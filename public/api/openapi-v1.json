@@ -1,0 +1,2642 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "HamQadam App API v1",
+    "version": "1.0.0",
+    "description": "App-only REST API for the Flutter mobile app and React web app. Legacy CMS/mobile endpoints and admin-only endpoints are intentionally excluded. Use GET /auth/me as the single authentication check endpoint."
+  },
+  "servers": [
+    {
+      "url": "/api/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "System"
+    },
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Profile"
+    },
+    {
+      "name": "Partner Preferences"
+    },
+    {
+      "name": "Search"
+    },
+    {
+      "name": "Matching"
+    },
+    {
+      "name": "Proposals"
+    },
+    {
+      "name": "Chat"
+    },
+    {
+      "name": "Verification"
+    },
+    {
+      "name": "Payments"
+    },
+    {
+      "name": "Notifications"
+    },
+    {
+      "name": "Safety"
+    },
+    {
+      "name": "AI"
+    },
+    {
+      "name": "Family"
+    },
+    {
+      "name": "Content"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sanctum": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Sanctum"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed."
+          },
+          "error": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          },
+          "data": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "API is available"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register with full onboarding",
+        "description": "Creates the account, stores required profile and partner-preference data, marks the member verified, and automatically activates the Basic Free package reward.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "first_name": "Ayesha",
+                "last_name": "Khan",
+                "email": "ayesha@example.com",
+                "password": "Password123!",
+                "password_confirmation": "Password123!",
+                "gender": "2",
+                "date_of_birth": "1998-04-15",
+                "on_behalf": 1,
+                "marital_status_id": 1,
+                "children": "No children",
+                "mother_tongue": 1,
+                "known_languages": [
+                  1,
+                  2
+                ],
+                "height": 5.4,
+                "weight": 58,
+                "complexion": "Fair",
+                "diet": "yes",
+                "smoke": "no",
+                "drink": "no",
+                "living_with": "Family",
+                "religion_id": 1,
+                "personal_value": "Practicing",
+                "education_degree": "BS Computer Science",
+                "education_institution": "Punjab University",
+                "profession": "Software Engineer",
+                "company": "Tech Company",
+                "country_id": 1,
+                "city_id": 1,
+                "about_me": "Family-oriented and serious about marriage.",
+                "future_goals": "Build a peaceful family life.",
+                "partner_age_min": 27,
+                "partner_age_max": 34,
+                "partner_religion_id": 1,
+                "partner_language_id": 1,
+                "partner_education": "Graduate",
+                "partner_profession": "Professional",
+                "partner_lifestyle": "Family-oriented",
+                "partner_prayer": "Practicing",
+                "partner_country_id": 1,
+                "partner_city_id": 1,
+                "partner_income_min": 100000,
+                "partner_income_max": 500000
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered and authenticated"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/auth/login/email": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login with email and password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "ayesha@example.com",
+                "password": "Password123!",
+                "device_name": "Pixel 8",
+                "device_type": "android"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/auth/otp/mobile": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Request mobile OTP",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "phone": "03451234567",
+                "country_code": "+92"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP sent"
+          }
+        }
+      }
+    },
+    "/auth/login/mobile": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login with mobile OTP",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "phone": "03451234567",
+                "country_code": "+92",
+                "otp": "123456",
+                "device_name": "iPhone 15"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated"
+          }
+        }
+      }
+    },
+    "/auth/login/google": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Login with Google",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "id_token": "google-id-token",
+                "device_name": "Pixel 8"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Check authenticated user",
+        "description": "Use this as the only app authentication check endpoint. Do not use legacy member validation endpoints in new apps.",
+        "responses": {
+          "200": {
+            "description": "Current user"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Logout current device",
+        "responses": {
+          "200": {
+            "description": "Logged out"
+          }
+        }
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Logout all devices",
+        "responses": {
+          "200": {
+            "description": "All sessions revoked"
+          }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Request password reset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "ayesha@example.com"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset code sent"
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Reset password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "email": "ayesha@example.com",
+                "otp": "123456",
+                "password": "NewPassword123!",
+                "password_confirmation": "NewPassword123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset"
+          }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Get current profile",
+        "responses": {
+          "200": {
+            "description": "Profile resource"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Update current profile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "introduction": "Family-oriented software engineer.",
+                "future_goals": "Build a peaceful family life."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated"
+          }
+        }
+      }
+    },
+    "/profile/privacy": {
+      "patch": {
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Update profile privacy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "photo_privacy": "members",
+                "gallery_privacy": "accepted"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Privacy updated"
+          }
+        }
+      }
+    },
+    "/profile/visibility": {
+      "patch": {
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Hide or show profile",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "hide_profile": true
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Visibility updated"
+          }
+        }
+      }
+    },
+    "/profile/deactivate": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Deactivate profile",
+        "responses": {
+          "200": {
+            "description": "Profile deactivated"
+          }
+        }
+      }
+    },
+    "/partner-preferences": {
+      "get": {
+        "tags": [
+          "Partner Preferences"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Get partner preferences",
+        "responses": {
+          "200": {
+            "description": "Preference resource"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Partner Preferences"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Update partner preferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "age_min": 27,
+                "age_max": 34,
+                "religion_id": 1,
+                "city_id": 1,
+                "deal_breakers": [
+                  "smoking"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Preferences updated"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Partner Preferences"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Clear partner preferences",
+        "responses": {
+          "200": {
+            "description": "Preferences cleared"
+          }
+        }
+      }
+    },
+    "/search/profiles": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Advanced profile search",
+        "parameters": [
+          {
+            "name": "age_min",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "example": 24
+            }
+          },
+          {
+            "name": "age_max",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "example": 32
+            }
+          },
+          {
+            "name": "verified_only",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "example": true
+            }
+          },
+          {
+            "name": "photo_only",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "example": true
+            }
+          },
+          {
+            "name": "compatibility_min",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "example": 70
+            }
+          },
+          {
+            "name": "nearby",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "example": true
+            }
+          },
+          {
+            "name": "online_now",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "example": false
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "compatibility"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated profiles"
+          }
+        }
+      }
+    },
+    "/search/saved": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "List saved searches",
+        "responses": {
+          "200": {
+            "description": "Saved searches"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Save search filters",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "name": "Lahore verified matches",
+                "filters": {
+                  "city_id": 1,
+                  "verified_only": true
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Search saved"
+          }
+        }
+      }
+    },
+    "/search/history": {
+      "get": {
+        "tags": [
+          "Search"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Search history",
+        "responses": {
+          "200": {
+            "description": "Search history"
+          }
+        }
+      }
+    },
+    "/search/hidden-users": {
+      "post": {
+        "tags": [
+          "Search"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Hide profile from user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "user_id": 25
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Hidden user saved"
+          }
+        }
+      }
+    },
+    "/matches": {
+      "get": {
+        "tags": [
+          "Matching"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Smart match suggestions",
+        "responses": {
+          "200": {
+            "description": "Paginated matches with compatibility scores"
+          }
+        }
+      }
+    },
+    "/matches/feedback": {
+      "post": {
+        "tags": [
+          "Matching"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Rate a match suggestion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "user_id": 25,
+                "feedback": "like",
+                "source": "daily_recommendation",
+                "note": "Good suggestion"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Feedback saved"
+          }
+        }
+      }
+    },
+    "/proposals": {
+      "get": {
+        "tags": [
+          "Proposals"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "List proposals",
+        "responses": {
+          "200": {
+            "description": "Paginated proposals"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Proposals"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Send proposal",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "user_id": 25,
+                "note": "Assalamualaikum, I would like our families to connect."
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Proposal created"
+          }
+        }
+      }
+    },
+    "/proposals/{proposal}/accept": {
+      "post": {
+        "tags": [
+          "Proposals"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Accept proposal",
+        "parameters": [
+          {
+            "name": "proposal",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "note": "Accepted after family review."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proposal accepted"
+          }
+        }
+      }
+    },
+    "/proposals/{proposal}/reject": {
+      "post": {
+        "tags": [
+          "Proposals"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Reject proposal",
+        "parameters": [
+          {
+            "name": "proposal",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "note": "Not compatible."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proposal rejected"
+          }
+        }
+      }
+    },
+    "/proposals/{proposal}/timeline": {
+      "get": {
+        "tags": [
+          "Proposals"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Proposal timeline",
+        "parameters": [
+          {
+            "name": "proposal",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proposal timeline"
+          }
+        }
+      }
+    },
+    "/proposals/favourites": {
+      "post": {
+        "tags": [
+          "Proposals"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Add favourite",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "user_id": 25
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Favourite saved"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Proposals"
+        ],
+        "summary": "List favourite profiles",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/chat/threads": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "List chat threads",
+        "responses": {
+          "200": {
+            "description": "Chat threads"
+          }
+        }
+      }
+    },
+    "/chat/threads/{thread}/messages": {
+      "get": {
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "List thread messages",
+        "parameters": [
+          {
+            "name": "thread",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Messages"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Send chat message",
+        "parameters": [
+          {
+            "name": "thread",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "message": "Assalamualaikum, how are you?",
+                "message_type": "text",
+                "reply_to_id": null
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message sent"
+          }
+        }
+      }
+    },
+    "/chat/threads/{thread}/typing": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Send typing indicator",
+        "parameters": [
+          {
+            "name": "thread",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Typing indicator updated"
+          }
+        }
+      }
+    },
+    "/verification/submit": {
+      "post": {
+        "tags": [
+          "Verification"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Submit CNIC/selfie verification",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "cnic_number",
+                  "cnic_front",
+                  "cnic_back",
+                  "selfie"
+                ],
+                "properties": {
+                  "cnic_number": {
+                    "type": "string",
+                    "example": "35202-1234567-1"
+                  },
+                  "cnic_front": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "cnic_back": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "selfie": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Verification submitted"
+          }
+        }
+      }
+    },
+    "/verification/current": {
+      "get": {
+        "tags": [
+          "Verification"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Current verification status",
+        "responses": {
+          "200": {
+            "description": "Current verification"
+          }
+        }
+      }
+    },
+    "/payments/plans": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "List subscription plans",
+        "responses": {
+          "200": {
+            "description": "Plans with coin features"
+          }
+        }
+      }
+    },
+    "/payments/checkout": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Create Stripe, EasyPaisa, or JazzCash checkout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "stripe": {
+                  "value": {
+                    "package_id": 2,
+                    "gateway": "stripe",
+                    "currency": "PKR",
+                    "coupon_code": "WELCOME20"
+                  }
+                },
+                "easypaisa": {
+                  "value": {
+                    "package_id": 2,
+                    "gateway": "easypaisa",
+                    "currency": "PKR",
+                    "easypaisa_phone": "03451234567"
+                  }
+                },
+                "jazzcash": {
+                  "value": {
+                    "package_id": 2,
+                    "gateway": "jazzcash",
+                    "currency": "PKR",
+                    "jazzcash_phone": "03001234567"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Checkout created. EasyPaisa and JazzCash remain pending until callback or admin verification."
+          }
+        }
+      }
+    },
+    "/payments/history": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Payment history",
+        "responses": {
+          "200": {
+            "description": "Paginated payments"
+          }
+        }
+      }
+    },
+    "/payments/coupons/validate": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Validate coupon",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "package_id": 2,
+                "code": "WELCOME20"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Coupon validation result"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "List notifications",
+        "responses": {
+          "200": {
+            "description": "Notifications"
+          }
+        }
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Unread notification count",
+        "responses": {
+          "200": {
+            "description": "Unread count"
+          }
+        }
+      }
+    },
+    "/notifications/push-tokens": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Register FCM push token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "token": "fcm-token",
+                "device_type": "android"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Push token stored"
+          }
+        }
+      }
+    },
+    "/safety/report": {
+      "post": {
+        "tags": [
+          "Safety"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Report user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "user_id": 25,
+                "reason": "Asked for money.",
+                "severity": "high"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Report submitted"
+          }
+        }
+      }
+    },
+    "/safety/block": {
+      "post": {
+        "tags": [
+          "Safety"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Block user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "user_id": 25,
+                "reason": "Harassment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User blocked"
+          }
+        }
+      }
+    },
+    "/ai/bio": {
+      "post": {
+        "tags": [
+          "AI"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Generate AI bio",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "text": "I value faith, family, and simple living."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated bio"
+          }
+        }
+      }
+    },
+    "/ai/conversation-starters": {
+      "post": {
+        "tags": [
+          "AI"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Generate conversation starters",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "matched_user_id": 25
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conversation starters"
+          }
+        }
+      }
+    },
+    "/ai/profile-quality": {
+      "post": {
+        "tags": [
+          "AI"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Check profile quality",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "text": "Family-oriented and serious about marriage."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Quality analysis"
+          }
+        }
+      }
+    },
+    "/family/guardians": {
+      "get": {
+        "tags": [
+          "Family"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "List guardians",
+        "responses": {
+          "200": {
+            "description": "Guardians"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Family"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Invite guardian",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "guardian_user_id": 45,
+                "relationship": "father",
+                "permissions": [
+                  "approve_matches",
+                  "view_notes"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Guardian invited"
+          }
+        }
+      }
+    },
+    "/family/dashboard": {
+      "get": {
+        "tags": [
+          "Family"
+        ],
+        "summary": "Family dashboard for guardians",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/family/guardians/{guardian}": {
+      "patch": {
+        "tags": [
+          "Family"
+        ],
+        "summary": "Update guardian permissions",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "guardian_role": "father",
+                "is_wali": true,
+                "digest_frequency": "weekly",
+                "permissions": [
+                  "approve_matches",
+                  "view_notes",
+                  "view_matches",
+                  "join_meetings"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/family/wali-mode": {
+      "post": {
+        "tags": [
+          "Family"
+        ],
+        "summary": "Enable or disable Wali/Mehram mode",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "enabled": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/family/conversations": {
+      "get": {
+        "tags": [
+          "Family"
+        ],
+        "summary": "List family conversations",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Family"
+        ],
+        "summary": "Start family-to-family conversation",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "proposal_id": 101,
+                "profile_user_id": 25,
+                "message": "Assalamualaikum, our family would like to arrange an introduction call."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/family/conversations/{conversation}/messages": {
+      "get": {
+        "tags": [
+          "Family"
+        ],
+        "summary": "List family conversation messages",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Family"
+        ],
+        "summary": "Send family conversation message",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "message": "We are available this weekend.",
+                "attachments": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "/family/digest/preview": {
+      "get": {
+        "tags": [
+          "Family"
+        ],
+        "summary": "Guardian notification digest preview",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/proposals/{proposal}/meetings": {
+      "get": {
+        "tags": [
+          "Proposals"
+        ],
+        "summary": "List proposal meetings",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Proposals"
+        ],
+        "summary": "Schedule proposal meeting",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "meeting_type": "family",
+                "scheduled_at": "2026-07-20 19:30:00",
+                "duration_minutes": 45,
+                "meeting_url": "https://meet.example.com/hamqadam-123",
+                "chaperone_mode": true,
+                "chaperone_user_id": 45,
+                "recording_consent_requested": false,
+                "pre_meeting_questionnaire": {
+                  "agenda": [
+                    "Family introduction",
+                    "Expectations",
+                    "Next step"
+                  ]
+                },
+                "notes": "Parents from both sides will join."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proposals/meetings/{meeting}": {
+      "patch": {
+        "tags": [
+          "Proposals"
+        ],
+        "summary": "Update proposal meeting",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "status": "rescheduled",
+                "scheduled_at": "2026-07-21 20:00:00",
+                "notes": "Moved after Maghrib."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proposals/meetings/{meeting}/feedback": {
+      "post": {
+        "tags": [
+          "Proposals"
+        ],
+        "summary": "Submit post-meeting feedback",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "rating": 5,
+                "interested_next_step": true,
+                "notes": "Families aligned well."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proposals/meetings/{meeting}/recording-consent": {
+      "post": {
+        "tags": [
+          "Proposals"
+        ],
+        "summary": "Update recording consent",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "consent": true,
+                "recording_url": "https://storage.example.com/recordings/meeting-1.mp4"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/proposals/relationship-status": {
+      "post": {
+        "tags": [
+          "Proposals"
+        ],
+        "summary": "Submit engagement, Nikah, or marriage status",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "partner_user_id": 25,
+                "proposal_id": 101,
+                "status": "nikah",
+                "status_date": "2026-08-15",
+                "notes": "Nikah completed with family consent.",
+                "is_public": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/articles": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "List blog/articles",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/content/articles/{slug}": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "Show article",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/content/success-stories": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "List approved success stories",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "Submit success story",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "title": "Alhamdulillah, we found each other",
+                "story": "Our families connected through HamQadam.",
+                "partner_name": "Ahmed",
+                "is_anonymous": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/advice": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "Relationship advice content",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/content/expert/questions": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "Answered expert questions",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "Ask an expert question",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "category": "islamic_guidance",
+                "question": "How should families approach the first meeting?",
+                "details": "We want to keep the process respectful.",
+                "is_anonymous": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/forums": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "List community forums",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/content/forums/{forum}/threads": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "List forum threads",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "Create moderated forum thread",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "title": "Useful first family meeting questions",
+                "body": "Please share respectful questions."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/threads/{thread}/posts": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "List thread posts",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "Reply to moderated thread",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "body": "Ask about family expectations and timelines."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/webinars": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "List webinars/live events",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/content/webinars/{webinar}/register": {
+      "post": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "Register for webinar",
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {}
+            }
+          }
+        }
+      }
+    },
+    "/content/marriage-tips": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "List weekly marriage tips",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/content/regional-updates": {
+      "get": {
+        "tags": [
+          "Content"
+        ],
+        "summary": "List regional/cultural updates",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/auth/account": {
+      "delete": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Deactivate current account",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/profiles/{profile}": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Public profile detail for app user",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/profiles/{profile}/compatibility": {
+      "get": {
+        "tags": [
+          "Matching"
+        ],
+        "summary": "Compatibility score against a profile",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/matches/recommended": {
+      "get": {
+        "tags": [
+          "Matching"
+        ],
+        "summary": "Recommended matches",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/matches/daily": {
+      "get": {
+        "tags": [
+          "Matching"
+        ],
+        "summary": "Daily recommended matches",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/matches/{profile}": {
+      "get": {
+        "tags": [
+          "Matching"
+        ],
+        "summary": "Match detail by profile id",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/proposals/favourites/{user}/check": {
+      "get": {
+        "tags": [
+          "Proposals"
+        ],
+        "summary": "Check whether a profile is favourited",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/auth/register/steps": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get 18-step registration metadata",
+        "responses": {
+          "200": {
+            "description": "Registration step metadata"
+          }
+        }
+      }
+    },
+    "/auth/register/step1": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Start 18-step registration and receive token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Draft member created"
+          }
+        }
+      }
+    },
+    "/auth/register/step/{step}": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Save a registration step (2-18)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "step",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 2,
+              "maximum": 18
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registration step saved"
+          },
+          "422": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/auth/register/status": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get 18-step registration status",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Registration status"
+          }
+        }
+      }
+    }
+  }
+}

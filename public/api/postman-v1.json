@@ -1,0 +1,1899 @@
+{
+  "info": {
+    "name": "HamQadam App API v1 - App Only",
+    "description": "Curated app-facing collection. Legacy CMS/mobile endpoints and admin-only endpoints are intentionally excluded. Use Auth - Me as the only authentication check request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "{{APP_URL}}/api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register With Onboarding",
+          "request": {
+            "method": "POST",
+            "description": "Full registration. Auto-verifies the user and applies the Basic Free package reward.",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/register",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Ayesha\",\n  \"last_name\": \"Khan\",\n  \"email\": \"ayesha@example.com\",\n  \"password\": \"Password123!\",\n  \"password_confirmation\": \"Password123!\",\n  \"gender\": \"2\",\n  \"date_of_birth\": \"1998-04-15\",\n  \"on_behalf\": 1,\n  \"marital_status_id\": 1,\n  \"children\": \"No children\",\n  \"mother_tongue\": 1,\n  \"known_languages\": [1, 2],\n  \"height\": 5.4,\n  \"weight\": 58,\n  \"complexion\": \"Fair\",\n  \"diet\": \"yes\",\n  \"smoke\": \"no\",\n  \"drink\": \"no\",\n  \"living_with\": \"Family\",\n  \"religion_id\": 1,\n  \"personal_value\": \"Practicing\",\n  \"education_degree\": \"BS Computer Science\",\n  \"education_institution\": \"Punjab University\",\n  \"profession\": \"Software Engineer\",\n  \"company\": \"Tech Company\",\n  \"country_id\": 1,\n  \"city_id\": 1,\n  \"about_me\": \"Family-oriented and serious about marriage.\",\n  \"future_goals\": \"Build a peaceful family life.\",\n  \"partner_age_min\": 27,\n  \"partner_age_max\": 34,\n  \"partner_religion_id\": 1,\n  \"partner_language_id\": 1,\n  \"partner_education\": \"Graduate\",\n  \"partner_profession\": \"Professional\",\n  \"partner_lifestyle\": \"Family-oriented\",\n  \"partner_prayer\": \"Practicing\",\n  \"partner_country_id\": 1,\n  \"partner_city_id\": 1,\n  \"partner_income_min\": 100000,\n  \"partner_income_max\": 500000\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login - Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/login/email",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ayesha@example.com\",\n  \"password\": \"Password123!\",\n  \"device_name\": \"Pixel 8\",\n  \"device_type\": \"android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "OTP - Request Mobile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/otp/mobile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"03451234567\",\n  \"country_code\": \"+92\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login - Mobile OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/login/mobile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"03451234567\",\n  \"country_code\": \"+92\",\n  \"otp\": \"123456\",\n  \"device_name\": \"iPhone 15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login - Google",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/auth/login/google",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_token\": \"google-id-token\",\n  \"device_name\": \"Pixel 8\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Me - Authentication Check",
+          "request": {
+            "method": "GET",
+            "description": "Use this as the only app auth-check endpoint.",
+            "url": "{{base_url}}/auth/me"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/logout"
+          }
+        },
+        {
+          "name": "Logout All Devices",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/logout-all"
+          }
+        },
+        {
+          "name": "Registration Steps Metadata",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/auth/register/steps"
+          }
+        },
+        {
+          "name": "Registration Step 1 - Account For",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/auth/register/step1",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"account_for\": \"myself\",\n  \"account_for_id\": 1,\n  \"gender\": \"2\",\n  \"marriage_timeline\": \"within_6_months\",\n  \"work_after_marriage\": \"depends_on_mutual_understanding\",\n  \"expects_spouse_to_work\": \"depends_on_mutual_understanding\",\n  \"device_name\": \"Pixel 8\",\n  \"device_type\": \"android\",\n  \"device_id\": \"device-123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registration Step 2 - Basic Information",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/auth/register/step/2",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Ayesha Khan\",\n  \"date_of_birth\": \"1998-04-15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registration Step 18 - Partner Preferences",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/auth/register/step/18",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partner_age_min\": 27,\n  \"partner_age_max\": 34,\n  \"partner_height_min\": 1.55,\n  \"partner_height_max\": 1.8,\n  \"partner_marital_status_id\": 1,\n  \"partner_religion_id\": 1,\n  \"partner_caste_id\": 1,\n  \"partner_sub_caste_id\": 2,\n  \"partner_language_id\": 1,\n  \"partner_country_id\": 166,\n  \"partner_state_id\": 2728,\n  \"partner_city_id\": 85568,\n  \"partner_education\": \"Graduate\",\n  \"partner_profession\": \"Professional\",\n  \"partner_income_min\": 1000000,\n  \"partner_income_max\": 5000000,\n  \"partner_diet\": \"halal\",\n  \"partner_other_preferences\": \"Family-oriented lifestyle preferred.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Registration Status - 18 Steps",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{base_url}}/auth/register/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Current Profile",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/profile"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/profile",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"introduction\": \"Family-oriented software engineer.\",\n  \"future_goals\": \"Build a peaceful family life.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update Privacy",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/profile/privacy",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photo_privacy\": \"members\",\n  \"gallery_privacy\": \"accepted\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Update Visibility",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/profile/visibility",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hide_profile\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Partner Preferences",
+      "item": [
+        {
+          "name": "Current Preferences",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/partner-preferences"
+          }
+        },
+        {
+          "name": "Update Preferences",
+          "request": {
+            "method": "PUT",
+            "url": "{{base_url}}/partner-preferences",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"age_min\": 27,\n  \"age_max\": 34,\n  \"religion_id\": 1,\n  \"city_id\": 1,\n  \"deal_breakers\": [\"smoking\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search And Matching",
+      "item": [
+        {
+          "name": "Search Profiles",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/search/profiles?age_min=24&age_max=32&verified_only=1&photo_only=1&compatibility_min=70&nearby=1&sort=compatibility"
+          }
+        },
+        {
+          "name": "Saved Searches",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/search/saved"
+          }
+        },
+        {
+          "name": "Save Search",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/search/saved",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Lahore verified matches\",\n  \"filters\": {\n    \"city_id\": 1,\n    \"verified_only\": true\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Search History",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/search/history"
+          }
+        },
+        {
+          "name": "Matches",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/matches"
+          }
+        },
+        {
+          "name": "Match Feedback",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/matches/feedback",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 25,\n  \"feedback\": \"like\",\n  \"source\": \"daily_recommendation\",\n  \"note\": \"Good suggestion\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Proposals",
+      "item": [
+        {
+          "name": "List Proposals",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/proposals"
+          }
+        },
+        {
+          "name": "Send Proposal",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/proposals",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 25,\n  \"note\": \"Assalamualaikum, I would like our families to connect.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Accept Proposal",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/proposals/10/accept"
+          }
+        },
+        {
+          "name": "Reject Proposal",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/proposals/10/reject"
+          }
+        },
+        {
+          "name": "Proposal Timeline",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/proposals/10/timeline"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Threads",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/chat/threads"
+          }
+        },
+        {
+          "name": "Messages",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/chat/threads/1/messages"
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chat/threads/1/messages",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Assalamualaikum, how are you?\",\n  \"message_type\": \"text\",\n  \"reply_to_id\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Typing",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chat/threads/1/typing"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verification",
+      "item": [
+        {
+          "name": "Current Status",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/verification/current"
+          }
+        },
+        {
+          "name": "Submit Verification",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verification/submit",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "cnic_number",
+                  "value": "35202-1234567-1",
+                  "type": "text"
+                },
+                {
+                  "key": "cnic_front",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "cnic_back",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "selfie",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Plans",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/payments/plans"
+          }
+        },
+        {
+          "name": "Stripe Checkout",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/payments/checkout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"package_id\": 2,\n  \"gateway\": \"stripe\",\n  \"currency\": \"PKR\",\n  \"coupon_code\": \"WELCOME20\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "EasyPaisa Checkout",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/payments/checkout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"package_id\": 2,\n  \"gateway\": \"easypaisa\",\n  \"currency\": \"PKR\",\n  \"easypaisa_phone\": \"03451234567\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "JazzCash Checkout",
+          "request": {
+            "method": "POST",
+            "description": "Creates a pending JazzCash payment. Package activation happens after gateway callback or admin verification.",
+            "url": "{{base_url}}/payments/checkout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"package_id\": 2,\n  \"gateway\": \"jazzcash\",\n  \"currency\": \"PKR\",\n  \"jazzcash_phone\": \"03001234567\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Payment History",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/payments/history"
+          }
+        },
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/payments/coupons/validate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"package_id\": 2,\n  \"code\": \"WELCOME20\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/notifications"
+          }
+        },
+        {
+          "name": "Unread Count",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/notifications/unread-count"
+          }
+        },
+        {
+          "name": "Register Push Token",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/notifications/push-tokens",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm-token\",\n  \"device_type\": \"android\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Safety",
+      "item": [
+        {
+          "name": "Report User",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/safety/report",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 25,\n  \"reason\": \"Asked for money and private bank details.\",\n  \"severity\": \"high\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Block User",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/safety/block",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 25,\n  \"reason\": \"Harassment\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "Bio Generator",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/bio",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"I value faith, family, and simple living.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Conversation Starters",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/conversation-starters",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"matched_user_id\": 25\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Profile Quality",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/ai/profile-quality",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Family-oriented and serious about marriage.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Family",
+      "item": [
+        {
+          "name": "Guardians",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/family/guardians"
+          }
+        },
+        {
+          "name": "Invite Guardian",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/family/guardians",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guardian_user_id\": 45,\n  \"relationship\": \"father\",\n  \"permissions\": [\"approve_matches\", \"view_notes\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Family & Guardian",
+      "item": [
+        {
+          "name": "Family dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/family/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "family",
+                "dashboard"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update guardian permissions",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/family/guardians/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "family",
+                "guardians",
+                "1"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"guardian_role\": \"father\",\n  \"is_wali\": true,\n  \"digest_frequency\": \"weekly\",\n  \"permissions\": [\n    \"approve_matches\",\n    \"view_notes\",\n    \"view_matches\",\n    \"join_meetings\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Toggle Wali mode",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/family/wali-mode",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "family",
+                "wali-mode"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Start family conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/family/conversations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "family",
+                "conversations"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proposal_id\": 101,\n  \"profile_user_id\": 25,\n  \"message\": \"Assalamualaikum, our family would like to arrange an introduction call.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Send family message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/family/conversations/1/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "family",
+                "conversations",
+                "1",
+                "messages"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"We are available this weekend.\",\n  \"attachments\": []\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Digest preview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/family/digest/preview",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "family",
+                "digest",
+                "preview"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Proposal Meetings",
+      "item": [
+        {
+          "name": "List meetings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/proposals/101/meetings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "101",
+                "meetings"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Schedule meeting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/proposals/101/meetings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "101",
+                "meetings"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"meeting_type\": \"family\",\n  \"scheduled_at\": \"2026-07-20 19:30:00\",\n  \"duration_minutes\": 45,\n  \"meeting_url\": \"https://meet.example.com/hamqadam-123\",\n  \"chaperone_mode\": true,\n  \"chaperone_user_id\": 45,\n  \"recording_consent_requested\": false,\n  \"pre_meeting_questionnaire\": {\n    \"agenda\": [\n      \"Family introduction\",\n      \"Expectations\",\n      \"Next step\"\n    ]\n  },\n  \"notes\": \"Parents from both sides will join.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Meeting feedback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/proposals/meetings/1/feedback",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "meetings",
+                "1",
+                "feedback"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"interested_next_step\": true,\n  \"notes\": \"Families aligned well.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Recording consent",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/proposals/meetings/1/recording-consent",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "meetings",
+                "1",
+                "recording-consent"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consent\": true,\n  \"recording_url\": \"https://storage.example.com/recordings/meeting-1.mp4\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Relationship status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/proposals/relationship-status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "relationship-status"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partner_user_id\": 25,\n  \"proposal_id\": 101,\n  \"status\": \"nikah\",\n  \"status_date\": \"2026-08-15\",\n  \"notes\": \"Nikah completed with family consent.\",\n  \"is_public\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content & Community",
+      "item": [
+        {
+          "name": "Articles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/articles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "articles"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Success stories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/success-stories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "success-stories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit success story",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/success-stories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "success-stories"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Alhamdulillah, we found each other\",\n  \"story\": \"Our families connected through HamQadam.\",\n  \"partner_name\": \"Ahmed\",\n  \"is_anonymous\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ask expert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/expert/questions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "expert",
+                "questions"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"islamic_guidance\",\n  \"question\": \"How should families approach the first meeting?\",\n  \"details\": \"We want to keep the process respectful.\",\n  \"is_anonymous\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Forums",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/forums",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "forums"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create thread",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/forums/1/threads",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "forums",
+                "1",
+                "threads"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Useful first family meeting questions\",\n  \"body\": \"Please share respectful questions.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Reply to thread",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/threads/1/posts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "threads",
+                "1",
+                "posts"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"Ask about family expectations and timelines.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Webinars",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/webinars",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "webinars"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register webinar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/webinars/1/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "webinars",
+                "1",
+                "register"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Marriage tips",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/marriage-tips",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "marriage-tips"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Regional updates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/regional-updates?region=Punjab",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "content",
+                "regional-updates?region=Punjab"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MVP Added Endpoints",
+      "item": [
+        {
+          "name": "Deactivate account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/account",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "account"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Public profile detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profiles/25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "25"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Profile compatibility",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/profiles/25/compatibility",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "profiles",
+                "25",
+                "compatibility"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Recommended matches",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/matches/recommended",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "recommended"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Daily matches",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/matches/daily",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "daily"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Match detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/matches/25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "matches",
+                "25"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List favourites",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/proposals/favourites",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "favourites"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check favourite",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/proposals/favourites/25/check",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "favourites",
+                "25",
+                "check"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
