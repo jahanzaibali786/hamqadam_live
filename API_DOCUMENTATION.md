@@ -135,14 +135,14 @@ Register sample (complete 18-step payload):
   "job_title": "Software Engineer",
   "organization": "Tech Company",
   "years_of_experience": 1,
-  "profile_photo": "base64_or_file_id",
-  "additional_photos": ["base64_or_file_id_1", "base64_or_file_id_2"],
+  "profile_photo": "file_id_or_base64_string",
+  "additional_photos": ["file_id_or_base64_string_1", "file_id_or_base64_string_2"],
   "about_me": "Family-oriented and serious about marriage.",
   "cnic_number": "12345-6789012-3",
-  "cnic_front": "base64_or_file_id",
-  "cnic_back": "base64_or_file_id",
-  "selfie_verification": "base64_or_file_id",
-  "hobbies": ["Reading", "Music", "Travel", "Photography"],
+  "cnic_front": "file_id_or_base64_string",
+  "cnic_back": "file_id_or_base64_string",
+  "selfie_verification": "file_id_or_base64_string",
+  "hobbies": "Reading, Music, Travel, Photography",
   "father_occupation": "Engineer",
   "mother_occupation": "Teacher",
   "siblings_sisters": 2,
@@ -199,6 +199,7 @@ Registration verified and finalized
 
 ```http
 POST /auth/register/complete
+Content-Type: application/json
 Content-Type: multipart/form-data
 ```
 
@@ -244,14 +245,14 @@ The frontend handles all 18 registration steps locally and submits the complete 
   "job_title": "Software Engineer",
   "organization": "Tech Company",
   "years_of_experience": 1,
-  "profile_photo": "base64_or_file_id",
-  "additional_photos": ["base64_or_file_id_1", "base64_or_file_id_2"],
+  "profile_photo": "file_id_or_base64_string",
+  "additional_photos": ["file_id_or_base64_string_1", "file_id_or_base64_string_2"],
   "about_me": "Family-oriented and serious about marriage.",
   "cnic_number": "12345-6789012-3",
-  "cnic_front": "base64_or_file_id",
-  "cnic_back": "base64_or_file_id",
-  "selfie_verification": "base64_or_file_id",
-  "hobbies": ["Reading", "Music", "Travel", "Photography"],
+  "cnic_front": "file_id_or_base64_string",
+  "cnic_back": "file_id_or_base64_string",
+  "selfie_verification": "file_id_or_base64_string",
+  "hobbies": "Reading, Music, Travel, Photography",
   "father_occupation": "Engineer",
   "mother_occupation": "Teacher",
   "siblings_sisters": 2,
@@ -298,7 +299,8 @@ The frontend handles all 18 registration steps locally and submits the complete 
 - `family_values`: `Elite`, `High`, `Middle`, `Aspiring`, `Poor`
 
 **Notes:**
-- File uploads (`profile_photo`, `additional_photos`, `cnic_front`, `cnic_back`, `selfie_verification`) require `multipart/form-data`. Accepts image files up to 5MB each. Additional photos require 2 to 4 items.
+- Photo fields (`profile_photo`, `additional_photos`) accept either actual image files in `multipart/form-data` format, or strings (file IDs from upload endpoints or base64 encoded strings) in JSON payload. These are stored as string references in the database.
+- Verification documents (`cnic_front`, `cnic_back`, `selfie_verification`) also accept either actual image files in `multipart/form-data` format, or strings (file IDs or base64 encoded strings) for the API.
 - `email_verify` is used to confirm the email address. Password must be at least 8 characters.
 - Optional steps 15-16 may be omitted or included with partial data.
 

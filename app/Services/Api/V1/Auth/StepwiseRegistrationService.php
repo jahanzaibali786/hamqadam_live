@@ -15,10 +15,12 @@ use App\Models\Lifestyle;
 use App\Models\Member;
 use App\Models\PartnerExpectation;
 use App\Models\PhysicalAttribute;
+use App\Enums\VerificationDocumentType;
 use App\Models\ProfileVerificationDocument;
 use App\Models\ProfileVerificationRequest;
 use App\Models\SpiritualBackground;
 use App\Models\User;
+use App\Models\Upload;
 use App\Services\Api\V1\Profile\ProfileCompletionService;
 use App\Support\RegistrationReward;
 use Carbon\Carbon;
@@ -26,6 +28,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -130,6 +133,10 @@ class StepwiseRegistrationService
 
     public function completeRegistration(array $data, DeviceData $deviceData, ?Request $request = null): IssuedTokenData
     {
+        if (isset($data['hobbies']) && is_array($data['hobbies'])) {
+            $data['hobbies'] = implode(', ', $data['hobbies']);
+        }
+
         $this->validate(1, $data);
 
         return DB::transaction(function () use ($data, $deviceData, $request): IssuedTokenData {
@@ -197,7 +204,7 @@ class StepwiseRegistrationService
             8 => $this->step8($user, $data),
             9 => $this->step9($user, $data),
             10 => $this->step10($user, $data),
-            11 => $this->step11($user, $data),
+            11 => $this->step11($user, $data, $request),
             12 => $this->step12($user, $data),
             13 => $this->step13($user, $data, $request),
             14 => $this->step14($user, $data),
@@ -327,22 +334,32 @@ class StepwiseRegistrationService
         ]);
     }
 
-    private function step11(User $user, array $data): void
+    private function step11(User $user, array $data, ?Request $request = null): void
     {
         $profilePhoto = $data['profile_photo'] ?? null;
-        if ($profilePhoto && is_string($profilePhoto)) {
-            $this->userUpdate($user, ['photo' => $profilePhoto, 'photo_approved' => 0]);
+        if (!$profilePhoto && $request) {
+            $profilePhoto = $request->file('profile_photo');
+        }
+
+        $uploadId = $this->resolveUploadIdFromPhoto($profilePhoto, $user->id);
+        if ($uploadId) {
+            $this->userUpdate($user, ['photo' => $uploadId, 'photo_approved' => 0]);
         }
 
         $additionalPhotos = $data['additional_photos'] ?? [];
+        if (!$additionalPhotos && $request) {
+            $additionalPhotos = $request->file('additional_photos') ?? [];
+        }
+
         if (is_array($additionalPhotos)) {
             $photoIds = [];
             foreach ($additionalPhotos as $photo) {
-                if (is_string($photo)) {
-                    $photoIds[] = $photo;
+                $uploadId = $this->resolveUploadIdFromPhoto($photo, $user->id);
+                if ($uploadId) {
+                    $photoIds[] = $uploadId;
                 }
             }
-            if (! empty($photoIds)) {
+            if (!empty($photoIds)) {
                 $this->memberUpdate($user, ['private_gallery' => json_encode($photoIds)]);
                 foreach ($photoIds as $photoId) {
                     GalleryImage::updateOrCreate(
@@ -352,6 +369,56 @@ class StepwiseRegistrationService
                 }
             }
         }
+    }
+
+    private function resolveUploadIdFromPhoto(mixed $photo, int $userId): ?int
+    {
+        if ($photo instanceof UploadedFile) {
+            return (int) upload_api_file($photo);
+        }
+
+        if (is_int($photo)) {
+            return $photo;
+        }
+
+        if (is_string($photo) && is_numeric($photo)) {
+            return (int) $photo;
+        }
+
+        if (is_string($photo)) {
+            return $this->createUploadFromBase64($photo, $userId);
+        }
+
+        return null;
+    }
+
+    private function createUploadFromBase64(string $base64, int $userId): ?int
+    {
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64, $matches)) {
+            $extension = $matches[1];
+            $base64 = substr($base64, strpos($base64, ',') + 1);
+        } else {
+            $extension = 'jpg';
+        }
+
+        $image = base64_decode($base64);
+        if ($image === false) {
+            return null;
+        }
+
+        $path = 'uploads/all/' . uniqid() . '.' . $extension;
+        Storage::put($path, $image);
+
+        $upload = new Upload();
+        $upload->file_original_name = 'base64_upload';
+        $upload->file_name = $path;
+        $upload->user_id = $userId;
+        $upload->extension = $extension;
+        $upload->type = 'image';
+        $upload->file_size = strlen($image);
+        $upload->save();
+
+        return $upload->id;
     }
 
     private function step12(User $user, array $data): void
@@ -371,13 +438,38 @@ class StepwiseRegistrationService
             ]
         );
 
-        foreach (['cnic_front', 'cnic_back', 'selfie_verification'] as $type) {
-            $file = $request?->file($type);
+        foreach (['cnic_front', 'cnic_back', 'selfie_verification'] as $field) {
+            $type = match ($field) {
+                'cnic_front' => VerificationDocumentType::CnicFront,
+                'cnic_back' => VerificationDocumentType::CnicBack,
+                'selfie_verification' => VerificationDocumentType::Selfie,
+            };
+
+            $file = $request?->file($field);
             $payload = ['type' => $type];
-            if ($file) {
-                $payload['upload_id'] = upload_api_file($file);
+
+            if ($file instanceof UploadedFile) {
+                $uploadId = upload_api_file($file);
+                $payload['upload_id'] = $uploadId;
+                $payload['file_path'] = Upload::find($uploadId)?->file_name;
             } else {
-                $payload['file_path'] = $data[$type];
+                $value = $data[$field] ?? null;
+
+                if ($value !== null && is_string($value)) {
+                    if (is_numeric($value)) {
+                        $uploadId = (int) $value;
+                        $payload['upload_id'] = $uploadId;
+                        $payload['file_path'] = Upload::find($uploadId)?->file_name;
+                    } else {
+                        $uploadId = $this->createUploadFromBase64($value, $user->id);
+                        if ($uploadId) {
+                            $payload['upload_id'] = $uploadId;
+                            $payload['file_path'] = Upload::find($uploadId)?->file_name;
+                        } else {
+                            $payload['file_path'] = $value;
+                        }
+                    }
+                }
             }
 
             ProfileVerificationDocument::updateOrCreate(
@@ -473,9 +565,9 @@ class StepwiseRegistrationService
             8 => ['education_level_id' => ['nullable', 'integer', 'exists:education_levels,id'], 'degree_id' => ['nullable', 'integer', 'exists:degrees,id'], 'field_of_study_id' => ['nullable', 'integer', 'exists:fields_of_study,id'], 'institution_id' => ['nullable', 'integer', 'exists:institutions,id'], 'graduation_year' => ['nullable', 'integer', 'min:1950', 'max:2100'], 'education_status' => ['nullable', Rule::in(['completed', 'in_progress', 'dropped'])], 'expected_graduation_year' => ['nullable', 'integer', 'min:1950', 'max:2100']],
             9 => ['height' => ['required', 'numeric', 'between:0,9.99'], 'diet' => ['required', Rule::in(['Vegetarian', 'Non-Vegetarian'])]],
             10 => ['annual_income' => ['required', 'numeric', 'min:0'], 'employment_status' => ['required', Rule::in(['government', 'private', 'civil', 'defence', 'self_employed', 'unemployed', 'retired'])], 'profession_category_id' => ['nullable', 'integer', 'exists:profession_categories,id'], 'profession_id' => ['nullable', 'integer', 'exists:professions,id'], 'job_title' => ['nullable', 'string', 'max:255'], 'organization' => ['nullable', 'string', 'max:255'], 'years_of_experience' => ['nullable', 'integer', 'min:0', 'max:50']],
-            11 => ['profile_photo' => ['required', 'image', 'max:5120'], 'additional_photos' => ['nullable', 'array'], 'additional_photos.*' => ['nullable', 'image', 'max:5120']],
+            11 => ['profile_photo' => ['required', 'string'], 'additional_photos' => ['nullable', 'array'], 'additional_photos.*' => ['nullable', 'string']],
             12 => ['about_me' => ['required', 'string', 'max:300']],
-            13 => ['cnic_number' => ['required', 'string', 'max:30'], 'cnic_front' => ['required'], 'cnic_back' => ['required'], 'selfie_verification' => ['required']],
+            13 => ['cnic_number' => ['required', 'string', 'max:30'], 'cnic_front' => ['required', 'string'], 'cnic_back' => ['required', 'string'], 'selfie_verification' => ['required', 'string']],
             14 => ['hobbies' => ['nullable', 'string', 'max:500']],
             15 => ['father_occupation' => ['nullable', 'string', 'max:255'], 'mother_occupation' => ['nullable', 'string', 'max:255'], 'siblings_sisters' => ['nullable', 'integer', 'min:0'], 'siblings_brothers' => ['nullable', 'integer', 'min:0']],
             16 => ['family_location' => ['nullable', 'string', 'max:255'], 'live_with_family' => ['nullable', Rule::in(['yes', 'no'])], 'family_values' => ['nullable', Rule::in(['Elite', 'High', 'Middle', 'Aspiring', 'Poor'])], 'family_country_id' => ['nullable', 'integer'], 'family_state' => ['nullable', 'string', 'max:255'], 'family_city' => ['nullable', 'string', 'max:255']],

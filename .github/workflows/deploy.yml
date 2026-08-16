@@ -1,0 +1,77 @@
+name: Deploy Laravel via FTP
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      ###########################################################
+      # Checkout Repository
+      ###########################################################
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      ###########################################################
+      # Install LFTP
+      ###########################################################
+      - name: Install LFTP
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp
+      ###########################################################
+      # Deploy Project
+      ###########################################################
+      - name: Deploy via FTP
+        env:
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+
+        run: |
+          lftp -u "admin_git","$FTP_PASSWORD" ftp://hamqadam.com:21 <<EOF
+          set ftp:passive-mode on
+          set ftp:list-options -a
+          set ssl:verify-certificate no
+          set net:max-retries 5
+          set net:timeout 60
+          set net:reconnect-interval-base 5
+          cd /public_html
+          mirror --reverse \
+            --verbose \
+            --parallel=2 \
+            --continue \
+            --only-newer \
+            --no-perms \
+            --exclude-glob ".git/**" \
+            --exclude-glob ".github/**" \
+            --exclude-glob ".gitignore" \
+            --exclude-glob "README.md" \
+            --exclude-glob "vendor/**" \
+            --exclude-glob "node_modules/**" \
+            --exclude-glob ".env" \
+            --exclude-glob ".env.*" \
+            --exclude-glob "storage/logs/**" \
+            --exclude-glob "storage/framework/cache/**" \
+            --exclude-glob "storage/framework/sessions/**" \
+            --exclude-glob "storage/framework/testing/**" \
+            --exclude-glob "storage/framework/views/**" \
+            --exclude-glob "storage/app/**" \
+            --exclude-glob "bootstrap/cache/*.php" \
+            --exclude-glob "tests/**" \
+            --exclude-glob "*.zip" \
+            --exclude-glob "*.sql" \
+            ./ .
+          bye
+          EOF
+      ###########################################################
+      # Done
+      ###########################################################
+      - name: Deployment Complete
+        run: echo "✅ Deployment completed successfully."

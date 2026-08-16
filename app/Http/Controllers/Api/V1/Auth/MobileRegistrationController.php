@@ -21,7 +21,8 @@ class MobileRegistrationController extends ApiController
     {
         $token = $this->registration->completeRegistration(
             $request->all(),
-            DeviceData::fromRequest($request)
+            DeviceData::fromRequest($request),
+            $request
         );
 
         return $this->success([
