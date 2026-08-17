@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Degree;
 use App\Models\Education;
+use App\Models\EducationLevel;
+use App\Models\Institution;
 use Validator;
 use Redirect;
 

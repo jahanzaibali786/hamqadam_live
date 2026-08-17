@@ -2,7 +2,7 @@
     <div class="card-header">
         <h5 class="mb-0 h6">{{translate('Education Info')}}</h5>
         <div class="text-right">
-            <a onclick="education_add_modal('{{$member->id}}');"  href="javascript:void(0);" class="btn btn-sm btn-primary ">
+            <a onclick="education_add_modal('{{ $member->id }}');" href="javascript:void(0);" class="btn btn-sm btn-primary">
               <i class="las mr-1 la-plus"></i>
               {{translate('Add New')}}
             </a>
@@ -20,11 +20,20 @@
                 <th class="text-right">{{translate('Options')}}</th>
             </tr>
 
-            @php $educations = \App\Models\Education::where('user_id',$member->id)->get(); @endphp
+            @php
+                $educations = \App\Models\Education::with(['degree', 'institution', 'educationLevel'])->where('user_id', $member->id)->get();
+            @endphp
             @foreach ($educations as $key => $education)
+                @php
+                    $degreeLabel = $education->degree?->name
+                        ?? $education->educationLevel?->name
+                        ?? (is_string($education->degree) ? $education->degree : (is_object($education->degree) ? ($education->degree->name ?? '') : ''));
+                    $institutionLabel = $education->institution?->name
+                        ?? (is_string($education->institution) ? $education->institution : (is_object($education->institution) ? ($education->institution->name ?? '') : ''));
+                @endphp
                 <tr>
-                    <td>{{ $education->degree }}</td>
-                    <td>{{ $education->institution }}</td>
+                    <td>{{ $degreeLabel }}</td>
+                    <td>{{ $institutionLabel }}</td>
                     <td>{{ $education->start }}</td>
                     <td>{{ $education->end }}</td>
                     <td>
@@ -40,10 +49,10 @@
                         </label>
                     </td>
                     <td class="text-right">
-                        <a href="javascript:void(0);" class="btn btn-soft-info btn-icon btn-circle btn-sm" onclick="education_edit_modal('{{$education->id}}');" title="{{ translate('Edit') }}">
+                        <a href="javascript:void(0);" class="btn btn-soft-info btn-icon btn-circle btn-sm" onclick="education_edit_modal('{{ $education->id }}');" title="{{ translate('Edit') }}">
                             <i class="las la-edit"></i>
                         </a>
-                        <a href="javascript:void(0);" class="btn btn-soft-danger btn-icon btn-circle btn-sm confirm-delete" data-href="{{route('education.destroy', $education->id)}}" title="{{ translate('Delete') }}">
+                        <a href="javascript:void(0);" class="btn btn-soft-danger btn-icon btn-circle btn-sm confirm-delete" data-href="{{ route('education.destroy', $education->id) }}" title="{{ translate('Delete') }}">
                             <i class="las la-trash"></i>
                         </a>
                     </td>

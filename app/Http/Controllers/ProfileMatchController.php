@@ -131,11 +131,17 @@ class ProfileMatchController extends Controller
         }
 
         if ($expected_education) {
-          if (Education::where('user_id', $partner->id)->where('degree', 'like', '%' . $expected_education . '%')->where('present', 1)->count() > 0) {
+          if (Education::where('user_id', $partner->id)
+            ->where('present', 1)
+            ->whereHas('degree', function ($degreeQuery) use ($expected_education) {
+              $degreeQuery->where('name', 'like', '%' . $expected_education . '%');
+            })
+            ->orWhereHas('educationLevel', function ($levelQuery) use ($expected_education) {
+              $levelQuery->where('name', 'like', '%' . $expected_education . '%');
+            })->count() > 0) {
             $matches_attributes++;
           }
         }
-
         if ($expected_profession) {
           if (Career::where('user_id', $partner->id)->where('designation', 'like', '%' . $expected_profession . '%')->where('present', 1)->count() > 0) {
             $matches_attributes++;
