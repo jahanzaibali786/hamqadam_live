@@ -8,6 +8,7 @@ use App\Contracts\Repositories\AuthOtpCodeRepository;
 use App\Enums\Auth\OtpChannel;
 use App\Enums\Auth\OtpPurpose;
 use App\Exceptions\ApiException;
+use App\Utility\EmailUtility;
 use App\Models\AuthOtpCode;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -38,6 +39,18 @@ class OtpService
             'code_hash' => Hash::make($code),
             'expires_at' => now()->addMinutes(self::TTL_MINUTES),
         ]);
+
+        if ($channel === OtpChannel::Email) {
+            try {
+                $template = $purpose->value === OtpPurpose::PasswordReset->value
+                    ? 'password_reset_email'
+                    : 'email_registration_verification';
+
+                EmailUtility::email_verification_for_registration_user($template, $identifier, $code);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         return [
             'otp' => $otp,
@@ -86,4 +99,5 @@ class OtpService
             : preg_replace('/\s+/', '', $identifier);
     }
 }
+
 

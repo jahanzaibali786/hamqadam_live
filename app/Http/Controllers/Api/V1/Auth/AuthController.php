@@ -151,15 +151,20 @@ class AuthController extends ApiController
         );
     }
 
-    public function verifyRegistrationOtp(VerifyRegistrationOtpRequest $request): JsonResponse
+        public function verifyRegistrationOtp(VerifyRegistrationOtpRequest $request): JsonResponse
     {
+        $user = $request->user();
+
         $this->authService->verifyRegistrationOtp(
-            user: $request->user(),
+            user: $user,
             code: $request->string('code')->toString(),
             email: $request->string('email')->toString() ?: null
         );
 
-        return $this->success(message: 'Registration verified successfully.');
+        return $this->success(
+            data: new UserResource($user->fresh()->loadMissing('member.package')),
+            message: 'Registration verified successfully.'
+        );
     }
 
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
@@ -236,3 +241,4 @@ class AuthController extends ApiController
         return $this->success(message: 'Account deactivated successfully.');
     }
 }
+

@@ -26,6 +26,7 @@ class RegistrationReward
             ?: Package::where('price', 0)->where('active', 1)->orderBy('id')->first()
             ?: Package::where('id', 1)->where('active', 1)->first();
     }
+
     public static function nextRecommendedPackage(?Package $currentPackage = null): ?Package
     {
         $currentPackage ??= self::basicPackage();
@@ -77,6 +78,12 @@ class RegistrationReward
 
         return $payment;
     }
+
+    public static function applyRegistrationDefaultPackage(User $user, string $paymentMethod = 'registration_reward'): ?PackagePayment
+    {
+        return self::applyBasicPackage($user, $paymentMethod);
+    }
+
     public static function verifyRegisteredUser(User $user): void
     {
         $user->forceFill([

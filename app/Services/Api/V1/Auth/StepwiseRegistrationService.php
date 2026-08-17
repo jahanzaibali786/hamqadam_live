@@ -22,6 +22,7 @@ use App\Models\SpiritualBackground;
 use App\Models\User;
 use App\Models\Upload;
 use App\Services\Api\V1\Profile\ProfileCompletionService;
+use App\Services\Api\V1\Auth\AuthService;
 use App\Support\RegistrationReward;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class StepwiseRegistrationService
     public function __construct(
         private readonly AuthTokenService $tokens,
         private readonly ProfileCompletionService $completion,
+        private readonly AuthService $authService,
     ) {
     }
 
