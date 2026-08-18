@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Jobs\RunAiVerification;
+use App\Models\AiVerificationAttempt;
 use Notification;
 use App\Models\User;
 use App\Models\Member;
@@ -228,6 +230,22 @@ class RegisterController extends Controller
 
         // Apply default package registration reward
         RegistrationReward::applyBasicPackage($user);
+
+        /*
+         * AI identity verification. Fired AFTER the account exists and the
+         * user is logged in, and out of band, so a slow or offline model can
+         * never block or fail a web registration.
+         *
+         * Web registration collects no photo at all, so this first attempt
+         * usually records "no usable image" and the member dashboard then
+         * shows the "Verify my identity" button. That is the intended path -
+         * the user uploads a photo or their CNIC documents and verification
+         * runs from there.
+         */
+        RunAiVerification::dispatchAfterResponse(
+            $user->id,
+            AiVerificationAttempt::SOURCE_REGISTRATION_WEB
+        );
 
         try {
             $notify_type = 'member_registration';

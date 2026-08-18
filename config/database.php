@@ -56,7 +56,12 @@ return [
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',
             'prefix_indexes' => true,
-            'strict' => true,
+            // Env-configurable so a local MySQL/MariaDB in strict mode can
+            // match the more permissive live server. NOTE: this is a
+            // workaround, not the fix - the real defect is that registration
+            // inserts into `careers` without `years_of_experience`, which is
+            // NOT NULL with no default. Under strict mode that is a hard error.
+            'strict' => env('DB_STRICT', true),
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),

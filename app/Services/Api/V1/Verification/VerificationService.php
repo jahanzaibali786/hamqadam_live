@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services\Api\V1\Verification;
 
+use App\Jobs\RunAiVerification;
+use App\Models\AiVerificationAttempt;
 use App\Enums\ApiErrorCode;
 use App\Enums\VerificationDocumentType;
 use App\Enums\VerificationRequestStatus;
@@ -58,6 +60,23 @@ class VerificationService
             }
 
             $user->member?->forceFill(['verification_status' => 'submitted'])?->save();
+
+            /*
+             * This is where AI verification earns its keep. Registration only
+             * ever has one profile photo, so the model can do face detection
+             * and quality/fraud checks but no identity comparison. Here we have
+             * a live selfie AND the CNIC front, so it can actually compare the
+             * face against the CNIC portrait and the account photo.
+             *
+             * Queued after the DB commit (afterResponse also runs after the
+             * transaction closes) so the submit endpoint returns immediately
+             * and a model outage cannot roll back a document submission.
+             */
+            RunAiVerification::dispatchAfterResponse(
+                $user->id,
+                AiVerificationAttempt::SOURCE_DOCUMENT_SUBMIT,
+                $request->id
+            );
 
             return $request->load(['documents', 'reviewer', 'user']);
         });

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Family\FamilyController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\MobileRegistrationController;
+use App\Http\Controllers\Api\V1\Verification\AiVerificationController;
 use App\Http\Controllers\Api\V1\Auth\StepRegistrationController;
 use App\Http\Controllers\Api\V1\Auth\StepwiseRegistrationController;
 use App\Http\Controllers\Api\V1\Matching\MatchController;
@@ -146,6 +147,20 @@ Route::middleware('auth:sanctum')->prefix('verification')->name('api.v1.verifica
     Route::get('/current', [VerificationController::class, 'current'])->name('current');
     Route::get('/history', [VerificationController::class, 'history'])->name('history');
     Route::post('/submit', [VerificationController::class, 'submit'])->middleware('throttle:5,1')->name('submit');
+
+    /*
+     * AI identity verification. Separate from /submit on purpose: these take no
+     * uploads and rebuild the model payload from the database, for when
+     * registration succeeded but verification did not complete.
+     *
+     * `run` is synchronous and calls a CPU-bound model, so it is throttled
+     * harder than the read endpoints.
+     */
+    Route::prefix('ai')->name('ai.')->group(function () {
+        Route::get('/status', [AiVerificationController::class, 'status'])->name('status');
+        Route::get('/history', [AiVerificationController::class, 'history'])->name('history');
+        Route::post('/run', [AiVerificationController::class, 'run'])->middleware('throttle:3,1')->name('run');
+    });
 });
 
 Route::middleware('auth:sanctum')->prefix('admin/verifications')->name('api.v1.admin.verifications.')->group(function () {

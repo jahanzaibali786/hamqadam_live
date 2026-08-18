@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Dto\Auth\DeviceData;
 use App\Http\Controllers\Api\V1\ApiController;
 use App\Http\Resources\Api\V1\Auth\UserResource;
+use App\Jobs\RunAiVerification;
+use App\Models\AiVerificationAttempt;
 use App\Services\Api\V1\Auth\StepwiseRegistrationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,10 +48,37 @@ class StepwiseRegistrationController extends ApiController
 
         $registration = $this->registration->saveStep($request->user(), $step, $request->all(), $request);
 
-        return $this->success([
-            'user' => new UserResource($request->user()->fresh('member')),
+        $user = $request->user()->fresh('member');
+
+        /*
+         * Step 11 is the Photos step - it is the first point at which an image
+         * exists on the account, so it is the earliest moment AI verification
+         * can do anything useful. Fired after the response so the step never
+         * waits on the model (see RunAiVerification for why afterResponse).
+         */
+        if ($step === StepwiseRegistrationService::TOTAL_STEPS) {
+            RunAiVerification::dispatchAfterResponse(
+                $user->id,
+                AiVerificationAttempt::SOURCE_REGISTRATION_API
+            );
+        }
+
+        $payload = [
+            'user' => new UserResource($user),
             'registration' => $registration,
-        ], 'Registration step '.$step.' saved.');
+        ];
+
+        if ($step === StepwiseRegistrationService::TOTAL_STEPS) {
+            $payload['ai_verification'] = [
+                'status' => 'pending',
+                'recommendation' => null,
+                'message' => 'Identity verification has started and runs in the background.',
+                'status_url' => url('/api/v1/verification/ai/status'),
+                'retry_url' => url('/api/v1/verification/ai/run'),
+            ];
+        }
+
+        return $this->success($payload, 'Registration step '.$step.' saved.');
     }
 
     public function status(Request $request): JsonResponse

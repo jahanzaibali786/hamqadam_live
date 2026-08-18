@@ -140,6 +140,12 @@ Route::group(['middleware' => ['verified']], function () {
         Route::get('/member/verification', 'verification_form')->name('member.verification');
         Route::post('/member/verification-info/store', 'verification_info_store')->name('member.verification_info.store');
     });
+
+    // AI identity verification, triggered from the member dashboard button.
+    // Throttled because it calls a CPU-bound model on the AI host.
+    Route::post('/member/ai-verification/run', [\App\Http\Controllers\AiVerificationWebController::class, 'run'])
+        ->middleware('throttle:3,1')
+        ->name('member.ai_verification.run');
 });
 
 Route::post('/registration/states/get-by-country', [StateController::class, 'get_state_by_country'])->name('registration.states.get_by_country');
