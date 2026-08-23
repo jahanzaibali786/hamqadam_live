@@ -831,6 +831,39 @@ the dashboard's "Verify My Identity" button acts on.
 
 The same block is returned inside `GET /profile` under `verification.ai`.
 
+### Where verification fires, per flow
+
+| Flow | Trigger | Blocking? |
+|---|---|---|
+| `POST /auth/register` | after response | No |
+| `POST /auth/register/complete` | after response | No |
+| `POST /auth/register/step/13` (Identity Verification) | after response | No |
+| `POST /api/signup` (legacy) | after response | No |
+| Web `POST /register` | redirect to the identity gate, which runs it synchronously | No - the account is created first |
+| `POST /verification/submit` | after response | No |
+| `POST /verification/ai/run` | synchronous | Yes, by design |
+
+Registration itself is never blocked. Step 13 stores the CNIC front, CNIC back
+and selfie, so from that point on the model performs a real identity comparison
+rather than only inspecting the profile photo - confirmed by
+`images_sent: ["cnic_image","live_selfie","profile_image"]` in
+`/verification/ai/history`.
+
+### Recommended app sequence
+
+1. Complete registration. The response carries an `ai_verification` block with
+   `status: "pending"` plus `status_url` and `retry_url`.
+2. Show a "verifying" screen and poll `GET /verification/ai/status`.
+3. `status: "approved"` -> continue into the app.
+4. Anything else -> the account is registered but unverified. Send the user on,
+   and surface a retry that calls `POST /verification/ai/run`. `can_retry` tells
+   you whether to show it.
+
+The web does exactly this: after registration the member lands on
+`/register/ai-verification`, which waits for the model, sends verified members to
+the dashboard and everyone else to login with the account intact and the
+dashboard's verification button available.
+
 ---
 
 ## Payments

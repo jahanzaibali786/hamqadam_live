@@ -148,6 +148,19 @@ Route::group(['middleware' => ['verified']], function () {
         ->name('member.ai_verification.run');
 });
 
+/*
+| Post-registration identity gate. Only needs `auth` - a brand-new member has
+| not necessarily passed the `verified` middleware yet, and the whole point of
+| this screen is to run before they reach the dashboard.
+*/
+Route::middleware('auth')->group(function () {
+    Route::get('/register/ai-verification', [\App\Http\Controllers\AiVerificationWebController::class, 'gate'])
+        ->name('register.ai_verification');
+    Route::post('/register/ai-verification/run', [\App\Http\Controllers\AiVerificationWebController::class, 'runForRegistration'])
+        ->middleware('throttle:6,1')
+        ->name('register.ai_verification.run');
+});
+
 Route::post('/registration/states/get-by-country', [StateController::class, 'get_state_by_country'])->name('registration.states.get_by_country');
 Route::post('/registration/cities/get-by-state', [CityController::class, 'get_cities_by_state'])->name('registration.cities.get_by_state');
 Route::post('/registration/castes/get-by-religion', [CasteController::class, 'get_caste_by_religion'])->name('registration.castes.get_by_religion');

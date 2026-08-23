@@ -232,20 +232,12 @@ class RegisterController extends Controller
         RegistrationReward::applyBasicPackage($user);
 
         /*
-         * AI identity verification. Fired AFTER the account exists and the
-         * user is logged in, and out of band, so a slow or offline model can
-         * never block or fail a web registration.
-         *
-         * Web registration collects no photo at all, so this first attempt
-         * usually records "no usable image" and the member dashboard then
-         * shows the "Verify my identity" button. That is the intended path -
-         * the user uploads a photo or their CNIC documents and verification
-         * runs from there.
+         * AI identity verification is NOT dispatched here any more. The member
+         * is redirected to the identity gate (registered() below), which runs
+         * the model synchronously so it can wait for the answer and route on
+         * the outcome. Dispatching here as well would call the model twice for
+         * every registration.
          */
-        RunAiVerification::dispatchAfterResponse(
-            $user->id,
-            AiVerificationAttempt::SOURCE_REGISTRATION_WEB
-        );
 
         try {
             $notify_type = 'member_registration';
@@ -316,8 +308,16 @@ class RegisterController extends Controller
         //?? where should redirect user after registration
         if ($user->email == null && $user->email_verified_at == null) {
             return redirect()->route('verification');
-        } else {
-            return redirect()->route('dashboard');
         }
+
+        /*
+         * Straight to the AI identity gate rather than the dashboard. The
+         * account is already created and the member already signed in - the
+         * gate only waits for the model and then routes: verified members go
+         * to the dashboard, everyone else is signed out and sent to login,
+         * still registered but unverified, with the dashboard's verification
+         * button waiting for them.
+         */
+        return redirect()->route('register.ai_verification');
     }
 }
