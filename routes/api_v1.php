@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Family\FamilyController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\MobileRegistrationController;
+use App\Http\Controllers\Api\V1\Interest\InterestController;
 use App\Http\Controllers\Api\V1\Verification\AiVerificationController;
 use App\Http\Controllers\Api\V1\Auth\StepRegistrationController;
 use App\Http\Controllers\Api\V1\Auth\StepwiseRegistrationController;
@@ -141,6 +142,24 @@ Route::middleware('auth:sanctum')->prefix('chat')->name('api.v1.chat.')->group(f
     Route::post('/threads/{thread}/unblock', [ChatController::class, 'unblock'])->name('unblock');
     Route::post('/threads/{thread}/report', [ChatController::class, 'report'])->middleware('throttle:10,1')->name('report');
     Route::delete('/messages/{message}', [ChatController::class, 'deleteForMe'])->name('messages.delete_for_me');
+});
+
+/*
+| Express interest ("proposals"). The v1 API had no interest endpoints at all -
+| only the website and the legacy /api routes did. These reuse InterestService
+| so coin cost, package-usage logging and notifications match the web exactly.
+|
+| Sending costs feature_coin_cost('express_interest') coins and returns 402 with
+| code `insufficient_coins` when the balance is short. Responding is free.
+*/
+Route::middleware('auth:sanctum')->prefix('interests')->name('api.v1.interests.')->group(function () {
+    Route::get('/sent', [InterestController::class, 'sent'])->name('sent');
+    Route::get('/received', [InterestController::class, 'received'])->name('received');
+    Route::get('/coin-balance', [InterestController::class, 'coinBalance'])->name('coin_balance');
+    Route::post('/', [InterestController::class, 'store'])->middleware('throttle:20,1')->name('store');
+    Route::post('/{interest}/accept', [InterestController::class, 'accept'])->whereNumber('interest')->name('accept');
+    Route::post('/{interest}/reject', [InterestController::class, 'reject'])->whereNumber('interest')->name('reject');
+    Route::delete('/{interest}', [InterestController::class, 'withdraw'])->whereNumber('interest')->name('withdraw');
 });
 
 Route::middleware('auth:sanctum')->prefix('verification')->name('api.v1.verification.')->group(function () {

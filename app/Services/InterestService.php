@@ -4,10 +4,13 @@ namespace App\Services;
 
 use App\Models\ChatThread;
 use App\Models\ExpressInterest;
+use App\Enums\ProposalStatus;
+use App\Models\PackageUsage;
 use App\Models\User;
 use App\Notifications\DbStoreNotification;
 use App\Utility\EmailUtility;
 use App\Utility\SmsUtility;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Kutia\Larafirebase\Facades\Larafirebase;
 
@@ -18,16 +21,55 @@ class InterestService
       {
             $interested_by_user = auth()->user();
             $interested_by_member = $interested_by_user->member;
-            if ($interested_by_member->remaining_interest > 0) {
-                  // Store express interest data
-                  $express_interest                 = new ExpressInterest;
-                  $express_interest->user_id        = $user_id;
-                  $express_interest->interested_by  = $interested_by_user->id;
-                  $express_interest->save();
 
-                  // Deduct interested by user's remaining express interest value
-                  $interested_by_member->remaining_interest -= 1;
-                  $interested_by_member->save();
+            // Nobody may express interest in themselves. The web controller
+            // guarded this; this service did not, so the API allowed it and
+            // charged a coin for it.
+            if ((int) $user_id === (int) $interested_by_user->id) {
+                  return false;
+            }
+
+            /*
+             * Use the configured coin cost rather than a hardcoded 1. The web
+             * flow already used feature_coin_cost(), so with an admin cost of
+             * (say) 3 the website charged 3 and the API charged 1 for the same
+             * action.
+             */
+            $coinCost = feature_coin_cost('express_interest', 1);
+
+            if ($interested_by_member->remaining_interest >= $coinCost) {
+                  /*
+                   * Row insert + coin deduction + usage log must be atomic.
+                   * They were not: when PackageUsage::record() failed (its table
+                   * was missing on one environment) the interest row and the
+                   * coin deduction had already committed, so the member was
+                   * charged for an interest the caller was told had failed.
+                   */
+                  $express_interest = DB::transaction(function () use ($user_id, $interested_by_user, $interested_by_member, $coinCost) {
+                        $express_interest                 = new ExpressInterest;
+                        $express_interest->user_id        = $user_id;
+                        $express_interest->interested_by  = $interested_by_user->id;
+                        $express_interest->save();
+
+                        // Deduct interested by user's remaining express interest value
+                        $interested_by_member->remaining_interest -= $coinCost;
+                        $interested_by_member->save();
+
+                        // Record the spend. The web flow logged this and the API
+                        // did not, so coin usage reports silently missed every
+                        // interest sent from the mobile app.
+                        PackageUsage::record(
+                              $interested_by_user->id,
+                              'interest',
+                              'Express Interest',
+                              $coinCost,
+                              ExpressInterest::class,
+                              $express_interest->id,
+                              'Used ' . $coinCost . ' coin(s) to send express interest.'
+                        );
+
+                        return $express_interest;
+                  });
 
                   $notify_user = User::where('id', $user_id)->first();
 
@@ -59,7 +101,10 @@ class InterestService
       {
             $interest = ExpressInterest::find($interest_id);
             if ($interest) {
-                  $interest->status = 1;
+                  $interest->status = ProposalStatus::Accepted;
+                  // responded_at exists on this table but was never set, so
+                  // there was no record of WHEN a proposal was answered.
+                  $interest->responded_at = now();
                   $interest->save();
 
                   // $existing_chat_thread = ChatThread::where('sender_user_id', $interest->interested_by)->where('receiver_user_id', $interest->user_id)->first();
@@ -104,7 +149,18 @@ class InterestService
       {
             $interest = ExpressInterest::find($interest_id);
             if ($interest) {
-                  ExpressInterest::destroy($interest_id);
+                  /*
+                   * Mark it rejected rather than deleting the row.
+                   *
+                   * ExpressInterest has a Rejected status and the web
+                   * interest-requests screen already offers a status filter for
+                   * it, so a hard delete made that filter permanently empty,
+                   * threw away the history, and let the sender express interest
+                   * again - paying a second time for the same rejected request.
+                   */
+                  $interest->status = ProposalStatus::Rejected;
+                  $interest->responded_at = now();
+                  $interest->save();
 
                   $notify_user = User::where('id', $interest->user_id)->first();
 

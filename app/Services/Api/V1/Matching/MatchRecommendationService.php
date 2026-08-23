@@ -111,7 +111,115 @@ class MatchRecommendationService
             ->whereDoesntHave('profile_privacy_setting', fn ($privacy) => $privacy->where('invisible_mode', true))
             ->whereNotIn('id', MatchSuggestionFeedback::where('user_id', $user->id)
                 ->whereIn('feedback', ['down', 'pass'])
-                ->pluck('suggested_user_id'));
+                ->pluck('suggested_user_id'))
+            ->tap(fn ($query) => $this->applyPartnerPreferenceFilters($query, $user));
+    }
+
+    /**
+     * Narrow the candidate pool to the partner preferences the member gave at
+     * registration (step 17 -> partner_expectations).
+     *
+     * Before this, preferences only ever affected the compatibility SCORE -
+     * the candidate pool itself ignored them completely, so a member who asked
+     * for 22-30 year olds of a given religion was still shown everybody.
+     *
+     * POLICY, and it matters on this dataset: a candidate is excluded only when
+     * their value is KNOWN and falls outside the preference. Candidates whose
+     * value is missing are kept, because a null is not a mismatch and profiles
+     * here are sparse - filtering on unknowns would collapse the pool to almost
+     * nothing. Scoring still ranks the better matches above the unknowns.
+     *
+     * Deliberately NOT filtered: `education`, `profession` and income. Those are
+     * free-text on the preference side but ids/ranges on the member side, so a
+     * SQL comparison would silently drop valid candidates. They continue to
+     * influence the score instead.
+     */
+    private function applyPartnerPreferenceFilters($query, User $user): void
+    {
+        $preference = $user->partner_expectations;
+
+        if (! $preference) {
+            return;
+        }
+
+        // --- age, derived from members.birthday ---
+        $ageMin = $preference->preferred_age_min;
+        $ageMax = $preference->preferred_age_max;
+
+        if (filled($ageMin) || filled($ageMax)) {
+            $query->whereHas('member', function ($member) use ($ageMin, $ageMax) {
+                $member->where(function ($q) use ($ageMin, $ageMax) {
+                    $q->whereNull('birthday');
+
+                    $q->orWhere(function ($inner) use ($ageMin, $ageMax) {
+                        // Older people have EARLIER birthdays, so the maximum
+                        // age becomes the earliest acceptable date. Getting this
+                        // backwards silently inverts the whole filter.
+                        if (filled($ageMax)) {
+                            $inner->where('birthday', '>=', now()->subYears((int) $ageMax + 1)->toDateString());
+                        }
+                        if (filled($ageMin)) {
+                            $inner->where('birthday', '<=', now()->subYears((int) $ageMin)->toDateString());
+                        }
+                    });
+                });
+            });
+        }
+
+        // --- marital status ---
+        if (filled($preference->marital_status_id)) {
+            $query->whereHas('member', fn ($member) => $member
+                ->where(fn ($q) => $q->whereNull('marital_status_id')
+                    ->orWhere('marital_status_id', $preference->marital_status_id)));
+        }
+
+        // --- religion / caste -> spiritual_backgrounds ---
+        foreach (['religion_id' => 'religion_id', 'caste_id' => 'caste_id'] as $prefCol => $column) {
+            if (! filled($preference->{$prefCol})) {
+                continue;
+            }
+
+            $value = $preference->{$prefCol};
+
+            $query->where(function ($outer) use ($column, $value) {
+                $outer->whereDoesntHave('spiritual_backgrounds')
+                    ->orWhereHas('spiritual_backgrounds', fn ($sb) => $sb
+                        ->where(fn ($q) => $q->whereNull($column)->orWhere($column, $value)));
+            });
+        }
+
+        /*
+         * Height is deliberately NOT filtered. The two sides of the comparison
+         * are in different units: partner_expectations.height_min/max are
+         * metres (e.g. 1.50-1.75) while physical_attributes.height is stored in
+         * feet for many rows (e.g. 5.4). Filtering on that silently excluded a
+         * candidate who matched on every other criterion - caught in testing.
+         *
+         * Until heights are stored in one unit, height only influences the
+         * compatibility score, where a wrong comparison costs ranking rather
+         * than removing somebody from the results entirely.
+         */
+
+        // --- preferred location -> addresses ---
+        $locationMap = [
+            'preferred_country_id' => 'country_id',
+            'preferred_state_id' => 'state_id',
+            'preferred_city_id' => 'city_id',
+        ];
+
+        foreach ($locationMap as $prefCol => $column) {
+            if (! filled($preference->{$prefCol})) {
+                continue;
+            }
+
+            $value = $preference->{$prefCol};
+
+            $query->where(function ($outer) use ($column, $value) {
+                $outer->whereDoesntHave('addresses')
+                    ->orWhereHas('addresses', fn ($a) => $a
+                        ->where(fn ($q) => $q->whereNull($column)->orWhere($column, $value)));
+            });
+        }
     }
 
     private function applyPhaseOneBoosts(User $user, User $candidate, array $score): array
