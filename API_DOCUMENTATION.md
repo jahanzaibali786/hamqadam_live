@@ -831,6 +831,29 @@ the dashboard's "Verify My Identity" button acts on.
 
 The same block is returned inside `GET /profile` under `verification.ai`.
 
+### Verification in the profile endpoints
+
+| Endpoint | What it carries |
+|---|---|
+| `GET /profile` | Full block: `verification.status` + `verification.ai` (status, recommendation, attempts, verified_at, last_attempt_at) |
+| `PUT /profile` | Same as above - it returns the profile resource |
+| `PATCH /profile/visibility` | Same as above |
+| `GET /profiles/{profile}` | **Badge only**: `verification.identity_verified` and `verification.verified_at` |
+| `GET /search/profiles`, `/matches`, proposal listings | Same badge on every row |
+| `PATCH /profile/privacy` | Nothing - it returns privacy settings only, by design |
+| `GET /profiles/{profile}/compatibility` | Nothing - it is a scoring endpoint |
+
+Another member's profile deliberately exposes only a boolean and a date. The
+recommendation, attempt count, fraud score and last error are the owner's
+business; a viewer has no need to know that somebody failed verification three
+times or why.
+
+`identity_verified` is true when **either** path succeeded - a moderator
+approved the documents, or the model returned APPROVE. `verified_at` is only
+populated for the AI path; the moderator path keeps its timestamp on the
+verification request, and reading it per row would add a query to every search
+result, so a moderator-verified member can read `true` with a null date.
+
 ### Where verification fires, per flow
 
 | Flow | Trigger | Blocking? |

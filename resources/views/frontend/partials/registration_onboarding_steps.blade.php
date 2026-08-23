@@ -240,7 +240,24 @@
                                         <button type="button" class="btn btn-sm btn-outline-secondary mb-1 d-none" data-selfie-retake>
                                             <i class="la la-redo"></i> {{ translate('Retake') }}
                                         </button>
+                                        {{--
+                                            Upload fallback, for a device with no
+                                            camera, a refused permission, or a
+                                            camera another app is holding. The
+                                            uploaded image goes through exactly
+                                            the same brightness / sharpness /
+                                            resolution gate as a captured frame -
+                                            otherwise this would reopen the
+                                            original problem of dark selfies
+                                            failing at the model after
+                                            registration was already done.
+                                        --}}
+                                        <button type="button" class="btn btn-sm btn-outline-primary mb-1" data-selfie-upload-open>
+                                            <i class="la la-upload"></i> {{ translate('Upload instead') }}
+                                        </button>
                                     </div>
+
+                                    <input type="file" class="d-none" data-selfie-picker accept="image/*">
 
                                     <div data-selfie-feedback class="fs-12 mt-2"></div>
                                     <canvas data-selfie-canvas class="d-none"></canvas>
@@ -306,14 +323,20 @@ function updateHobbyHiddenField() {
         denied:      @json(translate('Camera permission was refused. Allow camera access to continue.')),
         nocam:       @json(translate('No camera could be started. Check that another app is not using it.')),
         notready:    @json(translate('The camera is not ready yet. Wait a moment and try again.')),
-        lowres:      @json(translate('The camera resolution is too low for verification.')),
-        dark:        @json(translate('Too dark - move to brighter light and capture again.')),
-        bright:      @json(translate('Too bright - move out of direct light and capture again.')),
-        blurry:      @json(translate('Too blurry - hold still and capture again.')),
+        lowres:      @json(translate('The photo is too small for verification - it must be at least 480 pixels on the short side.')),
+        dark:        @json(translate('Too dark - use brighter, even light and try again.')),
+        bright:      @json(translate('Too bright - avoid direct light and try again.')),
+        blurry:      @json(translate('Too blurry - use a sharper photo and try again.')),
         readfail:    @json(translate('Could not read the frame.')),
         encodefail:  @json(translate('Could not process the photo. Please capture again.')),
         attachfail:  @json(translate('This browser cannot attach the captured photo. Please update your browser.')),
-        accepted:    @json(translate('Selfie accepted.'))
+        accepted:    @json(translate('Selfie accepted.')),
+        reading:     @json(translate('Checking the photo...')),
+        notimage:    @json(translate('That file is not an image. Choose a JPG or PNG photo.')),
+        toobig:      @json(translate('That photo is too large. Choose one under 10 MB.')),
+        loadfail:    @json(translate('Could not read that photo. Try another one.')),
+        capturedLabel: @json(translate('captured')),
+        uploadedLabel: @json(translate('uploaded'))
     };
 </script>
 <script src="{{ static_asset('assets/js/registration-selfie-camera.js') }}"></script>

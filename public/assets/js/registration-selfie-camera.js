@@ -23,6 +23,7 @@
     var MIN_SHORT_SIDE = 480;    // px, before any downscale
     var CAPTURE_MAX_SIDE = 1280; // keep the upload reasonable
     var JPEG_QUALITY = 0.92;
+    var MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
     function t(key, fallback) {
         var msgs = (window.registrationSelfieMessages || {});
@@ -43,6 +44,8 @@
         var btnStart = root.querySelector('[data-selfie-start]');
         var btnShoot = root.querySelector('[data-selfie-shoot]');
         var btnRetake = root.querySelector('[data-selfie-retake]');
+        var btnUpload = root.querySelector('[data-selfie-upload-open]');
+        var picker = root.querySelector('[data-selfie-picker]');
         var stream = null;
 
         if (!video || !canvas || !fileInput) return;
@@ -99,6 +102,111 @@
             });
         });
 
+        /**
+         * Shared tail for both paths: the frame is already on the canvas and
+         * has passed `assess`. Encode it, attach it to the submitted input and
+         * show it back to the member.
+         */
+        function acceptCanvas(verdict, sourceLabel) {
+            canvas.toBlob(function (blob) {
+                if (!blob) {
+                    say(t('encodefail', 'Could not process the photo. Please capture again.'));
+                    setAccepted(false);
+                    return;
+                }
+
+                var file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+                try {
+                    var dt = new DataTransfer();
+                    dt.items.add(file);
+                    fileInput.files = dt.files;
+                } catch (e) {
+                    say(t('attachfail', 'This browser cannot attach the captured photo. Please update your browser.'));
+                    setAccepted(false);
+                    return;
+                }
+
+                preview.src = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+                show(preview, true);
+                show(video, false);
+                show(btnShoot, false);
+                show(placeholder, false);
+                show(btnRetake, true);
+                btnStart.classList.add('d-none');
+                stop();
+                setAccepted(true);
+                say(t('accepted', 'Selfie accepted.') + ' <span class="opacity-70">(' + sourceLabel + ': ' + verdict.detail + ')</span>', 'ok');
+            }, 'image/jpeg', JPEG_QUALITY);
+        }
+
+        /*
+         * Upload fallback. Same gate as the camera: a device without a working
+         * camera should not become a way to submit an unusable selfie.
+         */
+        if (btnUpload && picker) {
+            btnUpload.addEventListener('click', function () { picker.click(); });
+
+            picker.addEventListener('change', function () {
+                var chosen = picker.files && picker.files[0];
+                if (!chosen) return;
+
+                if (!/^image\//.test(chosen.type)) {
+                    say(t('notimage', 'That file is not an image. Choose a JPG or PNG photo.'));
+                    setAccepted(false);
+                    picker.value = '';
+                    return;
+                }
+
+                if (chosen.size > MAX_UPLOAD_BYTES) {
+                    say(t('toobig', 'That photo is too large. Choose one under 10 MB.'));
+                    setAccepted(false);
+                    picker.value = '';
+                    return;
+                }
+
+                say(t('reading', 'Checking the photo...'), 'warn');
+
+                var url = URL.createObjectURL(chosen);
+                var img = new Image();
+
+                img.onload = function () {
+                    URL.revokeObjectURL(url);
+
+                    var scale = Math.min(1, CAPTURE_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+                    canvas.width = Math.round(img.naturalWidth * scale);
+                    canvas.height = Math.round(img.naturalHeight * scale);
+
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    // Resolution is judged on the ORIGINAL short side, not the
+                    // downscaled canvas, so a big photo is not penalised for
+                    // being resized here.
+                    var verdict = assess(ctx, canvas, Math.min(img.naturalWidth, img.naturalHeight));
+
+                    if (!verdict.ok) {
+                        say(verdict.message + ' <span class="opacity-70">(' + verdict.detail + ')</span>');
+                        setAccepted(false);
+                        fileInput.value = '';
+                        picker.value = '';
+                        return;
+                    }
+
+                    acceptCanvas(verdict, t('uploadedLabel', 'uploaded'));
+                    picker.value = '';
+                };
+
+                img.onerror = function () {
+                    URL.revokeObjectURL(url);
+                    say(t('loadfail', 'Could not read that photo. Try another one.'));
+                    setAccepted(false);
+                    picker.value = '';
+                };
+
+                img.src = url;
+            });
+        }
+
         btnShoot.addEventListener('click', function () {
             if (!video.videoWidth) {
                 say(t('notready', 'The camera is not ready yet. Wait a moment and try again.'));
@@ -123,34 +231,7 @@
                 return;
             }
 
-            canvas.toBlob(function (blob) {
-                if (!blob) {
-                    say(t('encodefail', 'Could not process the photo. Please capture again.'));
-                    return;
-                }
-
-                var file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
-                try {
-                    var dt = new DataTransfer();
-                    dt.items.add(file);
-                    fileInput.files = dt.files;
-                } catch (e) {
-                    // Very old browsers cannot assign FileList; fail loudly
-                    // rather than silently submitting nothing.
-                    say(t('attachfail', 'This browser cannot attach the captured photo. Please update your browser.'));
-                    setAccepted(false);
-                    return;
-                }
-
-                preview.src = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
-                show(preview, true);
-                show(video, false);
-                show(btnShoot, false);
-                show(btnRetake, true);
-                stop();
-                setAccepted(true);
-                say(t('accepted', 'Selfie accepted.') + ' <span class="opacity-70">(' + verdict.detail + ')</span>', 'ok');
-            }, 'image/jpeg', JPEG_QUALITY);
+            acceptCanvas(verdict, t('capturedLabel', 'captured'));
         });
 
         btnRetake.addEventListener('click', function () {
@@ -159,8 +240,10 @@
             show(preview, false);
             show(btnRetake, false);
             btnStart.classList.remove('d-none');
+            if (btnUpload) btnUpload.classList.remove('d-none');
             show(placeholder, true);
             feedback.innerHTML = '';
+            if (picker) picker.value = '';
         });
 
         window.addEventListener('beforeunload', stop);
@@ -174,7 +257,7 @@
         if (sourceShortSide < MIN_SHORT_SIDE) {
             return {
                 ok: false,
-                message: t('lowres', 'The camera resolution is too low for verification.'),
+                message: t('lowres', 'The photo is too small for verification - it must be at least 480 pixels on the short side.'),
                 detail: sourceShortSide + 'px'
             };
         }
@@ -208,7 +291,7 @@
         if (mean < MIN_BRIGHTNESS) {
             return {
                 ok: false,
-                message: t('dark', 'Too dark - move to brighter light and capture again.'),
+                message: t('dark', 'Too dark - use brighter, even light and try again.'),
                 detail: 'brightness ' + Math.round(mean) + '/' + MIN_BRIGHTNESS
             };
         }
@@ -216,7 +299,7 @@
         if (mean > MAX_BRIGHTNESS) {
             return {
                 ok: false,
-                message: t('bright', 'Too bright - move out of direct light and capture again.'),
+                message: t('bright', 'Too bright - avoid direct light and try again.'),
                 detail: 'brightness ' + Math.round(mean) + '/' + MAX_BRIGHTNESS
             };
         }
@@ -246,7 +329,7 @@
             if (sharpness < MIN_SHARPNESS) {
                 return {
                     ok: false,
-                    message: t('blurry', 'Too blurry - hold still and capture again.'),
+                    message: t('blurry', 'Too blurry - use a sharper photo and try again.'),
                     detail: 'sharpness ' + Math.round(sharpness) + '/' + MIN_SHARPNESS
                 };
             }
