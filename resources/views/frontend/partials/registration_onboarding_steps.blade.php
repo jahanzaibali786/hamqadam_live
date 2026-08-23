@@ -108,7 +108,7 @@
             $input(translate('Additional Photos'), 'additional_photos[]', 'file', true, ['id' => 'additional_photos', 'accept' => 'image/*', 'multiple' => 'multiple', 'data-photo-type' => 'additional'], 'col-lg-12'),
         ]],
         12 => [translate('About Yourself'), translate('Maximum 300 characters.'), [$textarea(translate('About Yourself'), 'about_me', true, ['maxlength' => '300', 'data-about-text' => '1'])]],
-        13 => [translate('Identity Verification'), translate('CNIC and selfie verification.'), [$input(translate('CNIC Number'), 'cnic_number', 'text', true, [], 'col-lg-12'), $input(translate('CNIC Front'), 'cnic_front', 'file', true, ['accept' => 'image/*'], 'col-lg-4'), $input(translate('CNIC Back'), 'cnic_back', 'file', true, ['accept' => 'image/*'], 'col-lg-4'), $input(translate('Selfie Verification'), 'selfie_verification', 'file', true, ['accept' => 'image/*'], 'col-lg-4')]],
+        13 => [translate('Identity Verification'), translate('CNIC and selfie verification.'), [$input(translate('CNIC Number'), 'cnic_number', 'text', true, [], 'col-lg-12'), $input(translate('CNIC Front'), 'cnic_front', 'file', true, ['accept' => 'image/*'], 'col-lg-4'), $input(translate('CNIC Back'), 'cnic_back', 'file', true, ['accept' => 'image/*'], 'col-lg-4'), $input(translate('Selfie Verification'), 'selfie_verification', 'selfie_camera', true, [], 'col-lg-4')]],
         14 => [translate('Interests & Hobbies'), translate('Select your interests and hobbies.'), [            ['type' => 'hobby_chips',
             'name' => 'hobbies',
             'label' => translate('Select Your Interests'),
@@ -210,6 +210,45 @@
                                         </select>
                                     </div>
                                 </div>
+                            @elseif(($field['type'] ?? 'text') === 'selfie_camera')
+                                {{--
+                                    Live-camera selfie. A file input let people
+                                    upload anything - screenshots, dark photos, a
+                                    picture of a picture - and the model then
+                                    rejected it with FACE_NOT_DETECTED after
+                                    registration was already finished. Capturing
+                                    from the camera and checking quality here
+                                    means the member fixes it while they can.
+                                --}}
+                                <div class="selfie-capture border rounded p-2" data-selfie-capture>
+                                    <div class="selfie-stage position-relative bg-light rounded overflow-hidden" style="aspect-ratio:3/4">
+                                        <video data-selfie-video class="w-100 h-100 d-none" style="object-fit:cover" playsinline muted></video>
+                                        <img data-selfie-preview class="w-100 h-100 d-none" style="object-fit:cover" alt="{{ translate('Captured selfie') }}">
+                                        <div data-selfie-placeholder class="d-flex flex-column align-items-center justify-content-center h-100 text-center p-3">
+                                            <i class="la la-camera" style="font-size:2.4rem;opacity:.45"></i>
+                                            <span class="fs-12 opacity-70 mt-2">{{ translate('Use your camera to take a live selfie') }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex flex-wrap gap-2 mt-2">
+                                        <button type="button" class="btn btn-sm btn-primary mr-2 mb-1" data-selfie-start>
+                                            <i class="la la-video"></i> {{ translate('Open camera') }}
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-success mr-2 mb-1 d-none" data-selfie-shoot>
+                                            <i class="la la-camera"></i> {{ translate('Capture') }}
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary mb-1 d-none" data-selfie-retake>
+                                            <i class="la la-redo"></i> {{ translate('Retake') }}
+                                        </button>
+                                    </div>
+
+                                    <div data-selfie-feedback class="fs-12 mt-2"></div>
+                                    <canvas data-selfie-canvas class="d-none"></canvas>
+
+                                    {{-- JS puts the captured JPEG here so the existing
+                                         multipart submit is unchanged. --}}
+                                    <input type="file" class="d-none" data-selfie-file name="{{ $field['name'] }}" accept="image/*">
+                                </div>
                             @elseif(($field['type'] ?? 'text') === 'file')
                                 <input type="file" class="form-control {{ $field['attrs']['class'] ?? '' }}" name="{{ $field['name'] }}" @if($field['required'] ?? false) required @endif @foreach(($field['attrs'] ?? []) as $attr => $value) @if(!in_array($attr, ['class'])) {{ $attr }}="{{ $value }}" @endif @endforeach>
                             @elseif(($field['name'] ?? '') !== 'email_verify')
@@ -257,5 +296,25 @@ function updateHobbyHiddenField() {
     if (hidden) hidden.value = selected.join(',');
 }
 </script>
-<script>window.registrationStepwiseConfig={csrf:'{{ csrf_token() }}',allCastes:@json($castes->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->values()),areasByCity:@json($areaOptionsByCity),institutionsByCountry:@json($institutionsByCountry),routes:{states:'{{ route('registration.states.get_by_country') }}',cities:'{{ route('registration.cities.get_by_state') }}',castes:'{{ route('registration.castes.get_by_religion') }}',subCastes:'{{ route('registration.sub_castes.get_by_caste') }}',professions:'{{ route('registration.professions.get_by_category') }}',degrees:'{{ route('registration.degrees.get_by_education_level') }}',fieldsOfStudy:'{{ route('registration.fields_of_study.get_by_degree') }}',institutions:'{{ route('registration.institutions.get_by_location') }}',sectMain:'{{ route('registration.sect_main.get_by_religion') }}',schoolOfThought:'{{ route('registration.school_of_thought.get_by_sect') }}',traditions:'{{ route('registration.traditions.get_by_school_of_thought') }}'},messages:{required:'{{ translate('Please complete the required fields before continuing.') }}',passwordMismatch:'{{ translate('Password confirmation does not match') }}',photoCount:'{{ translate('Please upload 2 to 4 additional photos.') }}',ageRange:'{{ translate('Preferred age from must be less than or equal to preferred age to.') }}',selectStateFirst:'{{ translate('Select state first') }}',selectCountryFirst:'{{ translate('Select country first') }}',loadingStates:'{{ translate('Loading states...') }}',chooseState:'{{ translate('Choose Province / State') }}',unableStates:'{{ translate('Unable to load states') }}',loadingCities:'{{ translate('Loading cities...') }}',chooseCity:'{{ translate('Choose City') }}',unableCities:'{{ translate('Unable to load cities') }}',chooseCaste:'{{ translate('Choose Caste') }}',chooseSubCaste:'{{ translate('Choose Sub Caste') }}',selectCityFirst:'{{ translate('Select city first') }}',chooseArea:'{{ translate('Choose Area') }}',selectCountryForInstitution:'{{ translate('Select country first') }}',chooseInstitution:'{{ translate('Choose College / University') }}',selectProfessionCategory:'{{ translate('Select profession category first') }}',selectEducationLevel:'{{ translate('Select education level first') }}',selectDegree:'{{ translate('Select degree first') }}',selectSectMain:'{{ translate('Select religion first') }}',selectSchoolOfThought:'{{ translate('Select sect first') }}'}};</script>
+<script>window.registrationStepwiseConfig={csrf:'{{ csrf_token() }}',allCastes:@json($castes->map(fn($c) => ['id' => $c->id, 'name' => $c->name])->values()),areasByCity:@json($areaOptionsByCity),institutionsByCountry:@json($institutionsByCountry),routes:{states:'{{ route('registration.states.get_by_country') }}',cities:'{{ route('registration.cities.get_by_state') }}',castes:'{{ route('registration.castes.get_by_religion') }}',subCastes:'{{ route('registration.sub_castes.get_by_caste') }}',professions:'{{ route('registration.professions.get_by_category') }}',degrees:'{{ route('registration.degrees.get_by_education_level') }}',fieldsOfStudy:'{{ route('registration.fields_of_study.get_by_degree') }}',institutions:'{{ route('registration.institutions.get_by_location') }}',sectMain:'{{ route('registration.sect_main.get_by_religion') }}',schoolOfThought:'{{ route('registration.school_of_thought.get_by_sect') }}',traditions:'{{ route('registration.traditions.get_by_school_of_thought') }}'},messages:{required:'{{ translate('Please complete the required fields before continuing.') }}',passwordMismatch:'{{ translate('Password confirmation does not match') }}',photoCount:'{{ translate('Please upload 2 to 4 additional photos.') }}',minAdditionalPhotos:'{{ translate('Please upload at least 2 additional photos.') }}',maxAdditionalPhotos:'{{ translate('You can upload at most 4 additional photos.') }}',selfieRequired:'{{ translate('Please capture a live selfie that passes the quality check.') }}',ageRange:'{{ translate('Preferred age from must be less than or equal to preferred age to.') }}',selectStateFirst:'{{ translate('Select state first') }}',selectCountryFirst:'{{ translate('Select country first') }}',loadingStates:'{{ translate('Loading states...') }}',chooseState:'{{ translate('Choose Province / State') }}',unableStates:'{{ translate('Unable to load states') }}',loadingCities:'{{ translate('Loading cities...') }}',chooseCity:'{{ translate('Choose City') }}',unableCities:'{{ translate('Unable to load cities') }}',chooseCaste:'{{ translate('Choose Caste') }}',chooseSubCaste:'{{ translate('Choose Sub Caste') }}',selectCityFirst:'{{ translate('Select city first') }}',chooseArea:'{{ translate('Choose Area') }}',selectCountryForInstitution:'{{ translate('Select country first') }}',chooseInstitution:'{{ translate('Choose College / University') }}',selectProfessionCategory:'{{ translate('Select profession category first') }}',selectEducationLevel:'{{ translate('Select education level first') }}',selectDegree:'{{ translate('Select degree first') }}',selectSectMain:'{{ translate('Select religion first') }}',selectSchoolOfThought:'{{ translate('Select sect first') }}'}};</script>
+<script>
+    // Translated strings for the selfie capture widget.
+    window.registrationSelfieMessages = {
+        unsupported: @json(translate('This browser cannot open the camera. Please use a modern browser on a device with a camera.')),
+        opening:     @json(translate('Opening camera...')),
+        framing:     @json(translate('Face the camera in even light, then press Capture.')),
+        denied:      @json(translate('Camera permission was refused. Allow camera access to continue.')),
+        nocam:       @json(translate('No camera could be started. Check that another app is not using it.')),
+        notready:    @json(translate('The camera is not ready yet. Wait a moment and try again.')),
+        lowres:      @json(translate('The camera resolution is too low for verification.')),
+        dark:        @json(translate('Too dark - move to brighter light and capture again.')),
+        bright:      @json(translate('Too bright - move out of direct light and capture again.')),
+        blurry:      @json(translate('Too blurry - hold still and capture again.')),
+        readfail:    @json(translate('Could not read the frame.')),
+        encodefail:  @json(translate('Could not process the photo. Please capture again.')),
+        attachfail:  @json(translate('This browser cannot attach the captured photo. Please update your browser.')),
+        accepted:    @json(translate('Selfie accepted.'))
+    };
+</script>
+<script src="{{ static_asset('assets/js/registration-selfie-camera.js') }}"></script>
 <script src="{{ static_asset('assets/js/registration-web-stepwise.js') }}"></script>
