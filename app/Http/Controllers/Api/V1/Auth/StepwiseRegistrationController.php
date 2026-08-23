@@ -15,6 +15,13 @@ use Illuminate\Http\Request;
 
 class StepwiseRegistrationController extends ApiController
 {
+    /**
+     * Registration step that collects CNIC front/back and the selfie
+     * (see StepwiseRegistrationService::definitions()). AI verification is
+     * fired here because this is where the images it needs actually arrive.
+     */
+    private const IDENTITY_VERIFICATION_STEP = 13;
+
     public function __construct(private readonly StepwiseRegistrationService $registration)
     {
     }
@@ -51,12 +58,16 @@ class StepwiseRegistrationController extends ApiController
         $user = $request->user()->fresh('member');
 
         /*
-         * Step 11 is the Photos step - it is the first point at which an image
-         * exists on the account, so it is the earliest moment AI verification
-         * can do anything useful. Fired after the response so the step never
-         * waits on the model (see RunAiVerification for why afterResponse).
+         * Step 13 is "Identity Verification" - it stores the CNIC front, CNIC
+         * back and selfie against a ProfileVerificationRequest. That is the
+         * first and only point in registration where the model has what it
+         * needs for a real identity comparison, rather than just looking at a
+         * profile photo.
+         *
+         * Fired after the response so the step never waits on the model
+         * (see RunAiVerification for why afterResponse rather than dispatch).
          */
-        if ($step === StepwiseRegistrationService::TOTAL_STEPS) {
+        if ($step === self::IDENTITY_VERIFICATION_STEP) {
             RunAiVerification::dispatchAfterResponse(
                 $user->id,
                 AiVerificationAttempt::SOURCE_REGISTRATION_API
@@ -68,7 +79,7 @@ class StepwiseRegistrationController extends ApiController
             'registration' => $registration,
         ];
 
-        if ($step === StepwiseRegistrationService::TOTAL_STEPS) {
+        if ($step === self::IDENTITY_VERIFICATION_STEP) {
             $payload['ai_verification'] = [
                 'status' => 'pending',
                 'recommendation' => null,

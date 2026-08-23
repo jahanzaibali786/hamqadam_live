@@ -57,9 +57,37 @@ class AiVerificationService
         ]);
 
         try {
+            /*
+             * When no request was handed in, look one up before falling back to
+             * the profile photo. Registration step 13 ("Identity Verification")
+             * creates a ProfileVerificationRequest and attaches the CNIC front,
+             * CNIC back and selfie, so by the end of registration those images
+             * DO exist. Using only the profile photo here threw away the very
+             * images that let the model do a real identity comparison.
+             */
+            $request ??= $this->latestVerificationRequest($user);
+
+            // Record which request we resolved to. Without this the audit row
+            // says nothing about where its images came from, which defeats the
+            // point of keeping the attempts table.
+            if ($request && $attempt->profile_verification_request_id === null) {
+                $attempt->profile_verification_request_id = $request->id;
+                $attempt->save();
+            }
+
             $images = $request
                 ? $this->imagesFromRequest($request)
                 : $this->imagesFromProfile($user);
+
+            // A request may exist but hold no usable selfie yet (documents
+            // still uploading, or a base64 decode failed). Fall back rather
+            // than skipping verification entirely.
+            if ($images === [] && $request) {
+                $request = null;
+                $attempt->profile_verification_request_id = null;
+                $attempt->save();
+                $images = $this->imagesFromProfile($user);
+            }
 
             if ($images === []) {
                 return $this->finishSkipped(
@@ -184,6 +212,21 @@ class AiVerificationService
         // The model requires a live selfie; without one there is nothing to
         // verify the other images against.
         return isset($images['live_selfie']) ? $images : [];
+    }
+
+    /**
+     * Newest verification request that still has a chance of carrying usable
+     * documents. Ordered newest-first; final (approved/rejected) requests are
+     * excluded because re-running the model against a settled decision is not
+     * what any caller wants.
+     */
+    private function latestVerificationRequest(User $user): ?ProfileVerificationRequest
+    {
+        return ProfileVerificationRequest::with(['documents', 'user'])
+            ->where('user_id', $user->id)
+            ->whereNotIn('status', ['approved', 'rejected'])
+            ->latest('id')
+            ->first();
     }
 
     private function resolveUploadPath(mixed $uploadId): ?string

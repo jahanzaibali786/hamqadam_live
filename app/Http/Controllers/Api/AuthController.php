@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Jobs\RunAiVerification;
+use App\Models\AiVerificationAttempt;
 use App\Http\Controllers\Api\Controller;
 use App\Http\Controllers\OTPVerificationController;
 use App\Http\Requests\AuthRequest;
@@ -86,6 +88,19 @@ class AuthController extends Controller
             } catch (\Exception $e) {
             }
         }
+
+        /*
+         * AI identity verification for the legacy (non-v1) signup endpoint.
+         * Older app builds still post here, and without this hook their
+         * registrations would never be verified at all.
+         *
+         * After-response as everywhere else, so a slow or offline model can
+         * never delay or fail a signup.
+         */
+        RunAiVerification::dispatchAfterResponse(
+            $user->id,
+            AiVerificationAttempt::SOURCE_REGISTRATION_API
+        );
 
         return $this->authResponse($user);
     }

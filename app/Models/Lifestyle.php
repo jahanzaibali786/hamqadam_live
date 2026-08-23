@@ -12,6 +12,9 @@ class Lifestyle extends Model
 
     protected $fillable = [
         'user_id',
+        // Registration step 9 writes `diet` here. It was absent from fillable,
+        // so every write was silently discarded.
+        'diet',
         'dietary_habits',
         'smoking_habits',
         'drinking_habits',
