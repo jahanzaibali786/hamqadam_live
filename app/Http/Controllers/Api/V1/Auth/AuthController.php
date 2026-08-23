@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Jobs\RunAiVerification;
+use App\Models\AiVerificationAttempt;
 use App\Dto\Auth\DeviceData;
 use App\Enums\Auth\OtpChannel;
 use App\Http\Controllers\Api\V1\ApiController;
@@ -41,6 +43,25 @@ class AuthController extends ApiController
         $token = $this->authService->register(
             data: $request->validated(),
             deviceData: DeviceData::fromRequest($request)
+        );
+
+        /*
+         * Kick off AI identity verification after the account exists, out of
+         * band, so registration can never fail or slow down because of it.
+         *
+         * This endpoint carries no photo, so the first attempt normally records
+         * "no usable image" and the member is prompted to upload one - either
+         * via registration step 11 (Photos), which fires verification again, or
+         * from the dashboard button.
+         *
+         * The response body is deliberately NOT changed here: AuthTokenResource
+         * is shared with login, and altering its shape would break existing app
+         * builds. Clients read verification state from
+         * GET /api/v1/verification/ai/status instead.
+         */
+        RunAiVerification::dispatchAfterResponse(
+            $token->user->id,
+            AiVerificationAttempt::SOURCE_REGISTRATION_API
         );
 
         return $this->success(new AuthTokenResource($token), 'Registered successfully.', 201);

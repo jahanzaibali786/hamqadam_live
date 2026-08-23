@@ -1,6 +1,17 @@
 @extends('frontend.layouts.app')
 
 @section('content')
+{{-- Set by the post-registration identity gate when the model did not verify
+     the member. The account exists and is usable; it is simply unverified, and
+     the dashboard carries the button to finish the check. --}}
+@if(session('ai_verification_notice'))
+    <div class="container pt-3">
+        <div class="alert alert-warning mb-0">
+            <i class="la la-info-circle"></i>
+            {{ session('ai_verification_notice') }}
+        </div>
+    </div>
+@endif
     <div class="py-4 py-lg-5">
         <div class="container">
             <div class="row">

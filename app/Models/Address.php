@@ -12,6 +12,12 @@ class Address extends Model
 
     protected $fillable = [
         'user_id',
+        // `type`, `area` and `postal_code` are real columns on this table but
+        // were missing here, so mass assignment silently dropped them -
+        // addresses saved with a null type and no area.
+        'type',
+        'area',
+        'postal_code',
         'country_id',
         'state_id',
         'city_id',

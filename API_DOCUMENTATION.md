@@ -42,6 +42,7 @@ Use this checklist for Flutter/mobile QA. These are the app-facing groups only:
 | Discovery | `/search/profiles`, `/search/saved`, `/search/history`, `/matches`, `/matches/recommended`, `/matches/daily`, `/profiles/{profile}/compatibility` |
 | Proposals | `/proposals`, `/proposals/{proposal}/accept`, `/proposals/{proposal}/reject`, `/proposals/favourites`, `/proposals/ignored` |
 | Chat | `/chat/threads`, `/chat/threads/{thread}/messages`, `/chat/threads/{thread}/typing`, `/chat/threads/{thread}/report` |
+| Interests | `/interests`, `/interests/sent`, `/interests/received`, `/interests/coin-balance`, `/interests/{interest}/accept`, `/interests/{interest}/reject` |
 | Packages & Payments | `/payments/plans`, `/payments/checkout`, `/payments/history`, `/payments/invoices/{payment}`, `/payments/coupons/validate` |
 | Notifications | `/notifications`, `/notifications/unread-count`, `/notifications/preferences`, `/notifications/push-tokens` |
 | Safety & Trust | `/verification/current`, `/verification/submit`, `/safety/report`, `/safety/block`, `/safety/mute` |
@@ -511,12 +512,49 @@ All dynamic dropdown data and hardcoded options are available from a single endp
 | Hide/show profile | PATCH | `/profile/visibility` | `hide_profile` |
 | Deactivate profile | POST | `/profile/deactivate` | None |
 
-Update sample:
+### GET /profile returns everything registration collected
+
+Registration writes its 18 steps across several tables, so the response is
+grouped by area. `user`, `member` and `privacy` keep their original shape and
+field names for backwards compatibility; the rest are additional sections:
+
+| Section | Source | Contains |
+|---|---|---|
+| `religion_and_language` | step 3 | religion, sect, school of thought, tradition, languages, prayer frequency |
+| `caste` | step 6 | caste, sub-caste, biradari, ethnicity, family/personal/community values |
+| `location` | step 4 | country, state, city, `area`, address type, relocation, visa status |
+| `education` | step 8 | level, degree, field of study, institution, graduation year, status |
+| `career` | step 10 | profession, job title, organization, years of experience, income, employment status |
+| `physical` | step 9 | height, weight, body type, complexion, blood group, eye/hair colour, `diet` |
+| `lifestyle_and_interests` | step 14 | hobbies, interests, life values, love language, personality, communication |
+| `family` | steps 15-16 | parents' names and occupations, siblings, family type/values/location |
+| `marriage_expectations` | step 17 | looking for, timeline, children preference, expectations |
+| `photos` | step 11 | profile photo, cover photo, gallery URLs |
+| `verification` | step 13 | CNIC verification status plus the AI check under `verification.ai` |
+| `registration` | — | completion percentage and completed steps |
+
+List-shaped fields (`hobbies`, `known_languages`, `life_values`, …) always come
+back as arrays even where the column holds a comma-separated string.
+
+### PUT /profile
+
+Accepts every field above, not just the original eighteen. Each one is written
+to the same table registration writes to, so the two paths cannot disagree.
+Only keys present in the request are touched, so a partial update never blanks
+a field you did not send.
 
 ```json
 {
-  "introduction": "Family-oriented software engineer.",
-  "future_goals": "Build a peaceful family life."
+  "religion_id": 1,
+  "country_id": 167,
+  "area": "Gulberg III",
+  "education_level_id": 4,
+  "height": "5.8",
+  "diet": "halal",
+  "job_title": "Backend Engineer",
+  "hobbies": ["reading", "cricket"],
+  "father_occupation": "Teacher",
+  "siblings_brothers": 2
 }
 ```
 
@@ -537,6 +575,27 @@ Update sample:
   "deal_breakers": ["smoking"]
 }
 ```
+
+### Preferences now filter the candidate pool
+
+Preferences used to affect only the compatibility *score* - the match query
+itself ignored them, so a member asking for 22-30 year olds of a given religion
+was still shown everybody. `/matches` and `/matches/recommended` now filter on:
+
+- age range (`preferred_age_min` / `preferred_age_max`, derived from birthday)
+- `marital_status_id`
+- `religion_id` and `caste_id`
+- preferred country / state / city
+
+A candidate is excluded only when their value is **known** and outside the
+preference. Candidates missing that field are kept, because a null is not a
+mismatch and profiles are sparse - filtering on unknowns would empty the
+results. Scoring still ranks better matches above the unknowns.
+
+Height, education, profession and income are deliberately **not** hard filters.
+Height is stored in metres on the preference side and feet on the member side,
+and the others are free text against ids/ranges - comparing them in SQL silently
+dropped valid candidates. They influence the score instead.
 
 ## Search And Matching
 
@@ -682,6 +741,130 @@ cnic_front: file
 cnic_back: file
 selfie: file
 ```
+
+## Interests (Express Interest)
+
+Express-interest proposals. Sending costs coins from the member's
+`remaining_interest` balance; responding is free. These endpoints share
+`InterestService` with the website, so coin cost, package-usage logging and
+notifications are identical across web and app.
+
+| Action | Method | Endpoint | Payload |
+|---|---|---|---|
+| Sent interests | GET | `/interests/sent` | `status` (optional), `per_page` |
+| Received interests | GET | `/interests/received` | `status` (optional), `per_page` |
+| Coin balance | GET | `/interests/coin-balance` | None |
+| Send interest | POST | `/interests` | `user_id`, `initial_note` (optional) |
+| Accept | POST | `/interests/{interest}/accept` | None |
+| Reject | POST | `/interests/{interest}/reject` | None |
+| Withdraw | DELETE | `/interests/{interest}` | None |
+
+`status` accepts `pending`, `accepted`, `rejected`, `withdrawn`, `cancelled`,
+`expired`.
+
+### Coins
+
+The cost per interest comes from `feature_coin_cost('express_interest')` and is
+returned by every endpoint as `coin_balance`:
+
+```json
+{ "remaining_interest": 8, "cost_per_interest": 2, "can_send": true }
+```
+
+`POST /interests` deducts the cost, writes a `package_usages` row, and returns
+`coins_spent`. The insert, the deduction and the usage log run in one
+transaction, so a failure cannot leave a member charged for an interest that was
+not created.
+
+### Error codes
+
+| HTTP | code | Meaning |
+|---|---|---|
+| 402 | `insufficient_coins` | Balance below the cost. Send the user to packages. |
+| 409 | `interest_exists` | An interest is already pending or accepted either way. |
+| 422 | `self_interest` | Cannot express interest in yourself. |
+| 422 | `already_answered` | Interest is no longer pending. |
+| 404 | `member_unavailable` | Recipient is blocked, deactivated or not approved. |
+
+Accepting creates the chat thread, so `/chat/threads` becomes available for that
+pair immediately.
+
+Rejecting sets status `rejected` and keeps the row (it used to hard-delete it,
+which emptied the "rejected" filter and let the sender pay again for the same
+request). Withdrawing does **not** refund coins - the recipient was already
+notified.
+
+---
+
+## AI Identity Verification
+
+Runs the CNIC/selfie images through the AI service at
+`ai-modals.hamqadam.com`. Fired automatically after registration (out of band,
+so it never delays or fails a signup) and available on demand here.
+
+| Action | Method | Endpoint | Payload |
+|---|---|---|---|
+| Current AI status | GET | `/verification/ai/status` | None |
+| Attempt history | GET | `/verification/ai/history` | None |
+| Run verification now | POST | `/verification/ai/run` | None (throttle 3/min) |
+
+`POST /verification/ai/run` takes **no uploads**. It rebuilds the model payload
+from the database, preferring the newest non-final verification request (CNIC +
+selfie from registration step 13) and falling back to the profile photo.
+
+```json
+{
+  "status": "manual_review",
+  "recommendation": "MANUAL_REVIEW",
+  "attempts": 2,
+  "verified_at": null,
+  "can_retry": true,
+  "message": "Your verification needs a manual review.",
+  "last_error": null
+}
+```
+
+`status` is one of `not_started`, `pending`, `approved`, `rejected`,
+`manual_review`, `failed`. The model returns a *recommendation*; the backend owns
+the decision. A `not_started` or `failed` status with `can_retry: true` is what
+the dashboard's "Verify My Identity" button acts on.
+
+The same block is returned inside `GET /profile` under `verification.ai`.
+
+### Where verification fires, per flow
+
+| Flow | Trigger | Blocking? |
+|---|---|---|
+| `POST /auth/register` | after response | No |
+| `POST /auth/register/complete` | after response | No |
+| `POST /auth/register/step/13` (Identity Verification) | after response | No |
+| `POST /api/signup` (legacy) | after response | No |
+| Web `POST /register` | redirect to the identity gate, which runs it synchronously | No - the account is created first |
+| `POST /verification/submit` | after response | No |
+| `POST /verification/ai/run` | synchronous | Yes, by design |
+
+Registration itself is never blocked. Step 13 stores the CNIC front, CNIC back
+and selfie, so from that point on the model performs a real identity comparison
+rather than only inspecting the profile photo - confirmed by
+`images_sent: ["cnic_image","live_selfie","profile_image"]` in
+`/verification/ai/history`.
+
+### Recommended app sequence
+
+1. Complete registration. The response carries an `ai_verification` block with
+   `status: "pending"` plus `status_url` and `retry_url`.
+2. Show a "verifying" screen and poll `GET /verification/ai/status`.
+3. `status: "approved"` -> continue into the app.
+4. Anything else -> the account is registered but unverified. Send the user on,
+   and surface a retry that calls `POST /verification/ai/run`. `can_retry` tells
+   you whether to show it.
+
+The web does exactly this: after registration the member lands on
+`/register/ai-verification`, which waits for the model, sends verified members to
+the dashboard and everyone else to login with the account intact and the
+dashboard's verification button available.
+
+---
 
 ## Payments
 

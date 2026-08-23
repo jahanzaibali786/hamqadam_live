@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\V1\Family\FamilyController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\MobileRegistrationController;
+use App\Http\Controllers\Api\V1\Interest\InterestController;
+use App\Http\Controllers\Api\V1\Verification\AiVerificationController;
 use App\Http\Controllers\Api\V1\Auth\StepRegistrationController;
 use App\Http\Controllers\Api\V1\Auth\StepwiseRegistrationController;
 use App\Http\Controllers\Api\V1\Matching\MatchController;
@@ -142,10 +144,42 @@ Route::middleware('auth:sanctum')->prefix('chat')->name('api.v1.chat.')->group(f
     Route::delete('/messages/{message}', [ChatController::class, 'deleteForMe'])->name('messages.delete_for_me');
 });
 
+/*
+| Express interest ("proposals"). The v1 API had no interest endpoints at all -
+| only the website and the legacy /api routes did. These reuse InterestService
+| so coin cost, package-usage logging and notifications match the web exactly.
+|
+| Sending costs feature_coin_cost('express_interest') coins and returns 402 with
+| code `insufficient_coins` when the balance is short. Responding is free.
+*/
+Route::middleware('auth:sanctum')->prefix('interests')->name('api.v1.interests.')->group(function () {
+    Route::get('/sent', [InterestController::class, 'sent'])->name('sent');
+    Route::get('/received', [InterestController::class, 'received'])->name('received');
+    Route::get('/coin-balance', [InterestController::class, 'coinBalance'])->name('coin_balance');
+    Route::post('/', [InterestController::class, 'store'])->middleware('throttle:20,1')->name('store');
+    Route::post('/{interest}/accept', [InterestController::class, 'accept'])->whereNumber('interest')->name('accept');
+    Route::post('/{interest}/reject', [InterestController::class, 'reject'])->whereNumber('interest')->name('reject');
+    Route::delete('/{interest}', [InterestController::class, 'withdraw'])->whereNumber('interest')->name('withdraw');
+});
+
 Route::middleware('auth:sanctum')->prefix('verification')->name('api.v1.verification.')->group(function () {
     Route::get('/current', [VerificationController::class, 'current'])->name('current');
     Route::get('/history', [VerificationController::class, 'history'])->name('history');
     Route::post('/submit', [VerificationController::class, 'submit'])->middleware('throttle:5,1')->name('submit');
+
+    /*
+     * AI identity verification. Separate from /submit on purpose: these take no
+     * uploads and rebuild the model payload from the database, for when
+     * registration succeeded but verification did not complete.
+     *
+     * `run` is synchronous and calls a CPU-bound model, so it is throttled
+     * harder than the read endpoints.
+     */
+    Route::prefix('ai')->name('ai.')->group(function () {
+        Route::get('/status', [AiVerificationController::class, 'status'])->name('status');
+        Route::get('/history', [AiVerificationController::class, 'history'])->name('history');
+        Route::post('/run', [AiVerificationController::class, 'run'])->middleware('throttle:3,1')->name('run');
+    });
 });
 
 Route::middleware('auth:sanctum')->prefix('admin/verifications')->name('api.v1.admin.verifications.')->group(function () {

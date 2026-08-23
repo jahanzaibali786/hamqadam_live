@@ -49,6 +49,12 @@ class Member extends Model
         'private_gallery' => 'array',
         'willing_to_work_after_marriage' => 'boolean',
         'expects_spouse_to_work' => 'boolean',
+        // AI identity verification. The datetime casts matter: the member
+        // dashboard calls ->diffForHumans() on ai_verification_last_attempt_at,
+        // which is a fatal error on a raw string.
+        'ai_verification_attempts' => 'integer',
+        'ai_verification_last_attempt_at' => 'datetime',
+        'ai_verified_at' => 'datetime',
     ];
 
     public function user()

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Jobs\RunAiVerification;
+use App\Models\AiVerificationAttempt;
 use Notification;
 use App\Models\User;
 use App\Models\Member;
@@ -229,6 +231,14 @@ class RegisterController extends Controller
         // Apply default package registration reward
         RegistrationReward::applyBasicPackage($user);
 
+        /*
+         * AI identity verification is NOT dispatched here any more. The member
+         * is redirected to the identity gate (registered() below), which runs
+         * the model synchronously so it can wait for the answer and route on
+         * the outcome. Dispatching here as well would call the model twice for
+         * every registration.
+         */
+
         try {
             $notify_type = 'member_registration';
             $id = unique_notify_id();
@@ -298,8 +308,16 @@ class RegisterController extends Controller
         //?? where should redirect user after registration
         if ($user->email == null && $user->email_verified_at == null) {
             return redirect()->route('verification');
-        } else {
-            return redirect()->route('dashboard');
         }
+
+        /*
+         * Straight to the AI identity gate rather than the dashboard. The
+         * account is already created and the member already signed in - the
+         * gate only waits for the model and then routes: verified members go
+         * to the dashboard, everyone else is signed out and sent to login,
+         * still registered but unverified, with the dashboard's verification
+         * button waiting for them.
+         */
+        return redirect()->route('register.ai_verification');
     }
 }

@@ -21,6 +21,62 @@
         <a href="{{ route('member.v1_dashboard') }}" class="btn btn-sm btn-primary mt-2 mt-md-0">{{ translate('Open AI Dashboard') }}</a>
     </div>
 
+    {{-- ------------------------------------------------------------------ --}}
+    {{-- AI identity verification status.                                    --}}
+    {{-- Shown only while the member is not AI-verified. Registration never  --}}
+    {{-- blocks on the model, so this is the recovery path: model was down,   --}}
+    {{-- no usable photo on file, or the result came back MANUAL_REVIEW.      --}}
+    {{-- ------------------------------------------------------------------ --}}
+    @php
+        $aiStatus = $user->member?->ai_verification_status ?? 'not_started';
+        $aiRecommendation = $user->member?->ai_verification_recommendation;
+        $aiAttempts = (int) ($user->member?->ai_verification_attempts ?? 0);
+        $aiVerified = $aiStatus === 'approved';
+        $aiMeta = match ($aiStatus) {
+            'approved'      => ['alert-success', 'la-check-circle',        translate('Your identity is verified by our AI check.')],
+            'rejected'      => ['alert-danger',  'la-times-circle',        translate('The automated identity check did not pass. Our team will review your documents.')],
+            'manual_review' => ['alert-warning', 'la-user-check',          translate('Your verification needs a manual review. Adding your CNIC and a selfie speeds this up.')],
+            'failed'        => ['alert-warning', 'la-exclamation-triangle',translate('The verification service could not be reached. Please try again.')],
+            'pending'       => ['alert-info',    'la-spinner',             translate('Identity verification is running in the background.')],
+            default         => ['alert-secondary','la-id-card',            translate('Your identity is not verified yet.')],
+        };
+    @endphp
+
+    @if(!$aiVerified)
+        <div class="alert {{ $aiMeta[0] }} d-flex flex-wrap align-items-center justify-content-between">
+            <div class="mr-3">
+                <strong>
+                    <i class="la {{ $aiMeta[1] }}"></i>
+                    {{ translate('AI Identity Verification') }}
+                </strong>
+                <span class="d-block fs-13">{{ $aiMeta[2] }}</span>
+                @if($aiAttempts > 0)
+                    <span class="d-block fs-12 opacity-70">
+                        {{ translate('Attempts') }}: {{ $aiAttempts }}
+                        @if($aiRecommendation) &middot; {{ translate('Last result') }}: {{ $aiRecommendation }} @endif
+                        @if($user->member?->ai_verification_last_attempt_at)
+                            &middot; {{ $user->member->ai_verification_last_attempt_at->diffForHumans() }}
+                        @endif
+                    </span>
+                @endif
+            </div>
+            <div class="mt-2 mt-md-0 d-flex align-items-center">
+                @if($aiStatus === 'not_started' || $aiStatus === 'manual_review')
+                    <a href="{{ route('member.verification') }}" class="btn btn-sm btn-outline-primary mr-2">
+                        {{ translate('Upload CNIC & Selfie') }}
+                    </a>
+                @endif
+                <form action="{{ route('member.ai_verification.run') }}" method="POST" class="d-inline">
+                    @csrf
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="la la-shield"></i>
+                        {{ $aiAttempts > 0 ? translate('Retry Verification') : translate('Verify My Identity') }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    @endif
+
     <div class="row gutters-5 mb-4">
         <div class="col-md-4 mb-3">
             <div class="bg-white border rounded p-3 h-100">
