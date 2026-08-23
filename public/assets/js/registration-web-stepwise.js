@@ -1,4 +1,10 @@
 (function () {
+    // Mirror of the server rule in RegistrationOnboarding::rules():
+    // 'additional_photos' => [array, min:2, max:4]. Keep these in step with it,
+    // otherwise the member only learns about the limit after submitting all 18
+    // steps.
+    var MIN_ADDITIONAL_PHOTOS = 2;
+    var MAX_ADDITIONAL_PHOTOS = 4;
     'use strict';
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -612,6 +618,9 @@
                 if (field.disabled || !field.required || field.type === 'hidden') continue;
 
                 if (field.type === 'file') {
+                    // The selfie is a camera capture, not a picked file; it has
+                    // its own check below that also covers image quality.
+                    if (field.hasAttribute('data-selfie-file')) continue;
                     if (!field.files || field.files.length === 0) {
                         field.classList.add('is-invalid');
                         field.focus();
@@ -631,16 +640,6 @@
                 field.classList.remove('is-invalid');
             }
 
-            if (current === 11) {
-                var profilePhoto = form.querySelector('[name="profile_photo"]');
-                if (profilePhoto && profilePhoto.files && profilePhoto.files.length === 0) {
-                    profilePhoto.classList.add('is-invalid');
-                    profilePhoto.focus();
-                    notify(config.messages.required);
-                    return false;
-                }
-            }
-
             if (current === 17) {
                 var minAge = Number(form.querySelector('[name="partner_age_min"]').value || 0);
                 var maxAge = Number(form.querySelector('[name="partner_age_max"]').value || 0);
@@ -657,26 +656,59 @@
                 }
             }
 
+            // Step 11 - Photos. Both checks below were previously commented out
+            // "for testing" and never restored, so the step could be skipped
+            // empty and the server then rejected the whole 18-step submission
+            // with "additional photos must have at least 2 items" - after the
+            // member had filled in everything.
             if (current === 11) {
                 var profilePhoto = form.querySelector('[name="profile_photo"]');
-                // Make profile photo optional for testing
-                /*if (profilePhoto && profilePhoto.files && profilePhoto.files.length === 0) {
+                if (profilePhoto && (!profilePhoto.files || profilePhoto.files.length === 0)) {
                     profilePhoto.classList.add('is-invalid');
                     profilePhoto.focus();
                     notify(config.messages.required);
                     return false;
-                }*/
-                
+                }
+                profilePhoto.classList.remove('is-invalid');
+
                 var additionalPhotos = form.querySelector('[name="additional_photos[]"]');
-                console.log('Validating additional photos - element:', !!additionalPhotos, 'files:', additionalPhotos ? additionalPhotos.files : 'no files');
-                // Make additional photos optional for testing
-                /*if (additionalPhotos && additionalPhotos.files && additionalPhotos.files.length < 2) {
-                    console.log('Additional photos validation failed - only', additionalPhotos.files.length, 'files uploaded');
+                var extraCount = additionalPhotos && additionalPhotos.files ? additionalPhotos.files.length : 0;
+                if (extraCount < MIN_ADDITIONAL_PHOTOS) {
                     additionalPhotos.classList.add('is-invalid');
                     additionalPhotos.focus();
-                    notify('Please upload at least 2 additional photos.');
+                    notify(
+                        (config.messages.minAdditionalPhotos || 'Please upload at least 2 additional photos.')
+                        + ' (' + extraCount + '/' + MIN_ADDITIONAL_PHOTOS + ')'
+                    );
                     return false;
-                }*/
+                }
+                if (extraCount > MAX_ADDITIONAL_PHOTOS) {
+                    additionalPhotos.classList.add('is-invalid');
+                    additionalPhotos.focus();
+                    notify(
+                        (config.messages.maxAdditionalPhotos || 'You can upload at most 4 additional photos.')
+                        + ' (' + extraCount + '/' + MAX_ADDITIONAL_PHOTOS + ')'
+                    );
+                    return false;
+                }
+                additionalPhotos.classList.remove('is-invalid');
+            }
+
+            // Step 13 - Identity Verification. The selfie must have been
+            // captured from the camera AND passed the local quality check, so a
+            // dark or blurry frame is fixed here rather than coming back as
+            // FACE_NOT_DETECTED once registration is already complete.
+            if (current === 13) {
+                var selfieWidget = step.querySelector('[data-selfie-capture]');
+                if (selfieWidget) {
+                    var selfieFile = selfieWidget.querySelector('[data-selfie-file]');
+                    var captured = selfieFile && selfieFile.files && selfieFile.files.length > 0;
+                    if (!captured || selfieWidget.dataset.selfieAccepted !== '1') {
+                        selfieWidget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        notify(config.messages.selfieRequired || 'Please capture a live selfie that passes the quality check.');
+                        return false;
+                    }
+                }
             }
 
             if (current === 18) {
