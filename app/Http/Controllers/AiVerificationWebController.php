@@ -13,48 +13,36 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
-/**
- * Member-facing AI verification trigger for the web dashboard.
- *
- * Mirrors Api\V1\Verification\AiVerificationController but returns a redirect
- * with a flash message instead of JSON. Runs synchronously - the member clicked
- * a button and is waiting for an answer.
- */
 class AiVerificationWebController extends Controller
 {
     public function __construct(private readonly AiVerificationService $verification)
     {
     }
 
-    /**
-     * The screen shown immediately after web registration.
-     *
-     * The account already exists and the member is already signed in - nothing
-     * here can undo that. This only decides where they go next.
-     */
     public function gate(Request $request): View|RedirectResponse
     {
-        // Already verified? Nothing to wait for.
         if (($request->user()->member?->ai_verification_status) === 'approved') {
             return redirect()->route('dashboard');
         }
 
-        return view('frontend.verification.ai_gate');
+        $attempts = AiVerificationAttempt::where('user_id', $request->user()->id)
+            ->latest('id')
+            ->limit(5)
+            ->get();
+
+        return view('frontend.verification.ai_gate', [
+            'verificationStatus' => $this->verification->statusFor($request->user()->load('member')),
+            'recentAttempts' => $attempts,
+        ]);
     }
 
-    /**
-     * Called by the gate screen over AJAX. Runs the model and tells the page
-     * where to send the member.
-     *
-     * APPROVE -> dashboard. Anything else -> signed out and sent to login: the
-     * account stays registered but unverified, and the dashboard's verification
-     * button is there once they log back in.
-     */
     public function runForRegistration(Request $request): JsonResponse
     {
         $user = $request->user()->load('member');
+        $before = AiVerificationAttempt::where('user_id', $user->id)->latest('id')->first();
         $result = $this->verifyNow($user);
         $verified = $result['status'] === 'approved';
+        $latestAttempt = AiVerificationAttempt::where('user_id', $user->id)->latest('id')->first();
 
         if ($verified) {
             return response()->json([
@@ -65,15 +53,12 @@ class AiVerificationWebController extends Controller
                 'message' => translate('Your identity has been verified. Taking you to your dashboard.'),
                 'cta' => translate('Go to dashboard'),
                 'redirect' => route('dashboard'),
+                'attempt_before' => $before?->id,
+                'attempt_after' => $latestAttempt?->id,
+                'logs' => $this->attemptLogs($latestAttempt),
             ]);
         }
 
-        /*
-         * Not verified. Sign them out and send them to login, as required.
-         * The flash survives the logout because it is queued on the session
-         * before invalidation is skipped - we deliberately do NOT invalidate
-         * the session id here, only the auth state, so the message shows.
-         */
         $message = $result['status'] === 'failed'
             ? translate('We could not reach the verification service. Your account is created - please log in and finish verification from your dashboard.')
             : translate('Your account is created but not yet verified. Please log in and complete verification from your dashboard.');
@@ -88,9 +73,10 @@ class AiVerificationWebController extends Controller
             'title' => translate('Verification not completed'),
             'message' => $message,
             'cta' => translate('Go to login'),
-            // The frontend login lives at /users/login (route name `user.login`);
-            // `login` is the framework default and not what this app serves.
             'redirect' => route('user.login'),
+            'attempt_before' => $before?->id,
+            'attempt_after' => $latestAttempt?->id,
+            'logs' => $this->attemptLogs($latestAttempt),
         ]);
     }
 
@@ -103,12 +89,6 @@ class AiVerificationWebController extends Controller
         return back();
     }
 
-    /**
-     * Run the model against whatever the database already holds. Prefers the
-     * newest open verification request, which carries the CNIC and selfie from
-     * registration step 13, so the model can do a real identity comparison
-     * rather than just looking at the profile photo.
-     */
     private function verifyNow($user): array
     {
         $pending = ProfileVerificationRequest::with(['documents', 'user'])
@@ -132,5 +112,41 @@ class AiVerificationWebController extends Controller
             'failed' => 'error',
             default => 'warning',
         };
+    }
+
+    private function attemptLogs(?AiVerificationAttempt $attempt): array
+    {
+        if (! $attempt) {
+            return [
+                ['level' => 'info', 'message' => 'Verification request not yet created.'],
+            ];
+        }
+
+        $logs = [
+            ['level' => 'info', 'message' => 'AI verification request created.'],
+            ['level' => $attempt->status === AiVerificationAttempt::STATUS_COMPLETED ? 'success' : ($attempt->status === AiVerificationAttempt::STATUS_FAILED ? 'danger' : 'warning'), 'message' => 'Current attempt status: '.$attempt->status.'.'],
+        ];
+
+        if ($attempt->http_status) {
+            $logs[] = ['level' => 'info', 'message' => 'HTTP status: '.$attempt->http_status.'.'];
+        }
+
+        if ($attempt->recommendation) {
+            $logs[] = ['level' => 'success', 'message' => 'Model recommendation: '.$attempt->recommendation.'.'];
+        }
+
+        if ($attempt->identity_confidence_score !== null) {
+            $logs[] = ['level' => 'info', 'message' => 'Identity confidence score: '.$attempt->identity_confidence_score.'.'];
+        }
+
+        if ($attempt->fraud_risk_level) {
+            $logs[] = ['level' => 'warning', 'message' => 'Fraud risk level: '.$attempt->fraud_risk_level.'.'];
+        }
+
+        if ($attempt->error_message) {
+            $logs[] = ['level' => 'danger', 'message' => $attempt->error_message];
+        }
+
+        return $logs;
     }
 }

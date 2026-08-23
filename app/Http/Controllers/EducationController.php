@@ -15,41 +15,29 @@ class EducationController extends Controller
     public function __construct()
     {
         $this->rules = [
-            'degree'          => [ 'required','max:255'],
-            'institution'     => [ 'required','max:255'],
-            'education_start' => [ 'required','numeric'],
-            'education_end'   => [ 'numeric', 'nullable'],
+            'education_level_id' => ['required', 'integer', 'exists:education_levels,id'],
+            'degree_id' => ['required', 'integer', 'exists:degrees,id'],
+            'institution_id' => ['required', 'integer', 'exists:institutions,id'],
+            'education_start' => ['required', 'numeric'],
+            'education_end' => ['nullable', 'numeric'],
         ];
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
         //
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-
     public function create(Request $request)
     {
         $member_id = $request->id;
-        return view('frontend.member.profile.education.create', compact('member_id'));
+        $education_levels = EducationLevel::where('is_active', true)->orderBy('sort_order')->get();
+        $degrees = Degree::where('is_active', true)->orderBy('sort_order')->get();
+        $institutions = Institution::where('is_active', true)->orderBy('sort_order')->get();
+
+        return view('frontend.member.profile.education.create', compact('member_id', 'education_levels', 'degrees', 'institutions'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         $rules = $this->rules;
@@ -57,56 +45,43 @@ class EducationController extends Controller
 
         if ($validator->fails()) {
             flash(translate('Something went wrong'))->error();
-            return Redirect::back();
+            return Redirect::back()->withErrors($validator);
         }
 
-        $education              = new Education;
-        $education->user_id     = $request->user_id;
-        $education->degree      = $request->degree;
-        $education->institution = $request->institution;
-        $education->start       = $request->education_start;
-        $education->end         = $request->education_end;
+        $education = new Education;
+        $education->user_id = $request->user_id;
+        $education->education_level_id = $request->education_level_id;
+        $education->degree_id = $request->degree_id;
+        $education->institution_id = $request->institution_id;
+        $education->degree = optional(Degree::find($request->degree_id))->name;
+        $education->institution = optional(Institution::find($request->institution_id))->name;
+        $education->start = $request->education_start;
+        $education->end = $request->education_end;
 
         if($education->save()){
             flash(translate('Education Info has been added successfully'))->success();
             return back();
         }
-        else {
-            flash(translate('Sorry! Something went wrong.'))->error();
-            return back();
-        }
+
+        flash(translate('Sorry! Something went wrong.'))->error();
+        return back();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+    public function edit(Request $request)
+    {
+        $education = Education::findOrFail($request->id);
+        $education_levels = EducationLevel::where('is_active', true)->orderBy('sort_order')->get();
+        $degrees = Degree::where('is_active', true)->orderBy('sort_order')->get();
+        $institutions = Institution::where('is_active', true)->orderBy('sort_order')->get();
 
-     public function edit(Request $request)
-     {
-         $education = Education::findOrFail($request->id);
-         return view('frontend.member.profile.education.edit', compact('education'));
-     }
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+        return view('frontend.member.profile.education.edit', compact('education', 'education_levels', 'degrees', 'institutions'));
+    }
+
     public function update(Request $request, $id)
     {
         $rules = $this->rules;
@@ -114,23 +89,25 @@ class EducationController extends Controller
 
         if ($validator->fails()) {
             flash(translate('Something went wrong'))->error();
-            return Redirect::back();
+            return Redirect::back()->withErrors($validator);
         }
 
-        $education              = Education::findOrFail($id);
-        $education->degree      = $request->degree;
-        $education->institution = $request->institution;
-        $education->start       = $request->education_start;
-        $education->end         = $request->education_end;
+        $education = Education::findOrFail($id);
+        $education->education_level_id = $request->education_level_id;
+        $education->degree_id = $request->degree_id;
+        $education->institution_id = $request->institution_id;
+        $education->degree = optional(Degree::find($request->degree_id))->name;
+        $education->institution = optional(Institution::find($request->institution_id))->name;
+        $education->start = $request->education_start;
+        $education->end = $request->education_end;
 
         if($education->save()){
             flash(translate('Education Info has been updated successfully'))->success();
             return back();
         }
-        else {
-            flash(translate('Sorry! Something went wrong.'))->error();
-            return back();
-        }
+
+        flash(translate('Sorry! Something went wrong.'))->error();
+        return back();
     }
 
     public function update_education_present_status(Request $request)
@@ -149,8 +126,6 @@ class EducationController extends Controller
         $education = Education::findOrFail($request->id);
         $education->is_highest_degree = $request->status;
         if ($education->save()) {
-
-            // Only one degree can be highest
             if(Education::where('is_highest_degree', 1)->count() > 1){
                 Education::where('id','!=', $education->id)->update(['is_highest_degree' => 0]);
             }
@@ -159,12 +134,6 @@ class EducationController extends Controller
         return 0;
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         if(Education::destroy($id))
