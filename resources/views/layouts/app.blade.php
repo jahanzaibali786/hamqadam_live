@@ -10,7 +10,9 @@
     <title>@yield('meta_title', get_setting('website_name').' | '.get_setting('site_motto'))</title>
 
     <!-- Scripts -->
-    <script src="{{ asset('js/app.js') }}" defer></script>
+    @if (file_exists(public_path('js/app.js')))
+        <script src="{{ asset('js/app.js') }}" defer></script>
+    @endif
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">

@@ -61,10 +61,12 @@
                 @endif
             </div>
             <div class="mt-2 mt-md-0 d-flex align-items-center">
-                @if($aiStatus === 'not_started' || $aiStatus === 'manual_review')
+                @if(in_array($aiStatus, ['not_started', 'manual_review']))
                     <a href="{{ route('member.verification') }}" class="btn btn-sm btn-outline-primary mr-2">
                         {{ translate('Upload CNIC & Selfie') }}
                     </a>
+                @else
+                    <span class="badge badge-inline badge-warning mr-2">{{ translate('Verification in progress') }}</span>
                 @endif
                 <form action="{{ route('member.ai_verification.run') }}" method="POST" class="d-inline">
                     @csrf
@@ -254,7 +256,13 @@
         <div class="col-md-6">
             @if(get_setting('member_verification'))
                 <div class="card mb-0 p-5 h-15 d-flex align-items-center justify-content-center mb-2">
-                    @if ($user->approved == 0)
+                    @if (in_array($user->member?->ai_verification_status ?? 'not_started', ['pending', 'submitted', 'under_review', 'processing']))
+                        <div class="my-n4 py-1 text-center">
+                            <img src="{{ static_asset('assets/img/non_verified.png') }}" alt=""
+                                class="w-xxl-130px w-90px d-block">
+                            <span class="badge badge-inline badge-warning">{{ translate('Verification in progress') }}</span>
+                        </div>
+                    @elseif ($user->approved == 0)
                         <div class="my-n4 py-1 text-center">
                             <img src="{{ static_asset('assets/img/non_verified.png') }}" alt=""
                                 class="w-xxl-130px w-90px d-block">
