@@ -36,6 +36,8 @@ class ProfileSearchService
             ->whereNotIn('id', HiddenProfileUser::where('hidden_from_user_id', $viewer->id)->pluck('user_id'));
 
         $this->excludeIgnored($query, $viewer);
+        $this->applyDefaultGenderScope($query, $viewer);
+        $this->applyPartnerPreferenceScope($query, $viewer);
         $this->applyFilters($query, $viewer, $filters);
         $this->applySorting($query, $viewer, $filters);
 
@@ -210,6 +212,101 @@ class ProfileSearchService
                 $proposal->where('user_id', $viewer->id)
                     ->where('status', ProposalStatus::Accepted->value);
             });
+        }
+    }
+
+    private function applyDefaultGenderScope($query, User $viewer): void
+    {
+        $viewerGender = (int) ($viewer->member?->gender ?? 0);
+        $targetGender = match ($viewerGender) {
+            1 => 2,
+            2 => 1,
+            default => null,
+        };
+
+        if ($targetGender === null) {
+            return;
+        }
+
+        $query->whereHas('member', fn ($member) => $member->where('gender', $targetGender));
+    }
+
+    private function applyPartnerPreferenceScope($query, User $viewer): void
+    {
+        $preference = $viewer->partner_expectations;
+
+        if (! $preference) {
+            return;
+        }
+
+        if (filled($preference->preferred_age_min) || filled($preference->preferred_age_max)) {
+            $query->whereHas('member', function ($member) use ($preference) {
+                $member->where(function ($q) use ($preference) {
+                    $q->whereNull('birthday');
+                    $q->orWhere(function ($inner) use ($preference) {
+                        if (filled($preference->preferred_age_max)) {
+                            $inner->where('birthday', '>=', now()->subYears((int) $preference->preferred_age_max + 1)->toDateString());
+                        }
+
+                        if (filled($preference->preferred_age_min)) {
+                            $inner->where('birthday', '<=', now()->subYears((int) $preference->preferred_age_min)->toDateString());
+                        }
+                    });
+                });
+            });
+        }
+
+        if (filled($preference->marital_status_id)) {
+            $query->whereHas('member', fn ($member) => $member
+                ->where(fn ($q) => $q->whereNull('marital_status_id')->orWhere('marital_status_id', $preference->marital_status_id)));
+        }
+
+        foreach (['religion_id' => 'religion_id', 'caste_id' => 'caste_id'] as $prefCol => $column) {
+            if (! filled($preference->{$prefCol})) {
+                continue;
+            }
+
+            $value = $preference->{$prefCol};
+
+            $query->where(function ($outer) use ($column, $value) {
+                $outer->whereDoesntHave('spiritual_backgrounds')
+                    ->orWhereHas('spiritual_backgrounds', fn ($sb) => $sb
+                        ->where(fn ($q) => $q->whereNull($column)->orWhere($column, $value)));
+            });
+        }
+
+        foreach ([
+            'preferred_country_id' => 'country_id',
+            'preferred_state_id' => 'state_id',
+            'preferred_city_id' => 'city_id',
+        ] as $prefCol => $column) {
+            if (! filled($preference->{$prefCol})) {
+                continue;
+            }
+
+            $value = $preference->{$prefCol};
+
+            $query->where(function ($outer) use ($column, $value) {
+                $outer->whereDoesntHave('addresses')
+                    ->orWhereHas('addresses', fn ($address) => $address
+                        ->where(fn ($q) => $q->whereNull($column)->orWhere($column, $value)));
+            });
+        }
+
+        if (filled($preference->preferred_language_ids) && is_array($preference->preferred_language_ids)) {
+            $languageIds = collect($preference->preferred_language_ids)->filter()->values()->all();
+
+            if ($languageIds !== []) {
+                $query->where(function ($outer) use ($languageIds) {
+                    $outer->whereNull('mothere_tongue')
+                        ->orWhereIn('mothere_tongue', $languageIds)
+                        ->orWhere(function ($nested) use ($languageIds) {
+                            foreach ($languageIds as $languageId) {
+                                $nested->orWhere('known_languages', 'like', '%"' . $languageId . '"%');
+                            }
+                        });
+                });
+            }
         }
     }
 

@@ -282,6 +282,10 @@
     @endforeach
 
     <datalist id="profession_options"><option value="Software Engineer"><option value="Doctor"><option value="Teacher"><option value="Banker"><option value="Business Owner"><option value="Government Officer"><option value="Armed Forces"><option value="Self-Employed"></datalist>
+    <div class="d-flex flex-wrap align-items-center justify-content-between mt-3 mb-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary mb-2" data-registration-autofill>{{ translate('Auto Fill Test Data') }}</button>
+        <span class="text-muted fs-12 mb-2">{{ translate('Developer helper: fills the form with sample data and jumps to the final step.') }}</span>
+    </div>
     <div class="registration-flow-actions d-flex justify-content-between align-items-center border-top pt-4 mt-4 mb-4 pb-2"><button type="button" class="btn registration-gradient-btn" data-registration-prev>{{ translate('Previous') }}</button><button type="button" class="btn registration-gradient-btn ml-auto" data-registration-next>{{ translate('Next') }}</button></div>
 </div>
 
@@ -341,3 +345,95 @@ function updateHobbyHiddenField() {
 </script>
 <script src="{{ static_asset('assets/js/registration-selfie-camera.js') }}"></script>
 <script src="{{ static_asset('assets/js/registration-web-stepwise.js') }}"></script>
+<script>
+(function () {
+    var btn = document.querySelector('[data-registration-autofill]');
+    if (!btn) return;
+
+    function setField(name, value) {
+        var el = document.querySelector('[name="' + name + '"]');
+        if (!el) return;
+        el.value = value;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function selectFirstOption(name, fallback) {
+        var el = document.querySelector('[name="' + name + '"]');
+        if (!el) return;
+        var opts = Array.from(el.options || []);
+        var opt = opts.find(function (o) { return o.value; }) || opts[1];
+        el.value = opt ? opt.value : fallback;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    btn.addEventListener('click', function () {
+        setField('first_name', 'JZ');
+        setField('last_name', 'JZ');
+        setField('weight', '60');
+        setField('complexion', 'Not Specified');
+        setField('living_with', 'Family');
+        setField('smoke', 'No');
+        setField('drink', 'No');
+        setField('personal_value', 'Family Oriented');
+        setField('company', 'Not Specified');
+        setField('future_goals', 'Build a peaceful and stable married life.');
+        setField('children', '0');
+        setField('partner_lifestyle', 'Compatible');
+        setField('partner_prayer', 'Flexible');
+        setField('full_name', 'JZ');
+        setField('date_of_birth', '1996-07-11');
+        setField('dob_day', '11');
+        setField('dob_month', '07');
+        setField('dob_year', '1996');
+        setField('area', 'Saddar');
+        setField('country_code', '92');
+        setField('phone', '33387678789');
+        setField('email', 'test' + Date.now().toString().slice(-6) + '@example.com');
+        setField('graduation_year', '2024');
+        setField('education_status', 'completed');
+        setField('expected_graduation_year', '');
+        setField('height', '6');
+        setField('diet', 'Vegetarian');
+        setField('annual_income', '7868679');
+        setField('employment_status', 'government');
+        setField('job_title', 'kklkl');
+        setField('organization', 'mkllmk');
+        setField('years_of_experience', '3');
+        setField('about_me', 'klmklmlkmk');
+        setField('cnic_number', '3730240741611');
+        setField('hobbies', 'Reading,Movies,Writing');
+        setField('father_occupation', 'mklkl');
+        setField('mother_occupation', 'mlmkkl');
+        setField('siblings_sisters', '1');
+        setField('siblings_brothers', '2');
+        setField('family_location', 'mklklmkl');
+        setField('live_with_family', 'yes');
+        setField('family_values', 'Elite');
+        setField('family_state', 'mklmkl');
+        setField('family_city', 'mklmk');
+        setField('partner_age_min', '20');
+        setField('partner_age_max', '30');
+        setField('partner_height_min', '5');
+        setField('partner_height_max', '6');
+        setField('partner_education', 'mklkl');
+        setField('partner_profession', 'mklm');
+        setField('partner_income_min', '999');
+        setField('partner_income_max', '99999');
+        setField('deal_breakers[]', 'jkljkljkljklklkl');
+        setField('password', '123456789');
+        setField('password_confirmation', '123456789');
+        setField('email_verify', '33384@iqraisb.edu.pk');
+
+        ['on_behalf','gender','marriage_timeline','willing_to_work_after_marriage','expects_spouse_to_work','religion_id','mother_tongue','sect_main_id','school_of_thought_id','tradition_id','country_id','state_id','city_id','caste_id','sub_caste_id','marital_status_id','education_level_id','degree_id','field_of_study_id','institution_id','profession_category_id','profession_id','partner_marital_status_id','partner_religion_id','partner_caste_id','partner_language_id','partner_country_id','partner_state_id','partner_city_id'].forEach(function (name) {
+            selectFirstOption(name);
+        });
+
+        var step = document.querySelector('.registration-flow-step[data-step="18"]');
+        if (step) {
+            step.classList.add('is-autofilled');
+        }
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+})();
+</script>

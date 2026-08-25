@@ -1,6 +1,6 @@
 # HamQadam App API v1
 
-Curated API documentation for the Flutter mobile app and React web app.
+Curated API documentation for the Flutter mobile app.
 
 Legacy CMS/mobile endpoints under `/api/...` are intentionally excluded. Admin-only endpoints are intentionally excluded. Use only `/api/v1/...` endpoints from the app.
 
@@ -180,7 +180,7 @@ The complete registration API creates a draft account and returns a Sanctum toke
 
 ### Mobile Registration Flow
 
-The frontend handles all 18 registration steps locally. Submit the complete data in one request, then verify via email OTP.
+The mobile app handles all 18 registration steps locally. Submit the complete data in one request, then verify via email OTP.
 
 ```text
 Frontend: 18 steps locally
@@ -204,7 +204,7 @@ Content-Type: application/json
 Content-Type: multipart/form-data
 ```
 
-The frontend handles all 18 registration steps locally and submits the complete payload in one request. Mandatory steps: 1-14, 17, 18. Optional steps: 15, 16.
+The mobile app handles all 18 registration steps locally and submits the complete payload in one request. Mandatory steps: 1-14, 17, 18. Optional steps: 15, 16.
 
 ```json
 {
@@ -393,7 +393,7 @@ On success, the account is marked as verified, approved, membership is activated
 
 ### Legacy Step-wise Registration (Deprecated)
 
-The legacy step-wise endpoints remain available for backward compatibility. New mobile/web apps should use `/auth/register/complete` with the OTP flow.
+The legacy step-wise endpoints remain available for backward compatibility. New mobile apps should use `/auth/register/complete` with the OTP flow.
 
 ```http
 GET /auth/register/steps
@@ -807,6 +807,7 @@ so it never delays or fails a signup) and available on demand here.
 | Current AI status | GET | `/verification/ai/status` | None |
 | Attempt history | GET | `/verification/ai/history` | None |
 | Run verification now | POST | `/verification/ai/run` | None (throttle 3/min) |
+| Run verification now (mobile alias) | POST | `/auth/register/ai-verification/run` | None (throttle 3/min) |
 
 `POST /verification/ai/run` takes **no uploads**. It rebuilds the model payload
 from the database, preferring the newest non-final verification request (CNIC +
@@ -862,9 +863,32 @@ result, so a moderator-verified member can read `true` with a null date.
 | `POST /auth/register/complete` | after response | No |
 | `POST /auth/register/step/13` (Identity Verification) | after response | No |
 | `POST /api/signup` (legacy) | after response | No |
+| `POST /verification/ai/run` | synchronous | Yes, by design |
+| `POST /auth/register/ai-verification/run` | synchronous | Yes, by design |
+
+Registration itself is never blocked. Step 13 stores the CNIC front, CNIC back
+and selfie, so from that point on the model performs a real identity comparison
+rather than only inspecting the profile photo - confirmed by
+`images_sent: ["cnic_image","live_selfie","profile_image"]` in
+`/verification/ai/history`.
+
+### Recommended app sequence
+
+1. Complete registration. The response carries an `ai_verification` block with
+   `status: "pending"` plus `status_url` and `retry_url`.
+2. Show a "verifying" screen and poll `GET /verification/ai/status`.
+3. `status: "approved"` -> continue into the app.
+4. Anything else -> the account is registered but unverified. Send the user on,
+   and surface a retry that calls `POST /verification/ai/run` or the alias `POST /auth/register/ai-verification/run`. `can_retry` tells
+   you whether to show it.
+---|---|---|
+| `POST /auth/register` | after response | No |
+| `POST /auth/register/complete` | after response | No |
+| `POST /auth/register/step/13` (Identity Verification) | after response | No |
+| `POST /api/signup` (legacy) | after response | No |
 | Web `POST /register` | redirect to the identity gate, which runs it synchronously | No - the account is created first |
 | `POST /verification/submit` | after response | No |
-| `POST /verification/ai/run` | synchronous | Yes, by design |
+| `POST /verification/ai/run` | synchronous | Yes, by design |\n| `POST /auth/register/ai-verification/run` | synchronous | Yes, by design |
 
 Registration itself is never blocked. Step 13 stores the CNIC front, CNIC back
 and selfie, so from that point on the model performs a real identity comparison
@@ -1068,7 +1092,6 @@ Family conversation sample:
 | Create thread | POST | `/content/forums/{forum}/threads` | Thread payload |
 | Thread posts | GET | `/content/threads/{thread}/posts` | None |
 | Reply to thread | POST | `/content/threads/{thread}/posts` | `body` |
-| Webinars/live events | GET | `/content/webinars` | None |
 | Register webinar | POST | `/content/webinars/{webinar}/register` | None |
 | Marriage tips | GET | `/content/marriage-tips` | None |
 | Regional updates | GET | `/content/regional-updates` | Query `region` optional |
