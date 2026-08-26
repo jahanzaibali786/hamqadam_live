@@ -2475,7 +2475,7 @@
             {{ get_remaining_package_value(Auth::user()->id, 'remaining_gallery_image_view') }};
 
         function gallery_image_view_request(id) {
-            if (!package_validity || remaining_profile_image_view < 1) {
+            if (!package_validity || remaining_gallery_image_view < 1) {
                 $('.package_update_alert_modal').modal('show');
             } else {
                 $('.confirm_modal').modal('show');

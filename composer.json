@@ -22,6 +22,7 @@
         "mehedi-iitdu/core-component-repository": "2.2",
         "niklasravnsborg/laravel-pdf": "^4.1",
         "paypal/paypal-checkout-sdk": "dev-master",
+        "pusher/pusher-php-server": "^7.3",
         "razorpay/razorpay": "2.*",
         "spatie/laravel-permission": "^6.0",
         "stripe/stripe-php": "^10.5",

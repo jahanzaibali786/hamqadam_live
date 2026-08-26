@@ -80,14 +80,23 @@
     @endif
 
     <div class="row gutters-5 mb-4">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="bg-white border rounded p-3 h-100">
                 <div class="text-muted fs-12 mb-1">{{ translate('Current Coin Balance') }}</div>
                 <div class="h3 fw-700 text-primary-grad mb-1">{{ (int) ($user->member?->remaining_interest ?? 0) }}</div>
                 <div class="fs-12 opacity-70">{{ translate('Coins received from the active package') }}</div>
+                <a href="{{ route('package_usage_history') }}" class="btn btn-link p-0 mt-2 fs-12">{{ translate('View usage history') }}</a>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
+            <div class="bg-white border rounded p-3 h-100">
+                <div class="text-muted fs-12 mb-1">{{ translate('Profile View Balance') }}</div>
+                <div class="h3 fw-700 text-primary-grad mb-1">{{ (int) ($user->member?->remaining_profile_viewer_view ?? 0) }}</div>
+                <div class="fs-12 opacity-70">{{ translate('Remaining profile detail views') }}</div>
+                <a href="{{ route('package_usage_history') }}" class="btn btn-link p-0 mt-2 fs-12">{{ translate('See profile-view usage') }}</a>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
             <div class="bg-white border rounded p-3 h-100">
                 <div class="text-muted fs-12 mb-1">{{ translate('Current Package') }}</div>
                 <div class="h5 fw-600 mb-1">{{ $user->member?->package?->name ?? translate('No active package') }}</div>
@@ -101,7 +110,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="bg-white border rounded p-3 h-100">
                 <div class="text-muted fs-12 mb-1">{{ translate('Package Entitlements') }}</div>
                 <div class="fs-12 mb-1">{{ translate('Interest') }}: {{ (int) ($user->member?->remaining_interest ?? 0) }}</div>
@@ -541,3 +550,5 @@
 
 
 @endsection
+
+

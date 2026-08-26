@@ -129,6 +129,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
     Route::controller(ReportedUserController::class)->group(function () {
         Route::get('/reported-members/{id}', 'reported_members')->name('reported_members');
+        Route::get('/chat-reported-members/{id}', 'chat_reports')->name('chat_reported_members');
         Route::get('/reported/destroy/{id}', 'destroy')->name('report_destrot.destroy');
     });
 
@@ -274,6 +275,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
         Route::get('/third-party-settings', 'third_party_settings')->name('third_party_settings');
         Route::post('/third-party-settings/update', 'third_party_settings_update')->name('third_party_settings.update');
+
+        Route::get('/chat-realtime-settings', 'chat_realtime_settings')->name('chat_realtime_settings');
+        Route::post('/chat-realtime-settings', 'chat_realtime_settings_update')->name('chat_realtime_settings.update');
 
         Route::get('/social-media-login-settings', 'social_media_login_settings')->name('social_media_login');
 

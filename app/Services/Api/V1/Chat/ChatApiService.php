@@ -1,11 +1,11 @@
 <?php
-
 declare(strict_types=1);
-
 namespace App\Services\Api\V1\Chat;
-
 use App\Enums\ApiErrorCode;
 use App\Enums\ChatMessageType;
+use App\Events\ChatMessageRead;
+use App\Events\ChatMessageSent;
+use App\Events\ChatTypingIndicator as ChatTypingIndicatorEvent;
 use App\Exceptions\ApiException;
 use App\Models\Chat;
 use App\Models\ChatThread;
@@ -15,12 +15,12 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Log;
 class ChatApiService
 {
     public function threads(User $user, int $perPage = 20): LengthAwarePaginator
     {
-        return ChatThread::with(['sender', 'receiver', 'chats' => fn ($query) => $query->latest()->limit(1)])
+        $threads = ChatThread::with(['sender', 'receiver'])
             ->where(function ($query) use ($user) {
                 $query->where('sender_user_id', $user->id)
                     ->orWhere('receiver_user_id', $user->id);
@@ -28,31 +28,32 @@ class ChatApiService
             ->orderByDesc('last_message_at')
             ->orderByDesc('updated_at')
             ->paginate($perPage);
-    }
 
+        $threads->getCollection()->transform(function (ChatThread $thread) use ($user) {
+            $thread->setRelation('visibleLastMessage', $this->visibleLastMessage($thread, $user));
+            return $thread;
+        });
+
+        return $threads;
+    }
     public function messages(User $user, int $threadId, int $perPage = 20): LengthAwarePaginator
     {
         $thread = $this->threadForUser($user, $threadId);
         $this->markRead($user, $thread);
-
         return Chat::with(['sender', 'replyTo.sender'])
             ->where('chat_thread_id', $thread->id)
             ->whereNull($this->deleteColumnFor($thread, $user))
             ->latest()
             ->paginate($perPage);
     }
-
     public function send(User $user, int $threadId, array $data, array $files = []): Chat
     {
         $thread = $this->threadForUser($user, $threadId);
         $this->ensureNotBlocked($thread);
-
         if (! empty($data['reply_to_chat_id'])) {
             $this->ensureReplyBelongsToThread((int) $data['reply_to_chat_id'], $thread);
         }
-
         $attachments = array_map(fn (UploadedFile $file) => upload_api_file($file), $files);
-
         return DB::transaction(function () use ($thread, $user, $data, $attachments) {
             $message = Chat::create([
                 'chat_thread_id' => $thread->id,
@@ -66,97 +67,119 @@ class ChatApiService
                 'moderation_status' => 'clean',
                 'toxicity_score' => 0,
             ]);
-
             $thread->forceFill(['last_message_at' => now()])->save();
-
-            return $message->load(['sender', 'replyTo.sender']);
+            $message = $message->load(['sender', 'replyTo.sender']);
+            $recipientId = (int) $thread->sender_user_id === (int) $user->id
+                ? (int) $thread->receiver_user_id
+                : (int) $thread->sender_user_id;
+            $this->broadcastSafely(new ChatMessageSent($message, $user, (int) $thread->id, $recipientId));
+            return $message;
         });
     }
-
     public function typing(User $user, int $threadId): void
     {
         $thread = $this->threadForUser($user, $threadId);
-
         ChatTypingIndicator::updateOrCreate([
             'chat_thread_id' => $thread->id,
             'user_id' => $user->id,
         ], [
             'expires_at' => now()->addSeconds(10),
         ]);
+        $recipientId = (int) $thread->sender_user_id === (int) $user->id
+            ? (int) $thread->receiver_user_id
+            : (int) $thread->sender_user_id;
+        $this->broadcastSafely(new ChatTypingIndicatorEvent(
+            $user,
+            (int) $thread->id,
+            now()->addSeconds(10)->toISOString(),
+            $recipientId
+        ));
     }
-
     public function markRead(User $user, ChatThread $thread): void
     {
-        Chat::where('chat_thread_id', $thread->id)
+        $messageIds = Chat::where('chat_thread_id', $thread->id)
             ->where('sender_user_id', '!=', $user->id)
             ->where('seen', 0)
-            ->update([
-                'seen' => 1,
-                'read_at' => now(),
-            ]);
+            ->pluck('id')
+            ->all();
+        if ($messageIds === []) {
+            return;
+        }
+        Chat::whereIn('id', $messageIds)->update([
+            'seen' => 1,
+            'read_at' => now(),
+        ]);
+        $this->broadcastSafely(new ChatMessageRead((int) $thread->id, $messageIds, (int) $user->id, now()->toISOString()));
     }
-
     public function deleteMessageForMe(User $user, int $messageId): void
     {
         $message = Chat::with('chatThread')->find($messageId);
         if (! $message || ! $message->chatThread || ! $this->isParticipant($message->chatThread, $user)) {
             throw new ApiException('Message not found.', 404, ApiErrorCode::NotFound->value);
         }
-
         $message->forceFill([
             $this->deleteColumnFor($message->chatThread, $user) => now(),
         ])->save();
     }
 
+    public function clear(User $user, int $threadId): ChatThread
+    {
+        $thread = $this->threadForUser($user, $threadId);
+        Chat::where('chat_thread_id', $thread->id)
+            ->whereNull($this->deleteColumnFor($thread, $user))
+            ->update([
+                $this->deleteColumnFor($thread, $user) => now(),
+            ]);
+
+        return $thread->fresh(['sender', 'receiver']);
+    }
     public function block(User $user, int $threadId): ChatThread
     {
         $thread = $this->threadForUser($user, $threadId);
         $thread->forceFill(['blocked_by_user' => $user->id])->save();
-
         return $thread->fresh(['sender', 'receiver']);
     }
-
     public function unblock(User $user, int $threadId): ChatThread
     {
         $thread = $this->threadForUser($user, $threadId);
         if ((int) $thread->blocked_by_user !== (int) $user->id) {
             throw new ApiException('Only the user who blocked this thread can unblock it.', 403, ApiErrorCode::Forbidden->value);
         }
-
         $thread->forceFill(['blocked_by_user' => null])->save();
-
         return $thread->fresh(['sender', 'receiver']);
     }
-
-    public function report(User $user, int $threadId, string $reason): void
+    public function report(User $user, int $threadId, string $reason): ChatThread
     {
         $thread = $this->threadForUser($user, $threadId);
         $reportedUserId = (int) $thread->sender_user_id === (int) $user->id ? $thread->receiver_user_id : $thread->sender_user_id;
-
-        ReportedUser::firstOrCreate([
+        ReportedUser::updateOrCreate([
             'user_id' => $reportedUserId,
             'reported_by' => $user->id,
+            'source' => 'chat',
+            'chat_thread_id' => $thread->id,
         ], [
             'reason' => $reason,
         ]);
-    }
 
+        $thread->forceFill([
+            'active' => 0,
+            'blocked_by_user' => $user->id,
+        ])->save();
+
+        return $thread->fresh(['sender', 'receiver']);
+    }
     private function threadForUser(User $user, int $threadId): ChatThread
     {
         $thread = ChatThread::with(['sender', 'receiver'])->find($threadId);
-
         if (! $thread || ! $this->isParticipant($thread, $user)) {
             throw new ApiException('Chat thread not found.', 404, ApiErrorCode::NotFound->value);
         }
-
         return $thread;
     }
-
     private function isParticipant(ChatThread $thread, User $user): bool
     {
         return in_array((int) $user->id, [(int) $thread->sender_user_id, (int) $thread->receiver_user_id], true);
     }
-
     private function ensureNotBlocked(ChatThread $thread): void
     {
         if ($thread->blocked_by_user) {
@@ -164,27 +187,42 @@ class ChatApiService
         }
     }
 
+    private function visibleLastMessage(ChatThread $thread, User $user): ?Chat
+    {
+        return Chat::with(['sender', 'replyTo.sender'])
+            ->where('chat_thread_id', $thread->id)
+            ->whereNull($this->deleteColumnFor($thread, $user))
+            ->latest()
+            ->first();
+    }
     private function ensureReplyBelongsToThread(int $messageId, ChatThread $thread): void
     {
         if (! Chat::whereKey($messageId)->where('chat_thread_id', $thread->id)->exists()) {
             throw new ApiException('Reply message does not belong to this thread.', 422, ApiErrorCode::ValidationFailed->value);
         }
     }
-
     private function deleteColumnFor(ChatThread $thread, User $user): string
     {
         return (int) $thread->sender_user_id === (int) $user->id ? 'deleted_by_sender_at' : 'deleted_by_receiver_at';
     }
-
     private function detectType(array $attachments): string
     {
         return $attachments === [] ? ChatMessageType::Text->value : ChatMessageType::Mixed->value;
     }
-
+    private function broadcastSafely(object $event): void
+    {
+        try {
+            broadcast($event)->toOthers();
+        } catch (\Throwable $throwable) {
+            Log::warning('API realtime chat broadcast failed.', [
+                'event' => $event::class,
+                'message' => $throwable->getMessage(),
+            ]);
+        }
+    }
     private function maskSensitiveText(string $message): string
     {
         $message = preg_replace('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', '[email hidden]', $message) ?? $message;
-
         return preg_replace('/(?<!\d)(?:\+?\d[\d\s().-]{7,}\d)(?!\d)/', '[phone hidden]', $message) ?? $message;
     }
 }

@@ -675,14 +675,14 @@ class ProfileController extends Controller
             if($user->id != $auth_user->id){
                 $profileViewed = ProfileViewer::where('user_id', $user->id)->where('viewed_by', $auth_user->id)->first();
                 if($profileViewed == null){
-                    if(package_validity($user->id) && $user->member->remaining_profile_viewer_view > 0){
-                        ProfileViewer::create([
+                $viewerMember = Member::where('user_id', $auth_user->id)->first();
+                    if(package_validity($auth_user->id) && $viewerMember->remaining_profile_viewer_view > 0){
+                        $profileViewed = ProfileViewer::create([
                             'user_id' => $user->id,
                             'viewed_by' => $auth_user->id
                         ]);
-                        $usermember = $user->member;
-                        $usermember->remaining_profile_viewer_view = $usermember->remaining_profile_viewer_view - 1;
-                        $usermember->save();
+                                                $viewerMember->remaining_profile_viewer_view = max(0, $viewerMember->remaining_profile_viewer_view - 1);
+                        $viewerMember->save();
 
                         PackageUsage::record(
                             auth()->id(),
@@ -873,3 +873,7 @@ class ProfileController extends Controller
         return $this->failure_message('Something Went Wrong!');
     }
 }
+
+
+
+

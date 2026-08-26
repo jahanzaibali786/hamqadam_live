@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\PartnerPreference\PartnerPreferenceController;
 use App\Http\Controllers\Api\V1\Payment\PaymentController;
 use App\Http\Controllers\Api\V1\Profile\ProfileController;
 use App\Http\Controllers\Api\V1\Profile\DropdownReferenceController;
+use App\Http\Controllers\Api\V1\Profile\ProfileViewController;
 use App\Http\Controllers\Api\V1\Proposal\ProposalController;
 use App\Http\Controllers\Api\V1\Proposal\ProposalMeetingController;
 use App\Http\Controllers\Api\V1\Search\SearchController;
@@ -84,6 +85,13 @@ Route::middleware('auth:sanctum')->prefix('profiles')->name('api.v1.profiles.')-
     Route::get('/{profile}/compatibility', [ProfileController::class, 'compatibility'])->name('compatibility');
 });
 
+Route::middleware('auth:sanctum')->prefix('profile-views')->name('api.v1.profile_views.')->group(function () {
+    Route::get('/', [ProfileViewController::class, 'index'])->name('index');
+    Route::get('/received', [ProfileViewController::class, 'received'])->name('received');
+    Route::get('/balance', [ProfileViewController::class, 'balance'])->name('balance');
+    Route::post('/{profile}', [ProfileViewController::class, 'view'])->whereNumber('profile')->name('view');
+});
+
 Route::middleware('auth:sanctum')->prefix('partner-preferences')->name('api.v1.partner_preferences.')->group(function () {
     Route::get('/', [PartnerPreferenceController::class, 'show'])->name('show');
     Route::put('/', [PartnerPreferenceController::class, 'update'])->name('update');
@@ -117,6 +125,10 @@ Route::middleware('auth:sanctum')->prefix('proposals')->name('api.v1.proposals.'
     Route::post('/favourites', [ProposalController::class, 'favourite'])->name('favourites.store');
     Route::get('/favourites/{user}/check', [ProposalController::class, 'checkFavourite'])->name('favourites.check');
     Route::delete('/favourites/{user}', [ProposalController::class, 'removeFavourite'])->name('favourites.delete');
+    Route::get('/shortlists', [ProposalController::class, 'shortlists'])->name('shortlists');
+    Route::post('/shortlists', [ProposalController::class, 'shortlist'])->middleware('throttle:20,1')->name('shortlists.store');
+    Route::get('/shortlists/{user}/check', [ProposalController::class, 'checkShortlist'])->name('shortlists.check');
+    Route::delete('/shortlists/{user}', [ProposalController::class, 'removeShortlist'])->name('shortlists.delete');
     Route::post('/ignored', [ProposalController::class, 'ignore'])->name('ignored.store');
     Route::delete('/ignored/{user}', [ProposalController::class, 'removeIgnore'])->name('ignored.delete');
     Route::post('/{proposal}/accept', [ProposalController::class, 'accept'])->name('accept');
@@ -140,6 +152,7 @@ Route::middleware('auth:sanctum')->prefix('chat')->name('api.v1.chat.')->group(f
     Route::post('/threads/{thread}/typing', [ChatController::class, 'typing'])->middleware('throttle:120,1')->name('typing');
     Route::post('/threads/{thread}/block', [ChatController::class, 'block'])->name('block');
     Route::post('/threads/{thread}/unblock', [ChatController::class, 'unblock'])->name('unblock');
+    Route::post('/threads/{thread}/clear', [ChatController::class, 'clear'])->name('clear');
     Route::post('/threads/{thread}/report', [ChatController::class, 'report'])->middleware('throttle:10,1')->name('report');
     Route::delete('/messages/{message}', [ChatController::class, 'deleteForMe'])->name('messages.delete_for_me');
 });
@@ -196,6 +209,9 @@ Route::prefix('payments')->name('api.v1.payments.')->group(function () {
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/plans', [PaymentController::class, 'plans'])->name('plans');
+        Route::get('/current', [PaymentController::class, 'current'])->name('current');
+        Route::get('/packages/{package}', [PaymentController::class, 'package'])->whereNumber('package')->name('package');
+        Route::get('/usage', [PaymentController::class, 'usage'])->name('usage');
         Route::post('/checkout', [PaymentController::class, 'checkout'])->middleware('throttle:10,1')->name('checkout');
         Route::get('/history', [PaymentController::class, 'history'])->name('history');
         Route::get('/invoices/{payment}', [PaymentController::class, 'invoice'])->name('invoice');
@@ -274,3 +290,5 @@ Route::middleware('auth:sanctum')->prefix('ai')->name('api.v1.ai.')->group(funct
     Route::post('/scam-check', [AiController::class, 'scamCheck'])->middleware('throttle:30,1')->name('scam_check');
     Route::post('/red-flag-check', [AiController::class, 'redFlagCheck'])->middleware('throttle:30,1')->name('red_flag_check');
 });
+
+

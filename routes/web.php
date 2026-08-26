@@ -236,6 +236,11 @@ Route::group(['middleware' => ['member', 'verified', 'check.package']], function
             Route::get('/chat', 'index')->name('all.messages');
             Route::get('/single-chat/{id}', 'chat_view')->name('chat_view');
             Route::post('/chat-reply', 'chat_reply')->name('chat.reply');
+            Route::post('/chat/block', 'block_chat')->name('chat.block');
+            Route::post('/chat/unblock', 'unblock_chat')->name('chat.unblock');
+            Route::post('/chat/clear', 'clear_chat')->name('chat.clear');
+            Route::post('/chat/report', 'report_chat')->name('chat.report');
+            Route::post('/chat/message/delete', 'delete_message')->name('chat.message.delete');
             Route::get('/chat/refresh/{id}', 'chat_refresh')->name('chat_refresh');
             Route::post('/chat/old-messages', 'get_old_messages')->name('get-old-message');
             Route::get('/chat/unread-count', 'unread_count')->name('chat.unread_count');

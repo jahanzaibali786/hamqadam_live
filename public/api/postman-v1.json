@@ -370,6 +370,82 @@
               }
             }
           }
+        },
+        {
+          "name": "Profile Views Balance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "type": "text",
+                "value": "Bearer {{token}}",
+                "key": "Authorization"
+              },
+              {
+                "type": "text",
+                "value": "application/json",
+                "key": "Accept"
+              }
+            ],
+            "url": "{{base_url}}/profile-views/balance"
+          }
+        },
+        {
+          "name": "Profile Views Sent",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "type": "text",
+                "value": "Bearer {{token}}",
+                "key": "Authorization"
+              },
+              {
+                "type": "text",
+                "value": "application/json",
+                "key": "Accept"
+              }
+            ],
+            "url": "{{base_url}}/profile-views"
+          }
+        },
+        {
+          "name": "Profile Views Received",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "type": "text",
+                "value": "Bearer {{token}}",
+                "key": "Authorization"
+              },
+              {
+                "type": "text",
+                "value": "application/json",
+                "key": "Accept"
+              }
+            ],
+            "url": "{{base_url}}/profile-views/received"
+          }
+        },
+        {
+          "name": "Consume Profile View",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "type": "text",
+                "value": "Bearer {{token}}",
+                "key": "Authorization"
+              },
+              {
+                "type": "text",
+                "value": "application/json",
+                "key": "Accept"
+              }
+            ],
+            "url": "{{base_url}}/profile-views/15"
+          }
         }
       ]
     },
@@ -554,6 +630,50 @@
             "method": "POST",
             "url": "{{base_url}}/chat/threads/1/typing"
           }
+        },
+        {
+          "name": "Block Thread",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chat/threads/1/block"
+          }
+        },
+        {
+          "name": "Unblock Thread",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chat/threads/1/unblock"
+          }
+        },
+        {
+          "name": "Clear Thread",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chat/threads/1/clear"
+          }
+        },
+        {
+          "name": "Report Thread",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chat/threads/1/report",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Unwanted messages\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Delete Message For Me",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/chat/messages/1"
+          }
         }
       ]
     },
@@ -609,6 +729,109 @@
           "request": {
             "method": "GET",
             "url": "{{base_url}}/payments/plans"
+          }
+        },
+        {
+          "name": "Current Package",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/current",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "current"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Package Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/packages/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "packages",
+                "1"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Package Usage",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/payments/usage?per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "payments",
+                "usage"
+              ],
+              "query": [
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
           }
         },
         {
@@ -1845,6 +2068,145 @@
               "path": [
                 "proposals",
                 "favourites"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List shortlists",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/proposals/shortlists",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "shortlists"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add shortlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 25\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/proposals/shortlists",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "shortlists"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check shortlist",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/proposals/shortlists/25/check",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "shortlists",
+                "25",
+                "check"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remove shortlist",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/proposals/shortlists/25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "proposals",
+                "shortlists",
+                "25"
               ]
             },
             "auth": {

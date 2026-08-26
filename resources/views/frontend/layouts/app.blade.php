@@ -251,6 +251,72 @@ $lang = \App\Models\Language::where('code', $locale)->first();
         </div>
     @endif
 
+    <script src="https://js.pusher.com/8.4.0/pusher.min.js"></script>
+    <script>
+        (function () {
+            if (typeof window.Pusher === 'undefined') {
+                return;
+            }            var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            var pusherOptions = {
+                cluster: '{{ get_setting('pusher_app_cluster', env('PUSHER_APP_CLUSTER')) }}',
+                forceTLS: true,
+                enabledTransports: ['ws', 'wss'],
+                authEndpoint: '{{ url('/broadcasting/auth') }}',
+                authTransport: 'ajax',
+                auth: {
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                },
+                channelAuthorization: {
+                    endpoint: '{{ url('/broadcasting/auth') }}',
+                    transport: 'ajax',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                }
+            };
+
+            Pusher.logToConsole = true;
+            var pusherClient = null;
+            if ('{{ get_setting('chat_realtime_enabled') }}' == 1 && '{{ get_setting('pusher_app_key', env('PUSHER_APP_KEY')) }}' !== '') {
+                pusherClient = new window.Pusher('{{ get_setting('pusher_app_key', env('PUSHER_APP_KEY')) }}', pusherOptions);
+            }
+
+            window.Echo = {
+                private: function (channelName) {
+                    if (!pusherClient) {
+                        return { listen: function () { return this; } };
+                    }
+
+                    var channel = pusherClient.subscribe('private-' + channelName);
+                    channel.bind('pusher:subscription_succeeded', function () {
+                    });
+                    channel.bind('pusher:subscription_error', function (status) {
+                    });
+                    channel.bind('pusher:member_added', function (member) {
+                    });
+                    channel.bind('pusher:member_removed', function (member) {
+                    });
+                    return {
+                        listen: function (eventName, callback) {
+                            channel.bind(eventName.replace(/^\./, ''), callback);
+                            return this;
+                        }
+                    };
+                },
+                leave: function (channelName) {
+                    if (pusherClient) {
+                        pusherClient.unsubscribe('private-' + channelName);
+                    }
+                }
+            };
+        })();
+    </script>
     <script src="{{ static_asset('assets/js/vendors.js') }}"></script>
     <script src="{{ static_asset('assets/js/aiz-core.js') }}"></script>
 
@@ -299,12 +365,10 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                             
                         },
                         error: function (err) {
-                            console.log(" Can't do because: " + err);
                         },
                     });
 
                 }).catch(function(err) {
-                    console.log(`Token Error :: ${err}`);
                 });
             }
 
@@ -348,8 +412,14 @@ $lang = \App\Models\Language::where('code', $locale)->first();
             }
         }
         function checkUnreadChats() {
-            $.get('{{ route('chat.unread_count') }}', function(data) {
+            $.get('{{ route('chat.unread_count') }}', {
+                active_thread_id: window.activeChatThreadId
+                    || $('.chat-user-item.selected-chat').first().data('thread-id')
+                    || ($('#chat_thread_id').length ? $('#chat_thread_id').val() : 0)
+            }, function(data) {
                 var count = parseInt(data.count);
+                console.log('[chat badge] unread_count response', data);
+                console.log('[chat badge] unread count parsed', count, 'previous', lastUnreadCount);
                 updateChatBadges(count);
                 if (count > lastUnreadCount && !window.location.pathname.endsWith('/chat')) {
                     var msg = data.sender_name ? data.sender_name + ': ' + data.message : '{{ translate('You have a new message') }}';
@@ -359,11 +429,56 @@ $lang = \App\Models\Language::where('code', $locale)->first();
             });
         }
         $(document).ready(function() {
-            $.get('{{ route('chat.unread_count') }}', function(data) {
+            $.get('{{ route('chat.unread_count') }}', {
+                active_thread_id: window.activeChatThreadId
+                    || $('.chat-user-item.selected-chat').first().data('thread-id')
+                    || ($('#chat_thread_id').length ? $('#chat_thread_id').val() : 0)
+            }, function(data) {
                 lastUnreadCount = parseInt(data.count);
                 updateChatBadges(lastUnreadCount);
             });
-            setInterval(checkUnreadChats, 10000);
+
+            if (typeof window.Echo !== 'undefined') {
+                window.Echo.private('App.User.{{ Auth::id() }}')
+                    .listen('.message-sent', function (event) {
+                        console.log('[chat badge] message-sent event', event);
+                        var activeThreadId = window.activeChatThreadId ? parseInt(window.activeChatThreadId) : (($(".chat-user-item.selected-chat").first().data("thread-id")) ? parseInt($(".chat-user-item.selected-chat").first().data("thread-id")) : (($("#chat_thread_id").length) ? parseInt($("#chat_thread_id").val()) : null));
+                        var incomingThreadId = event && event.thread_id ? parseInt(event.thread_id) : null;
+                        console.log('[chat badge] active thread', activeThreadId, 'incoming thread', incomingThreadId);
+                                                if (activeThreadId && incomingThreadId && activeThreadId === incomingThreadId) {
+                            console.log('[chat badge] active thread match, skipping badge increment');
+                            if (typeof window.markActiveChatThreadSeen === 'function') {
+                                window.markActiveChatThreadSeen(function () {
+                                    checkUnreadChats();
+                                    if (window.location.pathname.endsWith('/chat') && typeof window.initChatRealtimeRefresh === 'function') {
+                                        window.initChatRealtimeRefresh();
+                                    }
+                                });
+                            } else {
+                                checkUnreadChats();
+                                if (window.location.pathname.endsWith('/chat') && typeof window.initChatRealtimeRefresh === 'function') {
+                                    window.initChatRealtimeRefresh();
+                                }
+                            }
+                            return;
+                        }
+                        if (typeof window.handleIncomingChatSidebarEvent === 'function') {
+                            window.handleIncomingChatSidebarEvent(event);
+                        }
+                        console.log('[chat badge] unread before increment', lastUnreadCount);
+                        lastUnreadCount = Math.max(0, lastUnreadCount + 1);
+                        console.log('[chat badge] unread after increment', lastUnreadCount);
+                        updateChatBadges(lastUnreadCount);
+                        checkUnreadChats();
+                        if (window.location.pathname.endsWith('/chat') && typeof window.initChatRealtimeRefresh === 'function') {
+                            window.initChatRealtimeRefresh();
+                        }
+                    })
+                    .listen('.message-read', function (event) {
+                        console.log('[chat badge] message-read event', event);
+                        checkUnreadChats();
+                    });
+            }
         });
     </script>
     @endif

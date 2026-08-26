@@ -1,9 +1,15 @@
+
 @if ($chat->message != null)
     <div class="chat-coversation right">
         <div class="media">
             <div class="media-body">
                 <div class="text bg-soft-primary text-dark">{{ $chat->message }}</div>
-                <span class="time">{{ Carbon\Carbon::parse($chat->created_at)->diffForHumans() }}</span>
+                <div class="d-flex justify-content-end align-items-center mt-1">
+                    <a href="javascript:void(0)" class="text-danger fs-12 chat-delete-message" data-message-id="{{ $chat->id }}" title="Delete message">
+                        <i class="las la-trash"></i>
+                    </a>
+                    <span class="time ml-2">{{ Carbon\Carbon::parse($chat->created_at)->diffForHumans() }}</span>
+                </div>
             </div>
             <span class="avatar avatar-xs flex-shrink-0">
                 @if ($chat->sender->photo != null)
@@ -63,7 +69,12 @@
                         @endif
                     @endforeach
                 </div>
-                <span class="time">{{ Carbon\Carbon::parse($chat->created_at)->diffForHumans() }}</span>
+                
+                <div class="d-flex justify-content-end align-items-center mt-1">
+                    <a href="javascript:void(0)" class="text-danger fs-12 chat-delete-message" data-message-id="{{ $chat->id }}" title="Delete message">
+                        <i class="las la-trash"></i>
+                    </a>
+                </div><span class="time">{{ Carbon\Carbon::parse($chat->created_at)->diffForHumans() }}</span>
             </div>
             <span class="avatar avatar-xs flex-shrink-0">
                 @if ($chat->sender->photo != null)

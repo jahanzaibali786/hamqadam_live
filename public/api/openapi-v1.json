@@ -946,6 +946,107 @@
         }
       }
     },
+    "/proposals/shortlists": {
+      "get": {
+        "tags": [
+          "Proposals"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "List shortlists",
+        "responses": {
+          "200": {
+            "description": "Shortlist collection"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Proposals"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Add shortlist",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "user_id": 25
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Profile shortlisted successfully"
+          }
+        }
+      }
+    },
+    "/proposals/shortlists/{user}/check": {
+      "get": {
+        "tags": [
+          "Proposals"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Check shortlist state",
+        "parameters": [
+          {
+            "name": "user",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shortlist state"
+          }
+        }
+      }
+    },
+    "/proposals/shortlists/{user}": {
+      "delete": {
+        "tags": [
+          "Proposals"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Remove shortlist",
+        "parameters": [
+          {
+            "name": "user",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shortlist removed"
+          }
+        }
+      }
+    },
     "/proposals/favourites": {
       "post": {
         "tags": [
@@ -1174,6 +1275,71 @@
         "responses": {
           "200": {
             "description": "Current verification"
+          }
+        }
+      }
+    },
+    "/payments/current": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Current package",
+        "responses": {
+          "200": {
+            "description": "Current package and remaining entitlements"
+          }
+        }
+      }
+    },
+    "/payments/packages/{package}": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Package details",
+        "parameters": [
+          {
+            "name": "package",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Package details"
+          }
+        }
+      }
+    },
+    "/payments/usage": {
+      "get": {
+        "tags": [
+          "Payments"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Package usage history",
+        "responses": {
+          "200": {
+            "description": "Paginated package usage history"
           }
         }
       }
@@ -2402,7 +2568,7 @@
         "tags": [
           "Profile"
         ],
-        "summary": "Public profile detail for app user",
+        "summary": "Public profile detail for app user and consume one profile-view coin",
         "responses": {
           "200": {
             "description": "Successful response"
@@ -2636,6 +2802,257 @@
             "description": "Registration status"
           }
         }
+      }
+    },
+    "/chat/threads/{thread}/block": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Block chat thread",
+        "parameters": [
+          {
+            "name": "thread",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat blocked"
+          }
+        }
+      }
+    },
+    "/chat/threads/{thread}/unblock": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Unblock chat thread",
+        "parameters": [
+          {
+            "name": "thread",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat unblocked"
+          }
+        }
+      }
+    },
+    "/chat/threads/{thread}/clear": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Clear chat for me",
+        "parameters": [
+          {
+            "name": "thread",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chat cleared"
+          }
+        }
+      }
+    },
+    "/chat/threads/{thread}/report": {
+      "post": {
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Report and block chat thread",
+        "parameters": [
+          {
+            "name": "thread",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "reason": "Unwanted messages"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chat reported"
+          }
+        }
+      }
+    },
+    "/chat/messages/{message}": {
+      "delete": {
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "sanctum": []
+          }
+        ],
+        "summary": "Delete message for me",
+        "parameters": [
+          {
+            "name": "message",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 40
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message deleted for you"
+          }
+        }
+      }
+    },
+    "/profile-views": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "List profiles viewed by current member",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/profile-views/received": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "List members who viewed the current member",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/profile-views/balance": {
+      "get": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Get profile-view balance",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
+      }
+    },
+    "/profile-views/{profile}": {
+      "post": {
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Consume one profile-view coin and fetch a public profile",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          },
+          "401": {
+            "description": "Unauthenticated"
+          },
+          "422": {
+            "description": "Validation error"
+          }
+        },
+        "security": [
+          {
+            "sanctum": []
+          }
+        ]
       }
     }
   }

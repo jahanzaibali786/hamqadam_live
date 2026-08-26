@@ -10,6 +10,7 @@ use App\Exceptions\ApiException;
 use App\Models\Member;
 use App\Models\Package;
 use App\Models\PackagePayment;
+use App\Models\PackageUsage;
 use App\Models\PaymentCoupon;
 use App\Models\PaymentWebhookEvent;
 use App\Models\User;
@@ -23,6 +24,27 @@ class PaymentService
     public function plans()
     {
         return Package::where('active', 1)->orderBy('price')->get();
+    }
+
+    public function current(User $user): ?Package
+    {
+        return $user->member?->current_package_id ? Package::find($user->member->current_package_id) : null;
+    }
+
+    public function packageDetails(int $packageId): Package
+    {
+        return $this->activePackage($packageId);
+    }
+
+    public function usage(User $user, array $filters): LengthAwarePaginator
+    {
+        $query = PackageUsage::where('user_id', $user->id)->latest();
+
+        if (! empty($filters['feature'])) {
+            $query->where('feature', $filters['feature']);
+        }
+
+        return $query->paginate((int) ($filters['per_page'] ?? 20));
     }
 
     public function history(User $user, array $filters): LengthAwarePaginator

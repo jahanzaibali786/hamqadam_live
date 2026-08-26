@@ -422,14 +422,14 @@ class HomeController extends Controller
         if($user->id != $authUser->id){
             $profileViewed = ProfileViewer::where('user_id', $user->id)->where('viewed_by', $authUser->id)->first();
             if($profileViewed == null){
-                if(package_validity($user->id) && $user->member->remaining_profile_viewer_view > 0){
-                    ProfileViewer::create([
+                $viewerMember = Member::where('user_id', $authUser->id)->first();
+                if(package_validity($authUser->id) && $viewerMember->remaining_profile_viewer_view > 0){
+                    $profileViewed = ProfileViewer::create([
                         'user_id' => $user->id,
                         'viewed_by' => $authUser->id
                     ]);
-                    $usermember = $user->member;
-                    $usermember->remaining_profile_viewer_view = $usermember->remaining_profile_viewer_view - 1;
-                    $usermember->save();
+                                        $viewerMember->remaining_profile_viewer_view = max(0, $viewerMember->remaining_profile_viewer_view - 1);
+                    $viewerMember->save();
 
                     PackageUsage::record(
                         $authUser->id,
@@ -705,3 +705,5 @@ class HomeController extends Controller
         }
     }
 }
+
+

@@ -47,6 +47,8 @@ class ReportedUserController extends Controller
         $report_member->user_id    = $request->member_id;
         $report_member->reported_by= Auth::user()->id;
         $report_member->reason     = $request->reason;
+        $report_member->source     = 'profile';
+        $report_member->chat_thread_id = null;
         if($report_member->save()){
           flash('Reported to this member successfully.')->success();
           return back();
@@ -59,13 +61,32 @@ class ReportedUserController extends Controller
 
     public function reported_members($id)
     {
-      $reports       = ReportedUser::latest();
+      $reports = ReportedUser::with(['user', 'reportedBy'])->latest();
       if($id != 'all')
       {
         $reports  = $reports->where('user_id',$id);
       }
       $reports       = $reports->paginate(10);
-      return view('admin.members.reported_members', compact('reports'));
+      return view('admin.members.reported_members', [
+          'reports' => $reports,
+          'report_page_title' => 'Profile Reports',
+          'report_filter_type' => 'profile',
+      ]);
+    }
+
+    public function chat_reports($id)
+    {
+      $reports = ReportedUser::with(['user', 'reportedBy'])->where('source', 'chat')->latest();
+      if($id != 'all')
+      {
+        $reports  = $reports->where('user_id',$id);
+      }
+      $reports = $reports->paginate(10);
+      return view('admin.members.reported_members', [
+          'reports' => $reports,
+          'report_page_title' => 'Chat Reports',
+          'report_filter_type' => 'chat',
+      ]);
     }
 
     /**

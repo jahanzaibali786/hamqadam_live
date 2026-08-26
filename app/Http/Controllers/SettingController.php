@@ -54,6 +54,35 @@ class SettingController extends Controller
         return view('admin.settings.third_party_settings');
     }
 
+    public function chat_realtime_settings()
+    {
+        return view('admin.settings.chat_realtime_settings');
+    }
+
+    public function chat_realtime_settings_update(Request $request)
+    {
+        foreach (['chat_realtime_enabled', 'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster', 'pusher_host', 'pusher_port', 'pusher_scheme'] as $key) {
+            $setting = Setting::where('type', $key)->first();
+            if (! $setting) {
+                $setting = new Setting();
+                $setting->type = $key;
+            }
+
+            if ($key === 'chat_realtime_enabled') {
+                $setting->value = $request->has($key) ? 1 : 0;
+            } else {
+                $setting->value = $request->input($key);
+            }
+
+            $setting->save();
+        }
+
+        Artisan::call('cache:clear');
+
+        flash(translate('Settings updated successfully'))->success();
+        return back();
+    }
+
     public function member_profile_sections_configuration ()
     {
         return view('admin.member_profile_attributes.member_profile_sections.index');

@@ -748,6 +748,13 @@
                             </a>
                         </li>
                         @endcan
+                        @can('third_party_settings')
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('chat_realtime_settings') }}" class="aiz-side-nav-link">
+                                <span class="aiz-side-nav-text">{{ translate('Pusher / Realtime Chat') }}</span>
+                            </a>
+                        </li>
+                        @endcan
                     </ul>
                 </li>
                 @endif
