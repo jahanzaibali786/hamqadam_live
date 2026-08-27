@@ -70,6 +70,28 @@ class ProfileViewController extends ApiController
     {
         $result = $this->profileViews->view($request->user(), $profile);
 
+        if (! $result['allowed']) {
+            return $this->error(
+                $result['reason'] === 'package_required'
+                    ? 'Please purchase an active package before viewing profiles.'
+                    : 'Your package has no remaining profile views. Please upgrade your package to continue.',
+                422,
+                $result['reason'],
+                [],
+                [
+                    'profile_view' => [
+                        'consumed' => false,
+                        'already_viewed' => false,
+                        'remaining_profile_viewer_view' => $result['remaining_profile_viewer_view'],
+                        'package_validity' => $result['package_validity'],
+                        'is_active' => $result['is_active'],
+                        'current_package_id' => $result['current_package_id'],
+                        'upgrade_required' => true,
+                    ],
+                ]
+            );
+        }
+
         return $this->success([
             'profile' => new SearchProfileResource($result['profile']),
             'profile_view' => [
@@ -78,6 +100,7 @@ class ProfileViewController extends ApiController
                 'remaining_profile_viewer_view' => $result['remaining_profile_viewer_view'],
                 'package_validity' => $result['package_validity'],
                 'is_active' => $result['is_active'],
+                'current_package_id' => $result['current_package_id'],
             ],
         ], 'Profile fetched successfully.');
     }

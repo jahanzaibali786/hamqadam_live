@@ -423,12 +423,13 @@ if (!function_exists('feature_coin_cost')) {
 if (!function_exists('package_validity')) {
     function package_validity($id)
     {
-        $package_validity = Member::where('user_id', $id)->first()->package_validity;
+        $member = Member::where('user_id', $id)->first();
+        $package_validity = $member?->package_validity;
         if ($package_validity == null || ($package_validity < date('Y-m-d'))) {
             return false;
-        } else {
-            return true;
         }
+
+        return true;
     }
 }
 

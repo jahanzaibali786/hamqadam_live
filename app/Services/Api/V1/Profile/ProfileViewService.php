@@ -14,6 +14,25 @@ use Illuminate\Support\Facades\DB;
 
 class ProfileViewService
 {
+    public function canView(User $viewer): array
+    {
+        $member = Member::where('user_id', $viewer->id)->first();
+        $package = $member?->package;
+        $packageValid = (bool) ($member?->package_validity && Carbon::parse($member->package_validity)->greaterThanOrEqualTo(now()->startOfDay()));
+        $isActive = (bool) ($member && $member->current_package_id && $packageValid);
+        $remaining = (int) ($member?->remaining_profile_viewer_view ?? 0);
+
+        return [
+            'allowed' => $isActive && $remaining > 0,
+            'reason' => $isActive ? ($remaining > 0 ? null : 'insufficient_profile_view_balance') : 'package_required',
+            'remaining_profile_viewer_view' => $remaining,
+            'package_validity' => $member?->package_validity ? Carbon::parse($member->package_validity)->toDateString() : null,
+            'is_active' => $isActive,
+            'current_package_id' => $member?->current_package_id,
+            'package' => $package,
+        ];
+    }
+
     public function sent(User $viewer, int $perPage = 20): LengthAwarePaginator
     {
         return ProfileViewer::with([
@@ -48,16 +67,15 @@ class ProfileViewService
 
     public function balance(User $viewer): array
     {
-        $member = $viewer->member;
-        $package = $member?->package;
+        $access = $this->canView($viewer);
 
         return [
-            'remaining_profile_viewer_view' => (int) ($member?->remaining_profile_viewer_view ?? 0),
-            'used_profile_views' => max(0, (int) ($package?->profile_viewers_view ?? 0) - (int) ($member?->remaining_profile_viewer_view ?? 0)),
-            'package_validity' => $member?->package_validity ? Carbon::parse($member->package_validity)->toDateString() : null,
-            'is_active' => (bool) ($member && $member->current_package_id && package_validity($viewer->id)),
-            'current_package_id' => $member?->current_package_id,
-            'package' => $package,
+            'remaining_profile_viewer_view' => $access['remaining_profile_viewer_view'],
+            'used_profile_views' => max(0, (int) ($access['package']?->profile_viewers_view ?? 0) - $access['remaining_profile_viewer_view']),
+            'package_validity' => $access['package_validity'],
+            'is_active' => $access['is_active'],
+            'current_package_id' => $access['current_package_id'],
+            'package' => $access['package'],
         ];
     }
 
@@ -85,12 +103,28 @@ class ProfileViewService
 
         $alreadyViewed = (bool) $profileViewer;
         $consumed = false;
+        $access = $this->canView($viewer);
+
+        if (! $alreadyViewed && ! $access['allowed']) {
+            return [
+                'profile' => $profile,
+                'consumed' => false,
+                'already_viewed' => false,
+                'allowed' => false,
+                'reason' => $access['reason'],
+                'remaining_profile_viewer_view' => $access['remaining_profile_viewer_view'],
+                'package_validity' => $access['package_validity'],
+                'is_active' => $access['is_active'],
+                'current_package_id' => $access['current_package_id'],
+                'package' => $access['package'],
+            ];
+        }
 
         if (! $alreadyViewed) {
-            DB::transaction(function () use (&$profileViewer, $profile, $viewer): void {
+            DB::transaction(function () use (&$profileViewer, $profile, $viewer, $access): void {
                 $member = Member::where('user_id', $viewer->id)->lockForUpdate()->first();
 
-                if (! $member || ! package_validity($viewer->id) || (int) $member->remaining_profile_viewer_view <= 0) {
+                if (! $member || ! $access['is_active'] || (int) $member->remaining_profile_viewer_view <= 0) {
                     return;
                 }
 
@@ -116,15 +150,19 @@ class ProfileViewService
             $consumed = (bool) $profileViewer;
         }
 
-        $freshMember = Member::where('user_id', $viewer->id)->first();
+        $freshAccess = $this->canView($viewer);
 
         return [
             'profile' => $profile,
             'consumed' => $consumed,
             'already_viewed' => $alreadyViewed,
-            'remaining_profile_viewer_view' => (int) ($freshMember?->remaining_profile_viewer_view ?? 0),
-            'package_validity' => $freshMember?->package_validity ? Carbon::parse($freshMember->package_validity)->toDateString() : null,
-            'is_active' => (bool) ($freshMember && $freshMember->current_package_id && package_validity($viewer->id)),
+            'allowed' => true,
+            'reason' => null,
+            'remaining_profile_viewer_view' => $freshAccess['remaining_profile_viewer_view'],
+            'package_validity' => $freshAccess['package_validity'],
+            'is_active' => $freshAccess['is_active'],
+            'current_package_id' => $freshAccess['current_package_id'],
+            'package' => $freshAccess['package'],
         ];
     }
 }
