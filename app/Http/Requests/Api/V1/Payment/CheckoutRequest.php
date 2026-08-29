@@ -12,7 +12,8 @@ class CheckoutRequest extends ApiFormRequest
     {
         return [
             'package_id' => ['required', 'integer', 'exists:packages,id'],
-            'gateway' => ['required', 'string', 'in:stripe,easypaisa,jazzcash'],
+            'gateway_id' => ['sometimes', 'nullable', 'integer', 'in:1,2,3', 'required_without:gateway'],
+            'gateway' => ['sometimes', 'nullable', 'string', 'in:stripe,easypaisa,jazzcash', 'required_without:gateway_id'],
             'coupon_code' => ['sometimes', 'nullable', 'string', 'max:100'],
             'currency' => ['sometimes', 'nullable', 'string', 'size:3'],
             'success_url' => ['sometimes', 'nullable', 'url'],

@@ -50,6 +50,28 @@ class PaymentController extends ApiController
         ]);
     }
 
+    public function gateways(Request $request): JsonResponse
+    {
+        $gateways = $this->payments->gateways();
+
+        return $this->success([
+            'gateways' => $gateways,
+            'summary' => [
+                'total_supported' => count($gateways),
+                'enabled_gateways' => count(array_filter($gateways, fn ($gateway) => $gateway['enabled'])),
+                'available_gateways' => count(array_filter($gateways, fn ($gateway) => $gateway['available'])),
+            ],
+        ], 'Payment gateways fetched successfully.');
+    }
+
+    public function gateway(Request $request, int $gateway): JsonResponse
+    {
+        return $this->success(
+            $this->payments->gatewayDetails(\App\Enums\PaymentGateway::fromId($gateway)),
+            'Payment gateway fetched successfully.'
+        );
+    }
+
     public function package(Request $request, int $package): JsonResponse
     {
         return $this->success(new PlanResource($this->payments->packageDetails($package)));
@@ -76,8 +98,20 @@ class PaymentController extends ApiController
         return $this->success([
             'payment' => new PaymentResource($checkout['payment']),
             'gateway' => $checkout['gateway'],
+            'gateway_id' => $checkout['gateway_id'],
             'checkout' => $checkout['checkout'],
+            'security' => $checkout['security'],
         ], 'Checkout created successfully.', 201);
+    }
+
+    public function checkoutStatus(Request $request, int $payment): JsonResponse
+    {
+        $status = $this->payments->checkoutStatus($request->user(), $payment, $request->string('checkout_token')->toString() ?: null);
+
+        return $this->success([
+            'payment' => new PaymentResource($status['payment']),
+            'checkout' => $status['checkout'],
+        ], 'Checkout status fetched successfully.');
     }
 
     public function history(PaymentHistoryRequest $request): JsonResponse

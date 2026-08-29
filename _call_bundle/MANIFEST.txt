@@ -1,0 +1,34 @@
+Call bundle generated: 2026-08-29
+
+Included files:
+app/Enums/CallStatus.php
+app/Enums/CallType.php
+app/Events/CallAccepted.php
+app/Events/CallBroadcastEvent.php
+app/Events/CallBusy.php
+app/Events/CallCancelled.php
+app/Events/CallEnded.php
+app/Events/CallIncoming.php
+app/Events/CallMissed.php
+app/Events/CallRejected.php
+app/Http/Controllers/Api/V1/Chat/CallController.php
+app/Http/Controllers/CallController.php
+app/Http/Requests/Api/V1/Chat/StartCallRequest.php
+app/Models/Call.php
+app/Services/CallService.php
+database/migrations/2026_08_28_000001_create_calls_table.php
+resources/views/frontend/member/messages/calls_part.blade.php
+resources/views/frontend/partials/global_call_modals.blade.php
+resources/views/frontend/layouts/app.blade.php
+resources/views/frontend/member/messages/messages.blade.php
+routes/api_v1.php
+routes/web.php
+app/Http/Controllers/ChatController.php
+app/Http/Controllers/SettingController.php
+app/Models/ChatThread.php
+app/Models/User.php
+resources/views/admin/settings/chat_realtime_settings.blade.php
+composer.json
+API_DOCUMENTATION.md
+public/api/openapi-v1.json
+public/api/postman-v1.json

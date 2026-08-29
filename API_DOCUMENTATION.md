@@ -41,7 +41,7 @@ Use this checklist for Flutter/mobile QA. These are the app-facing groups only:
 | Profile | `/profile`, `/profiles/{profile}`, `/profile-views`, `/profile-views/received`, `/profile-views/balance`, `/profile/privacy`, `/profile/visibility`, `/partner-preferences`, `/profile/dropdown-reference-data` |
 | Discovery | `/search/profiles`, `/search/saved`, `/search/history`, `/matches`, `/matches/recommended`, `/matches/daily`, `/profiles/{profile}/compatibility` |
 | Proposals | `/proposals`, `/proposals/{proposal}/accept`, `/proposals/{proposal}/reject`, `/proposals/favourites`, `/proposals/shortlists`, `/proposals/ignored` |
-| Chat | `/chat/threads`, `/chat/threads/{thread}/messages`, `/chat/threads/{thread}/typing`, `/chat/threads/{thread}/block`, `/chat/threads/{thread}/unblock`, `/chat/threads/{thread}/clear`, `/chat/threads/{thread}/report`, `/chat/messages/{message}` |
+| Chat | `/chat/threads`, `/chat/threads/{thread}/messages`, `/chat/threads/{thread}/calls`, `/chat/calls`, `/chat/calls/{call}`, `/chat/threads/{thread}/typing`, `/chat/threads/{thread}/block`, `/chat/threads/{thread}/unblock`, `/chat/threads/{thread}/clear`, `/chat/threads/{thread}/report`, `/chat/messages/{message}` |
 | Interests | `/interests`, `/interests/sent`, `/interests/received`, `/interests/coin-balance`, `/interests/{interest}/accept`, `/interests/{interest}/reject` |
 | Packages & Payments | `/payments/plans`, `/payments/current`, `/payments/packages/{package}`, `/payments/usage`, `/payments/checkout`, `/payments/history`, `/payments/invoices/{payment}`, `/payments/coupons/validate` |
 | Notifications | `/notifications`, `/notifications/unread-count`, `/notifications/preferences`, `/notifications/push-tokens` |
@@ -756,6 +756,16 @@ Broadcast channels
 | Report chat | POST | `/api/v1/chat/threads/{thread}/report` | `reason` | Reports the thread, writes a moderation record, and blocks the thread from the reporter's side. |
 | Delete message for me | DELETE | `/api/v1/chat/messages/{message}` | None | Hides the message from the authenticated user's view only. |
 
+| Calls history | GET | `/api/v1/chat/threads/{thread}/calls` | `per_page` (optional) | Returns structured call logs for the conversation timeline. |
+| Start call | POST | `/api/v1/chat/calls` | `chat_thread_id`, `call_type` (`audio` or `video`) | Creates a call record, generates an Agora RTC token, and fires the incoming-call Pusher event. |
+| Get call | GET | `/api/v1/chat/calls/{call}` | None | Returns a single call record with caller, receiver, status, channel, and timing metadata. |
+| Accept call | POST | `/api/v1/chat/calls/{call}/accept` | None | Marks the call accepted and returns the receiver RTC token. |
+| Reject call | POST | `/api/v1/chat/calls/{call}/reject` | None | Declines the call and notifies the caller in realtime. |
+| Cancel call | POST | `/api/v1/chat/calls/{call}/cancel` | None | Cancels an outgoing call from the caller side. |
+| Connect call | POST | `/api/v1/chat/calls/{call}/connect` | None | Marks the call connected once the Agora client joins successfully. |
+| End call | POST | `/api/v1/chat/calls/{call}/end` | `status` optional (`ended` or `missed`) | Ends the active call and stores the duration. |
+| Missed call | POST | `/api/v1/chat/calls/{call}/missed` | None | Marks the call as missed and broadcasts the missed-call event. |
+
 Sample request bodies
 
 Send message:
@@ -997,9 +1007,12 @@ dashboard's verification button available.
 |---|---:|---|---|
 | Plans | GET | `/payments/plans` | None |
 | Current package | GET | `/payments/current` | None |
+| Payment gateways | GET | `/payments/gateways` | None |
+| Gateway detail | GET | `/payments/gateways/{gateway}` | None |
 | Package details | GET | `/payments/packages/{package}` | None |
 | Package usage | GET | `/payments/usage` | Optional `feature` and `per_page` |
-| Checkout | POST | `/payments/checkout` | Stripe, EasyPaisa, or JazzCash payload |
+| Checkout | POST | `/payments/checkout` | `package_id` + `gateway_id` or `gateway`, plus gateway-specific fields |
+| Checkout status | GET | `/payments/checkout/{payment}/status` | Optional `checkout_token` |
 | Payment history | GET | `/payments/history` | Query filters optional |
 | Invoice | GET | `/payments/invoices/{payment}` | None |
 | Validate coupon | POST | `/payments/coupons/validate` | `package_id`, `code` |
@@ -1352,9 +1365,12 @@ Use: show plans, show the active package, inspect usage, start checkout, inspect
 |---|---|---|---|
 | Plans | `/payments/plans` | None | `PlanResource` collection with package limits, duration, coins, and price |
 | Current package | `/payments/current` | None | Current package info with remaining entitlements |
+| Payment gateways | `/payments/gateways` | None | Active gateway definitions from admin settings, with configuration status and checkout metadata |
+| Gateway detail | `/payments/gateways/{gateway}` | None | One gateway definition with payload schema and sample request body |
 | Package details | `/payments/packages/{package}` | None | Single `PlanResource` with package limits |
 | Usage | `/payments/usage` | Optional `feature` and `per_page` | Paginated usage history with summary totals |
-| Checkout | `/payments/checkout` | `plan/package_id`, gateway fields, coupon code | `PaymentResource` with invoice and gateway details |
+| Checkout | `/payments/checkout` | `package_id`, `gateway_id` or `gateway`, gateway fields, coupon code | `PaymentResource` with invoice and gateway details plus secure checkout token |
+| Checkout status | `/payments/checkout/{payment}/status` | Optional `checkout_token` | Payment status, gateway status, and token expiry details |
 | History | `/payments/history`, `/payments/invoices/{payment}` | Optional filters | Paginated payment list or invoice detail |
 | Coupons | `/payments/coupons/validate` | `package_id`, `code` | Coupon validation status and discount |
 Typical payment response:
@@ -1429,9 +1445,107 @@ Typical content response:
 - Use `/auth/me` as the only app authentication check.
 - Use `/payments/plans` to show packages and `/payments/current` to show the active package and remaining limits. Plan feature payloads include `coins`.
 - Basic Free package is applied automatically after registration.
-- For EasyPaisa/JazzCash, show the returned `checkout.instructions`, `account_msisdn`, `gateway_reference`, and `amount` to the user.
+- Use `GET /payments/gateways` to build the package payment-method screen. Show only gateways where `available=true`, and surface the returned settings snapshot for Stripe, EasyPaisa, and JazzCash.
+- For EasyPaisa/JazzCash checkout, show the returned `checkout.instructions`, `account_msisdn`, `gateway_reference`, and `amount` to the user.
 - Treat payment status `Due` as pending approval, not failed.
 - Do not call legacy endpoints under `/api/member/...`.
 - Do not call admin endpoints from the app.
 
 
+
+
+### Secure Payment Flow
+1. Pehle `GET /payments/gateways` call karo.
+2. Sirf woh gateways show karo jinka `available=true` ho.
+3. Gateway select karne ke baad `gateway_id` aur `package_id` ke sath `POST /payments/checkout` bhejo.
+4. Backend tumhe `checkout_token`, `status_endpoint`, aur payment detail dega.
+5. Agar gateway manual hai to app sirf instructions show kare, secrets kabhi store na kare.
+6. Payment complete hone ke baad `GET /payments/checkout/{payment}/status?checkout_token=...` se current status verify karo.
+7. Webhook sirf backend ke liye hai. App ko webhook hit nahi karna chahiye.
+8. Agar admin panel me key, secret, ya instruction change ho, app ko bas `GET /payments/gateways` dobara call karna hai.
+
+#### Gateway-specific payloads
+- Stripe:
+  - `package_id`
+  - `gateway_id = 1`
+  - optional `currency`, `success_url`, `cancel_url`
+- EasyPaisa:
+  - `package_id`
+  - `gateway_id = 2`
+  - `easypaisa_phone`
+  - optional `currency`, `metadata`
+- JazzCash:
+  - `package_id`
+  - `gateway_id = 3`
+  - `jazzcash_phone`
+  - optional `currency`, `metadata`
+## System Bridge
+
+These endpoints expose app-facing connection settings in a neutral format. Sensitive values are not returned raw. Instead, the response includes fingerprints and masked secret metadata.
+
+| Feature | Method | Endpoint | Payload | Auth |
+|---|---:|---|---|---|
+| Connector A config | GET | `/bridge/connector-a` | None | Required |
+| Connector B config | GET | `/bridge/connector-b` | None | Required |
+
+### Connector A response shape
+
+```json
+{
+  "success": true,
+  "message": "Configuration loaded successfully.",
+  "data": {
+    "connector": "connector_a",
+    "enabled": true,
+    "public": {
+      "app_id": "...",
+      "app_key": "...",
+      "cluster": "...",
+      "host": "...",
+      "port": "...",
+      "scheme": "..."
+    },
+    "fingerprints": {
+      "app_id": "sha256-hash",
+      "app_key": "sha256-hash"
+    },
+    "secured": {
+      "app_secret": {
+        "present": true,
+        "masked": "********abcd",
+        "fingerprint": "sha256-hash"
+      }
+    },
+    "payload_hash": "sha256-hash"
+  }
+}
+```
+
+### Connector B response shape
+
+```json
+{
+  "success": true,
+  "message": "Configuration loaded successfully.",
+  "data": {
+    "connector": "connector_b",
+    "enabled": true,
+    "public": {
+      "app_id": "...",
+      "token_expiry": "3600"
+    },
+    "fingerprints": {
+      "app_id": "sha256-hash",
+      "token_expiry": "sha256-hash"
+    },
+    "secured": {
+      "app_certificate": {
+        "present": true,
+        "masked": "********ture",
+        "fingerprint": "sha256-hash"
+      }
+    },
+    "payload_hash": "sha256-hash"
+  }
+}
+```
