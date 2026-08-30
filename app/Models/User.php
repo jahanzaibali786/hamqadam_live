@@ -52,7 +52,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'password', 'code', 'phone','membership','approved', 'verification_code','fcm_token','referred_by','email_verified_at', 'match_refresh_updated_at', 'refresh_updated_at'
+        'first_name', 'last_name', 'email', 'password', 'code', 'phone','membership','approved', 'verification_code','fcm_token','referred_by','email_verified_at', 'match_refresh_updated_at', 'refresh_updated_at', 'admin_identifier'
     ];
 
     /**
@@ -254,3 +254,4 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(FamilyGuardianLink::class, 'guardian_user_id');
     }
 }
+

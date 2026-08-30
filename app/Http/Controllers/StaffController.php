@@ -20,59 +20,43 @@ class StaffController extends Controller
         $this->middleware(['permission:delete_staffs'])->only('destroy');
     }
 
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function index()
     {
         $staffs = Staff::latest()->paginate(10);
         return view('admin.staff.staffs.index', compact('staffs'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
     public function create()
     {
         $roles = Role::latest()->get();
         return view('admin.staff.staffs.create', compact('roles'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         if(User::where('email', $request->email)->first() == null){
-            $user             = new User;
+            $user = new User;
             $user->first_name = $request->first_name;
             $user->last_name  = $request->last_name;
             $user->email      = $request->email;
             $user->phone      = $request->mobile;
-            $user->user_type  = "staff";
+            $user->user_type  = 'staff';
+            $role             = Role::findOrFail($request->role_id);
+            $user->admin_identifier = str_contains(strtolower($role->name), 'sub') ? 'subadmin' : 'staff';
             $user->password   = Hash::make($request->password);
             if($user->save()){
-                $staff          = new Staff;
+                $staff = new Staff;
                 $staff->user_id = $user->id;
                 $staff->role_id = $request->role_id;
-                $user->assignRole(Role::findOrFail($request->role_id)->name);
+                $user->assignRole($role->name);
                 if($staff->save()){
-                    $role_name  = Role::where('id',$staff->role_id)->first()->name;
+                    $role_name  = Role::where('id', $staff->role_id)->first()->name;
 
-                    // Account approval email send to staff
                     if($user->email != null && get_email_template('staff_account_opening_email','status'))
                     {
                         EmailUtility::staff_account_opening_email($user, $request->password, $role_name);
                     }
 
-                    // Account Approval SMS send to staff
                     if($user->phone != null && addon_activation('otp_system') && (get_sms_template('staff_account_opening','status') == 1))
                     {
                         SmsUtility::staff_account_opening($user, $request->password, $role_name);
@@ -88,23 +72,11 @@ class StaffController extends Controller
         return back();
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function edit($id)
     {
         $staff = Staff::findOrFail(decrypt($id));
@@ -112,17 +84,10 @@ class StaffController extends Controller
         return view('admin.staff.staffs.edit', compact('staff','roles'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request, $id)
     {
-        $staff            = Staff::findOrFail($id);
-        $user             = $staff->user;
+        $staff = Staff::findOrFail($id);
+        $user  = $staff->user;
         $user->first_name = $request->first_name;
         $user->last_name  = $request->last_name;
         $user->email      = $request->email;
@@ -132,7 +97,9 @@ class StaffController extends Controller
         }
         if($user->save()){
             $staff->role_id = $request->role_id;
-            $user->syncRoles(Role::findOrFail($request->role_id)->name);
+            $role = Role::findOrFail($request->role_id);
+            $user->admin_identifier = str_contains(strtolower($role->name), 'sub') ? 'subadmin' : 'staff';
+            $user->syncRoles($role->name);
             if($staff->save()){
                 flash(translate('Staff has been updated successfully'))->success();
                 return redirect()->route('staffs.index');
@@ -143,12 +110,6 @@ class StaffController extends Controller
         return back();
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         User::destroy(Staff::findOrFail($id)->user->id);
