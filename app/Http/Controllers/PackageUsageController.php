@@ -23,12 +23,16 @@ class PackageUsageController extends Controller
 
         $totalUsedCoins = (int) $usages->sum('amount');
         $remainingCoins = (int) (auth()->user()->member?->remaining_interest ?? 0);
+        $remainingProfileViews = (int) (auth()->user()->member?->remaining_profile_viewer_view ?? 0);
+        $profileViewsUsed = (int) $usages->where('feature', 'profile_viewer_view')->sum('amount');
 
         return view('frontend.member.package_usage_history', compact(
             'usages',
             'totalPurchasedCoins',
             'totalUsedCoins',
-            'remainingCoins'
+            'remainingCoins',
+            'remainingProfileViews',
+            'profileViewsUsed'
         ));
     }
 }

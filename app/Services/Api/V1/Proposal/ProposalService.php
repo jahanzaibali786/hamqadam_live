@@ -10,13 +10,16 @@ use App\Exceptions\ApiException;
 use App\Models\ChatThread;
 use App\Models\ExpressInterest;
 use App\Models\IgnoredUser;
+use App\Models\PackageUsage;
 use App\Models\ProposalEvent;
 use App\Models\ProposalNote;
 use App\Models\ProfileMatch;
 use App\Models\Shortlist;
 use App\Models\User;
+use App\Notifications\DbStoreNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class ProposalService
 {
@@ -197,6 +200,20 @@ class ProposalService
             ->paginate($perPage);
     }
 
+    public function shortlists(User $actor, int $perPage = 20): LengthAwarePaginator
+    {
+        return Shortlist::with([
+            'user.member',
+            'user.physical_attributes',
+            'user.spiritual_backgrounds',
+            'user.addresses',
+            'user.profile_match_for_viewer' => fn ($query) => $query->where('user_id', $actor->id),
+        ])
+            ->where('shortlisted_by', $actor->id)
+            ->latest()
+            ->paginate($perPage);
+    }
+
     public function isFavourite(User $actor, int $userId): bool
     {
         return Shortlist::where('user_id', $userId)->where('shortlisted_by', $actor->id)->exists();
@@ -205,6 +222,97 @@ class ProposalService
     public function removeFavourite(User $actor, int $userId): void
     {
         Shortlist::where('user_id', $userId)->where('shortlisted_by', $actor->id)->delete();
+    }
+
+    public function removeShortlist(User $actor, int $userId): void
+    {
+        Shortlist::where('user_id', $userId)->where('shortlisted_by', $actor->id)->delete();
+    }
+
+    public function shortlist(User $actor, int $userId): Shortlist
+    {
+        $target = $this->ensureTargetUser($actor, $userId);
+
+        if ($this->isShortlisted($actor, $userId)) {
+            throw new ApiException('This member is already in your shortlist.', 409, ApiErrorCode::Conflict->value);
+        }
+
+        if (! $this->hasAcceptedInterestBetween($actor->id, $userId)) {
+            throw new ApiException('Please wait for an accepted interest before shortlisting this member.', 409, ApiErrorCode::Conflict->value);
+        }
+
+        $coinCost = (int) feature_coin_cost('shortlist', 5);
+        $balance = (int) ($actor->member?->remaining_interest ?? 0);
+
+        if ($balance < $coinCost) {
+            throw new ApiException(
+                'You need '.$coinCost.' coin(s) to shortlist this member and you currently have '.$balance.'.',
+                402,
+                'insufficient_coins'
+            );
+        }
+
+        return DB::transaction(function () use ($actor, $target, $userId, $coinCost) {
+            $member = $actor->member()->lockForUpdate()->first();
+            $currentBalance = (int) ($member?->remaining_interest ?? 0);
+
+            if ($currentBalance < $coinCost) {
+                throw new ApiException(
+                    'You need '.$coinCost.' coin(s) to shortlist this member and you currently have '.$currentBalance.'.',
+                    402,
+                    'insufficient_coins'
+                );
+            }
+
+            $shortlist = Shortlist::create([
+                'user_id' => $userId,
+                'shortlisted_by' => $actor->id,
+            ]);
+
+            $member->remaining_interest = $currentBalance - $coinCost;
+            $member->save();
+
+            PackageUsage::record(
+                $actor->id,
+                'shortlist',
+                'Shortlist',
+                $coinCost,
+                Shortlist::class,
+                $shortlist->id,
+                'Used '.$coinCost.' coin(s) to shortlist member.'
+            );
+
+            try {
+                $notifyType = 'shortlist';
+                $notifyId = unique_notify_id();
+                $message = $actor->first_name.' '.$actor->last_name.' '.translate(' has shortlisted you.');
+                Notification::send(
+                    $target,
+                    new DbStoreNotification($notifyType, $notifyId, $actor->id, $shortlist->id, $message, route('my_shortlists'))
+                );
+            } catch (\Throwable $e) {
+                // Notification failure must not roll back the shortlist.
+            }
+
+            return $shortlist;
+        });
+    }
+
+    public function isShortlisted(User $actor, int $userId): bool
+    {
+        return Shortlist::where('user_id', $userId)->where('shortlisted_by', $actor->id)->exists();
+    }
+
+    private function hasAcceptedInterestBetween(int $firstUserId, int $secondUserId): bool
+    {
+        return ExpressInterest::where('status', ProposalStatus::Accepted->value)
+            ->where(function ($query) use ($firstUserId, $secondUserId) {
+                $query->where(function ($scope) use ($firstUserId, $secondUserId) {
+                    $scope->where('interested_by', $firstUserId)->where('user_id', $secondUserId);
+                })->orWhere(function ($scope) use ($firstUserId, $secondUserId) {
+                    $scope->where('interested_by', $secondUserId)->where('user_id', $firstUserId);
+                });
+            })->exists();
     }
 
     public function ignore(User $actor, int $userId): IgnoredUser

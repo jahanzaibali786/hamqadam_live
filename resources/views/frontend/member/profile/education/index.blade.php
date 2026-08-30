@@ -25,11 +25,11 @@
             @endphp
             @foreach ($educations as $key => $education)
                 @php
-                    $degreeLabel = $education->degree?->name
-                        ?? $education->educationLevel?->name
-                        ?? (is_string($education->degree) ? $education->degree : (is_object($education->degree) ? ($education->degree->name ?? '') : ''));
-                    $institutionLabel = $education->institution?->name
-                        ?? (is_string($education->institution) ? $education->institution : (is_object($education->institution) ? ($education->institution->name ?? '') : ''));
+                    $degreeLabel = trim((string) $education->degree);
+                    if ($degreeLabel === '') {
+                        $degreeLabel = $education->educationLevel?->name ?? '';
+                    }
+                    $institutionLabel = trim((string) $education->institution);
                 @endphp
                 <tr>
                     <td>{{ $degreeLabel }}</td>

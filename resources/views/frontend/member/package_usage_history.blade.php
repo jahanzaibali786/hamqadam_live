@@ -13,21 +13,28 @@
     </div>
 
     <div class="row gutters-5 mb-4">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="bg-white border rounded p-3 h-100">
                 <div class="text-muted fs-12 mb-1">{{ translate('Total Coins') }}</div>
                 <div class="h3 fw-700 text-primary-grad mb-1">{{ $totalPurchasedCoins }}</div>
                 <div class="fs-12 opacity-70">{{ translate('Coins granted from purchased packages') }}</div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
             <div class="bg-white border rounded p-3 h-100">
                 <div class="text-muted fs-12 mb-1">{{ translate('Total Usage') }}</div>
                 <div class="h3 fw-700 text-primary-grad mb-1">{{ $totalUsedCoins }}</div>
                 <div class="fs-12 opacity-70">{{ translate('Coins consumed across activities') }}</div>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
+        <div class="col-md-3 mb-3">
+            <div class="bg-white border rounded p-3 h-100">
+                <div class="text-muted fs-12 mb-1">{{ translate('Profile Views Used') }}</div>
+                <div class="h3 fw-700 text-primary-grad mb-1">{{ $profileViewsUsed }}</div>
+                <div class="fs-12 opacity-70">{{ translate('Profile details opened with package allowance') }}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
             <div class="bg-white border rounded p-3 h-100">
                 <div class="text-muted fs-12 mb-1">{{ translate('Remaining Coins') }}</div>
                 <div class="h3 fw-700 text-primary-grad mb-1">{{ $remainingCoins }}</div>

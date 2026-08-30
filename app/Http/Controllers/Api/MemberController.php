@@ -22,6 +22,7 @@ use App\Models\Shortlist;
 use App\Models\ViewGalleryImage;
 use App\Models\ViewProfilePicture;
 use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Support\Facades\Schema;
 
 class MemberController extends Controller
 {
@@ -138,15 +139,17 @@ class MemberController extends Controller
             $user_ids = Address::where('country_id', $country_id)->pluck('user_id')->toArray();
             $users_query->whereIn('id', $user_ids);
         }
-
         // Sort By Mother Tongue
-        if ($mother_tongue != null) {
-            $user_ids = Member::where('mothere_tongue', $mother_tongue)->pluck('user_id')->toArray();
+        $motherTongueColumn = Schema::hasColumn('members', 'mothere_tongue')
+            ? 'mothere_tongue'
+            : (Schema::hasColumn('members', 'mother_tongue') ? 'mother_tongue' : null);
+
+        if ($mother_tongue != null && $motherTongueColumn) {
+            $user_ids = Member::where($motherTongueColumn, $mother_tongue)->pluck('user_id')->toArray();
             if (count($user_ids) > 0) {
                 $users_query->whereIn('id', $user_ids);
             }
         }
-
         // Sort by Height
         if (!empty($min_height)) {
             $user_ids = PhysicalAttribute::where('height', '>=', $min_height)->pluck('user_id')->toArray();

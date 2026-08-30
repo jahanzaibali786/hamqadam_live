@@ -5,13 +5,12 @@ declare(strict_types=1);
 namespace App\Events;
 
 use App\Models\Chat;
+use App\Models\Upload;
 use App\Models\User;
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Queue\SerializesModels;
 
 class ChatMessageSent implements ShouldBroadcast
@@ -21,13 +20,17 @@ class ChatMessageSent implements ShouldBroadcast
     public function __construct(
         public readonly Chat $message,
         public readonly User $sender,
-        public readonly int $threadId
+        public readonly int $threadId,
+        public readonly int $recipientId
     ) {
     }
 
-    public function broadcastOn(): PrivateChannel
+    public function broadcastOn(): array
     {
-        return new PrivateChannel('chat-thread.' . $this->threadId);
+        return [
+            new PrivateChannel('chat-thread.' . $this->threadId),
+            new PrivateChannel('App.User.' . $this->recipientId),
+        ];
     }
 
     public function broadcastAs(): string
@@ -75,10 +78,41 @@ class ChatMessageSent implements ShouldBroadcast
         }
 
         $ids = array_filter(array_map('trim', explode(',', (string) $this->message->attachment)));
+        $attachments = [];
 
-        return array_map(fn (string $id) => [
-            'id' => (int) $id,
-            'url' => uploaded_asset((int) $id),
-        ], $ids);
+        foreach ($ids as $id) {
+            $attachmentId = (int) $id;
+            $upload = Upload::find($attachmentId);
+
+            if (! $upload) {
+                $attachments[] = [
+                    'id' => $attachmentId,
+                    'type' => 'file',
+                    'url' => uploaded_asset($attachmentId),
+                    'download_url' => route('download_attachment', $attachmentId),
+                    'name' => 'Attachment',
+                    'original_name' => 'Attachment',
+                    'extension' => '',
+                    'size' => null,
+                    'preview_url' => uploaded_asset($attachmentId),
+                ];
+
+                continue;
+            }
+
+            $attachments[] = [
+                'id' => (int) $upload->id,
+                'type' => (string) $upload->type,
+                'url' => uploaded_asset((int) $upload->id),
+                'download_url' => route('download_attachment', (int) $upload->id),
+                'name' => (string) $upload->file_name,
+                'original_name' => (string) $upload->file_original_name,
+                'extension' => (string) $upload->extension,
+                'size' => $upload->file_size !== null ? (int) $upload->file_size : null,
+                'preview_url' => static_asset($upload->file_name),
+            ];
+        }
+
+        return $attachments;
     }
 }

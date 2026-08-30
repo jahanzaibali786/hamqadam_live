@@ -39,6 +39,7 @@ use App\Http\Controllers\StateController;
 use App\Http\Controllers\SubCasteController;
 use App\Http\Controllers\UpdateController;
 use App\Http\Controllers\V1PlatformConsoleController;
+use App\Http\Controllers\WebsiteDropdownDataController;
 use App\Http\Controllers\WalletController;
 
 /*
@@ -129,6 +130,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
     Route::controller(ReportedUserController::class)->group(function () {
         Route::get('/reported-members/{id}', 'reported_members')->name('reported_members');
+        Route::get('/chat-reported-members/{id}', 'chat_reports')->name('chat_reported_members');
         Route::get('/reported/destroy/{id}', 'destroy')->name('report_destrot.destroy');
     });
 
@@ -275,6 +277,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::get('/third-party-settings', 'third_party_settings')->name('third_party_settings');
         Route::post('/third-party-settings/update', 'third_party_settings_update')->name('third_party_settings.update');
 
+        Route::get('/chat-realtime-settings', 'chat_realtime_settings')->name('chat_realtime_settings');
+        Route::post('/chat-realtime-settings', 'chat_realtime_settings_update')->name('chat_realtime_settings.update');
+
         Route::get('/social-media-login-settings', 'social_media_login_settings')->name('social_media_login');
 
         Route::get('/member-profile-sections', 'member_profile_sections_configuration')->name('member_profile_sections_configuration');
@@ -309,6 +314,14 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
             Route::get('/appearances', 'website_appearances')->name('website.appearances');
         });
 
+        Route::controller(WebsiteDropdownDataController::class)->group(function () {
+            Route::get('/dropdowns-data', 'index')->name('website.dropdown_data.index');
+            Route::post('/dropdowns-data', 'store')->name('website.dropdown_data.store');
+            Route::get('/dropdowns-data/{type}/{id}/edit', 'edit')->name('website.dropdown_data.edit');
+            Route::patch('/dropdowns-data/{type}/{id}', 'update')->name('website.dropdown_data.update');
+            Route::get('/dropdowns-data/{type}/{id}/destroy', 'destroy')->name('website.dropdown_data.destroy');
+        });
+
         Route::resource('custom-pages', PageController::class)->except(['edit', 'destroy']);
         Route::controller(PageController::class)->group(function () {
             Route::get('/custom-pages/edit/{id}', 'edit')->name('custom-pages.edit');
@@ -334,7 +347,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('/uploaded-files', AizUploadController::class);
     Route::controller(AizUploadController::class)->group(function() {
         Route::any('/uploaded-files/file-info', 'file_info')->name('uploaded-files.info');
-        Route::get('/uploaded-files/destroy/{id}', 'destroy')->name('uploaded-files.destroy');
+        Route::get('/uploaded-files/destroy/{id}', 'destroy')->name('uploaded-files.delete');
         Route::post('/bulk-uploaded-files-delete', 'bulk_uploaded_files_delete')->name('bulk-uploaded-files-delete');
     });
 
@@ -344,3 +357,4 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('manual_payment_methods', ManualPaymentMethodController::class)->except(['destroy']);
     Route::get('/manual_payment_methods/destroy/{id}', [ManualPaymentMethodController::class, 'destroy'])->name('manual_payment_methods.destroy');
 });
+

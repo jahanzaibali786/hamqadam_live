@@ -64,17 +64,16 @@ class InstallController extends Controller
         $user->email              = $request->admin_email;
         $user->password           = Hash::make($request->admin_password);
         $user->user_type          = 'admin';
+        $user->admin_identifier   = 'admin';
         $user->email_verified_at  = date('Y-m-d H:m:s');
         $user->save();
 
-        //Assign Super-Admin Role
         $user->assignRole(['Super Admin']);
 
         $install_web_router        = base_path('routes/web.php');
         $installed_web_router      = base_path('routes/web.txt');
         copy($installed_web_router, $install_web_router);
 
-        //sleep(5);
         if (Session::has('purchase_code')) {
             $business_settings = new Setting;
             $business_settings->type = 'purchase_code';
@@ -83,9 +82,8 @@ class InstallController extends Controller
             Session::forget('purchase_code');
         }
         return view('installation.step6');
-
-        // return redirect('step6');
     }
+
     public function database_installation(Request $request) {
 
         if(self::check_database_connection($request->DB_HOST, $request->DB_DATABASE, $request->DB_USERNAME, $request->DB_PASSWORD)) {

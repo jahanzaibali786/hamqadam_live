@@ -119,7 +119,13 @@
                                 <span class="text-secondary d-block">{{ $package->validity }} {{ translate('Days') }}</span>
                             </div>
 
-                            <div class="text-center">
+                                                        <div class="text-center">
+                                @if(Auth::check() && $isCurrentPackage)
+                                    <div class="alert alert-success py-2 px-3 mb-3 text-left fs-12">
+                                        <div class="fw-700 mb-1">{{ translate('Your current plan is active') }}</div>
+                                        <div>{{ translate('Remaining profile views') }}: {{ (int) (Auth::user()->member?->remaining_profile_viewer_view ?? 0) }}</div>
+                                    </div>
+                                @endif
                                 @if ($package->id != 1)
                                     @if(Auth::check() && $isPackageActive)
                                         <button type="button" class="btn btn-soft-success" disabled>{{ translate('Activated') }}</button>

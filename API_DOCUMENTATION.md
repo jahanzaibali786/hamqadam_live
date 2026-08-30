@@ -1,6 +1,6 @@
 # HamQadam App API v1
 
-Curated API documentation for the Flutter mobile app and React web app.
+Curated API documentation for the Flutter mobile app.
 
 Legacy CMS/mobile endpoints under `/api/...` are intentionally excluded. Admin-only endpoints are intentionally excluded. Use only `/api/v1/...` endpoints from the app.
 
@@ -38,12 +38,12 @@ Use this checklist for Flutter/mobile QA. These are the app-facing groups only:
 | Group | Required App Endpoints |
 |---|---|
 | Auth | `/auth/register/complete`, `/auth/register/steps`, `/auth/register/step1`, `/auth/register/step/{step}`, `/auth/register/status`, `/auth/login/email`, `/auth/login/mobile`, `/auth/me`, `/auth/logout`, `/auth/devices`, `/auth/account`, `/auth/register/request-otp`, `/auth/register/verify-otp` |
-| Profile | `/profile`, `/profiles/{profile}`, `/profile/privacy`, `/profile/visibility`, `/partner-preferences` |
+| Profile | `/profile`, `/profiles/{profile}`, `/profile-views`, `/profile-views/received`, `/profile-views/balance`, `/profile/privacy`, `/profile/visibility`, `/partner-preferences`, `/profile/dropdown-reference-data` |
 | Discovery | `/search/profiles`, `/search/saved`, `/search/history`, `/matches`, `/matches/recommended`, `/matches/daily`, `/profiles/{profile}/compatibility` |
-| Proposals | `/proposals`, `/proposals/{proposal}/accept`, `/proposals/{proposal}/reject`, `/proposals/favourites`, `/proposals/ignored` |
-| Chat | `/chat/threads`, `/chat/threads/{thread}/messages`, `/chat/threads/{thread}/typing`, `/chat/threads/{thread}/report` |
+| Proposals | `/proposals`, `/proposals/{proposal}/accept`, `/proposals/{proposal}/reject`, `/proposals/favourites`, `/proposals/shortlists`, `/proposals/ignored` |
+| Chat | `/chat/threads`, `/chat/threads/{thread}/messages`, `/chat/threads/{thread}/calls`, `/chat/calls`, `/chat/calls/{call}`, `/chat/threads/{thread}/typing`, `/chat/threads/{thread}/block`, `/chat/threads/{thread}/unblock`, `/chat/threads/{thread}/clear`, `/chat/threads/{thread}/report`, `/chat/messages/{message}` |
 | Interests | `/interests`, `/interests/sent`, `/interests/received`, `/interests/coin-balance`, `/interests/{interest}/accept`, `/interests/{interest}/reject` |
-| Packages & Payments | `/payments/plans`, `/payments/checkout`, `/payments/history`, `/payments/invoices/{payment}`, `/payments/coupons/validate` |
+| Packages & Payments | `/payments/plans`, `/payments/current`, `/payments/packages/{package}`, `/payments/usage`, `/payments/checkout`, `/payments/history`, `/payments/invoices/{payment}`, `/payments/coupons/validate` |
 | Notifications | `/notifications`, `/notifications/unread-count`, `/notifications/preferences`, `/notifications/push-tokens` |
 | Safety & Trust | `/verification/current`, `/verification/submit`, `/safety/report`, `/safety/block`, `/safety/mute` |
 | Family | `/family/dashboard`, `/family/guardians`, `/family/wali-mode`, `/family/approval-requests`, `/family/conversations` |
@@ -180,7 +180,7 @@ The complete registration API creates a draft account and returns a Sanctum toke
 
 ### Mobile Registration Flow
 
-The frontend handles all 18 registration steps locally. Submit the complete data in one request, then verify via email OTP.
+The mobile app handles all 18 registration steps locally. Submit the complete data in one request, then verify via email OTP.
 
 ```text
 Frontend: 18 steps locally
@@ -204,7 +204,7 @@ Content-Type: application/json
 Content-Type: multipart/form-data
 ```
 
-The frontend handles all 18 registration steps locally and submits the complete payload in one request. Mandatory steps: 1-14, 17, 18. Optional steps: 15, 16.
+The mobile app handles all 18 registration steps locally and submits the complete payload in one request. Mandatory steps: 1-14, 17, 18. Optional steps: 15, 16.
 
 ```json
 {
@@ -393,7 +393,7 @@ On success, the account is marked as verified, approved, membership is activated
 
 ### Legacy Step-wise Registration (Deprecated)
 
-The legacy step-wise endpoints remain available for backward compatibility. New mobile/web apps should use `/auth/register/complete` with the OTP flow.
+The legacy step-wise endpoints remain available for backward compatibility. New mobile apps should use `/auth/register/complete` with the OTP flow.
 
 ```http
 GET /auth/register/steps
@@ -511,6 +511,35 @@ All dynamic dropdown data and hardcoded options are available from a single endp
 | Update privacy | PATCH | `/profile/privacy` | Privacy fields |
 | Hide/show profile | PATCH | `/profile/visibility` | `hide_profile` |
 | Deactivate profile | POST | `/profile/deactivate` | None |
+
+### Profile views
+
+Profile views now use the same package allowance as the website. Opening a profile via `GET /profiles/{profile}` or `POST /profile-views/{profile}` will spend one `remaining_profile_viewer_view` coin when the member has an active package and an unused view.
+
+#### GET /profile-views
+
+Returns the profiles the current member has viewed.
+
+Query parameters:
+- per_page (integer, optional, default 20)
+
+#### GET /profile-views/received
+
+Returns the members who viewed the current user.
+
+Query parameters:
+- per_page (integer, optional, default 20)
+
+#### GET /profile-views/balance
+
+Returns the current profile-view balance, the active package, and the remaining count.
+
+#### POST /profile-views/{profile}
+
+Consumes one profile-view allowance and returns the public profile payload.
+
+Path parameters:
+- profile (integer, required)
 
 ### GET /profile returns everything registration collected
 
@@ -652,6 +681,10 @@ Match feedback sample:
 | Add favourite | POST | `/proposals/favourites` | `user_id` |
 | Check favourite | GET | `/proposals/favourites/{user}/check` | None |
 | Remove favourite | DELETE | `/proposals/favourites/{user}` | None |
+| List shortlists | GET | `/proposals/shortlists` | None |
+| Add shortlist | POST | `/proposals/shortlists` | `user_id` | Accepted interest required; costs shortlist coins. |
+| Check shortlist | GET | `/proposals/shortlists/{user}/check` | None |
+| Remove shortlist | DELETE | `/proposals/shortlists/{user}` | None |
 | Ignore profile | POST | `/proposals/ignored` | `user_id` |
 | Remove ignored profile | DELETE | `/proposals/ignored/{user}` | None |
 
@@ -704,26 +737,81 @@ Relationship status sample:
 }
 ```
 
-## Chat
+## Chat (Mobile API)
+Realtime chat is powered by the mobile REST endpoints below and broadcasts updates over Pusher.
 
-| Feature | Method | Endpoint | Payload |
-|---|---:|---|---|
-| Chat threads | GET | `/chat/threads` | None |
-| Thread messages | GET | `/chat/threads/{thread}/messages` | None |
-| Send message | POST | `/chat/threads/{thread}/messages` | `message`, `message_type`, `reply_to_id` |
-| Typing indicator | POST | `/chat/threads/{thread}/typing` | None |
-| Block chat | POST | `/chat/threads/{thread}/block` | None |
-| Unblock chat | POST | `/chat/threads/{thread}/unblock` | None |
-| Report chat | POST | `/chat/threads/{thread}/report` | `reason` |
-| Delete message for me | DELETE | `/chat/messages/{message}` | None |
+Broadcast channels
+- `App.User.{userId}` for inbox, unread-count, sidebar badge, and preview updates
+- `chat-thread.{threadId}` for the active conversation stream
 
+| Feature | Method | Endpoint | Payload | Notes |
+|---|---:|---|---|---|
+| Chat threads | GET | `/api/v1/chat/threads` | `per_page` (optional) | Returns the authenticated user's conversation list. |
+| Thread messages | GET | `/api/v1/chat/threads/{thread}/messages` | `per_page` (optional) | Paginates one conversation thread. |
+| Send message | POST | `/api/v1/chat/threads/{thread}/messages` | `message`, `message_type`, `reply_to_chat_id`, `attachments[]` | Creates the message and broadcasts it in realtime. |
+| Typing indicator | POST | `/api/v1/chat/threads/{thread}/typing` | None | Emits realtime typing state. |
+| Block chat | POST | `/api/v1/chat/threads/{thread}/block` | None | Blocks the thread for the authenticated user. |
+| Unblock chat | POST | `/api/v1/chat/threads/{thread}/unblock` | None | Restores chat access for the user who blocked it. |
+| Clear chat | POST | `/api/v1/chat/threads/{thread}/clear` | None | Hides the thread history from the authenticated user's side only. |
+| Report chat | POST | `/api/v1/chat/threads/{thread}/report` | `reason` | Reports the thread, writes a moderation record, and blocks the thread from the reporter's side. |
+| Delete message for me | DELETE | `/api/v1/chat/messages/{message}` | None | Hides the message from the authenticated user's view only. |
+
+| Calls history | GET | `/api/v1/chat/threads/{thread}/calls` | `per_page` (optional) | Returns structured call logs for the conversation timeline. |
+| Start call | POST | `/api/v1/chat/calls` | `chat_thread_id`, `call_type` (`audio` or `video`) | Creates a call record, generates an Agora RTC token, and fires the incoming-call Pusher event. |
+| Get call | GET | `/api/v1/chat/calls/{call}` | None | Returns a single call record with caller, receiver, status, channel, and timing metadata. |
+| Accept call | POST | `/api/v1/chat/calls/{call}/accept` | None | Marks the call accepted and returns the receiver RTC token. |
+| Reject call | POST | `/api/v1/chat/calls/{call}/reject` | None | Declines the call and notifies the caller in realtime. |
+| Cancel call | POST | `/api/v1/chat/calls/{call}/cancel` | None | Cancels an outgoing call from the caller side. |
+| Connect call | POST | `/api/v1/chat/calls/{call}/connect` | None | Marks the call connected once the Agora client joins successfully. |
+| End call | POST | `/api/v1/chat/calls/{call}/end` | `status` optional (`ended` or `missed`) | Ends the active call and stores the duration. |
+| Missed call | POST | `/api/v1/chat/calls/{call}/missed` | None | Marks the call as missed and broadcasts the missed-call event. |
+
+Sample request bodies
+
+Send message:
 ```json
 {
   "message": "Assalamualaikum, how are you?",
   "message_type": "text",
-  "reply_to_id": null
+  "reply_to_chat_id": null,
+  "attachments": []
 }
 ```
+
+Report chat:
+```json
+{
+  "reason": "Unwanted messages"
+}
+```
+
+Attachment payload
+The chat message response includes attachment metadata so the mobile app can preview and download without refreshing the conversation.
+```json
+{
+  "id": 40,
+  "thread_id": 16,
+  "message": "Hi",
+  "attachments": [
+    {
+      "id": 812,
+      "name": "contract.pdf",
+      "original_name": "contract.pdf",
+      "type": "file",
+      "url": "https://example.com/uploads/contract.pdf",
+      "download_url": "https://example.com/aiz-uploader/download/812",
+      "preview_url": null,
+      "size": 245671
+    }
+  ]
+}
+
+Realtime behavior
+- A successful send updates the sender and receiver inbox badges immediately.
+- When the active thread is open, incoming messages append locally without page refresh.
+- Read events clear the unread badge and keep the member sidebar in sync.
+- Block, unblock, clear, delete, and report actions should refresh the thread state from the API response so the app can re-render the list, preview, and composer state immediately.
+- The mobile app should treat the API response and the broadcast payload as the same source of truth for message content.
 
 ## Verification
 
@@ -807,6 +895,7 @@ so it never delays or fails a signup) and available on demand here.
 | Current AI status | GET | `/verification/ai/status` | None |
 | Attempt history | GET | `/verification/ai/history` | None |
 | Run verification now | POST | `/verification/ai/run` | None (throttle 3/min) |
+| Run verification now (mobile alias) | POST | `/auth/register/ai-verification/run` | None (throttle 3/min) |
 
 `POST /verification/ai/run` takes **no uploads**. It rebuilds the model payload
 from the database, preferring the newest non-final verification request (CNIC +
@@ -862,9 +951,32 @@ result, so a moderator-verified member can read `true` with a null date.
 | `POST /auth/register/complete` | after response | No |
 | `POST /auth/register/step/13` (Identity Verification) | after response | No |
 | `POST /api/signup` (legacy) | after response | No |
+| `POST /verification/ai/run` | synchronous | Yes, by design |
+| `POST /auth/register/ai-verification/run` | synchronous | Yes, by design |
+
+Registration itself is never blocked. Step 13 stores the CNIC front, CNIC back
+and selfie, so from that point on the model performs a real identity comparison
+rather than only inspecting the profile photo - confirmed by
+`images_sent: ["cnic_image","live_selfie","profile_image"]` in
+`/verification/ai/history`.
+
+### Recommended app sequence
+
+1. Complete registration. The response carries an `ai_verification` block with
+   `status: "pending"` plus `status_url` and `retry_url`.
+2. Show a "verifying" screen and poll `GET /verification/ai/status`.
+3. `status: "approved"` -> continue into the app.
+4. Anything else -> the account is registered but unverified. Send the user on,
+   and surface a retry that calls `POST /verification/ai/run` or the alias `POST /auth/register/ai-verification/run`. `can_retry` tells
+   you whether to show it.
+---|---|---|
+| `POST /auth/register` | after response | No |
+| `POST /auth/register/complete` | after response | No |
+| `POST /auth/register/step/13` (Identity Verification) | after response | No |
+| `POST /api/signup` (legacy) | after response | No |
 | Web `POST /register` | redirect to the identity gate, which runs it synchronously | No - the account is created first |
 | `POST /verification/submit` | after response | No |
-| `POST /verification/ai/run` | synchronous | Yes, by design |
+| `POST /verification/ai/run` | synchronous | Yes, by design |\n| `POST /auth/register/ai-verification/run` | synchronous | Yes, by design |
 
 Registration itself is never blocked. Step 13 stores the CNIC front, CNIC back
 and selfie, so from that point on the model performs a real identity comparison
@@ -894,7 +1006,13 @@ dashboard's verification button available.
 | Feature | Method | Endpoint | Payload |
 |---|---:|---|---|
 | Plans | GET | `/payments/plans` | None |
-| Checkout | POST | `/payments/checkout` | Stripe, EasyPaisa, or JazzCash payload |
+| Current package | GET | `/payments/current` | None |
+| Payment gateways | GET | `/payments/gateways` | None |
+| Gateway detail | GET | `/payments/gateways/{gateway}` | None |
+| Package details | GET | `/payments/packages/{package}` | None |
+| Package usage | GET | `/payments/usage` | Optional `feature` and `per_page` |
+| Checkout | POST | `/payments/checkout` | `package_id` + `gateway_id` or `gateway`, plus gateway-specific fields |
+| Checkout status | GET | `/payments/checkout/{payment}/status` | Optional `checkout_token` |
 | Payment history | GET | `/payments/history` | Query filters optional |
 | Invoice | GET | `/payments/invoices/{payment}` | None |
 | Validate coupon | POST | `/payments/coupons/validate` | `package_id`, `code` |
@@ -1068,7 +1186,6 @@ Family conversation sample:
 | Create thread | POST | `/content/forums/{forum}/threads` | Thread payload |
 | Thread posts | GET | `/content/threads/{thread}/posts` | None |
 | Reply to thread | POST | `/content/threads/{thread}/posts` | `body` |
-| Webinars/live events | GET | `/content/webinars` | None |
 | Register webinar | POST | `/content/webinars/{webinar}/register` | None |
 | Marriage tips | GET | `/content/marriage-tips` | None |
 | Regional updates | GET | `/content/regional-updates` | Query `region` optional |
@@ -1104,12 +1221,440 @@ Forum thread sample:
 }
 ```
 
+## Mobile API Summary
+This section is the quick reference for the Flutter app and the web client. The same resources power both frontends, so the payloads and responses below are the shared contract.
+### Auth and Onboarding
+Use: sign up, sign in, verify email/OTP, device sessions, and account shutdown.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| Registration | `/auth/register/complete`, `/auth/register/request-otp`, `/auth/register/verify-otp` | Full 18-step payload, then `email` and `code` | `token`, `user`, `registration.completed_steps`, `registration.next_step`, `registration_completed` |
+| Login | `/auth/login/email`, `/auth/login/mobile`, `/auth/login/google` | `email/password`, `phone/country_code/otp`, or `id_token` | `token`, `token_type`, `expires_at`, `user`, `device_session` |
+| Session | `/auth/me`, `/auth/devices`, `/auth/logout`, `/auth/logout/all`, `/auth/account` | None or device id | Current user, active sessions, or `success: true` |
+| Recovery | `/auth/forgot-password`, `/auth/reset-password`, `/auth/email/verification-code`, `/auth/email/verify` | `email`, `otp`, `password`, `password_confirmation` | `success`, `message`, `expires_at` or user state |
+Typical response:
+```json
+{
+  "success": true,
+  "message": "Registration submitted successfully.",
+  "data": {
+    "token": "1|abc123...",
+    "user": { "id": 101, "code": "20260899", "name": "Ayesha Khan" },
+    "registration": {
+      "total_steps": 18,
+      "completed_steps": ["step1", "step2"],
+      "next_step": "step3",
+      "registration_completed": false
+    }
+  },
+  "errors": null
+}
+```
+### Reference Data
+Use: populate registration and filter dropdowns from the backend instead of hardcoding them in the app.
+| Endpoint | Payload | Response |
+|---|---|---|
+| `/profile/dropdown-reference-data` | None | Countries, states, cities, areas, religions, sects, castes, sub-castes, languages, education levels, degrees, fields of study, institutions, professions, hobbies, and fixed option lists |
+Typical response:
+```json
+{
+  "success": true,
+  "data": {
+    "countries": [{ "id": 166, "name": "Pakistan" }],
+    "states": [{ "id": 2728, "country_id": 166, "name": "Punjab" }],
+    "cities": [{ "id": 85568, "state_id": 2728, "name": "Lahore" }],
+    "religions": [{ "id": 1, "name": "Islam" }]
+  },
+  "errors": null
+}
+```
+### Profile and Preferences
+Use: load the signed-in member profile, public profile cards, partner preferences, and compatibility preview.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| Own profile | `/profile`, `/profile/privacy`, `/profile/visibility`, `/profile/deactivate` | Profile form, privacy flags, visibility flags | Full `ProfileResource` with `user`, `member`, `photos`, `verification`, `registration`, `privacy` |
+| Public profile | `/profiles/{profile}`, `/profiles/{profile}/compatibility` | None | Public profile card, compatibility percentage, explanation, score breakdown |
+| Partner preferences | `/partner-preferences` | Age/height ranges, religion, caste, languages, location, profession, income, lifestyle | Stored preference set or empty defaults |
+Typical response:
+```json
+{
+  "success": true,
+  "data": {
+    "user": { "id": 101, "name": "Ayesha Khan" },
+    "member": { "gender": 2, "current_package_id": 1, "coin_balance": 8 },
+    "photos": { "profile_photo": "https://...", "gallery": ["https://..."] },
+    "verification": { "status": "verified", "ai": { "status": "approved" } },
+    "registration": { "completion_percentage": 100, "steps": ["step1", "step2"] }
+  },
+  "errors": null
+}
+```
+### Search and Matching
+Use: browse profiles, filter search results, save searches, and read AI/rule-based match explanations.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| Search | `/search/profiles`, `/search/history`, `/search/saved`, `/search/hidden-users` | Search filters and pagination | Paged profile collection with `total`, `current_page`, `data[]` |
+| Matches | `/matches`, `/matches/recommended`, `/matches/daily`, `/matches/recalculate`, `/matches/feedback` | Match filters or feedback | Match list with `compatibility_percentage`, `compatibility_explanation`, `score_breakdown` |
+### Proposals, Favorites, and Interests
+Use: send interest/proposal, approve or reject, save favorites, and manage the coin-based interest flow.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| Proposals | `/proposals`, `/proposals/{proposal}/accept`, `/proposals/{proposal}/reject`, `/proposals/{proposal}/withdraw`, `/proposals/{proposal}/cancel`, `/proposals/{proposal}/notes`, `/proposals/{proposal}/timeline`, `/proposals/{proposal}/meetings` | Proposal action, note text, meeting fields | `ProposalResource` with `status`, `sender`, `recipient`, `notes`, `timeline`, `expires_at` |
+| Favorites | `/proposals/favourites`, `/proposals/favourites/{user}/check`, `/proposals/favourites/{user}` | User id | Favorite state or removal success |
+| Shortlists | `/proposals/shortlists`, `/proposals/shortlists/{user}/check`, `/proposals/shortlists/{user}` | User id | Shortlist list/state or removal success; requires accepted interest and coin balance |
+| Ignored | `/proposals/ignored`, `/proposals/ignored/{user}` | User id | Ignored state or removal success |
+| Interests | `/interests`, `/interests/sent`, `/interests/received`, `/interests/coin-balance`, `/interests/{interest}/accept`, `/interests/{interest}/reject` | `user_id`, `initial_note` | Interest status plus `remaining_interest` coin balance |
+Typical proposal response:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 55,
+    "status": "pending",
+    "status_value": 1,
+    "initial_note": "Assalamualaikum",
+    "compatibility_percentage": 82,
+    "expires_at": "2026-08-28T10:00:00Z"
+  },
+  "errors": null
+}
+```
+### Realtime Chat
+Use: load threads, open a conversation, send messages, upload attachments, and keep the sidebar badges synced with Pusher.
+| Method | Endpoint | Payload type | Sample payload | Success response |
+|---|---|---|---|---|
+| GET | `/chat/threads` | Query params | `?page=1` | `ChatThreadResource` collection with `other_user`, `unread_count`, `last_message` |
+| GET | `/chat/threads/{thread}/messages` | Query params | `?page=1` | `ChatMessageResource` collection with `sender`, `message_type`, `attachments`, `read_at`, `seen` |
+| POST | `/chat/threads/{thread}/messages` | JSON + multipart form-data | JSON: `{ "message": "Hi", "message_type": "text", "reply_to_id": null, "attachments": [] }` or multipart with `message` and one or more `attachments[]` files | Broadcast payload and API response use the same message resource |
+| POST | `/chat/threads/{thread}/typing` | JSON | `{ "is_typing": true }` | Typing event payload |
+| POST | `/chat/threads/{thread}/block` | No body | `{}` | `success: true` or blocked status |
+| POST | `/chat/threads/{thread}/unblock` | No body | `{}` | `success: true` or unblocked status |
+| POST | `/chat/threads/{thread}/report` | JSON | `{ "reason": "spam", "details": "User shared fake details." }` | Moderation report created |
+| DELETE | `/chat/messages/{message}` | No body | `{}` | `success: true` |
+Typical message response:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 40,
+    "thread_id": 16,
+    "message": "Hi",
+    "message_type": "text",
+    "attachments": [
+      {
+        "id": 812,
+        "name": "contract.pdf",
+        "url": "https://...",
+        "download_url": "https://.../aiz-uploader/download/812"
+      }
+    ],
+    "seen": false,
+    "read_at": null
+  },
+  "errors": null
+}
+```
+### Verification and Trust
+Use: submit CNIC/selfie, check verification status, and run the AI verification model when needed.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| Verification requests | `/verification/current`, `/verification/history`, `/verification/submit` | CNIC fields and uploaded documents | `VerificationRequestResource` with `status`, `face_match_status`, `documents`, `submitted_at` |
+| AI verification | `/verification/ai/status`, `/verification/ai/history`, `/verification/ai/run`, `/auth/register/ai-verification/run` | None | AI status object with `status`, `recommendation`, `attempts`, `can_retry` |
+### Payments and Packages
+Use: show plans, show the active package, inspect usage, start checkout, inspect invoices, and track package history.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| Plans | `/payments/plans` | None | `PlanResource` collection with package limits, duration, coins, and price |
+| Current package | `/payments/current` | None | Current package info with remaining entitlements |
+| Payment gateways | `/payments/gateways` | None | Active gateway definitions from admin settings, with configuration status and checkout metadata |
+| Gateway detail | `/payments/gateways/{gateway}` | None | One gateway definition with payload schema and sample request body |
+| Package details | `/payments/packages/{package}` | None | Single `PlanResource` with package limits |
+| Usage | `/payments/usage` | Optional `feature` and `per_page` | Paginated usage history with summary totals |
+| Checkout | `/payments/checkout` | `package_id`, `gateway_id` or `gateway`, gateway fields, coupon code | `PaymentResource` with invoice and gateway details plus secure checkout token |
+| Checkout status | `/payments/checkout/{payment}/status` | Optional `checkout_token` | Payment status, gateway status, and token expiry details |
+| History | `/payments/history`, `/payments/invoices/{payment}` | Optional filters | Paginated payment list or invoice detail |
+| Coupons | `/payments/coupons/validate` | `package_id`, `code` | Coupon validation status and discount |
+Typical payment response:
+```json
+{
+  "success": true,
+  "data": {
+    "id": 77,
+    "payment_code": "PAY-20260826-001",
+    "payment_status": "Due",
+    "gateway_reference": "TXN-9981",
+    "amount": 2500,
+    "payable_amount": 2000,
+    "currency": "PKR"
+  },
+  "errors": null
+}
+```
+### Notifications
+Use: show in-app notifications, update read state, and register push tokens for FCM.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| Notifications | `/notifications`, `/notifications/unread-count`, `/notifications/mark-all-read`, `/notifications/{notification}/read` | None | `NotificationResource` collection with `type`, `title`, `message`, `deep_link`, `read_at` |
+| Preferences | `/notifications/preferences`, `/notifications/push-tokens` | Notification toggles, FCM token, device type | Preference resource or token registration success |
+### Safety and Moderation
+Use: report abuse, block or mute users, and inspect moderation cases where supported.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| User safety | `/safety/report`, `/safety/block`, `/safety/mute`, `/safety/restrict` | `user_id`, `reason`, `severity` | Moderation action success |
+| Moderation queue | `/safety/moderation-cases`, `/safety/moderation-cases/{case}/resolve` | Resolution payload | Moderation case list or resolved case |
+### AI Helpers
+Use: generate bios, conversation starters, profile quality checks, scam checks, and red-flag scoring.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| AI tools | `/ai/bio`, `/ai/conversation-starters`, `/ai/profile-quality`, `/ai/scam-check`, `/ai/red-flag-check` | Prompt text or matched user id | AI result object with `status`, `score`, `insights`, `suggestions` |
+### Family and Guardian
+Use: manage parents/guardians, wali mode, family approvals, and family-to-family messaging.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| Guardians | `/family/dashboard`, `/family/guardians`, `/family/guardians/{guardian}`, `/family/guardians/{guardian}/approve`, `/family/wali-mode` | Guardian and permission fields | Guardian list, updated guardian resource, wali mode flag |
+| Approvals and notes | `/family/approval-requests`, `/family/approval-requests/{approval}/decision`, `/family/notes`, `/family/notes/{profile}` | Decision/note fields | Approval resource or note resource |
+| Family chat | `/family/conversations`, `/family/conversations/{conversation}/messages`, `/family/digest/preview` | Conversation and message fields | Conversation list, message list, digest preview |
+### Content and Community
+Use: browse blog posts, success stories, advice, expert Q&A, forums, webinars, tips, and regional updates.
+| Endpoint group | Key endpoints | Payload | Success response |
+|---|---|---|---|
+| Content feed | `/content/articles`, `/content/articles/{slug}`, `/content/success-stories`, `/content/advice`, `/content/expert/questions`, `/content/forums`, `/content/webinars` | Query filters or content payloads | Paginated collections or detail resources |
+Typical content response:
+```json
+{
+  "success": true,
+  "data": {
+    "items": [],
+    "pagination": {
+      "current_page": 1,
+      "per_page": 15,
+      "total": 0
+    }
+  },
+  "errors": null
+}
+```
+### Response Rules
+- All endpoints return JSON.
+- Authenticated endpoints require `Authorization: Bearer {{token}}`.
+- Validation errors return `success: false` with a field-level `errors` map.
+- Realtime chat endpoints also emit Pusher events so the web sidebar and mobile inbox stay in sync.
+- The mobile app should treat the API response as the primary source of truth and use the broadcast event as the realtime mirror.
+
 ## App Developer Notes
 
 - Use `/auth/me` as the only app authentication check.
-- Use `/payments/plans` to show packages. Plan feature payloads include `coins`.
+- Use `/payments/plans` to show packages and `/payments/current` to show the active package and remaining limits. Plan feature payloads include `coins`.
 - Basic Free package is applied automatically after registration.
-- For EasyPaisa/JazzCash, show the returned `checkout.instructions`, `account_msisdn`, `gateway_reference`, and `amount` to the user.
+- Use `GET /payments/gateways` to build the package payment-method screen. Show only gateways where `available=true`, and surface the returned settings snapshot for Stripe, EasyPaisa, and JazzCash.
+- For EasyPaisa/JazzCash checkout, show the returned `checkout.instructions`, `account_msisdn`, `gateway_reference`, and `amount` to the user.
 - Treat payment status `Due` as pending approval, not failed.
 - Do not call legacy endpoints under `/api/member/...`.
 - Do not call admin endpoints from the app.
+
+
+
+
+### Secure Payment Flow
+1. Pehle `GET /payments/gateways` call karo.
+2. Sirf woh gateways show karo jinka `available=true` ho.
+3. Gateway select karne ke baad `gateway_id` aur `package_id` ke sath `POST /payments/checkout` bhejo.
+4. Backend tumhe `checkout_token`, `status_endpoint`, aur payment detail dega.
+5. Agar gateway manual hai to app sirf instructions show kare, secrets kabhi store na kare.
+6. Payment complete hone ke baad `GET /payments/checkout/{payment}/status?checkout_token=...` se current status verify karo.
+7. Webhook sirf backend ke liye hai. App ko webhook hit nahi karna chahiye.
+8. Agar admin panel me key, secret, ya instruction change ho, app ko bas `GET /payments/gateways` dobara call karna hai.
+
+#### Gateway-specific payloads
+- Stripe:
+  - `package_id`
+  - `gateway_id = 1`
+  - optional `currency`, `success_url`, `cancel_url`
+- EasyPaisa:
+  - `package_id`
+  - `gateway_id = 2`
+  - `easypaisa_phone`
+  - optional `currency`, `metadata`
+- JazzCash:
+  - `package_id`
+  - `gateway_id = 3`
+  - `jazzcash_phone`
+  - optional `currency`, `metadata`
+## System Bridge
+
+These endpoints expose app-facing connection settings in a neutral format. Sensitive values are not returned raw. Instead, the response includes fingerprints and masked secret metadata.
+
+| Feature | Method | Endpoint | Payload | Auth |
+|---|---:|---|---|---|
+| Connector A config | GET | `/bridge/connector-a` | None | Required |
+| Connector B config | GET | `/bridge/connector-b` | None | Required |
+
+### Connector A response shape
+
+```json
+{
+  "success": true,
+  "message": "Configuration loaded successfully.",
+  "data": {
+    "connector": "connector_a",
+    "enabled": true,
+    "public": {
+      "app_id": "...",
+      "app_key": "...",
+      "cluster": "...",
+      "host": "...",
+      "port": "...",
+      "scheme": "..."
+    },
+    "fingerprints": {
+      "app_id": "sha256-hash",
+      "app_key": "sha256-hash"
+    },
+    "secured": {
+      "app_secret": {
+        "present": true,
+        "masked": "********abcd",
+        "fingerprint": "sha256-hash"
+      }
+    },
+    "payload_hash": "sha256-hash"
+  }
+}
+```
+
+### Connector B response shape
+
+```json
+{
+  "success": true,
+  "message": "Configuration loaded successfully.",
+  "data": {
+    "connector": "connector_b",
+    "enabled": true,
+    "public": {
+      "app_id": "...",
+      "token_expiry": "3600"
+    },
+    "fingerprints": {
+      "app_id": "sha256-hash",
+      "token_expiry": "sha256-hash"
+    },
+    "secured": {
+      "app_certificate": {
+        "present": true,
+        "masked": "********ture",
+        "fingerprint": "sha256-hash"
+      }
+    },
+    "payload_hash": "sha256-hash"
+  }
+}
+```
+
+## Horoscope Match APIs (Mobile)
+
+### 1) Load horoscope dropdown data
+
+| Method | Endpoint | Auth | Purpose |
+|---|---|---|---|
+| GET | `/api/v1/member/astronomic/dropdowns` | Required | Returns horoscope dropdown options for the mobile horoscope form |
+| GET | `/api/v1/member/profile-dropdown` | Required | Returns common dropdowns plus `horoscope_dropdowns` |
+
+#### Sample response
+
+```json
+{
+  "success": true,
+  "message": "Data loaded successfully.",
+  "data": {
+    "horoscope_dropdowns": {
+      "sun_signs": [
+        { "value": "aries", "label": "Aries (Mar 21 – Apr 19)" }
+      ],
+      "moon_signs": [
+        { "value": "aries", "label": "Aries (Mesha)" }
+      ],
+      "nakshatras": ["anuradha", "ardra", "ashlesha"],
+      "gana": [
+        { "value": "deva", "label": "Deva" }
+      ],
+      "nadi": [
+        { "value": "aadi", "label": "Aadi" }
+      ],
+      "manglik": [
+        { "value": "yes", "label": "Yes" }
+      ]
+    }
+  }
+}
+```
+
+### 2) Load horoscope matched profiles
+
+| Method | Endpoint | Auth | Purpose |
+|---|---|---|---|
+| GET | `/api/v1/member/horoscope-matched-profile` | Required | Returns matched profiles or an empty-state flag if horoscope data is missing |
+
+#### Success response with horoscope filled
+
+```json
+{
+  "success": true,
+  "message": "Horoscope matched profiles loaded successfully.",
+  "data": {
+    "horoscope_filled": true,
+    "needs_horoscope_info": false,
+    "matched_count": 2,
+    "matched_profiles": [
+      {
+        "user_id": 19,
+        "code": "20260819",
+        "name": "Ali Ahmad",
+        "photo": "https://...",
+        "age": 28,
+        "height": "5.8",
+        "marital_status": "Never Married",
+        "religion": "Islam",
+        "caste": "",
+        "sub_caste": "",
+        "report_status": false,
+        "shortlist_status": 0,
+        "profile_view_request_status": false,
+        "gallery_view_request_status": false
+      }
+    ]
+  }
+}
+```
+
+#### Empty-state response when horoscope details are missing
+
+```json
+{
+  "success": true,
+  "message": "Please complete your horoscope details first.",
+  "data": {
+    "horoscope_filled": false,
+    "needs_horoscope_info": true,
+    "matched_profiles": [],
+    "matched_count": 0
+  }
+}
+```
+
+### Test payload for horoscope update
+
+**Endpoint:** `POST /api/v1/member/astronomic/update`
+
+```json
+{
+  "time_of_birth": "09:30 PM",
+  "city_of_birth": "Lahore",
+  "sun_sign": "leo",
+  "moon_sign": "taurus",
+  "nakshatra": "rohini",
+  "gana": "deva",
+  "nadi": "madhya",
+  "manglik": "no"
+}
+```
+

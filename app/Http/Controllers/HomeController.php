@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 use App\Mail\SecondEmailVerifyMailManager;
 use App\Models\AdditionalAttribute;
 use App\Notifications\DbStoreNotification;
@@ -322,15 +323,17 @@ class HomeController extends Controller
             $user_ids = Address::where('country_id', $country_id)->pluck('user_id')->toArray();
             $users = $users->WhereIn('id', $user_ids);
         }
-
         // Sort By Mother Tongue
-        if ($mother_tongue != null) {
-            $user_ids = Member::where('mothere_tongue', $mother_tongue)->pluck('user_id')->toArray();
+        $motherTongueColumn = Schema::hasColumn('members', 'mothere_tongue')
+            ? 'mothere_tongue'
+            : (Schema::hasColumn('members', 'mother_tongue') ? 'mother_tongue' : null);
+
+        if ($mother_tongue != null && $motherTongueColumn) {
+            $user_ids = Member::where($motherTongueColumn, $mother_tongue)->pluck('user_id')->toArray();
             if (count($user_ids) > 0) {
                 $users = $users->WhereIn('id', $user_ids);
             }
         }
-
         // Sort by Height
         if (!empty($min_height)) {
             $user_ids = PhysicalAttribute::where('height', '>=', $min_height)->pluck('user_id')->toArray();
@@ -422,14 +425,14 @@ class HomeController extends Controller
         if($user->id != $authUser->id){
             $profileViewed = ProfileViewer::where('user_id', $user->id)->where('viewed_by', $authUser->id)->first();
             if($profileViewed == null){
-                if(package_validity($user->id) && $user->member->remaining_profile_viewer_view > 0){
-                    ProfileViewer::create([
+                $viewerMember = Member::where('user_id', $authUser->id)->first();
+                if(package_validity($authUser->id) && $viewerMember->remaining_profile_viewer_view > 0){
+                    $profileViewed = ProfileViewer::create([
                         'user_id' => $user->id,
                         'viewed_by' => $authUser->id
                     ]);
-                    $usermember = $user->member;
-                    $usermember->remaining_profile_viewer_view = $usermember->remaining_profile_viewer_view - 1;
-                    $usermember->save();
+                                        $viewerMember->remaining_profile_viewer_view = max(0, $viewerMember->remaining_profile_viewer_view - 1);
+                    $viewerMember->save();
 
                     PackageUsage::record(
                         $authUser->id,
@@ -705,3 +708,5 @@ class HomeController extends Controller
         }
     }
 }
+
+

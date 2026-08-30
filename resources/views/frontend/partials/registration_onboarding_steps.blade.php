@@ -10,6 +10,7 @@
     $professionCategories = \App\Models\ProfessionCategory::where('is_active', true)->orderBy('sort_order')->get();
     $educationLevels = \App\Models\EducationLevel::where('is_active', true)->orderBy('sort_order')->get();
     $institutions = \App\Models\Institution::where('is_active', true)->orderBy('sort_order')->get();
+    $annualSalaryRanges = \App\Models\AnnualSalaryRange::orderBy('min_salary', 'asc')->get();
     
     $hobbyOptions = $hobbies->count() > 0 ? $hobbies->pluck('name', 'id')->all() : [
         translate('Reading'), translate('Cooking'), translate('Travel'), translate('Photography'),
@@ -19,6 +20,7 @@
     ];
     $required = '<span class="text-danger">*</span>';
     $pairs = fn($items) => $items->mapWithKeys(fn($item) => [$item->id => $item->name])->all();
+    $salaryPairs = $annualSalaryRanges->mapWithKeys(fn($range) => [$range->id => single_price($range->min_salary).' - '.single_price($range->max_salary)])->all();
     $select = fn($label, $name, $options, $required = true, $attrs = [], $col = 'col-lg-6') => compact('label', 'name', 'options', 'required', 'attrs', 'col') + ['type' => 'select'];
     $input = fn($label, $name, $type = 'text', $required = true, $attrs = [], $col = 'col-lg-6') => compact('label', 'name', 'type', 'required', 'attrs', 'col');
     $textarea = fn($label, $name, $required = true, $attrs = [], $col = 'col-lg-12') => compact('label', 'name', 'required', 'attrs', 'col') + ['type' => 'textarea'];
@@ -73,7 +75,7 @@
         ]],
         5 => [translate('Contact Information'), translate('Mobile number with country code and unique email.'), [
             $input('', 'country_code', 'hidden', true, ['id' => 'country_code'], 'd-none'),
-            $input(translate('Mobile Number'), 'phone', 'tel', true, ['id' => 'phone-code'], 'col-lg-12 phone-form-group'),
+            $input(translate('Mobile Number'), 'phone', 'tel', true, ['id' => 'phone-code', 'maxlength' => '11', 'inputmode' => 'numeric', 'pattern' => '[0-9]*', 'autocomplete' => 'tel-national'], 'col-lg-12 phone-form-group'),
             $input(translate('Email Address'), 'email', 'email', true, ['id' => 'signinSrEmail', 'data-noverify' => '1'], 'col-lg-12 email-form-group'),
         ]],
         6 => [translate('Caste'), translate('Community details.'), [
@@ -95,7 +97,7 @@
             $select(translate('Diet'), 'diet', ['Vegetarian' => translate('Vegetarian'), 'Non-Vegetarian' => translate('Non-Vegetarian')], true),
         ]],
         10 => [translate('Career & Income'), translate('Income, work category and profession.'), [
-            $input(translate('Annual Income'), 'annual_income', 'number', true, ['min' => '0']),
+            $select(translate('Annual Income'), 'annual_salary_range_id', $salaryPairs, true, ['data-live-search' => 'true', 'data-selected' => old('annual_salary_range_id')]),
             $select(translate('Employment Status'), 'employment_status', ['government' => translate('Government'), 'private' => translate('Private'), 'civil' => translate('Civil'), 'defence' => translate('Defence'), 'self_employed' => translate('Self-Employed')], true),
             $select(translate('Profession Category'), 'profession_category_id', $pairs($professionCategories), true, ['data-live-search' => 'true', 'data-profession-category' => '1', 'data-selected' => old('profession_category_id')]),
             $select(translate('Profession'), 'profession_id', [], true, ['data-live-search' => 'true', 'data-profession' => '1', 'data-selected' => old('profession_id')]),
@@ -119,7 +121,7 @@
         $input('', 'hobbies', 'hidden', false, ['id' => 'hobbies_hidden']),
     ], true],
         15 => [translate('Family Information'), translate('Optional parent and sibling details.'), [$input(translate("Father's Occupation"), 'father_occupation', 'text', false), $input(translate("Mother's Occupation"), 'mother_occupation', 'text', false), $input(translate('Number of Sisters'), 'siblings_sisters', 'number', false, ['min' => '0']), $input(translate('Number of Brothers'), 'siblings_brothers', 'number', false, ['min' => '0'])], true],
-        16 => [translate('Family Details'), translate('Optional family residence and financial status.'), [$input(translate('Family Location'), 'family_location', 'text', false), $select(translate('Do you live with your family?'), 'live_with_family', ['yes' => translate('Yes'), 'no' => translate('No')], false), $select(translate('Family Financial Status'), 'family_values', array_combine(['Elite','High','Middle','Aspiring','Poor'], array_map('translate', ['Elite','High','Middle','Aspiring','Poor'])), false), $select(translate('Family Country'), 'family_country_id', $pairs($countries), false, ['data-live-search' => 'true']), $input(translate('Family Province / State'), 'family_state', 'text', false), $input(translate('Family City'), 'family_city', 'text', false)], true],
+        16 => [translate('Family Details'), translate('Optional family residence and family background.'), [$input(translate('Family Location'), 'family_location', 'text', false), $select(translate('Do you live with your family?'), 'live_with_family', ['yes' => translate('Yes'), 'no' => translate('No')], false), $select(translate('Family Country'), 'family_country_id', $pairs($countries), false, ['data-live-search' => 'true']), $input(translate('Family Province / State'), 'family_state', 'text', false), $input(translate('Family City'), 'family_city', 'text', false)], true],
         17 => [translate('Basic Partner Preferences'), translate('Mandatory preferences used by matching.'), [
             $input(translate('Preferred Age From'), 'partner_age_min', 'number', true, ['min' => '18', 'max' => '100']), $input(translate('Preferred Age To'), 'partner_age_max', 'number', true, ['min' => '18', 'max' => '100']),
             $input(translate('Preferred Height Min'), 'partner_height_min', 'number', true, ['step' => '0.01']), $input(translate('Preferred Height Max'), 'partner_height_max', 'number', true, ['step' => '0.01']),
@@ -282,6 +284,10 @@
     @endforeach
 
     <datalist id="profession_options"><option value="Software Engineer"><option value="Doctor"><option value="Teacher"><option value="Banker"><option value="Business Owner"><option value="Government Officer"><option value="Armed Forces"><option value="Self-Employed"></datalist>
+    <div class="d-flex flex-wrap align-items-center justify-content-between mt-3 mb-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary mb-2" data-registration-autofill>{{ translate('Auto Fill Test Data') }}</button>
+        <span class="text-muted fs-12 mb-2">{{ translate('Developer helper: fills the form with sample data and jumps to the final step.') }}</span>
+    </div>
     <div class="registration-flow-actions d-flex justify-content-between align-items-center border-top pt-4 mt-4 mb-4 pb-2"><button type="button" class="btn registration-gradient-btn" data-registration-prev>{{ translate('Previous') }}</button><button type="button" class="btn registration-gradient-btn ml-auto" data-registration-next>{{ translate('Next') }}</button></div>
 </div>
 
@@ -341,3 +347,93 @@ function updateHobbyHiddenField() {
 </script>
 <script src="{{ static_asset('assets/js/registration-selfie-camera.js') }}"></script>
 <script src="{{ static_asset('assets/js/registration-web-stepwise.js') }}"></script>
+<script>
+(function () {
+    var btn = document.querySelector('[data-registration-autofill]');
+    if (!btn) return;
+
+    function setField(name, value) {
+        var el = document.querySelector('[name="' + name + '"]');
+        if (!el) return;
+        el.value = value;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function selectFirstOption(name, fallback) {
+        var el = document.querySelector('[name="' + name + '"]');
+        if (!el) return;
+        var opts = Array.from(el.options || []);
+        var opt = opts.find(function (o) { return o.value; }) || opts[1];
+        el.value = opt ? opt.value : fallback;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    btn.addEventListener('click', function () {
+        setField('first_name', 'JZ');
+        setField('last_name', 'JZ');
+        setField('weight', '60');
+        setField('complexion', 'Not Specified');
+        setField('living_with', 'Family');
+        setField('smoke', 'No');
+        setField('drink', 'No');
+        setField('personal_value', 'Family Oriented');
+        setField('company', 'Not Specified');
+        setField('future_goals', 'Build a peaceful and stable married life.');
+        setField('children', '0');
+        setField('partner_lifestyle', 'Compatible');
+        setField('partner_prayer', 'Flexible');
+        setField('full_name', 'JZ');
+        setField('date_of_birth', '1996-07-11');
+        setField('dob_day', '11');
+        setField('dob_month', '07');
+        setField('dob_year', '1996');
+        setField('area', 'Saddar');
+        setField('country_code', '92');
+        setField('phone', '33387678789');
+        setField('email', 'test' + Date.now().toString().slice(-6) + '@example.com');
+        setField('graduation_year', '2024');
+        setField('education_status', 'completed');
+        setField('expected_graduation_year', '');
+        setField('height', '6');
+        setField('diet', 'Vegetarian');
+        setField('employment_status', 'government');
+        setField('job_title', 'kklkl');
+        setField('organization', 'mkllmk');
+        setField('years_of_experience', '3');
+        setField('about_me', 'klmklmlkmk');
+        setField('cnic_number', '3730240741611');
+        setField('hobbies', 'Reading,Movies,Writing');
+        setField('father_occupation', 'mklkl');
+        setField('mother_occupation', 'mlmkkl');
+        setField('siblings_sisters', '1');
+        setField('siblings_brothers', '2');
+        setField('family_location', 'mklklmkl');
+        setField('live_with_family', 'yes');
+        setField('family_state', 'mklmkl');
+        setField('family_city', 'mklmk');
+        setField('partner_age_min', '20');
+        setField('partner_age_max', '30');
+        setField('partner_height_min', '5');
+        setField('partner_height_max', '6');
+        setField('partner_education', 'mklkl');
+        setField('partner_profession', 'mklm');
+        setField('partner_income_min', '999');
+        setField('partner_income_max', '99999');
+        setField('deal_breakers[]', 'jkljkljkljklklkl');
+        setField('password', '123456789');
+        setField('password_confirmation', '123456789');
+        setField('email_verify', '33384@iqraisb.edu.pk');
+
+        ['on_behalf','gender','marriage_timeline','willing_to_work_after_marriage','expects_spouse_to_work','religion_id','mother_tongue','sect_main_id','school_of_thought_id','tradition_id','country_id','state_id','city_id','caste_id','sub_caste_id','marital_status_id','education_level_id','degree_id','field_of_study_id','institution_id','annual_salary_range_id','profession_category_id','profession_id','partner_marital_status_id','partner_religion_id','partner_caste_id','partner_language_id','partner_country_id','partner_state_id','partner_city_id'].forEach(function (name) {
+            selectFirstOption(name);
+        });
+
+        var step = document.querySelector('.registration-flow-step[data-step="18"]');
+        if (step) {
+            step.classList.add('is-autofilled');
+        }
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+})();
+</script>

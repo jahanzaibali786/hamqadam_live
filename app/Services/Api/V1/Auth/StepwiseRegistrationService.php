@@ -7,6 +7,7 @@ namespace App\Services\Api\V1\Auth;
 use App\Dto\Auth\DeviceData;
 use App\Dto\Auth\IssuedTokenData;
 use App\Models\Address;
+use App\Models\AnnualSalaryRange;
 use App\Models\Career;
 use App\Models\Education;
 use App\Models\Family;
@@ -69,13 +70,13 @@ class StepwiseRegistrationService
             7 => ['key' => 'step7', 'name' => 'Marital Status', 'skippable' => false, 'fields' => ['marital_status_id']],
             8 => ['key' => 'step8', 'name' => 'Education', 'skippable' => false, 'fields' => ['education_level_id', 'degree_id', 'field_of_study_id', 'institution_id', 'graduation_year', 'education_status', 'expected_graduation_year']],
             9 => ['key' => 'step9', 'name' => 'Physical Information', 'skippable' => false, 'fields' => ['height', 'diet']],
-            10 => ['key' => 'step10', 'name' => 'Career & Income', 'skippable' => false, 'fields' => ['annual_income', 'employment_status', 'profession_category_id', 'profession_id', 'job_title', 'organization', 'years_of_experience']],
+            10 => ['key' => 'step10', 'name' => 'Career & Income', 'skippable' => false, 'fields' => ['annual_salary_range_id', 'employment_status', 'profession_category_id', 'profession_id', 'job_title', 'organization', 'years_of_experience']],
             11 => ['key' => 'step11', 'name' => 'Photos', 'skippable' => false, 'fields' => ['profile_photo', 'additional_photos']],
             12 => ['key' => 'step12', 'name' => 'About Yourself', 'skippable' => false, 'fields' => ['about_me']],
             13 => ['key' => 'step13', 'name' => 'Identity Verification', 'skippable' => false, 'fields' => ['cnic_number', 'cnic_front', 'cnic_back', 'selfie_verification']],
             14 => ['key' => 'step14', 'name' => 'Interests & Hobbies', 'skippable' => true, 'fields' => ['hobbies']],
             15 => ['key' => 'step15', 'name' => 'Family Information', 'skippable' => true, 'fields' => ['father_occupation', 'mother_occupation', 'siblings_sisters', 'siblings_brothers']],
-            16 => ['key' => 'step16', 'name' => 'Family Details', 'skippable' => true, 'fields' => ['family_location', 'live_with_family', 'family_values', 'family_country_id', 'family_state', 'family_city']],
+            16 => ['key' => 'step16', 'name' => 'Family Details', 'skippable' => true, 'fields' => ['family_location', 'live_with_family', 'family_country_id', 'family_state', 'family_city']],
             17 => ['key' => 'step17', 'name' => 'Basic Partner Preferences', 'skippable' => false, 'fields' => [
                 'partner_age_min', 'partner_age_max', 'partner_height_min', 'partner_height_max',
                 'partner_marital_status_id', 'partner_religion_id', 'partner_caste_id', 'partner_language_id',
@@ -316,6 +317,8 @@ class StepwiseRegistrationService
 
     private function step10(User $user, array $data): void
     {
+        $salaryRange = ! empty($data['annual_salary_range_id']) ? AnnualSalaryRange::find($data['annual_salary_range_id']) : null;
+
         Career::updateOrCreate(['user_id' => $user->id], [
             'profession_category_id' => $data['profession_category_id'] ?? null,
             'profession_id' => $data['profession_id'] ?? null,
@@ -326,7 +329,8 @@ class StepwiseRegistrationService
             'present' => 1,
         ]);
         $this->memberUpdate($user, [
-            'annual_income' => $data['annual_income'],
+            'annual_salary_range_id' => $data['annual_salary_range_id'] ?? null,
+            'annual_income' => $data['annual_income'] ?? ($salaryRange?->max_salary ?? null),
             'employment_status' => $data['employment_status'],
             'profession_category_id' => $data['profession_category_id'] ?? null,
             'profession_id' => $data['profession_id'] ?? null,
@@ -504,7 +508,6 @@ class StepwiseRegistrationService
     {
         $this->memberUpdate($user, [
             'family_location' => $data['family_location'] ?? null,
-            'family_values' => $data['family_values'] ?? null,
             'family_country_id' => $data['family_country_id'] ?? null,
             'family_state' => $data['family_state'] ?? null,
             'family_city' => $data['family_city'] ?? null,
@@ -543,7 +546,22 @@ class StepwiseRegistrationService
 
     private function validate(int $step, array $data): void
     {
-        Validator::make($data, $this->rules($step))->validate();
+        $validator = Validator::make($data, $this->rules($step));
+
+        if ($step === 5) {
+            $validator->after(function ($validator) use ($data) {
+                $countryCode = preg_replace('/\D+/', '', (string) ($data['country_code'] ?? ''));
+                $phone = preg_replace('/\D+/', '', (string) ($data['phone'] ?? ''));
+
+                if ($countryCode === '92' && strlen($phone) > 11) {
+                    $validator->errors()->add('phone', translate('Pakistan mobile number must be 11 digits or fewer.'));
+                } elseif ($countryCode !== '' && strlen($phone) > 15) {
+                    $validator->errors()->add('phone', translate('Phone number is too long for the selected country.'));
+                }
+            });
+        }
+
+        $validator->validate();
     }
 
     private function rules(int $step): array
@@ -561,18 +579,18 @@ class StepwiseRegistrationService
             2 => ['full_name' => ['required', 'string', 'max:255'], 'date_of_birth' => ['required', 'date', 'before:today']],
             3 => ['religion_id' => ['required', 'integer', 'exists:religions,id'], 'mother_tongue' => ['required', 'integer', 'exists:member_languages,id'], 'sect_main_id' => ['nullable', 'integer', 'exists:sect_main,id'], 'school_of_thought_id' => ['nullable', 'integer', 'exists:school_of_thought,id'], 'tradition_id' => ['nullable', 'integer', 'exists:traditions,id']],
             4 => ['country_id' => ['required', 'integer', 'exists:countries,id'], 'state_id' => ['required', 'integer', 'exists:states,id'], 'city_id' => ['required', 'integer', 'exists:cities,id'], 'area' => ['required', 'string', 'max:255']],
-            5 => ['country_code' => ['required', 'string', 'max:10'], 'phone' => ['required', 'string', 'max:30'], 'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore(request()->user()?->id)]],
+            5 => ['country_code' => ['required', 'string', 'max:10'], 'phone' => ['required', 'string', 'max:15'], 'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore(request()->user()?->id)]],
             6 => ['caste_id' => ['required', 'integer', 'exists:castes,id'], 'sub_caste_id' => ['nullable', 'integer', 'exists:sub_castes,id']],
             7 => ['marital_status_id' => ['required', 'integer', 'exists:marital_statuses,id']],
             8 => ['education_level_id' => ['nullable', 'integer', 'exists:education_levels,id'], 'degree_id' => ['nullable', 'integer', 'exists:degrees,id'], 'field_of_study_id' => ['nullable', 'integer', 'exists:fields_of_study,id'], 'institution_id' => ['nullable', 'integer', 'exists:institutions,id'], 'graduation_year' => ['nullable', 'integer', 'min:1950', 'max:2100'], 'education_status' => ['nullable', Rule::in(['completed', 'in_progress', 'dropped'])], 'expected_graduation_year' => ['nullable', 'integer', 'min:1950', 'max:2100']],
             9 => ['height' => ['required', 'numeric', 'between:0,9.99'], 'diet' => ['required', Rule::in(['Vegetarian', 'Non-Vegetarian'])]],
-            10 => ['annual_income' => ['required', 'numeric', 'min:0'], 'employment_status' => ['required', Rule::in(['government', 'private', 'civil', 'defence', 'self_employed', 'unemployed', 'retired'])], 'profession_category_id' => ['nullable', 'integer', 'exists:profession_categories,id'], 'profession_id' => ['nullable', 'integer', 'exists:professions,id'], 'job_title' => ['nullable', 'string', 'max:255'], 'organization' => ['nullable', 'string', 'max:255'], 'years_of_experience' => ['nullable', 'integer', 'min:0', 'max:50']],
+            10 => ['annual_salary_range_id' => ['required', 'integer', 'exists:annual_salary_ranges,id'], 'annual_income' => ['nullable', 'numeric', 'min:0'], 'employment_status' => ['required', Rule::in(['government', 'private', 'civil', 'defence', 'self_employed', 'unemployed', 'retired'])], 'profession_category_id' => ['nullable', 'integer', 'exists:profession_categories,id'], 'profession_id' => ['nullable', 'integer', 'exists:professions,id'], 'job_title' => ['nullable', 'string', 'max:255'], 'organization' => ['nullable', 'string', 'max:255'], 'years_of_experience' => ['nullable', 'integer', 'min:0', 'max:50']],
             11 => ['profile_photo' => ['required', 'string'], 'additional_photos' => ['nullable', 'array'], 'additional_photos.*' => ['nullable', 'string']],
             12 => ['about_me' => ['required', 'string', 'max:300']],
             13 => ['cnic_number' => ['required', 'string', 'max:30'], 'cnic_front' => ['required', 'string'], 'cnic_back' => ['required', 'string'], 'selfie_verification' => ['required', 'string']],
             14 => ['hobbies' => ['nullable', 'string', 'max:500']],
             15 => ['father_occupation' => ['nullable', 'string', 'max:255'], 'mother_occupation' => ['nullable', 'string', 'max:255'], 'siblings_sisters' => ['nullable', 'integer', 'min:0'], 'siblings_brothers' => ['nullable', 'integer', 'min:0']],
-            16 => ['family_location' => ['nullable', 'string', 'max:255'], 'live_with_family' => ['nullable', Rule::in(['yes', 'no'])], 'family_values' => ['nullable', Rule::in(['Elite', 'High', 'Middle', 'Aspiring', 'Poor'])], 'family_country_id' => ['nullable', 'integer'], 'family_state' => ['nullable', 'string', 'max:255'], 'family_city' => ['nullable', 'string', 'max:255']],
+            16 => ['family_location' => ['nullable', 'string', 'max:255'], 'live_with_family' => ['nullable', Rule::in(['yes', 'no'])], 'family_country_id' => ['nullable', 'integer'], 'family_state' => ['nullable', 'string', 'max:255'], 'family_city' => ['nullable', 'string', 'max:255']],
             17 => [
                 'partner_age_min' => ['required', 'integer', 'min:18', 'max:100'],
                 'partner_age_max' => ['required', 'integer', 'min:18', 'max:100'],

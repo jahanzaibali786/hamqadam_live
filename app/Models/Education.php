@@ -20,7 +20,6 @@ class Education extends Model
         'institution',
         'start',
         'end',
-        // New controlled fields
         'education_level_id',
         'degree_id',
         'field_of_study_id',
@@ -35,7 +34,6 @@ class Education extends Model
         return $this->belongsTo(User::class)->withTrashed();
     }
 
-    // New relationships
     public function educationLevel()
     {
         return $this->belongsTo(EducationLevel::class);
@@ -54,5 +52,59 @@ class Education extends Model
     public function institution()
     {
         return $this->belongsTo(Institution::class);
+    }
+
+    public function getDegreeAttribute($value): string
+    {
+        $relation = $this->getRelationValue('degree');
+
+        if ($relation instanceof Degree && !empty($relation->name)) {
+            return (string) $relation->name;
+        }
+
+        if (is_string($value) && trim($value) !== '') {
+            $decoded = json_decode($value, true);
+
+            if (is_array($decoded) && isset($decoded['name']) && trim((string) $decoded['name']) !== '') {
+                return (string) $decoded['name'];
+            }
+
+            return $value;
+        }
+
+        if (!empty($this->degree_id)) {
+            return (string) optional(Degree::find($this->degree_id))->name;
+        }
+
+        if (!empty($this->education_level_id)) {
+            return (string) optional(EducationLevel::find($this->education_level_id))->name;
+        }
+
+        return '';
+    }
+
+    public function getInstitutionAttribute($value): string
+    {
+        $relation = $this->getRelationValue('institution');
+
+        if ($relation instanceof Institution && !empty($relation->name)) {
+            return (string) $relation->name;
+        }
+
+        if (is_string($value) && trim($value) !== '') {
+            $decoded = json_decode($value, true);
+
+            if (is_array($decoded) && isset($decoded['name']) && trim((string) $decoded['name']) !== '') {
+                return (string) $decoded['name'];
+            }
+
+            return $value;
+        }
+
+        if (!empty($this->institution_id)) {
+            return (string) optional(Institution::find($this->institution_id))->name;
+        }
+
+        return '';
     }
 }

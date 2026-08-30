@@ -1,4 +1,4 @@
-<div class="card">
+<div class="card" id="astronomic_information">
     <div class="card-header">
         <h5 class="mb-0 h6">{{translate('Astronomic & Horoscope Information')}}</h5>
     </div>
@@ -153,3 +153,4 @@
         </form>
     </div>
 </div>
+

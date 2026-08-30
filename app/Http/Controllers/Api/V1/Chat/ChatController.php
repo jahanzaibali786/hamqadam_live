@@ -60,6 +60,11 @@ class ChatController extends ApiController
         return $this->success(message: 'Message deleted for you.');
     }
 
+    public function clear(Request $request, int $thread): JsonResponse
+    {
+        return $this->success(new ChatThreadResource($this->chat->clear($request->user(), $thread)), 'Chat cleared successfully.');
+    }
+
     public function block(Request $request, int $thread): JsonResponse
     {
         return $this->success(new ChatThreadResource($this->chat->block($request->user(), $thread)), 'Chat blocked successfully.');
@@ -72,8 +77,6 @@ class ChatController extends ApiController
 
     public function report(ReportChatRequest $request, int $thread): JsonResponse
     {
-        $this->chat->report($request->user(), $thread, $request->validated('reason'));
-
-        return $this->success(message: 'Chat reported successfully.');
+        return $this->success(new ChatThreadResource($this->chat->report($request->user(), $thread, $request->validated('reason'))), 'Chat reported successfully.');
     }
 }

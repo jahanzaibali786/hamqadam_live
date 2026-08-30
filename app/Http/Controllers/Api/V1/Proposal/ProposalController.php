@@ -104,6 +104,27 @@ class ProposalController extends ApiController
             ->response();
     }
 
+    public function shortlists(ProposalActionRequest $request): JsonResponse
+    {
+        $items = $this->proposals->shortlists($request->user(), min((int) $request->integer('per_page', 20), 50));
+
+        return SearchProfileResource::collection($items->through(fn ($shortlist) => $shortlist->user))
+            ->additional(['success' => true])
+            ->response();
+    }
+
+    public function shortlist(ToggleUserListRequest $request): JsonResponse
+    {
+        $shortlist = $this->proposals->shortlist($request->user(), (int) $request->validated('user_id'));
+
+        return $this->success([
+            'user_id' => (int) $request->validated('user_id'),
+            'shortlisted' => true,
+            'shortlist_id' => $shortlist->id,
+            'coin_balance' => (int) ($request->user()->fresh('member')->member?->remaining_interest ?? 0),
+        ], 'Profile shortlisted successfully.', 201);
+    }
+
     public function checkFavourite(ProposalActionRequest $request, int $user): JsonResponse
     {
         return $this->success([
@@ -117,6 +138,21 @@ class ProposalController extends ApiController
         $this->proposals->removeFavourite($request->user(), $user);
 
         return $this->success(message: 'Profile removed from favourites.');
+    }
+
+    public function checkShortlist(ProposalActionRequest $request, int $user): JsonResponse
+    {
+        return $this->success([
+            'user_id' => $user,
+            'is_shortlisted' => $this->proposals->isShortlisted($request->user(), $user),
+        ]);
+    }
+
+    public function removeShortlist(ProposalActionRequest $request, int $user): JsonResponse
+    {
+        $this->proposals->removeShortlist($request->user(), $user);
+
+        return $this->success(message: 'Profile removed from shortlist.');
     }
 
     public function ignore(ToggleUserListRequest $request): JsonResponse

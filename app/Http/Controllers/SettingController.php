@@ -16,9 +16,11 @@ class SettingController extends Controller
         $this->middleware(['permission:footer'])->only('website_footer_settings');
         $this->middleware(['permission:appearances'])->only('website_appearances');
         $this->middleware(['permission:general_settings'])->only('general_settings');
-        $this->middleware(['permission:payment_method_settings'])->only('payment_method_settings');
+        $this->middleware(['permission:coin_charge_settings'])->only('coin_charge_settings');
+        $this->middleware(['permission:payment_method_settings|payment_methods'])->only('payment_method_settings');
         $this->middleware(['permission:smtp_settings'])->only('smtp_settings');
         $this->middleware(['permission:third_party_settings'])->only('third_party_settings');
+        $this->middleware(['permission:chat_realtime_settings'])->only(['chat_realtime_settings', 'chat_realtime_settings_update']);
         $this->middleware(['permission:social_media_login_settings'])->only('social_media_login_settings');
         $this->middleware(['permission:system_update'])->only('system_update');
         $this->middleware(['permission:server_status'])->only('system_server');
@@ -52,6 +54,35 @@ class SettingController extends Controller
 
     public function third_party_settings(){
         return view('admin.settings.third_party_settings');
+    }
+
+    public function chat_realtime_settings()
+    {
+        return view('admin.settings.chat_realtime_settings');
+    }
+
+    public function chat_realtime_settings_update(Request $request)
+    {
+        foreach (['chat_realtime_enabled', 'pusher_app_id', 'pusher_app_key', 'pusher_app_secret', 'pusher_app_cluster', 'pusher_host', 'pusher_port', 'pusher_scheme', 'agora_calling_enabled', 'agora_app_id', 'agora_app_certificate', 'agora_token_expiry'] as $key) {
+            $setting = Setting::where('type', $key)->first();
+            if (! $setting) {
+                $setting = new Setting();
+                $setting->type = $key;
+            }
+
+            if ($key === 'chat_realtime_enabled') {
+                $setting->value = $request->has($key) ? 1 : 0;
+            } else {
+                $setting->value = $request->input($key);
+            }
+
+            $setting->save();
+        }
+
+        Artisan::call('cache:clear');
+
+        flash(translate('Settings updated successfully'))->success();
+        return back();
     }
 
     public function member_profile_sections_configuration ()
@@ -423,3 +454,5 @@ class SettingController extends Controller
         return back();
     }
 }
+
+

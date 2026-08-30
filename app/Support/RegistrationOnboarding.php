@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Models\Address;
+use App\Models\AnnualSalaryRange;
 use App\Models\Career;
 use App\Models\Education;
 use App\Models\Lifestyle;
@@ -65,6 +66,7 @@ class RegistrationOnboarding
             'profession' => ['nullable', 'string', 'max:255'], // Made nullable for backward compatibility
             'company' => ['nullable', 'string', 'max:255'], // Made nullable for backward compatibility
             'employment_status' => ['nullable', 'string', 'max:20'],
+            'annual_salary_range_id' => ['nullable', 'integer'],
             'annual_income' => ['nullable', 'numeric', 'min:0'],
             'work_location_city' => ['nullable', 'string', 'max:255'],
             // New controlled fields for profession (now primary required fields)
@@ -92,7 +94,6 @@ class RegistrationOnboarding
             'family_location' => ['nullable', 'string', 'max:255'],
             'guardian_name' => ['nullable', 'string', 'max:255'],
             'guardian_contact' => ['nullable', 'string', 'max:100'],
-            'family_values' => ['nullable', 'string', 'max:50'],
             'family_bio' => ['nullable', 'string', 'max:2000'],
             'family_expectations' => ['nullable', 'string', 'max:2000'],
             'parents_contact' => ['nullable', 'string', 'max:100'],
@@ -178,7 +179,8 @@ class RegistrationOnboarding
             // Step 5 - Education & Career
             $member->employment_status = $data['employment_status'] ?? $member->employment_status;
             $member->work_location_city = $data['work_location_city'] ?? $member->work_location_city;
-            $member->annual_income = $data['annual_income'] ?? $member->annual_income;
+            $member->annual_salary_range_id = $data['annual_salary_range_id'] ?? $member->annual_salary_range_id;
+            $member->annual_income = $data['annual_income'] ?? ($data['annual_salary_range_id'] ? (AnnualSalaryRange::find($data['annual_salary_range_id'])?->max_salary ?? $member->annual_income) : $member->annual_income);
             
             // New profession fields
             $member->profession_category_id = $data['profession_category_id'] ?? $member->profession_category_id;
@@ -217,7 +219,8 @@ class RegistrationOnboarding
             // Step 5 - Education & Career
             $member->employment_status = $data['employment_status'] ?? $member->employment_status;
             $member->work_location_city = $data['work_location_city'] ?? $member->work_location_city;
-            $member->annual_income = $data['annual_income'] ?? $member->annual_income;
+            $member->annual_salary_range_id = $data['annual_salary_range_id'] ?? $member->annual_salary_range_id;
+            $member->annual_income = $data['annual_income'] ?? ($data['annual_salary_range_id'] ? (AnnualSalaryRange::find($data['annual_salary_range_id'])?->max_salary ?? $member->annual_income) : $member->annual_income);
 
             // Step 6 - Family Details
             $member->father_occupation = $data['father_occupation'] ?? $member->father_occupation;
@@ -229,7 +232,6 @@ class RegistrationOnboarding
             $member->family_location = $data['family_location'] ?? $member->family_location;
             $member->guardian_name = $data['guardian_name'] ?? $member->guardian_name;
             $member->guardian_contact = $data['guardian_contact'] ?? $member->guardian_contact;
-            $member->family_values = $data['family_values'] ?? $member->family_values;
             $member->family_bio = $data['family_bio'] ?? $member->family_bio;
             $member->family_expectations = $data['family_expectations'] ?? $member->family_expectations;
             $member->parents_contact = $data['parents_contact'] ?? $member->parents_contact;

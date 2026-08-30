@@ -655,19 +655,25 @@
                             </a>
                         </li>
                         @endcan
-                    </ul>
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('website.dropdown_data.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['website.dropdown_data.index']) }}">
+                                <i class="las la-list aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Dropdowns Data') }}</span>
+                            </a>
+                        </li>                    </ul>
                 </li>
                 @endif
 
 
                 <!-- General settings -->
-                @if (auth()->user()->can('general_settings') ||
+                @if (auth()->user()->can('general_settings') || auth()->user()->can('coin_charge_settings') ||
                 auth()->user()->can('show_languages') ||
                 auth()->user()->can('show_currencies') ||
                 auth()->user()->can('payment_methods') ||
                 auth()->user()->can('smtp_settings') ||
                 auth()->user()->can('email_templates') ||
                 auth()->user()->can('third_party_settings') ||
+                auth()->user()->can('chat_realtime_settings') ||
                 auth()->user()->can('social_media_login_settings'))
                 <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
@@ -683,7 +689,7 @@
                             </a>
                         </li>
                         @endcan
-                        @can('general_settings')
+                        @can('coin_charge_settings')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('coin_charge_settings') }}" class="aiz-side-nav-link">
                                 <span class="aiz-side-nav-text">{{ translate('Coin Charge Settings') }}</span>
@@ -745,6 +751,13 @@
                             <a href="{{ route('settings.fcm') }}" class="aiz-side-nav-link">
                                 <span
                                     class="aiz-side-nav-text">{{ translate('Firebase Push Notification') }}</span>
+                            </a>
+                        </li>
+                        @endcan
+                        @can('chat_realtime_settings')
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('chat_realtime_settings') }}" class="aiz-side-nav-link">
+                                <span class="aiz-side-nav-text">{{ translate('Pusher / Realtime Chat') }}</span>
                             </a>
                         </li>
                         @endcan
@@ -826,3 +839,10 @@
     </div><!-- .aiz-sidebar -->
     <div class="aiz-sidebar-overlay"></div>
 </div><!-- .aiz-sidebar -->
+
+
+
+
+
+
+

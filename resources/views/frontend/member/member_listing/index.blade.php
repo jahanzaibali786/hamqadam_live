@@ -143,16 +143,31 @@
                                                         </div>
                                                     </div>
                                                 @endif
+                                                @php
+                                                    $remaining_full_profile_views = (int) get_remaining_package_value(Auth::user()->id, 'remaining_profile_viewer_view');
+                                                    $can_view_full_profile = package_validity(Auth::user()->id) && $remaining_full_profile_views > 0;
+                                                @endphp
                                                 <div class="row gutters-5 text-center">
-                                                    <div class="col">
-                                                        <a @if (get_setting('full_profile_show_according_to_membership') == 1 && Auth::user()->membership == 1) href="javascript:void(0);" onclick="package_update_alert()"
-                                                    @else
-                                                        href="{{ route('member_profile', $user->id) }}" @endif
-                                                            class="text-reset c-pointer">
-                                                            <i class="las la-user fs-20 text-primary"></i>
-                                                            <span
-                                                                class="d-block fs-10 opacity-60">{{ translate('Full Profile') }}</span>
-                                                        </a>
+                                                                                                        <div class="col">
+                                                        @php
+                                                            $already_viewed_full_profile = \App\Models\ProfileViewer::where('user_id', $user->id)->where('viewed_by', Auth::user()->id)->exists();
+                                                        @endphp
+                                                        @if ($already_viewed_full_profile)
+                                                            <a href="{{ route('member_profile', $user->id) }}" class="text-success d-inline-block">
+                                                                <i class="las la-check-circle fs-20"></i>
+                                                                <span class="d-block fs-10 opacity-60">{{ translate('Viewed') }}</span>
+                                                            </a>
+                                                        @elseif (get_setting('full_profile_show_according_to_membership') == 1 && ! $can_view_full_profile)
+                                                            <a href="javascript:void(0);" onclick="package_update_alert()" class="text-reset c-pointer">
+                                                                <i class="las la-user-lock fs-20 text-muted"></i>
+                                                                <span class="d-block fs-10 opacity-60">{{ translate('Upgrade to View') }}</span>
+                                                            </a>
+                                                        @else
+                                                            <a href="{{ route('member_profile', $user->id) }}" class="text-reset c-pointer">
+                                                                <i class="las la-user fs-20 text-primary"></i>
+                                                                <span class="d-block fs-10 opacity-60">{{ translate('Full Profile') }}</span>
+                                                            </a>
+                                                        @endif
                                                     </div>
                                                     <div class="col">
                                                         @php
@@ -650,3 +665,5 @@
         }
     </script>
 @endsection
+
+

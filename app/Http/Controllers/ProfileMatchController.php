@@ -15,6 +15,7 @@ use App\Models\Lifestyle;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class ProfileMatchController extends Controller
 {
@@ -96,13 +97,15 @@ class ProfileMatchController extends Controller
             $matches_attributes++;
           }
         }
-
         if ($expected_language) {
-          if (Member::where('user_id', $partner->id)->where('mothere_tongue', $expected_language)->count() > 0) {
+          $motherTongueColumn = Schema::hasColumn('members', 'mothere_tongue')
+            ? 'mothere_tongue'
+            : (Schema::hasColumn('members', 'mother_tongue') ? 'mother_tongue' : null);
+
+          if ($motherTongueColumn && Member::where('user_id', $partner->id)->where($motherTongueColumn, $expected_language)->count() > 0) {
             $matches_attributes++;
           }
         }
-
         // Match by religion religion
         $match_by_religion = false;
         $match_by_cast = false;

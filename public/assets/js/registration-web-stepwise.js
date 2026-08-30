@@ -546,6 +546,25 @@
                 countryCode.value = String(value || countryCode.value || '92').replace(/^\+/, '');
             }
 
+            function applyPhoneLength(dialCode) {
+                var code = String(dialCode || countryCode.value || '92');
+                var maxLength = code === '92' ? 11 : 15;
+                phone.setAttribute('maxlength', String(maxLength));
+                phone.setAttribute('data-phone-maxlength', String(maxLength));
+                if (phone.value && phone.value.length > maxLength) {
+                    phone.value = phone.value.slice(0, maxLength);
+                }
+            }
+
+            function syncPhoneField() {
+                var digits = (phone.value || '').replace(/\D/g, '');
+                var maxLength = parseInt(phone.getAttribute('data-phone-maxlength') || phone.getAttribute('maxlength') || '11', 10);
+                if (digits.length > maxLength) {
+                    digits = digits.slice(0, maxLength);
+                }
+                phone.value = digits;
+            }
+
             if (window.intlTelInput) {
                 var iti = window.intlTelInput(phone, {
                     initialCountry: 'pk',
@@ -556,12 +575,18 @@
                 });
                 var sync = function () {
                     var data = iti.getSelectedCountryData();
-                    setCode(data && data.dialCode ? data.dialCode : '92');
+                    var dialCode = data && data.dialCode ? data.dialCode : '92';
+                    setCode(dialCode);
+                    applyPhoneLength(dialCode);
+                    syncPhoneField();
                 };
                 phone.addEventListener('countrychange', sync);
+                phone.addEventListener('input', syncPhoneField);
                 sync();
             } else {
                 setCode(countryCode.value || '92');
+                applyPhoneLength(countryCode.value || '92');
+                phone.addEventListener('input', syncPhoneField);
             }
         }
 

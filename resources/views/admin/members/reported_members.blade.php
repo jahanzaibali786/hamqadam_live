@@ -3,21 +3,26 @@
 <div class="aiz-titlebar mt-2 mb-4">
     <div class="row align-items-center">
         <div class="col-md-6">
-            <h1 class="h3">{{translate('Profile Reports')}}</h1>
+            <h1 class="h3">{{ translate($report_page_title ?? 'Profile Reports') }}</h1>
+        </div>
+        <div class="col-md-6 text-md-right">
+            <a href="{{ route('reported_members', 'all') }}" class="btn btn-soft-primary btn-sm mr-2">{{ translate('Profile Reports') }}</a>
+            <a href="{{ route('chat_reported_members', 'all') }}" class="btn btn-soft-info btn-sm">{{ translate('Chat Reports') }}</a>
         </div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header">
-      <h5 class="mb-md-0 h6">{{ translate('Profile Reports') }}</h5>
+      <h5 class="mb-md-0 h6">{{ translate($report_page_title ?? 'Profile Reports') }}</h5>
     </div>
     <div class="card-body">
         <table class="table aiz-table mb-0">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>{{translate('Member Name')}}</th>
+                    <th>{{translate('Reported Member')}}</th>
+                    <th>{{translate('Source')}}</th>
                     <th>{{translate('Reported By')}}</th>
                     <th>{{translate('Report Reason')}}</th>
                     <th class="text-right">{{translate('Option')}}</th>
@@ -27,16 +32,17 @@
                 @foreach($reports as $key => $report)
                     <tr>
                         <td>{{ ($key+1) + ($reports->currentPage() - 1)*$reports->perPage() }}</td>
-                        <td>{{ $report->user->first_name.' '.$report->user->last_name}}</td>
-                        <td>{{ $report->reportedBy->first_name.' '.$report->reportedBy->last_name }}</td>
+                        <td>{{ $report->user ? $report->user->first_name.' '.$report->user->last_name : translate('Deleted User') }}</td>
+                        <td>{{ ucfirst($report->source ?? 'profile') }}</td>
+                        <td>{{ $report->reportedBy ? $report->reportedBy->first_name.' '.$report->reportedBy->last_name : translate('Deleted User') }}</td>
                         <td>{{ $report->reason }}</td>
                         <td class="text-right">
                             @can('block_member')
-                                @if($report->user->blocked == 0 && $report->user->deleted_at == null)
+                                @if($report->user && $report->user->blocked == 0 && $report->user->deleted_at == null)
                                   <a href="javascript:void(0);" onclick="block_member({{$report->user_id}})" class="btn btn-soft-primary btn-icon btn-circle btn-sm" title="{{ translate('Block') }}">
                                       <i class="las la-ban"></i>
                                   </a>
-                                @elseif($report->user->blocked == 1)
+                                @elseif($report->user && $report->user->blocked == 1)
                                   <a href="javascript:void(0);" onclick="unblock_member({{$report->user_id}})" class="btn btn-soft-danger btn-icon btn-circle btn-sm" title="{{ translate('unblock') }}">
                                       <i class="las la-unban"></i>
                                   </a>

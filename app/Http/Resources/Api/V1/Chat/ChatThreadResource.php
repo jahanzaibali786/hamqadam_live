@@ -14,13 +14,18 @@ class ChatThreadResource extends JsonResource
     {
         $viewer = $request->user();
         $otherUser = (int) $this->sender_user_id === (int) $viewer->id ? $this->receiver : $this->sender;
-        $lastMessage = $this->whenLoaded('chats', fn () => $this->chats->last());
+        $lastMessage = $this->whenLoaded('visibleLastMessage', fn () => $this->visibleLastMessage);
+        $blockedByMe = (int) $this->blocked_by_user === (int) $viewer->id;
+        $blockedByOther = ! empty($this->blocked_by_user) && ! $blockedByMe;
 
         return [
             'id' => $this->id,
             'thread_code' => $this->thread_code,
             'other_user' => $otherUser ? new ChatUserResource($otherUser) : null,
             'blocked_by_user' => $this->blocked_by_user,
+            'blocked_by_me' => $blockedByMe,
+            'blocked_by_other' => $blockedByOther,
+            'can_send_message' => ! $blockedByOther && ! $blockedByMe,
             'message_request_status' => $this->message_request_status ?? 'accepted',
             'unread_count' => Chat::where('chat_thread_id', $this->id)
                 ->where('sender_user_id', '!=', $viewer->id)

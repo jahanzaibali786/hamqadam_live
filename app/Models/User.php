@@ -15,6 +15,7 @@ use App\Models\Family;
 use App\Models\PartnerExpectation;
 use App\Models\SpiritualBackground;
 use App\Models\PackagePayment;
+use App\Models\Call;
 use App\Models\HappyStory;
 use App\Models\Shortlist;
 use App\Models\IgnoredUser;
@@ -51,7 +52,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'password', 'code', 'phone','membership','approved', 'verification_code','fcm_token','referred_by','email_verified_at', 'match_refresh_updated_at', 'refresh_updated_at'
+        'first_name', 'last_name', 'email', 'password', 'code', 'phone','membership','approved', 'verification_code','fcm_token','referred_by','email_verified_at', 'match_refresh_updated_at', 'refresh_updated_at', 'admin_identifier'
     ];
 
     /**
@@ -167,6 +168,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasmany(ReportedUser::class);
     }
 
+    public function callsMade()
+    {
+        return $this->hasMany(Call::class, 'caller_id');
+    }
+
+    public function callsReceived()
+    {
+        return $this->hasMany(Call::class, 'receiver_id');
+    }
+
     public function gallery_images()
     {
         return $this->hasmany(GalleryImage::class);
@@ -243,3 +254,4 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(FamilyGuardianLink::class, 'guardian_user_id');
     }
 }
+

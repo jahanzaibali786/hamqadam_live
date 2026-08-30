@@ -675,14 +675,14 @@ class ProfileController extends Controller
             if($user->id != $auth_user->id){
                 $profileViewed = ProfileViewer::where('user_id', $user->id)->where('viewed_by', $auth_user->id)->first();
                 if($profileViewed == null){
-                    if(package_validity($user->id) && $user->member->remaining_profile_viewer_view > 0){
-                        ProfileViewer::create([
+                $viewerMember = Member::where('user_id', $auth_user->id)->first();
+                    if(package_validity($auth_user->id) && $viewerMember->remaining_profile_viewer_view > 0){
+                        $profileViewed = ProfileViewer::create([
                             'user_id' => $user->id,
                             'viewed_by' => $auth_user->id
                         ]);
-                        $usermember = $user->member;
-                        $usermember->remaining_profile_viewer_view = $usermember->remaining_profile_viewer_view - 1;
-                        $usermember->save();
+                                                $viewerMember->remaining_profile_viewer_view = max(0, $viewerMember->remaining_profile_viewer_view - 1);
+                        $viewerMember->save();
 
                         PackageUsage::record(
                             auth()->id(),
@@ -818,23 +818,58 @@ class ProfileController extends Controller
 
     public function horoscope_matched_profile()
     {
-        $matched_profiles = [];
         $user = auth()->user();
-        if ($user->member->auto_horoscope_profile_match == 1) {
-            $matched_profiles = HoroscopeProfileMatch::orderBy('match_count', 'desc')
-                ->where('user_id', $user->id)
-                ->where('match_count', '>=', 18);
-            $ignored_to = IgnoredUser::where('ignored_by', $user->id)->pluck('user_id')->toArray();
-            if (count($ignored_to) > 0) {
-                $matched_profiles = $matched_profiles->whereNotIn('match_id', $ignored_to);
-            }
-            $ignored_by_ids = IgnoredUser::where('user_id', $user->id)->pluck('ignored_by')->toArray();
-            if (count($ignored_by_ids) > 0) {
-                $matched_profiles = $matched_profiles->whereNotIn('match_id', $ignored_by_ids);
-            }
-            $matched_profiles = $matched_profiles->limit(20)->get();
+        $astrologyExists = Astrology::where('user_id', $user->id)->exists();
+
+        if (! $user->member || $user->member->auto_horoscope_profile_match != 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Horoscope matching is disabled for this account.',
+                'data' => [
+                    'horoscope_filled' => $astrologyExists,
+                    'needs_horoscope_info' => ! $astrologyExists,
+                    'matched_profiles' => [],
+                    'matched_count' => 0,
+                ],
+            ]);
         }
-        return HoroscopeMatchedProfileResource::collection($matched_profiles);
+
+        if (! $astrologyExists) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Please complete your horoscope details first.',
+                'data' => [
+                    'horoscope_filled' => false,
+                    'needs_horoscope_info' => true,
+                    'matched_profiles' => [],
+                    'matched_count' => 0,
+                ],
+            ]);
+        }
+
+        $matched_profiles = HoroscopeProfileMatch::orderBy('match_count', 'desc')
+            ->where('user_id', $user->id)
+            ->where('match_count', '>=', 18);
+        $ignored_to = IgnoredUser::where('ignored_by', $user->id)->pluck('user_id')->toArray();
+        if (count($ignored_to) > 0) {
+            $matched_profiles = $matched_profiles->whereNotIn('match_id', $ignored_to);
+        }
+        $ignored_by_ids = IgnoredUser::where('user_id', $user->id)->pluck('ignored_by')->toArray();
+        if (count($ignored_by_ids) > 0) {
+            $matched_profiles = $matched_profiles->whereNotIn('match_id', $ignored_by_ids);
+        }
+        $matched_profiles = $matched_profiles->limit(20)->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Horoscope matched profiles loaded successfully.',
+            'data' => [
+                'horoscope_filled' => true,
+                'needs_horoscope_info' => false,
+                'matched_count' => $matched_profiles->count(),
+                'matched_profiles' => HoroscopeMatchedProfileResource::collection($matched_profiles),
+            ],
+        ]);
     }
 
     public function account_delete(Request $request)
@@ -873,3 +908,7 @@ class ProfileController extends Controller
         return $this->failure_message('Something Went Wrong!');
     }
 }
+
+
+
+

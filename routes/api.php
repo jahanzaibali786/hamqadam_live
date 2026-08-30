@@ -403,3 +403,4 @@ Route::group(['middleware' => ['app_language']], function () {
         });
     });
 });
+Route::prefix('v1/bridge')->middleware('auth:sanctum')->group(base_path('routes/api_bridge.php'));

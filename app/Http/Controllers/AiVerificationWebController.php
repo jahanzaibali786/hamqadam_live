@@ -25,14 +25,8 @@ class AiVerificationWebController extends Controller
             return redirect()->route('dashboard');
         }
 
-        $attempts = AiVerificationAttempt::where('user_id', $request->user()->id)
-            ->latest('id')
-            ->limit(5)
-            ->get();
-
         return view('frontend.verification.ai_gate', [
             'verificationStatus' => $this->verification->statusFor($request->user()->load('member')),
-            'recentAttempts' => $attempts,
         ]);
     }
 
