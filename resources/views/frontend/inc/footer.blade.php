@@ -4,11 +4,11 @@
         <div class="row mb-4">
             <div class="col-xxl-6 col-xl-7 col-lg-8 col-md-10 text-center mx-auto">
                 <div class="logo mb-4">
-                    <a href="{{ route('home') }}" class="d-inline-block py-15px">
+                    <a href="{{ route('home') }}" class="d-inline-block">
                         @if(get_setting('footer_logo') != null)
-                            <img src="{{ uploaded_asset(get_setting('footer_logo')) }}" alt="{{ env('APP_NAME') }}" class="mw-100 h-30px h-md-40px" height="40">
+                            <img src="{{ uploaded_asset(get_setting('footer_logo')) }}" alt="{{ env('APP_NAME') }}" class="mw-100 h-30px" style="height:80px; width:140px;">
                         @else
-                            <img src="{{ static_asset('assets/img/logo.png') }}" alt="{{ env('APP_NAME') }}" class="mw-100 h-30px h-md-40px" height="40">
+                            <img src="{{ static_asset('assets/img/logo.png') }}" alt="{{ env('APP_NAME') }}" class="mw-100 h-30px" style="height:80px; width:140px;">
                         @endif
                     </a>
                 </div>

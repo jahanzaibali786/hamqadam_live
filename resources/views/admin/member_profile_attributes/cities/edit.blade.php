@@ -53,31 +53,33 @@
 
 @section('script')
     <script type="text/javascript">
-        function get_state_by_country(){
+        function get_state_by_country(selected_state_id = null){
             var country_id = $('#country_id').val();
             $.post('{{ route('states.get_state_by_country') }}',{_token:'{{ csrf_token() }}', country_id:country_id}, function(data){
-                $('#state_id').html(null);
+                var stateSelect = $('#state_id');
+                stateSelect.html(null);
+                stateSelect.append($('<option>', {
+                    value: '',
+                    text: '{{ translate('Select State') }}'
+                }));
                 for (var i = 0; i < data.length; i++) {
-                    $('#state_id').append($('<option>', {
+                    stateSelect.append($('<option>', {
                         value: data[i].id,
-                        text: data[i].name
+                        text: data[i].name,
+                        selected: selected_state_id && String(selected_state_id) === String(data[i].id)
                     }));
-                    AIZ.plugins.bootstrapSelect('refresh');
                 }
+                stateSelect.selectpicker('refresh');
             });
 
         }
 
         $(document).ready(function(){
-            $("#country_id > option").each(function() {
-                if(this.value == '{{$city->state->country_id}}'){
-                    $("#country_id").val(this.value).change();
-                }
-            });
-            get_state_by_country();
+            $('#country_id').val('{{$city->state->country_id}}');
+            get_state_by_country('{{$city->state_id}}');
         });
 
-        $('#country_id').on('change', function() {
+        $('#country_id').on('change changed.bs.select', function() {
             get_state_by_country();
         });
 

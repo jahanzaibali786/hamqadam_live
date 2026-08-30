@@ -11,6 +11,7 @@ use App\Models\ProfileViewer;
 use App\Models\SearchHistory;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class ProfileSearchService
 {
@@ -37,7 +38,15 @@ class ProfileSearchService
 
         $this->excludeIgnored($query, $viewer);
         $this->applyDefaultGenderScope($query, $viewer);
-        $this->applyPartnerPreferenceScope($query, $viewer);
+
+        $applyPartnerPreference = array_key_exists('partner_preference', $filters)
+            ? filter_var($filters['partner_preference'], FILTER_VALIDATE_BOOLEAN)
+            : request()->boolean('partner_preference');
+
+        if ($applyPartnerPreference) {
+            $this->applyPartnerPreferenceScope($query, $viewer);
+        }
+
         $this->applyFilters($query, $viewer, $filters);
         $this->applySorting($query, $viewer, $filters);
 
@@ -185,14 +194,21 @@ class ProfileSearchService
                 }
             });
         }
-
         if (! empty($filters['language_id'])) {
-            $query->whereHas('member', function ($member) use ($filters) {
-                $member->where('mothere_tongue', $filters['language_id'])
-                    ->orWhere('known_languages', 'like', '%' . $filters['language_id'] . '%');
+            $motherTongueColumn = Schema::hasColumn('members', 'mothere_tongue')
+                ? 'mothere_tongue'
+                : (Schema::hasColumn('members', 'mother_tongue') ? 'mother_tongue' : null);
+
+            $query->whereHas('member', function ($member) use ($filters, $motherTongueColumn) {
+                if ($motherTongueColumn) {
+                    $member->where($motherTongueColumn, $filters['language_id'])
+                        ->orWhere('known_languages', 'like', '%' . $filters['language_id'] . '%');
+                    return;
+                }
+
+                $member->where('known_languages', 'like', '%' . $filters['language_id'] . '%');
             });
         }
-
         if (isset($filters['compatibility_min'])) {
             $query->whereHas('profile_match_for_viewer', function ($match) use ($viewer, $filters) {
                 $match->where('user_id', $viewer->id)
@@ -231,6 +247,7 @@ class ProfileSearchService
         $query->whereHas('member', fn ($member) => $member->where('gender', $targetGender));
     }
 
+
     private function applyPartnerPreferenceScope($query, User $viewer): void
     {
         $preference = $viewer->partner_expectations;
@@ -241,73 +258,152 @@ class ProfileSearchService
 
         if (filled($preference->preferred_age_min) || filled($preference->preferred_age_max)) {
             $query->whereHas('member', function ($member) use ($preference) {
-                $member->where(function ($q) use ($preference) {
-                    $q->whereNull('birthday');
-                    $q->orWhere(function ($inner) use ($preference) {
-                        if (filled($preference->preferred_age_max)) {
-                            $inner->where('birthday', '>=', now()->subYears((int) $preference->preferred_age_max + 1)->toDateString());
-                        }
+                if (filled($preference->preferred_age_min)) {
+                    $member->where(
+                        'birthday',
+                        '<=',
+                        Carbon::now()
+                            ->subYears((int) $preference->preferred_age_min)
+                            ->toDateString()
+                    );
+                }
 
-                        if (filled($preference->preferred_age_min)) {
-                            $inner->where('birthday', '<=', now()->subYears((int) $preference->preferred_age_min)->toDateString());
-                        }
-                    });
-                });
+                if (filled($preference->preferred_age_max)) {
+                    $member->where(
+                        'birthday',
+                        '>=',
+                        Carbon::now()
+                            ->subYears(((int) $preference->preferred_age_max) + 1)
+                            ->addDay()
+                            ->toDateString()
+                    );
+                }
             });
         }
 
         if (filled($preference->marital_status_id)) {
-            $query->whereHas('member', fn ($member) => $member
-                ->where(fn ($q) => $q->whereNull('marital_status_id')->orWhere('marital_status_id', $preference->marital_status_id)));
+            $query->whereHas(
+                'member',
+                fn ($member) => $member->where(
+                    'marital_status_id',
+                    $preference->marital_status_id
+                )
+            );
         }
 
-        foreach (['religion_id' => 'religion_id', 'caste_id' => 'caste_id'] as $prefCol => $column) {
-            if (! filled($preference->{$prefCol})) {
-                continue;
-            }
+        if (filled($preference->religion_id) || filled($preference->caste_id)) {
+            $query->whereHas('spiritual_backgrounds', function ($spiritual) use ($preference) {
+                if (filled($preference->religion_id)) {
+                    $spiritual->where('religion_id', $preference->religion_id);
+                }
 
-            $value = $preference->{$prefCol};
-
-            $query->where(function ($outer) use ($column, $value) {
-                $outer->whereDoesntHave('spiritual_backgrounds')
-                    ->orWhereHas('spiritual_backgrounds', fn ($sb) => $sb
-                        ->where(fn ($q) => $q->whereNull($column)->orWhere($column, $value)));
+                if (filled($preference->caste_id)) {
+                    $spiritual->where('caste_id', $preference->caste_id);
+                }
             });
         }
 
-        foreach ([
-            'preferred_country_id' => 'country_id',
-            'preferred_state_id' => 'state_id',
-            'preferred_city_id' => 'city_id',
-        ] as $prefCol => $column) {
-            if (! filled($preference->{$prefCol})) {
-                continue;
-            }
+        if (
+            filled($preference->preferred_country_id)
+            || filled($preference->preferred_state_id)
+            || filled($preference->preferred_city_id)
+        ) {
+            $query->whereHas('addresses', function ($address) use ($preference) {
+                if (filled($preference->preferred_country_id)) {
+                    $address->where('country_id', $preference->preferred_country_id);
+                }
 
-            $value = $preference->{$prefCol};
+                if (filled($preference->preferred_state_id)) {
+                    $address->where('state_id', $preference->preferred_state_id);
+                }
 
-            $query->where(function ($outer) use ($column, $value) {
-                $outer->whereDoesntHave('addresses')
-                    ->orWhereHas('addresses', fn ($address) => $address
-                        ->where(fn ($q) => $q->whereNull($column)->orWhere($column, $value)));
+                if (filled($preference->preferred_city_id)) {
+                    $address->where('city_id', $preference->preferred_city_id);
+                }
             });
         }
 
-        if (filled($preference->preferred_language_ids) && is_array($preference->preferred_language_ids)) {
-            $languageIds = collect($preference->preferred_language_ids)->filter()->values()->all();
+        $languageIds = $this->normalizePreferenceIds(
+            $preference->preferred_language_ids ?? null
+        );
 
-            if ($languageIds !== []) {
-                $query->where(function ($outer) use ($languageIds) {
-                    $outer->whereNull('mothere_tongue')
-                        ->orWhereIn('mothere_tongue', $languageIds)
-                        ->orWhere(function ($nested) use ($languageIds) {
+        if ($languageIds !== []) {
+            $motherTongueColumn = Schema::hasColumn('members', 'mothere_tongue')
+                ? 'mothere_tongue'
+                : (Schema::hasColumn('members', 'mother_tongue') ? 'mother_tongue' : null);
+
+            $query->whereHas('member', function ($member) use ($languageIds, $motherTongueColumn) {
+                $member->where(function ($languageQuery) use ($languageIds, $motherTongueColumn) {
+                    if ($motherTongueColumn) {
+                        $languageQuery->whereIn($motherTongueColumn, $languageIds);
+                    }
+
+                    $languageQuery->when(
+                        $motherTongueColumn,
+                        fn ($q) => $q->orWhere(function ($knownLanguages) use ($languageIds) {
                             foreach ($languageIds as $languageId) {
-                                $nested->orWhere('known_languages', 'like', '%"' . $languageId . '"%');
+                                $knownLanguages->orWhere(
+                                    'known_languages',
+                                    'like',
+                                    '%"' . $languageId . '"%'
+                                );
                             }
-                        });
+                        }),
+                        fn ($q) => $q->where(function ($knownLanguages) use ($languageIds) {
+                            foreach ($languageIds as $languageId) {
+                                $knownLanguages->orWhere(
+                                    'known_languages',
+                                    'like',
+                                    '%"' . $languageId . '"%'
+                                );
+                            }
+                        })
+                    );
                 });
-            }
+            });
         }
+    }
+
+    private function normalizePreferenceIds(mixed $value): array
+    {
+        if (blank($value)) {
+            return [];
+        }
+
+        if (is_array($value)) {
+            return collect($value)
+                ->filter(fn ($id) => filled($id))
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        if (is_string($value)) {
+            $decoded = json_decode($value, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return collect($decoded)
+                    ->filter(fn ($id) => filled($id))
+                    ->map(fn ($id) => (int) $id)
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+            }
+
+            return collect(explode(',', $value))
+                ->map(fn ($id) => trim($id))
+                ->filter(fn ($id) => $id !== '')
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        return [(int) $value];
     }
 
     private function applySorting($query, User $viewer, array $filters): void

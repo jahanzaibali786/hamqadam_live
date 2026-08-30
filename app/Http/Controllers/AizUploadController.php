@@ -56,6 +56,10 @@ class AizUploadController extends Controller
         return view('admin.uploaded_files.create');
     }
 
+    public function show($id){
+        return redirect()->route('uploaded-files.index');
+    }
+
 
     public function show_uploader(Request $request){
         return view('uploader.aiz-uploader');
@@ -186,20 +190,36 @@ class AizUploadController extends Controller
 
     public function destroy($id)
     {
-        try{
-            if(env('FILESYSTEM_DRIVER') == 's3'){
-                Storage::disk('s3')->delete(Upload::where('id', $id)->first()->file_name);
+        $upload = Upload::find($id);
+
+        if (! $upload) {
+            flash(translate('File not found'))->error();
+            return back();
+        }
+
+        try {
+            if (env('FILESYSTEM_DRIVER') == 's3') {
+                Storage::disk('s3')->delete($upload->file_name);
+            } else {
+                Storage::disk('local')->delete($upload->file_name);
+
+                $publicPath = public_path($upload->file_name);
+                if (file_exists($publicPath)) {
+                    @unlink($publicPath);
+                }
             }
-            else{
-                unlink(public_path().'/'.Upload::where('id', $id)->first()->file_name);
-            }
+
             Upload::destroy($id);
             flash(translate('File deleted successfully'))->success();
+        } catch (\Throwable $e) {
+            \Log::warning('Upload delete failed.', [
+                'upload_id' => $id,
+                'file_name' => $upload->file_name,
+                'message' => $e->getMessage(),
+            ]);
+            flash(translate('Unable to delete file. Please try again.'))->error();
         }
-        catch(\Exception $e){
-            Upload::destroy($id);
-            flash(translate('File deleted successfully'))->success();
-        }
+
         return back();
     }
 
@@ -284,3 +304,4 @@ class AizUploadController extends Controller
     }
 
 }
+

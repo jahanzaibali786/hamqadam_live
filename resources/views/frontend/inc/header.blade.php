@@ -161,13 +161,13 @@
             <div class="container">
                 <div class="d-lg-flex justify-content-between text-center text-lg-left">
                     <div class="logo">
-                        <a href="{{ route('home') }}" class="d-inline-block py-15px">
+                        <a href="{{ route('home') }}" class="d-inline-block">
                             @if(get_setting('header_logo') != null)
                             <img src="{{ uploaded_asset(get_setting('header_logo')) }}" alt="{{ env('APP_NAME') }}"
-                                class="mw-100 h-30px h-md-40px" height="40">
+                                class="mw-100 h-30px"style="width: 140px; height:80px;">
                             @else
                             <img src="{{ static_asset('assets/img/logo.png') }}" alt="{{ env('APP_NAME') }}"
-                                class="mw-100 h-30px h-md-40px" height="40">
+                                class="mw-100 h-30px"style="width: 140px; height:80px;">
                             @endif
                         </a>
                     </div>

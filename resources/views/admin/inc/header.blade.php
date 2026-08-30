@@ -7,7 +7,8 @@
         </div>
         <div class="aiz-topbar-logo-wrap d-flex align-items-center justify-content-start">
             <a href="{{ route('admin.dashboard') }}" class="d-block">
-                <img src="{{ uploaded_asset(get_setting('system_logo')) }}" class="img-fluid" height="45">
+                <img src="{{ uploaded_asset(get_setting('system_logo')) }}" class="img-fluid" style="width: 140px;height: 80px;
+">
             </a>
         </div>
     </div>

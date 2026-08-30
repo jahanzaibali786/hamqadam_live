@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 use App\Mail\SecondEmailVerifyMailManager;
 use App\Models\AdditionalAttribute;
 use App\Notifications\DbStoreNotification;
@@ -322,15 +323,17 @@ class HomeController extends Controller
             $user_ids = Address::where('country_id', $country_id)->pluck('user_id')->toArray();
             $users = $users->WhereIn('id', $user_ids);
         }
-
         // Sort By Mother Tongue
-        if ($mother_tongue != null) {
-            $user_ids = Member::where('mothere_tongue', $mother_tongue)->pluck('user_id')->toArray();
+        $motherTongueColumn = Schema::hasColumn('members', 'mothere_tongue')
+            ? 'mothere_tongue'
+            : (Schema::hasColumn('members', 'mother_tongue') ? 'mother_tongue' : null);
+
+        if ($mother_tongue != null && $motherTongueColumn) {
+            $user_ids = Member::where($motherTongueColumn, $mother_tongue)->pluck('user_id')->toArray();
             if (count($user_ids) > 0) {
                 $users = $users->WhereIn('id', $user_ids);
             }
         }
-
         // Sort by Height
         if (!empty($min_height)) {
             $user_ids = PhysicalAttribute::where('height', '>=', $min_height)->pluck('user_id')->toArray();

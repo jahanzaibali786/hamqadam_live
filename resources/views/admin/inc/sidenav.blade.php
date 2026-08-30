@@ -655,7 +655,12 @@
                             </a>
                         </li>
                         @endcan
-                    </ul>
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('website.dropdown_data.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['website.dropdown_data.index']) }}">
+                                <i class="las la-list aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Dropdowns Data') }}</span>
+                            </a>
+                        </li>                    </ul>
                 </li>
                 @endif
 
@@ -833,3 +838,10 @@
     </div><!-- .aiz-sidebar -->
     <div class="aiz-sidebar-overlay"></div>
 </div><!-- .aiz-sidebar -->
+
+
+
+
+
+
+
