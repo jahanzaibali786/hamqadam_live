@@ -783,3 +783,7 @@ if (!function_exists('attribute_text_format')) {
         return $formatted_text;
     }
 }
+
+if (!class_exists(\Kutia\Larafirebase\Facades\Larafirebase::class)) {
+    class_alias(\App\Support\Compatibility\Larafirebase::class, \Kutia\Larafirebase\Facades\Larafirebase::class);
+}
