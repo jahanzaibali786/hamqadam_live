@@ -16,9 +16,11 @@ class SettingController extends Controller
         $this->middleware(['permission:footer'])->only('website_footer_settings');
         $this->middleware(['permission:appearances'])->only('website_appearances');
         $this->middleware(['permission:general_settings'])->only('general_settings');
-        $this->middleware(['permission:payment_method_settings'])->only('payment_method_settings');
+        $this->middleware(['permission:coin_charge_settings'])->only('coin_charge_settings');
+        $this->middleware(['permission:payment_method_settings|payment_methods'])->only('payment_method_settings');
         $this->middleware(['permission:smtp_settings'])->only('smtp_settings');
         $this->middleware(['permission:third_party_settings'])->only('third_party_settings');
+        $this->middleware(['permission:chat_realtime_settings'])->only(['chat_realtime_settings', 'chat_realtime_settings_update']);
         $this->middleware(['permission:social_media_login_settings'])->only('social_media_login_settings');
         $this->middleware(['permission:system_update'])->only('system_update');
         $this->middleware(['permission:server_status'])->only('system_server');
@@ -452,3 +454,5 @@ class SettingController extends Controller
         return back();
     }
 }
+
+

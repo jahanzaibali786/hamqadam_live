@@ -666,13 +666,14 @@
 
 
                 <!-- General settings -->
-                @if (auth()->user()->can('general_settings') ||
+                @if (auth()->user()->can('general_settings') || auth()->user()->can('coin_charge_settings') ||
                 auth()->user()->can('show_languages') ||
                 auth()->user()->can('show_currencies') ||
                 auth()->user()->can('payment_methods') ||
                 auth()->user()->can('smtp_settings') ||
                 auth()->user()->can('email_templates') ||
                 auth()->user()->can('third_party_settings') ||
+                auth()->user()->can('chat_realtime_settings') ||
                 auth()->user()->can('social_media_login_settings'))
                 <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
@@ -688,7 +689,7 @@
                             </a>
                         </li>
                         @endcan
-                        @can('general_settings')
+                        @can('coin_charge_settings')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('coin_charge_settings') }}" class="aiz-side-nav-link">
                                 <span class="aiz-side-nav-text">{{ translate('Coin Charge Settings') }}</span>
@@ -753,7 +754,7 @@
                             </a>
                         </li>
                         @endcan
-                        @can('third_party_settings')
+                        @can('chat_realtime_settings')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('chat_realtime_settings') }}" class="aiz-side-nav-link">
                                 <span class="aiz-side-nav-text">{{ translate('Pusher / Realtime Chat') }}</span>
