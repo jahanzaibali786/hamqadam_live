@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Api\V1\Auth;
 
 use App\Models\Address;
+use App\Models\AnnualSalaryRange;
 use App\Models\Career;
 use App\Models\Education;
 use App\Models\Lifestyle;
@@ -130,7 +131,8 @@ class RegistrationStepService
                 $member->education_level = $data['education_level'] ?? $member->education_level;
                 $member->employment_status = $data['employment_status'] ?? $member->employment_status;
                 $member->work_location_city = $data['work_location_city'] ?? $member->work_location_city;
-                $member->annual_income = $data['annual_income'] ?? $member->annual_income;
+                $member->annual_salary_range_id = $data['annual_salary_range_id'] ?? $member->annual_salary_range_id;
+                $member->annual_income = $data['annual_income'] ?? ($data['annual_salary_range_id'] ? (AnnualSalaryRange::find($data['annual_salary_range_id'])?->max_salary ?? $member->annual_income) : $member->annual_income);
                 $member->save();
             }
 
@@ -170,7 +172,6 @@ class RegistrationStepService
         $member->family_location = $data['family_location'] ?? $member->family_location;
         $member->guardian_name = $data['guardian_name'] ?? $member->guardian_name;
         $member->guardian_contact = $data['guardian_contact'] ?? $member->guardian_contact;
-        $member->family_values = $data['family_values'] ?? $member->family_values;
         $member->family_bio = $data['family_bio'] ?? $member->family_bio;
         $member->family_expectations = $data['family_expectations'] ?? $member->family_expectations;
         $member->parents_contact = $data['parents_contact'] ?? $member->parents_contact;

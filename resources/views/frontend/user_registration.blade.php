@@ -44,35 +44,6 @@
 							<div class="mb-5">
 								<button type="submit" id="createAccountBtn" class="btn btn-block btn-primary d-none">{{ translate('Create Account') }}</button>
 							</div>
-							@if(get_setting('google_login_activation') == 1 || get_setting('facebook_login_activation') == 1 || get_setting('twitter_login_activation') == 1 || get_setting('apple_login_activation') == 1)
-			                <div class="mb-5">
-			                    <div class="separator mb-3">
-			                        <span class="bg-white px-3">{{ translate('Or Join With') }}</span>
-			                    </div>
-	                    		<ul class="list-inline social colored text-center">
-									@if(get_setting('facebook_login_activation') == 1)
-			                        <li class="list-inline-item">
-			                            <a href="{{ route('social.login', ['provider' => 'facebook']) }}" class="facebook" title="{{ translate('Facebook') }}"><i class="lab la-facebook-f"></i></a>
-			                        </li>
-									@endif
-									@if(get_setting('google_login_activation') == 1)
-									<li class="list-inline-item">
-										<a href="{{ route('social.login', ['provider' => 'google']) }}" class="google" title="{{ translate('Google') }}"><i class="lab la-google"></i></a>
-									</li>
-									@endif
-									@if(get_setting('twitter_login_activation') == 1)
-			                        <li class="list-inline-item">
-			                            <a href="{{ route('social.login', ['provider' => 'twitter']) }}" class="twitter" title="{{ translate('Twitter') }}"><i class="lab la-twitter"></i></a>
-			                        </li>
-									@endif
-									@if(get_setting('apple_login_activation') == 1)
-			                        <li class="list-inline-item">
-			                            <a href="{{ route('social.login', ['provider' => 'apple']) }}" class="apple" title="{{ translate('Apple') }}"><i class="lab la-apple"></i></a>
-			                        </li>
-									@endif
-								</ul>
-							</div>
-							@endif
 
 							<div class="text-center">
 								<p class="text-muted mb-0">{{ translate("Already have an account?") }}</p>

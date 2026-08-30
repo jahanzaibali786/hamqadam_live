@@ -3,7 +3,6 @@
 @section('content')
 @php
     $status = $verificationStatus['status'] ?? 'not_started';
-    $attempts = collect($recentAttempts ?? []);
 @endphp
 <div class="py-5" style="min-height:70vh;background:linear-gradient(180deg,#fff 0%,#fff5f8 100%);">
   <div class="container">
@@ -26,23 +25,10 @@
 
           <div class="border rounded p-3 mb-4" style="background:#fffdfd;">
             <div class="d-flex align-items-center justify-content-between mb-2">
-              <strong>{{ translate('Live verification log') }}</strong>
+              <strong>{{ translate('Verification status') }}</strong>
               <span id="ai-badge" class="badge badge-soft-warning">{{ strtoupper($status) }}</span>
             </div>
-            <div id="ai-log-list" style="max-height:260px;overflow:auto;font-size:14px;line-height:1.6;">
-              <div class="text-muted" id="ai-initial-log">{{ translate('Waiting to start...') }}</div>
-              @foreach($attempts as $attempt)
-                <div class="mt-2">
-                  <div><strong>#{{ $attempt->id }}</strong> - {{ $attempt->status }}</div>
-                  @if($attempt->recommendation)
-                    <div class="text-success">{{ translate('Recommendation') }}: {{ $attempt->recommendation }}</div>
-                  @endif
-                  @if($attempt->error_message)
-                    <div class="text-danger">{{ $attempt->error_message }}</div>
-                  @endif
-                </div>
-              @endforeach
-            </div>
+            <div class="text-muted" id="ai-status-text">{{ translate('Waiting to start...') }}</div>
           </div>
 
           <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
@@ -81,16 +67,18 @@
 (function () {
     var runUrl = @json(route('register.ai_verification.run'));
     var token = @json(csrf_token());
-    var logs = @json($verificationStatus['last_error'] ? [['level' => 'danger', 'message' => $verificationStatus['last_error']]] : []);
     var timer = 60;
     var timerText = document.getElementById('ai-timer-text');
     var dashBtn = document.getElementById('ai-dashboard-btn');
     var progress = document.getElementById('ai-progress');
-    var logList = document.getElementById('ai-log-list');
+    var statusText = document.getElementById('ai-status-text');
     var badge = document.getElementById('ai-badge');
     var stateRunning = document.getElementById('ai-state-running');
     var stateDone = document.getElementById('ai-state-done');
     var stateError = document.getElementById('ai-state-error');
+    var title = document.getElementById('ai-title');
+    var message = document.getElementById('ai-message');
+    var continueBtn = document.getElementById('ai-continue');
 
     function setState(id) {
         [stateRunning, stateDone, stateError].forEach(function (el) {
@@ -101,19 +89,9 @@
         if (id === 'error' && stateError) stateError.classList.remove('d-none');
     }
 
-    function addLog(level, message) {
-        if (!logList) return;
-        var color = level === 'success' ? 'text-success' : (level === 'danger' ? 'text-danger' : (level === 'warning' ? 'text-warning' : 'text-muted'));
-        var item = document.createElement('div');
-        item.className = 'mb-1 ' + color;
-        item.textContent = '• ' + message;
-        logList.appendChild(item);
-        logList.scrollTop = logList.scrollHeight;
+    if (statusText) {
+        statusText.textContent = '{{ translate('Starting verification...') }}';
     }
-
-    addLog('info', 'Starting AI verification request...');
-    (logs || []).forEach(function (entry) { addLog(entry.level || 'info', entry.message || ''); });
-    addLog('info', 'Sending verification request to the API...');
 
     var countdown = setInterval(function () {
         timer--;
@@ -132,8 +110,6 @@
         }
     }, 1000);
 
-    addLog('info', 'Verification API hit: ' + runUrl);
-
     fetch(runUrl, {
         method: 'POST',
         headers: {
@@ -146,32 +122,31 @@
     .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
     .then(function (payload) {
         var data = payload.data || {};
-        addLog('success', 'Verification API responded successfully.');
-        addLog('info', 'Response status: ' + (data.status || 'pending'));
-
-        if (Array.isArray(data.logs)) {
-            data.logs.forEach(function (entry) {
-                addLog(entry.level || 'info', entry.message || '');
-            });
-        }
-
-        if (!data.redirect) {
-            addLog('danger', 'Missing redirect URL in response.');
-            setState('error');
-            return;
-        }
 
         if (badge) {
             badge.textContent = (data.status || 'pending').toUpperCase();
             badge.className = 'badge ' + (data.verified ? 'badge-soft-success' : 'badge-soft-warning');
         }
 
-        document.getElementById('ai-title').textContent = data.title || '';
-        document.getElementById('ai-message').textContent = data.message || '';
-        document.getElementById('ai-continue').setAttribute('href', data.redirect);
+        if (statusText) {
+            statusText.textContent = data.message || '{{ translate('Verification request processed.') }}';
+        }
+
+        if (title) {
+            title.textContent = data.title || '';
+        }
+        if (message) {
+            message.textContent = data.message || '';
+        }
+        if (continueBtn) {
+            continueBtn.setAttribute('href', data.redirect || '{{ route('dashboard') }}');
+        }
 
         if (data.verified) {
             setState('done');
+            window.setTimeout(function () {
+                window.location.href = data.redirect || '{{ route('dashboard') }}';
+            }, 900);
         } else if (data.status === 'pending' || data.status === 'processing') {
             setState('running');
         } else {
@@ -179,7 +154,9 @@
         }
     })
     .catch(function (error) {
-        addLog('danger', error && error.message ? error.message : 'Verification request failed.');
+        if (statusText) {
+            statusText.textContent = error && error.message ? error.message : '{{ translate('Verification request failed.') }}';
+        }
         setState('error');
     });
 })();

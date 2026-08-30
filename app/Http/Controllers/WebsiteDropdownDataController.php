@@ -220,22 +220,6 @@ class WebsiteDropdownDataController extends Controller
                 'success_update' => translate('Family value has been updated successfully'),
                 'success_delete' => translate('Family value has been deleted successfully'),
             ],
-            'family_statuses' => [
-                'group' => 'family',
-                'title' => translate('Family Statuses'),
-                'model' => FamilyStatus::class,
-                'rules' => ['name' => ['required', 'max:255']],
-                'messages' => [
-                    'name.required' => translate('Name is required'),
-                    'name.max' => translate('Max 255 characters'),
-                ],
-                'fields' => [['name' => 'name', 'label' => translate('Name'), 'type' => 'text', 'required' => true]],
-                'columns' => [['label' => translate('Name'), 'value' => fn ($record) => $record->name]],
-                'searchable' => ['name'],
-                'success_store' => translate('New family status has been added successfully'),
-                'success_update' => translate('Family status has been updated successfully'),
-                'success_delete' => translate('Family status has been deleted successfully'),
-            ],
             'countries' => [
                 'group' => 'location',
                 'title' => translate('Countries'),

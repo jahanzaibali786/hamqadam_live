@@ -32,7 +32,29 @@
         @elseif(($field['type'] ?? 'text') === 'textarea')
             <textarea id="{{ $fieldId }}" name="{{ $field['name'] }}" class="form-control" rows="3" @if(!empty($field['required'])) required @endif>{{ $currentValue }}</textarea>
         @elseif(($field['type'] ?? 'text') === 'select')
-            <select id="{{ $fieldId }}" name="{{ $field['name'] }}" class="form-control aiz-selectpicker" data-live-search="true" @if(!empty($field['required'])) required @endif>
+            @php
+                $locationRole = null;
+                if ($field['name'] === 'country_id') {
+                    $locationRole = 'country';
+                } elseif ($field['name'] === 'state_id') {
+                    $locationRole = 'state';
+                } elseif ($field['name'] === 'city_id') {
+                    $locationRole = 'city';
+                }
+                $selectAttributes = [
+                    'id' => $fieldId,
+                    'name' => $field['name'],
+                    'class' => 'form-control aiz-selectpicker',
+                    'data-live-search' => 'true',
+                ];
+                if ($locationRole) {
+                    $selectAttributes['data-location-role'] = $locationRole;
+                    if (in_array($locationRole, ['state', 'city'], true)) {
+                        $selectAttributes['data-selected'] = $currentValue;
+                    }
+                }
+            @endphp
+            <select @foreach($selectAttributes as $attribute => $value) {{ $attribute }}="{{ $value }}" @endforeach @if(!empty($field['required'])) required @endif>
                 <option value="">{{ translate('Choose') }}</option>
                 @foreach($options as $optionKey => $optionValue)
                     @php
