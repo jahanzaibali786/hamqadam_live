@@ -109,19 +109,25 @@ class HoroscopeProfileMatchController extends Controller
       flash(translate('Please update your package.'))->error();
       return back();
     }
-    $matchedProfiles = HoroscopeProfileMatch::where('user_id', $user->id)->where('match_count', '>=', 18);
 
-    $ignored_to = IgnoredUser::where('ignored_by', $user->id)->pluck('user_id')->toArray();
-    if (count($ignored_to) > 0) {
-      $matchedProfiles = $matchedProfiles->whereNotIn('match_id', $ignored_to);
-    }
-    $ignored_by_ids = IgnoredUser::where('user_id', $user->id)->pluck('ignored_by')->toArray();
-    if (count($ignored_by_ids) > 0) {
-      $matchedProfiles = $matchedProfiles->whereNotIn('match_id', $ignored_by_ids);
-    }
-    $matchedProfiles = $matchedProfiles->orderBy('match_count', 'desc')->paginate(10);
+    $horoscopeFilled = Astrology::where('user_id', $user->id)->exists();
+    $matchedProfiles = null;
 
-    return view('frontend.member.horoscope_matched_profiles', compact('matchedProfiles'));
+    if ($horoscopeFilled) {
+      $matchedProfiles = HoroscopeProfileMatch::where('user_id', $user->id)->where('match_count', '>=', 18);
+
+      $ignored_to = IgnoredUser::where('ignored_by', $user->id)->pluck('user_id')->toArray();
+      if (count($ignored_to) > 0) {
+        $matchedProfiles = $matchedProfiles->whereNotIn('match_id', $ignored_to);
+      }
+      $ignored_by_ids = IgnoredUser::where('user_id', $user->id)->pluck('ignored_by')->toArray();
+      if (count($ignored_by_ids) > 0) {
+        $matchedProfiles = $matchedProfiles->whereNotIn('match_id', $ignored_by_ids);
+      }
+      $matchedProfiles = $matchedProfiles->orderBy('match_count', 'desc')->paginate(10);
+    }
+
+    return view('frontend.member.horoscope_matched_profiles', compact('matchedProfiles', 'horoscopeFilled'));
   }
 
   public function horoscopeMatchedRefresh()
@@ -201,3 +207,4 @@ class HoroscopeProfileMatchController extends Controller
     }
   }
 }
+

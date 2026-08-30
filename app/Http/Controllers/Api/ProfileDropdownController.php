@@ -36,13 +36,45 @@ class ProfileDropdownController extends Controller
         $data['religion_list'] = ReligionResource::collection(Religion::all());
         $data['family_value_list'] = FamilyValuesResource::collection(FamilyValue::all());
         $data['country_list'] = CountryResource::collection(Country::where('status',1)->get());
-        
-        // New controlled dropdowns
         $data['profession_categories'] = \App\Models\ProfessionCategory::where('is_active', true)->orderBy('sort_order')->get();
         $data['education_levels'] = \App\Models\EducationLevel::where('is_active', true)->orderBy('sort_order')->get();
-        
+        $data['horoscope_dropdowns'] = [
+            'sun_signs' => [
+                ['value' => 'aries', 'label' => 'Aries (Mar 21 – Apr 19)'],
+                ['value' => 'taurus', 'label' => 'Taurus (Apr 20 – May 20)'],
+                ['value' => 'gemini', 'label' => 'Gemini (May 21 – Jun 20)'],
+                ['value' => 'cancer', 'label' => 'Cancer (Jun 21 – Jul 22)'],
+                ['value' => 'leo', 'label' => 'Leo (Jul 23 – Aug 22)'],
+                ['value' => 'virgo', 'label' => 'Virgo (Aug 23 – Sep 22)'],
+                ['value' => 'libra', 'label' => 'Libra (Sep 23 – Oct 22)'],
+                ['value' => 'scorpio', 'label' => 'Scorpio (Oct 23 – Nov 21)'],
+                ['value' => 'sagittarius', 'label' => 'Sagittarius (Nov 22 – Dec 21)'],
+                ['value' => 'capricorn', 'label' => 'Capricorn (Dec 22 – Jan 19)'],
+                ['value' => 'aquarius', 'label' => 'Aquarius (Jan 20 – Feb 18)'],
+                ['value' => 'pisces', 'label' => 'Pisces (Feb 19 – Mar 20)'],
+            ],
+            'moon_signs' => [
+                ['value' => 'aries', 'label' => 'Aries (Mesha)'],
+                ['value' => 'taurus', 'label' => 'Taurus (Vrishabha)'],
+                ['value' => 'gemini', 'label' => 'Gemini (Mithuna)'],
+                ['value' => 'cancer', 'label' => 'Cancer (Karka)'],
+                ['value' => 'leo', 'label' => 'Leo (Simha)'],
+                ['value' => 'virgo', 'label' => 'Virgo (Kanya)'],
+                ['value' => 'libra', 'label' => 'Libra (Tula)'],
+                ['value' => 'scorpio', 'label' => 'Scorpio (Vrishchika)'],
+                ['value' => 'sagittarius', 'label' => 'Sagittarius (Dhanu)'],
+                ['value' => 'capricorn', 'label' => 'Capricorn (Makara)'],
+                ['value' => 'aquarius', 'label' => 'Aquarius (Kumbha)'],
+                ['value' => 'pisces', 'label' => 'Pisces (Meena)'],
+            ],
+            'nakshatras' => ['anuradha','ardra','ashlesha','ashwini','bharani','chitra','dhanishta','hasta','jyeshtha','krittika','magha','mrigashira','mula','punarvasu','purva_ashadha','purva_bhadrapada','purva_phalguni','pushya','revati','rohini','shatabhisha','shravana','swati','uttara_ashadha','uttara_bhadrapada','uttara_phalguni','vishakha'],
+            'gana' => [['value' => 'deva', 'label' => 'Deva'], ['value' => 'manushya', 'label' => 'Manushya'], ['value' => 'rakshasa', 'label' => 'Rakshasa']],
+            'nadi' => [['value' => 'aadi', 'label' => 'Aadi'], ['value' => 'antya', 'label' => 'Antya'], ['value' => 'madhya', 'label' => 'Madhya']],
+            'manglik' => [['value' => 'yes', 'label' => 'Yes'], ['value' => 'no', 'label' => 'No']],
+        ];
         return $this->response_data($data);
     }
+
     public function onbehalf_list(){
         return OnBehalfResource::collection(OnBehalf::latest()->get());
     }

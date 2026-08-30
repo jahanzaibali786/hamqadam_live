@@ -1549,3 +1549,112 @@ These endpoints expose app-facing connection settings in a neutral format. Sensi
   }
 }
 ```
+
+## Horoscope Match APIs (Mobile)
+
+### 1) Load horoscope dropdown data
+
+| Method | Endpoint | Auth | Purpose |
+|---|---|---|---|
+| GET | `/api/v1/member/astronomic/dropdowns` | Required | Returns horoscope dropdown options for the mobile horoscope form |
+| GET | `/api/v1/member/profile-dropdown` | Required | Returns common dropdowns plus `horoscope_dropdowns` |
+
+#### Sample response
+
+```json
+{
+  "success": true,
+  "message": "Data loaded successfully.",
+  "data": {
+    "horoscope_dropdowns": {
+      "sun_signs": [
+        { "value": "aries", "label": "Aries (Mar 21 – Apr 19)" }
+      ],
+      "moon_signs": [
+        { "value": "aries", "label": "Aries (Mesha)" }
+      ],
+      "nakshatras": ["anuradha", "ardra", "ashlesha"],
+      "gana": [
+        { "value": "deva", "label": "Deva" }
+      ],
+      "nadi": [
+        { "value": "aadi", "label": "Aadi" }
+      ],
+      "manglik": [
+        { "value": "yes", "label": "Yes" }
+      ]
+    }
+  }
+}
+```
+
+### 2) Load horoscope matched profiles
+
+| Method | Endpoint | Auth | Purpose |
+|---|---|---|---|
+| GET | `/api/v1/member/horoscope-matched-profile` | Required | Returns matched profiles or an empty-state flag if horoscope data is missing |
+
+#### Success response with horoscope filled
+
+```json
+{
+  "success": true,
+  "message": "Horoscope matched profiles loaded successfully.",
+  "data": {
+    "horoscope_filled": true,
+    "needs_horoscope_info": false,
+    "matched_count": 2,
+    "matched_profiles": [
+      {
+        "user_id": 19,
+        "code": "20260819",
+        "name": "Ali Ahmad",
+        "photo": "https://...",
+        "age": 28,
+        "height": "5.8",
+        "marital_status": "Never Married",
+        "religion": "Islam",
+        "caste": "",
+        "sub_caste": "",
+        "report_status": false,
+        "shortlist_status": 0,
+        "profile_view_request_status": false,
+        "gallery_view_request_status": false
+      }
+    ]
+  }
+}
+```
+
+#### Empty-state response when horoscope details are missing
+
+```json
+{
+  "success": true,
+  "message": "Please complete your horoscope details first.",
+  "data": {
+    "horoscope_filled": false,
+    "needs_horoscope_info": true,
+    "matched_profiles": [],
+    "matched_count": 0
+  }
+}
+```
+
+### Test payload for horoscope update
+
+**Endpoint:** `POST /api/v1/member/astronomic/update`
+
+```json
+{
+  "time_of_birth": "09:30 PM",
+  "city_of_birth": "Lahore",
+  "sun_sign": "leo",
+  "moon_sign": "taurus",
+  "nakshatra": "rohini",
+  "gana": "deva",
+  "nadi": "madhya",
+  "manglik": "no"
+}
+```
+

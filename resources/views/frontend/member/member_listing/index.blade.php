@@ -153,10 +153,10 @@
                                                             $already_viewed_full_profile = \App\Models\ProfileViewer::where('user_id', $user->id)->where('viewed_by', Auth::user()->id)->exists();
                                                         @endphp
                                                         @if ($already_viewed_full_profile)
-                                                            <span class="text-success d-inline-block">
+                                                            <a href="{{ route('member_profile', $user->id) }}" class="text-success d-inline-block">
                                                                 <i class="las la-check-circle fs-20"></i>
                                                                 <span class="d-block fs-10 opacity-60">{{ translate('Viewed') }}</span>
-                                                            </span>
+                                                            </a>
                                                         @elseif (get_setting('full_profile_show_according_to_membership') == 1 && ! $can_view_full_profile)
                                                             <a href="javascript:void(0);" onclick="package_update_alert()" class="text-reset c-pointer">
                                                                 <i class="las la-user-lock fs-20 text-muted"></i>
