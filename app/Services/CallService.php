@@ -306,6 +306,11 @@ class CallService
         ])->save();
         $payload = $this->payload($call->fresh(['caller', 'receiver', 'conversation']), $call->caller, translate('Missed call.'));
         $this->broadcastSafely(new CallMissed($payload));
+        // Create missed call notification in DB + tray push
+        $receiver = User::find($call->receiver_id);
+        if ($receiver) {
+            \App\Services\NotificationHelper::callMissed($receiver, $call->caller, (int) $call->id);
+        }
         Log::info('Call missed.', [
             'call_id' => $call->id,
             'caller_id' => $call->caller_id,

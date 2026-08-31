@@ -43,12 +43,13 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\CheckForMaintenanceMode::class
         ],
 
-        'api' => [        
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+        'api' => [
+            // NOTE: EnsureFrontendRequestsAreStateful removed — it is for
+            // same-domain SPA cookie auth only. Mobile apps use Sanctum
+            // Bearer tokens (stateless), so CSRF/Session middleware must
+            // NOT apply to API routes.
             'throttle:api',
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,   
-            // 'throttle:600,1',
-            // 'bindings',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 

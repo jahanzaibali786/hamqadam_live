@@ -182,25 +182,20 @@ class InterestService
             try {
                   $id = unique_notify_id();
 
-                  // fcm 
-                  if (get_setting('firebase_push_notification') == 1) {
-                        $fcmTokens = User::where('id', $user_id)->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
-                        Larafirebase::withTitle($notify_type)
-                              ->withBody($message)
-                              ->sendMessage($fcmTokens);
+                  // FCM v1 push notification (replaces legacy Larafirebase + FirbaseNotification)
+                  if (! empty($notify_user->fcm_token)) {
+                        try {
+                              \App\Services\FcmV1Service::send(
+                                    $notify_user->fcm_token,
+                                    ['title' => $notify_type, 'body' => $message],
+                                    ['type' => $notify_type, 'notify_by' => (string) $notify_by, 'info_id' => (string) $info_id],
+                              );
+                        } catch (\Throwable $e) {
+                              \Illuminate\Support\Facades\Log::warning('FCM v1 push failed in InterestService.', ['error' => $e->getMessage()]);
+                        }
                   }
-                  // end of fcm
-                  // send firebase notification for mobile app
-                  if ($notify_user->fcm_token != null) {
-                        $data = (object)[];
-                        $data->fcm_token = $notify_user->fcm_token;
-                        $data->title = $notify_type;
-                        $data->text = $message;
-                        $data->notify_by = $notify_by;
-                        FirbaseNotification::send($data);
-                  }
-                  // end of  firebase notification
 
+                  // Store in database (Laravel notification table)
                   Notification::send($notify_user, new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route));
                   return true;
             } catch (\Exception $e) {

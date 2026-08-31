@@ -76,6 +76,16 @@ class ChatApiService
             $this->broadcastSafely(new ChatMessageSent($message, $user, (int) $thread->id, $recipientId));
             // Send FCM push so the recipient gets notified even if app is backgrounded/killed
             $this->sendChatFcmPush($thread, $recipientId, $user, $message);
+            // Create notification record in DB + tray push
+            $recipient = \App\Models\User::find($recipientId);
+            if ($recipient) {
+                \App\Services\NotificationHelper::chatMessage(
+                    $recipient,
+                    $user,
+                    (int) $thread->id,
+                    (string) ($data['message'] ?? ''),
+                );
+            }
             return $message;
         });
     }
