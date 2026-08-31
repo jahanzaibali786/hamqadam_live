@@ -253,5 +253,15 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(FamilyGuardianLink::class, 'guardian_user_id');
     }
-}
+    public function shouldBlockLoginForManualReview(): bool
+    {
+        if ($this->user_type !== 'member') {
+            return false;
+        }
 
+        $member = $this->member;
+
+        return in_array($member?->verification_status, ['manual_review'], true)
+            || in_array($member?->ai_verification_status, ['manual_review'], true);
+    }
+}

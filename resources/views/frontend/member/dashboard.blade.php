@@ -263,7 +263,7 @@
             </div>
         </div>
         <div class="col-md-6">
-            @if(get_setting('member_verification'))
+            @if(get_setting('member_verification') && ->approved == 0)
                 <div class="card mb-0 p-5 h-15 d-flex align-items-center justify-content-center mb-2">
                     @if (in_array($user->member?->ai_verification_status ?? 'not_started', ['pending', 'submitted', 'under_review', 'processing']))
                         <div class="my-n4 py-1 text-center">
@@ -550,5 +550,6 @@
 
 
 @endsection
+
 
 

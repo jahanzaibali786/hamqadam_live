@@ -487,18 +487,43 @@ class MemberController extends Controller
 
     public function approve_verification($id)
     {
-        $user             = User::findOrFail($id);
-        $user->approved   = 1;
-        if ($user->save()) {
+        $user = User::with('member')->findOrFail($id);
+
+        try {
+            \DB::transaction(function () use ($user) {
+                $user->approved = 1;
+                $user->save();
+
+                if ($user->member) {
+                    $user->member->verification_status = 'approved';
+                    $user->member->ai_verification_status = 'approved';
+                    $user->member->save();
+                }
+            });
 
             $status = 'Approved';
 
-            // Member verification email send to members
-            if ($user->email != null && get_email_template('member_verification_email', 'status')) {
-                EmailUtility::member_verification_email($user, $status);
+            if ($user->email != null) {
+                if (get_email_template('member_verification_email', 'status')) {
+                    EmailUtility::member_verification_email($user, $status);
+                } else {
+                    $subject = translate('Your Hamqadam account has been approved');
+                    $message = '<p>' . translate('Assalam o Alaikum') . ' ' . e($user->first_name . ' ' . $user->last_name) . ',</p>'
+                        . '<p>' . translate('Your verification is now complete. You can log in to the system and continue using your account.') . '</p>'
+                        . '<p>' . translate('Regards') . ',<br>' . e(get_setting('website_name') ?: config('app.name')) . '</p>';
+
+                    try {
+                        \Notification::route('mail', $user->email)->notify(new \App\Notifications\EmailNotification($subject, $message));
+                    } catch (\Throwable $e) {
+                        \Log::warning('Verification approval email failed.', [
+                            'user_id' => $user->id,
+                            'message' => $e->getMessage(),
+                        ]);
+                    }
+                }
             }
 
-            flash('Member Verified Successfully')->success();
+            flash(translate('Member verified successfully'))->success();
 
             if ($user->membership === 2) {
                 return redirect()->route('premium.members.index');
@@ -507,8 +532,13 @@ class MemberController extends Controller
             } else {
                 return redirect()->route('unsubscribed.members.index');
             }
-        } else {
-            flash('Sorry! Something went wrong.')->error();
+        } catch (\Throwable $e) {
+            \Log::error('Member verification approval failed.', [
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            flash(translate('Sorry! Something went wrong.'))->error();
             return back();
         }
     }
@@ -964,3 +994,4 @@ class MemberController extends Controller
         return view('admin.members.member_types', compact('members', 'sort_search', 'type'));
     }
 }
+
