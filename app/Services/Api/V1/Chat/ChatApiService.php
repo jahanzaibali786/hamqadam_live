@@ -16,6 +16,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\FcmV1Service;
 class ChatApiService
 {
     public function threads(User $user, int $perPage = 20): LengthAwarePaginator
@@ -73,6 +74,8 @@ class ChatApiService
                 ? (int) $thread->receiver_user_id
                 : (int) $thread->sender_user_id;
             $this->broadcastSafely(new ChatMessageSent($message, $user, (int) $thread->id, $recipientId));
+            // Send FCM push so the recipient gets notified even if app is backgrounded/killed
+            $this->sendChatFcmPush($thread, $recipientId, $user, $message);
             return $message;
         });
     }
@@ -218,6 +221,39 @@ class ChatApiService
                 'event' => $event::class,
                 'message' => $throwable->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * Send an FCM v1 push so the recipient is notified even when the app
+     * is backgrounded or killed and Pusher cannot reach it.
+     */
+    private function sendChatFcmPush(ChatThread $thread, int $recipientId, User $sender, Chat $message): void
+    {
+        try {
+            $recipient = User::find($recipientId);
+            if (! $recipient || empty($recipient->fcm_token)) {
+                return;
+            }
+            $senderName = trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''));
+            $body = $message->message_type === 'text'
+                ? $message->message
+                : ($message->message ?: '📷 Photo');
+            FcmV1Service::send(
+                $recipient->fcm_token,
+                [
+                    'title' => $senderName,
+                    'body' => mb_substr($body, 0, 200),
+                ],
+                [
+                    'type' => 'chat_message',
+                    'thread_id' => (string) $thread->id,
+                    'sender_id' => (string) $sender->id,
+                    'message_id' => (string) $message->id,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('FCM chat push failed.', ['error' => $e->getMessage()]);
         }
     }
     private function maskSensitiveText(string $message): string

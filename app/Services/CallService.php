@@ -35,6 +35,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 use Illuminate\Support\Facades\Log;
+use App\Services\FcmV1Service;
 
 use TaylanUnutmaz\AgoraTokenBuilder\RtcTokenBuilder;
 
@@ -105,6 +106,7 @@ class CallService
         $payload = $this->payload($call->fresh(['caller', 'receiver', 'conversation']), $caller, translate('Ali is calling you...'));
         $payload['rtc'] = null;
         $this->broadcastSafely(new CallIncoming($payload));
+        $this->sendCallFcmPush($receiver, $call, $type->value);
         Log::info('Call initiated.', [
             'call_id' => $call->id,
             'caller_id' => $caller->id,
@@ -643,9 +645,29 @@ private function broadcastSafely(object $event): void
                 'event' => $event::class,
                 'message' => $throwable->getMessage(),
             ]);
-
         }
+    }
 
+    /**
+     * Send an FCM v1 push notification to the receiver so the app rings
+     * even when Pusher cannot reach it (app killed, backgrounded, Doze).
+     */
+    private function sendCallFcmPush(User $receiver, Call $call, string $callType): void
+    {
+        try {
+            $fcmToken = $receiver->fcm_token;
+            if (empty($fcmToken)) {
+                return;
+            }
+            FcmV1Service::sendCallPush(
+                $fcmToken,
+                (int) $call->id,
+                $callType,
+                trim(($call->caller->first_name ?? '') . ' ' . ($call->caller->last_name ?? ''))
+            );
+        } catch (Throwable $e) {
+            Log::warning('FCM call push failed.', ['error' => $e->getMessage()]);
+        }
     }
 
 }
