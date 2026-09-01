@@ -167,6 +167,7 @@ Route::middleware('auth:sanctum')->prefix('chat')->name('api.v1.chat.')->group(f
         Route::post('/{call}/connect', [CallController::class, 'connect'])->whereNumber('call')->name('connect');
         Route::post('/{call}/end', [CallController::class, 'end'])->whereNumber('call')->name('end');
         Route::post('/{call}/missed', [CallController::class, 'missed'])->whereNumber('call')->name('missed');
+        Route::post('/{call}/renew-token', [CallController::class, 'renewToken'])->whereNumber('call')->name('renew_token');
     });
 });
 

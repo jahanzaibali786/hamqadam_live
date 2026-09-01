@@ -286,6 +286,30 @@ class CallService
 
     }
 
+    /**
+     * Issue a fresh Agora RTC token for an active call.
+     *
+     * The app calls this when `onTokenPrivilegeWillExpire` fires or after a
+     * network reconnection, so the media session can continue without the
+     * user having to hang up and redial.
+     */
+    public function renewToken(User $user, int $callId): array
+    {
+        $call = $this->callForUser($user, $callId);
+
+        if (! in_array($call->status, [CallStatus::Accepted, CallStatus::Connected, CallStatus::Calling, CallStatus::Ringing], true)) {
+            throw new ApiException(translate('This call is no longer active.'), 422, 'call_inactive');
+        }
+
+        $rtc = $this->rtcPayload($call, $user);
+        Log::info('Agora token renewed.', [
+            'call_id' => $call->id,
+            'user_id' => $user->id,
+        ]);
+        return ['rtc' => $rtc];
+
+    }
+
     public function markMissedIfExpired(Call $call): bool
     {
         if ($call->status !== CallStatus::Calling && $call->status !== CallStatus::Ringing) {

@@ -86,6 +86,11 @@ class CallController extends ApiController
         return $this->success($this->calls->get($request->user(), $call), 'Call details loaded.');
     }
 
+    public function renewToken(Request $request, int $call): JsonResponse
+    {
+        return $this->handle(fn () => $this->calls->renewToken($request->user(), $call), translate('Token renewed.'));
+    }
+
     private function handle(callable $callback, string $message): JsonResponse
     {
         try {

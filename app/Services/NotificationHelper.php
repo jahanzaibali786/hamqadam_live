@@ -246,9 +246,12 @@ class NotificationHelper
     ): void {
         try {
             // 1. Store in database (Laravel's notification table)
-            $recipient->notifications()->create([
-                'id' => \Illuminate\Support\Str::uuid(),
+            // NOTE: id column is bigint auto-increment — do NOT set it manually.
+            // Use raw DB insert to avoid Eloquent double-encoding the data column.
+            \Illuminate\Support\Facades\DB::table('notifications')->insert([
                 'type' => $type,
+                'notifiable_type' => \App\Models\User::class,
+                'notifiable_id' => $recipient->id,
                 'data' => json_encode([
                     'type' => $type,
                     'title' => $title,
