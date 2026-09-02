@@ -93,6 +93,19 @@ class NotificationService
 
     public function deletePushToken(User $user, int $id): void
     {
-        UserPushToken::where('user_id', $user->id)->whereKey($id)->delete();
+        $token = UserPushToken::where('user_id', $user->id)->whereKey($id)->first();
+        if (! $token) {
+            return;
+        }
+
+        // Deleting the row is not enough on its own: every push sender also
+        // reads users.fcm_token, so a member who logged out kept receiving
+        // their own messages and calls - previews included - on a phone that
+        // was no longer theirs.
+        if ($user->fcm_token === $token->token) {
+            $user->forceFill(['fcm_token' => null])->save();
+        }
+
+        $token->delete();
     }
 }

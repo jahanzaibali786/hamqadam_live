@@ -183,10 +183,12 @@ class InterestService
                   $id = unique_notify_id();
 
                   // FCM v1 push notification (replaces legacy Larafirebase + FirbaseNotification)
-                  if (! empty($notify_user->fcm_token)) {
+                  if ($notify_user) {
                         try {
-                              \App\Services\FcmV1Service::send(
-                                    $notify_user->fcm_token,
+                              // Every device, not just whichever registered
+                              // last into the shared users.fcm_token column.
+                              \App\Services\FcmV1Service::sendToUser(
+                                    (int) $notify_user->id,
                                     ['title' => $notify_type, 'body' => $message],
                                     ['type' => $notify_type, 'notify_by' => (string) $notify_by, 'info_id' => (string) $info_id],
                               );

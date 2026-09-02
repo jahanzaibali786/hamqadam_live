@@ -102,10 +102,10 @@ class ChatApiService
             ? (int) $thread->receiver_user_id
             : (int) $thread->sender_user_id;
         $this->broadcastSafely(new ChatTypingIndicatorEvent(
-            $user,
             (int) $thread->id,
-            now()->addSeconds(10)->toISOString(),
-            $recipientId
+            $user,
+            true,
+            now()->addSeconds(10)->toISOString()
         ));
     }
     public function markRead(User $user, ChatThread $thread): void
@@ -242,15 +242,18 @@ class ChatApiService
     {
         try {
             $recipient = User::find($recipientId);
-            if (! $recipient || empty($recipient->fcm_token)) {
+            if (! $recipient) {
                 return;
             }
+            // No check on $recipient->fcm_token: that single column is shared
+            // with the website, so an empty or stale value there says nothing
+            // about whether the member has a reachable device.
             $senderName = trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''));
             $body = $message->message_type === 'text'
                 ? $message->message
                 : ($message->message ?: '📷 Photo');
-            FcmV1Service::send(
-                $recipient->fcm_token,
+            FcmV1Service::sendToUser(
+                (int) $recipient->id,
                 [
                     'title' => $senderName,
                     'body' => mb_substr($body, 0, 200),
@@ -259,6 +262,10 @@ class ChatApiService
                     'type' => 'chat_message',
                     'thread_id' => (string) $thread->id,
                     'sender_id' => (string) $sender->id,
+                    // The same person under the name the rest of the payloads
+                    // use, so one routing path covers every notification type.
+                    'notify_by' => (string) $sender->id,
+                    'info_id' => (string) $thread->id,
                     'message_id' => (string) $message->id,
                 ]
             );

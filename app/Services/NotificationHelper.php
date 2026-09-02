@@ -39,6 +39,9 @@ class NotificationHelper
             notifyBy: $sender->id,
             infoId: $threadId,
             route: "/chat/$threadId",
+            // ChatApiService::sendChatFcmPush already pushed this message, and
+            // its payload is the one with `message_id`.
+            push: false,
         );
     }
 
@@ -243,6 +246,7 @@ class NotificationHelper
         int $notifyBy,
         int $infoId,
         string $route,
+        bool $push = true,
     ): void {
         try {
             // 1. Store in database (Laravel's notification table)
@@ -265,11 +269,18 @@ class NotificationHelper
                 'updated_at' => now(),
             ]);
 
-            // 2. Send FCM v1 push notification (if token exists)
-            if (! empty($recipient->fcm_token)) {
+            // 2. Send the FCM v1 push, to every device this member has.
+            //
+            // $push is false for chat messages: ChatApiService has already sent
+            // one that carries `message_id`, and two pushes for one message
+            // means Android draws two tray entries when the app is in the
+            // background - which the app cannot de-duplicate, because a
+            // notification-block push is drawn by the system before any app
+            // code runs.
+            if ($push) {
                 try {
-                    FcmV1Service::send(
-                        $recipient->fcm_token,
+                    FcmV1Service::sendToUser(
+                        (int) $recipient->id,
                         ['title' => $title, 'body' => $message],
                         [
                             'type' => $type,
