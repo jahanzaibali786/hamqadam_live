@@ -74,7 +74,7 @@ class ProfileImageController extends Controller
 
                     // fcm 
                     if (get_setting('firebase_push_notification') == 1) {
-                        self::sendFirebaseNotification($notify_user->fcm_token, $notify_user, $notify_type, $message, $notify_by);
+                        self::sendFirebaseNotification($notify_user->fcm_token, $notify_user, $notify_type, $message, $notify_by, $info_id);
                     }
                     // end of fcm
 
@@ -123,7 +123,7 @@ class ProfileImageController extends Controller
 
                 // fcm 
                 if (get_setting('firebase_push_notification') == 1) {
-                    self::sendFirebaseNotification($notify_user->fcm_token, $notify_user, $notify_type, $message, $notify_by);
+                    self::sendFirebaseNotification($notify_user->fcm_token, $notify_user, $notify_type, $message, $notify_by, $info_id);
                 }
                 // end of fcm
 
@@ -165,7 +165,7 @@ class ProfileImageController extends Controller
 
                 // fcm 
                 if (get_setting('firebase_push_notification') == 1) {
-                    self::sendFirebaseNotification($notify_user->fcm_token, $notify_user, $notify_type, $message, $notify_by);
+                    self::sendFirebaseNotification($notify_user->fcm_token, $notify_user, $notify_type, $message, $notify_by, $info_id);
                 }
                 // end of fcm
 
@@ -180,21 +180,41 @@ class ProfileImageController extends Controller
         }
     }
 
-    public static function sendFirebaseNotification($fcmTokens = null, $notify_user, $notify_type, $message, $notify_by = null)
+    public static function sendFirebaseNotification($fcmTokens = null, $notify_user = null, $notify_type = null, $message = null, $notify_by = null, $info_id = null)
     {
-        // send firebase notification for mobile app
-        if ($notify_user->fcm_token != null) {
-            $data = (object)[];
-            $data->fcm_token = $notify_user->fcm_token;
-            $data->title = $notify_type;
-            $data->text = $message;
-            $data->notify_by = $notify_by;
-            FirbaseNotification::send($data);
+        // FCM v1, addressed by member rather than by token.
+        //
+        // This used to post to `fcm.googleapis.com/fcm/send`, the endpoint
+        // Google retired in June 2024, and it discarded the result - so these
+        // notifications reached nobody and nothing was logged. It was also
+        // gated on `users.fcm_token`, a column the mobile app never writes:
+        // the app registers per-device rows in `user_push_tokens`. Both of
+        // those had to go for a member to be reachable on their phone.
+        if (!$notify_user) {
+            return;
         }
-        // end of  firebase notification
 
-        Larafirebase::withTitle(str_replace("_", " ", $notify_type))
-            ->withBody($message)
-            ->sendMessage($fcmTokens);
+        try {
+            \App\Services\FcmV1Service::sendToUser(
+                (int) $notify_user->id,
+                [
+                    'title' => str_replace('_', ' ', (string) $notify_type),
+                    'body'  => (string) $message,
+                ],
+                [
+                    // The keys the app routes and de-duplicates on.
+                    'type'      => (string) $notify_type,
+                    'route'     => (string) $notify_type,
+                    'notify_by' => (string) $notify_by,
+                    'info_id'   => (string) $info_id,
+                ],
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('FCM v1 push failed.', [
+                'user_id' => $notify_user->id ?? null,
+                'type'    => $notify_type,
+                'error'   => $e->getMessage(),
+            ]);
+        }
     }
 }

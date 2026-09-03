@@ -2,42 +2,63 @@
 
 namespace App\Services;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * Bridge for the eight controllers that still call `FirbaseNotification::send`.
+ *
+ * This used to POST to `https://fcm.googleapis.com/fcm/send`, the legacy FCM
+ * endpoint Google retired in June 2024, with an `Authorization: key=` server
+ * key. It also threw the result away, so every one of those notifications -
+ * express interest, profile-picture and gallery view requests, profile views,
+ * package payment approvals - reached nobody, and nothing was written to the
+ * log to say so.
+ *
+ * It now hands the same payload to FCM v1. Where the token can be traced back
+ * to a member the push is addressed to the member instead, so it reaches every
+ * device they have signed in on (`user_push_tokens`) rather than only whichever
+ * one last wrote the shared `users.fcm_token` column.
+ */
 class FirbaseNotification
 {
     public static function send($data)
     {
-        $url = 'https://fcm.googleapis.com/fcm/send';
+        $token = (string) ($data->fcm_token ?? '');
+        if ($token === '') {
+            return;
+        }
 
-        $fields = array(
-            'to' => $data->fcm_token,
-            'notification' => [
-                'body' => $data->text,
-                'title' => str_replace("_", " ", $data->title),
-                'sound' => 'default' /*Default sound*/
-            ],
-            'data' => [
-                'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-                'route' => $data->title,
-                'notify_by' => $data->notify_by
+        $type = (string) ($data->title ?? '');
+        $body = (string) ($data->text ?? '');
 
-            ]
-        );
+        $notification = [
+            'title' => str_replace('_', ' ', $type),
+            'body'  => $body,
+        ];
 
-        //$fields = json_encode($arrayToSend);
-        $headers = array(
-            'Authorization: key=' . env('FIREBASE_SERVER_KEY'),
-            'Content-Type: application/json'
-        );
+        // The keys the app routes and de-duplicates activity pushes on.
+        $payload = [
+            'type'         => $type,
+            'route'        => $type,
+            'notify_by'    => (string) ($data->notify_by ?? ''),
+            'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+        ];
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($fields));
+        try {
+            $userId = User::where('fcm_token', $token)->value('id');
 
-        $result = curl_exec($ch);
-        curl_close($ch);
+            if ($userId) {
+                FcmV1Service::sendToUser((int) $userId, $notification, $payload);
+                return;
+            }
+
+            FcmV1Service::send($token, $notification, $payload);
+        } catch (\Throwable $e) {
+            Log::warning('FCM v1 push failed.', [
+                'type'  => $type,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }

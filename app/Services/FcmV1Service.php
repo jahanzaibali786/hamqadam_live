@@ -452,6 +452,21 @@ class FcmV1Service
 
     private static function serviceAccountPath(): string
     {
-        return (string) (env('FIREBASE_SERVICE_ACCOUNT_PATH', storage_path('app/firebase-service-account.json')));
+        // config() first, env() only as a fallback: once `php artisan
+        // config:cache` has run, `env()` outside a config file returns null, so
+        // reading env directly here would silently fall back to a path that
+        // does not exist - and every push would fail with "service account JSON
+        // not found" on exactly the servers that are tuned for production.
+        $path = (string) (config('services.firebase.service_account_path', '')
+            ?: env('FIREBASE_SERVICE_ACCOUNT_PATH', ''));
+
+        if ($path === '') {
+            return storage_path('app/firebase-service-account.json');
+        }
+
+        // A relative path would resolve against the PHP working directory,
+        // which under LiteSpeed / php-fpm is the document root rather than the
+        // project root. Anchor it to the base path instead.
+        return str_starts_with($path, '/') ? $path : base_path($path);
     }
 }

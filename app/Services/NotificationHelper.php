@@ -139,6 +139,24 @@ class NotificationHelper
         );
     }
 
+    public static function proposalRejected(
+        User $recipient,
+        User $rejecter,
+        int $proposalId,
+    ): void {
+        $name = trim(($rejecter->first_name ?? '') . ' ' . ($rejecter->last_name ?? ''));
+
+        self::createAndPush(
+            recipient: $recipient,
+            type: 'proposal_rejected',
+            title: 'Proposal Declined',
+            message: "$name declined your proposal.",
+            notifyBy: $rejecter->id,
+            infoId: $proposalId,
+            route: '/proposals',
+        );
+    }
+
     // ── Profile View ───────────────────────────────────────────────────────
 
     public static function profileViewed(

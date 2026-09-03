@@ -17,6 +17,7 @@ use App\Models\ProfileMatch;
 use App\Models\Shortlist;
 use App\Models\User;
 use App\Notifications\DbStoreNotification;
+use App\Services\NotificationHelper;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -74,7 +75,7 @@ class ProposalService
             throw new ApiException('Please upgrade your package to send more proposals.', 402, 'package_limit_exceeded');
         }
 
-        return DB::transaction(function () use ($sender, $recipientId, $note) {
+        $proposal = DB::transaction(function () use ($sender, $recipientId, $note) {
             $sender->member()->lockForUpdate()->first()->decrement('remaining_interest');
             $expiryDays = max(1, (int) (get_setting('proposal_expiry_days') ?: 14));
             $compatibility = ProfileMatch::where('user_id', $sender->id)
@@ -94,6 +95,15 @@ class ProposalService
 
             return $proposal->load(['sender', 'recipient', 'events.actor', 'notes.user']);
         });
+
+        // Outside the transaction: a notification that fails must not undo the
+        // proposal, and the recipient should not be told about one that was
+        // rolled back. Until this existed the whole proposal flow was silent -
+        // no push and no notification row - so the member only found out by
+        // opening the app and looking at the list.
+        NotificationHelper::proposalReceived($recipient, $sender, (int) $proposal->id);
+
+        return $proposal;
     }
 
     public function accept(User $actor, int $proposalId, ?string $note = null): ExpressInterest
@@ -103,7 +113,7 @@ class ProposalService
         $this->ensureRecipient($actor, $proposal);
         $this->ensurePending($proposal);
 
-        return DB::transaction(function () use ($actor, $proposal, $note) {
+        $accepted = DB::transaction(function () use ($actor, $proposal, $note) {
             $proposal->forceFill([
                 'status' => ProposalStatus::Accepted,
                 'responded_at' => now(),
@@ -114,6 +124,12 @@ class ProposalService
 
             return $proposal->fresh(['sender', 'recipient', 'events.actor', 'notes.user']);
         });
+
+        if ($accepted->sender) {
+            NotificationHelper::proposalAccepted($accepted->sender, $actor, (int) $accepted->id);
+        }
+
+        return $accepted;
     }
 
     public function reject(User $actor, int $proposalId, ?string $note = null): ExpressInterest
@@ -123,9 +139,15 @@ class ProposalService
         $this->ensureRecipient($actor, $proposal);
         $this->ensurePending($proposal);
 
-        return $this->transition($proposal, $actor, ProposalStatus::Rejected, 'proposal_rejected', $note, [
+        $rejected = $this->transition($proposal, $actor, ProposalStatus::Rejected, 'proposal_rejected', $note, [
             'responded_at' => now(),
         ]);
+
+        if ($rejected->sender) {
+            NotificationHelper::proposalRejected($rejected->sender, $actor, (int) $rejected->id);
+        }
+
+        return $rejected;
     }
 
     public function withdraw(User $actor, int $proposalId, ?string $note = null): ExpressInterest
