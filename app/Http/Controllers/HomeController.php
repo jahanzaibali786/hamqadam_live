@@ -456,7 +456,7 @@ class HomeController extends Controller
                         // fcm 
                         if (get_setting('firebase_push_notification') == 1) {
                             $fcmTokens = User::where('id', $user->id)->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
-                            self::sendFirebaseNotification($fcmTokens, $user, $notify_type, $message, $notify_by);
+                            self::sendFirebaseNotification($fcmTokens, $user, $notify_type, $message, $notify_by, $info_id);
                         }
                         // end of fcm
         
@@ -614,10 +614,49 @@ class HomeController extends Controller
     }
 
     // fcm
+    /**
+     * Registers the browser's FCM token.
+     *
+     * This used to write `$request->fcm_token` straight into
+     * `users.fcm_token` with no validation, and that single column is the same
+     * one the mobile app registers into. Two consequences, both of which made
+     * push look broken on the phone:
+     *
+     *  1. Opening the site replaced the phone's token, so the member stopped
+     *     being reachable on mobile - notifications kept working while the app
+     *     was open (the websocket) and vanished the moment it was closed.
+     *  2. When the site's Firebase JS config is incomplete, `getToken()` yields
+     *     nothing usable and it was stored anyway. Every later push then came
+     *     back from Google as 400 "not a valid FCM registration token".
+     *
+     * The token now goes into `user_push_tokens` as a `web` row, which is what
+     * `FcmV1Service::tokensForUser()` reads, so the browser and the phone are
+     * both reachable and neither overwrites the other.
+     */
     public function updateToken(Request $request)
     {
         try {
-            $request->user()->update(['fcm_token' => $request->fcm_token]);
+            $token = trim((string) $request->input('fcm_token', ''));
+            if ($token === '') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'fcm_token is required.',
+                ], 422);
+            }
+
+            $user = $request->user();
+
+            \App\Models\UserPushToken::updateOrCreate([
+                'user_id' => $user->id,
+                'token' => $token,
+            ], [
+                'platform' => 'web',
+                'last_used_at' => now(),
+            ]);
+
+            // Kept in step for anything still reading the legacy column.
+            $user->update(['fcm_token' => $token]);
+
             return response()->json([
                 'success' => true
             ]);
@@ -629,22 +668,42 @@ class HomeController extends Controller
         }
     }
 
-    public static function sendFirebaseNotification($fcmTokens = null, $notify_user, $notify_type, $message, $notify_by = null)
+    public static function sendFirebaseNotification($fcmTokens = null, $notify_user = null, $notify_type = null, $message = null, $notify_by = null, $info_id = null)
     {
-        // send firebase notification for mobile app
-        if ($notify_user->fcm_token != null) {
-            $data = (object)[];
-            $data->fcm_token = $notify_user->fcm_token;
-            $data->title = $notify_type;
-            $data->text = $message;
-            $data->notify_by = $notify_by;
-            FirbaseNotification::send($data);
+        // FCM v1, addressed by member rather than by token.
+        //
+        // This used to post to `fcm.googleapis.com/fcm/send`, the endpoint
+        // Google retired in June 2024, and it discarded the result - so these
+        // notifications reached nobody and nothing was logged. It was also
+        // gated on `users.fcm_token`, a column the mobile app never writes:
+        // the app registers per-device rows in `user_push_tokens`. Both of
+        // those had to go for a member to be reachable on their phone.
+        if (!$notify_user) {
+            return;
         }
-        // end of  firebase notification
 
-        Larafirebase::withTitle(str_replace("_", " ", $notify_type))
-            ->withBody($message)
-            ->sendMessage($fcmTokens);
+        try {
+            \App\Services\FcmV1Service::sendToUser(
+                (int) $notify_user->id,
+                [
+                    'title' => str_replace('_', ' ', (string) $notify_type),
+                    'body'  => (string) $message,
+                ],
+                [
+                    // The keys the app routes and de-duplicates on.
+                    'type'      => (string) $notify_type,
+                    'route'     => (string) $notify_type,
+                    'notify_by' => (string) $notify_by,
+                    'info_id'   => (string) $info_id,
+                ],
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('FCM v1 push failed.', [
+                'user_id' => $notify_user->id ?? null,
+                'type'    => $notify_type,
+                'error'   => $e->getMessage(),
+            ]);
+        }
     }
 
     public function sendRegVerificationCode(Request $request)

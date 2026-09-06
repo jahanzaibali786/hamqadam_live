@@ -170,6 +170,7 @@ class CallService
         ])->save();
         $payload = $this->payload($call->fresh(['caller', 'receiver', 'conversation']), $user, translate('Call declined.'));
         $this->broadcastSafely(new CallRejected($payload));
+        $this->pushCallEnded($call, $user, 'call_rejected');
         Log::info('Call rejected.', [
             'call_id' => $call->id,
             'caller_id' => $call->caller_id,
@@ -195,6 +196,7 @@ class CallService
         ])->save();
         $payload = $this->payload($call->fresh(['caller', 'receiver', 'conversation']), $user, translate('Call cancelled.'));
         $this->broadcastSafely(new CallCancelled($payload));
+        $this->pushCallEnded($call, $user, 'call_cancelled');
         Log::info('Call cancelled.', [
             'call_id' => $call->id,
             'caller_id' => $call->caller_id,
@@ -253,6 +255,11 @@ class CallService
         $payload = $this->payload($call->fresh(['caller', 'receiver', 'conversation']), $user, $status === CallStatus::Missed->value ? translate('Missed call.') : translate('Call ended.'));
         $event = $status === CallStatus::Missed->value ? new CallMissed($payload) : new CallEnded($payload);
         $this->broadcastSafely($event);
+        $this->pushCallEnded(
+            $call,
+            $user,
+            $status === CallStatus::Missed->value ? 'call_missed' : 'call_ended',
+        );
         Log::info($status === CallStatus::Missed->value ? 'Call missed.' : 'Call ended.', [
             'call_id' => $call->id,
             'caller_id' => $call->caller_id,
@@ -286,6 +293,30 @@ class CallService
 
     }
 
+    /**
+     * Issue a fresh Agora RTC token for an active call.
+     *
+     * The app calls this when `onTokenPrivilegeWillExpire` fires or after a
+     * network reconnection, so the media session can continue without the
+     * user having to hang up and redial.
+     */
+    public function renewToken(User $user, int $callId): array
+    {
+        $call = $this->callForUser($user, $callId);
+
+        if (! in_array($call->status, [CallStatus::Accepted, CallStatus::Connected, CallStatus::Calling, CallStatus::Ringing], true)) {
+            throw new ApiException(translate('This call is no longer active.'), 422, 'call_inactive');
+        }
+
+        $rtc = $this->rtcPayload($call, $user);
+        Log::info('Agora token renewed.', [
+            'call_id' => $call->id,
+            'user_id' => $user->id,
+        ]);
+        return ['rtc' => $rtc];
+
+    }
+
     public function markMissedIfExpired(Call $call): bool
     {
         if ($call->status !== CallStatus::Calling && $call->status !== CallStatus::Ringing) {
@@ -306,6 +337,11 @@ class CallService
         ])->save();
         $payload = $this->payload($call->fresh(['caller', 'receiver', 'conversation']), $call->caller, translate('Missed call.'));
         $this->broadcastSafely(new CallMissed($payload));
+        // Create missed call notification in DB + tray push
+        $receiver = User::find($call->receiver_id);
+        if ($receiver) {
+            \App\Services\NotificationHelper::callMissed($receiver, $call->caller, (int) $call->id);
+        }
         Log::info('Call missed.', [
             'call_id' => $call->id,
             'caller_id' => $call->caller_id,
@@ -649,18 +685,40 @@ private function broadcastSafely(object $event): void
     }
 
     /**
+     * Tells the other side's devices that this call is over.
+     *
+     * Only one of the two ever has a ringing notification to dismiss - the
+     * receiver, while the call is still being offered - but pushing to whoever
+     * did not act is simpler than reasoning about which, and the app ignores a
+     * dismissal for a call it is not showing. Without this, cancelling a call
+     * left the receiver's phone ringing for the rest of the ring window.
+     */
+    private function pushCallEnded(Call $call, User $actor, string $type): void
+    {
+        try {
+            $otherId = (int) $call->caller_id === (int) $actor->id
+                ? (int) $call->receiver_id
+                : (int) $call->caller_id;
+
+            FcmV1Service::sendCallEndedToUser($otherId, (int) $call->id, $type);
+        } catch (Throwable $e) {
+            Log::warning('FCM call-ended push failed.', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Send an FCM v1 push notification to the receiver so the app rings
      * even when Pusher cannot reach it (app killed, backgrounded, Doze).
      */
     private function sendCallFcmPush(User $receiver, Call $call, string $callType): void
     {
         try {
-            $fcmToken = $receiver->fcm_token;
-            if (empty($fcmToken)) {
-                return;
-            }
-            FcmV1Service::sendCallPush(
-                $fcmToken,
+            // No early return on $receiver->fcm_token any more: that single
+            // column is shared with the website, so an empty or stale value
+            // there said nothing about whether the member has a reachable
+            // device. FcmV1Service::tokensForUser() reads the real register.
+            FcmV1Service::sendCallPushToUser(
+                (int) $receiver->id,
                 (int) $call->id,
                 $callType,
                 trim(($call->caller->first_name ?? '') . ' ' . ($call->caller->last_name ?? ''))
