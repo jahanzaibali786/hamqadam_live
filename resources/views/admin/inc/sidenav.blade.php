@@ -121,6 +121,13 @@
                             </a>
                         </li>
                         @endcan
+                        @can('view_user_activity')
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('member.activity.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.activity.index', 'member.activity']) }}">
+                                <span class="aiz-side-nav-text">{{ translate('User Activity Tracking') }}</span>
+                            </a>
+                        </li>
+                        @endcan
                         @can('bulk_member_add')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('member_bulk_add.index') }}" class="aiz-side-nav-link">
@@ -839,6 +846,7 @@
     </div><!-- .aiz-sidebar -->
     <div class="aiz-sidebar-overlay"></div>
 </div><!-- .aiz-sidebar -->
+
 
 
 

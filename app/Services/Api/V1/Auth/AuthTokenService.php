@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\UserDeviceSession;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use App\Services\Admin\UserActivityTracker;
 
 class AuthTokenService
 {
@@ -31,6 +32,11 @@ class AuthTokenService
             'user_agent' => $deviceData->userAgent,
             'last_used_at' => now(),
             'expires_at' => $expiresAt,
+        ]);
+
+        app(UserActivityTracker::class)->trackLogin($user, request(), 'sanctum', [
+            'device_session_id' => $session->id,
+            'device_id' => $deviceData->deviceId,
         ]);
 
         return new IssuedTokenData($user, $token->plainTextToken, $expiresAt, $session);
@@ -77,4 +83,5 @@ class AuthTokenService
         $user->tokens()->delete();
     }
 }
+
 

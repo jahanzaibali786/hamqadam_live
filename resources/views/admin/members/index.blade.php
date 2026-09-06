@@ -48,6 +48,20 @@
                     </thead>
                     <tbody>
                         @foreach($members as $key => $member)
+                            @php
+                                $verificationStatus = optional($member->member)->verification_status;
+                                $aiVerificationStatus = optional($member->member)->ai_verification_status;
+                                $hasStructuredVerification = isset($member->profile_verification_requests_count)
+                                    ? $member->profile_verification_requests_count > 0
+                                    : $member->profile_verification_requests()->exists();                                $isManualReview = in_array($verificationStatus, ['manual_review'], true)
+                                    || in_array($aiVerificationStatus, ['manual_review'], true);
+                                $isRejectedReview = in_array($verificationStatus, ['rejected'], true)
+                                    || in_array($aiVerificationStatus, ['rejected'], true);
+                                $needsVerificationReview = $isManualReview || $isRejectedReview || ($member->approved != 1 && ($member->verification_info != null
+                                    || $hasStructuredVerification
+                                    || in_array($verificationStatus, ['submitted', 'under_review'], true)
+                                    || in_array($aiVerificationStatus, ['pending', 'submitted', 'under_review', 'processing'], true)));
+                            @endphp
                             <tr>
                                 <td>{{ ($key+1) + ($members->currentPage() - 1)*$members->perPage() }}</td>
                                 <td>
@@ -73,9 +87,13 @@
                                 </td>
                                 @if(get_setting('member_verification') == 1)
                                     <td>
-                                        @if($member->approved == 1)
+                                        @if($isManualReview)
+                                            <span class="badge badge-inline badge-warning">{{translate('Manual Review')}}</span>
+                                        @elseif($isRejectedReview)
+                                            <span class="badge badge-inline badge-danger">{{translate('Rejected')}}</span>
+                                        @elseif($member->approved == 1)
                                             <span class="badge badge-inline badge-success">{{translate('Approved')}}</span>
-                                        @elseif($member->verification_info != null)
+                                        @elseif($needsVerificationReview)
                                             <span class="badge badge-inline badge-info">{{translate('Pending')}}</span>
                                         @else
                                             <span class="badge badge-inline badge-warning">{{translate('No Request')}}</span>
@@ -108,6 +126,9 @@
                                                 @can ('view_member_profile')
                                                     <a class="dropdown-item" href="{{ route('members.show', encrypt($member->id)) }}">{{translate('View')}}</a>
                                                 @endcan
+                                                @can ('view_user_activity')
+                                                    <a class="dropdown-item" href="{{ route('member.activity', encrypt($member->id)) }}">{{ translate('Activity Tracking') }}</a>
+                                                @endcan
                                                 @can('edit_member')
                                                     <a class="dropdown-item" href="{{ route('members.edit', encrypt($member->id)) }}">{{translate('Edit')}}</a>
                                                 @endcan
@@ -118,11 +139,11 @@
                                                         <a class="dropdown-item" onclick="unblock_member({{$member->id}})" href="javascript:void(0);" >{{translate('Unblock')}}</a>
                                                     @endif
                                                 @endcan
-                                                @can ('approve_member')
-                                                    @if(get_setting('member_verification') == 1 && $member->verification_info != null)
+                                                @if(auth()->user()->can('approve_member') || auth()->user()->can('review_member_verification'))
+                                                    @if(get_setting('member_verification') == 1 && $needsVerificationReview)
                                                         <a class="dropdown-item" href="{{ route('member.show_verification_info', encrypt($member->id)) }}" >{{translate('View Verification Info')}}</a>
                                                     @endif
-                                                @endcan
+                                                @endif
 
                                                 @can ('update_member_package')
                                                     <a class="dropdown-item" onclick="package_info({{$member->id}})" href="javascript:void(0);" >{{translate('Package')}}</a>
@@ -313,3 +334,13 @@
 
 </script>
 @endsection
+
+
+
+
+
+
+
+
+
+
