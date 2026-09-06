@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdditionalAttributeController;
 use App\Http\Controllers\AddonController;
 use App\Http\Controllers\AizUploadController;
+use App\Http\Controllers\Admin\UserActivityController;
 use App\Http\Controllers\AnnualSalaryRangeyController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogCategoryController;
@@ -98,6 +99,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
     // Member Manage
     Route::resource('members', MemberController::class)->except(['destroy']);
+    Route::get('/member-activity', [UserActivityController::class, 'index'])->name('member.activity.index');
     Route::controller(MemberController::class)->group(function () {
         Route::get('/premium-members-list', 'premiumIndex')->name('premium.members.index');
         Route::get('/free-members-list', 'freeIndex')->name('free.members.index');
@@ -115,6 +117,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::post('/member/approve_profile_image', 'approve_profile_image')->name('approve_profile_image');
 
         Route::get('/member/show-verification-info/{id}', 'show_verification_info')->name('member.show_verification_info');
+        Route::get('/member/activity/{id}', [UserActivityController::class, 'show'])->name('member.activity');
         Route::get('/member/approve-verification/{id}', 'approve_verification')->name('member.approve_verification');
         Route::get('/member/reject-verification/{id}', 'reject_verification')->name('member.reject_verification');
 
@@ -357,4 +360,6 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('manual_payment_methods', ManualPaymentMethodController::class)->except(['destroy']);
     Route::get('/manual_payment_methods/destroy/{id}', [ManualPaymentMethodController::class, 'destroy'])->name('manual_payment_methods.destroy');
 });
+
+
 

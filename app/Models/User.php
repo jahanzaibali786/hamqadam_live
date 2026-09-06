@@ -24,6 +24,7 @@ use App\Models\Staff;
 use App\Models\GalleryImage;
 use App\Models\ExpressInterest;
 use App\Models\ProfileMatch;
+use App\Models\UserActivityLog;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -265,3 +266,4 @@ class User extends Authenticatable implements MustVerifyEmail
             || in_array($member?->ai_verification_status, ['manual_review'], true);
     }
 }
+

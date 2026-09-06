@@ -12,6 +12,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Services\Admin\UserActivityTracker;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -41,6 +42,8 @@ class AuthenticatedSessionController extends Controller
                 'email' => translate('Your account is under manual review. Please wait for approval.'),
             ]);
         }
+
+        app(UserActivityTracker::class)->trackLogin(auth()->user(), $request, 'web');
 
         if (auth()->user() != null && (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff')) {
             $redirect_route = 'admin.dashboard';
@@ -79,6 +82,7 @@ class AuthenticatedSessionController extends Controller
         // $request->session()->regenerateToken();
 
         // return redirect('/');
+
         if (auth()->user() != null && (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff')) {
             $redirect_route = 'admin';
         } else {
@@ -96,3 +100,5 @@ class AuthenticatedSessionController extends Controller
         return redirect()->route($redirect_route);
     }
 }
+
+

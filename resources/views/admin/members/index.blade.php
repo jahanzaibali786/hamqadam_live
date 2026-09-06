@@ -108,6 +108,9 @@
                                                 @can ('view_member_profile')
                                                     <a class="dropdown-item" href="{{ route('members.show', encrypt($member->id)) }}">{{translate('View')}}</a>
                                                 @endcan
+                                                @can ('view_user_activity')
+                                                    <a class="dropdown-item" href="{{ route('member.activity', encrypt($member->id)) }}">{{ translate('Activity Tracking') }}</a>
+                                                @endcan
                                                 @can('edit_member')
                                                     <a class="dropdown-item" href="{{ route('members.edit', encrypt($member->id)) }}">{{translate('Edit')}}</a>
                                                 @endcan
@@ -313,3 +316,4 @@
 
 </script>
 @endsection
+
