@@ -224,6 +224,10 @@ class CallService
             'started_at' => $call->started_at ?: now(),
             'ring_expires_at' => null,
         ])->save();
+
+        $payload = $this->payload($call->fresh(['caller', 'receiver', 'conversation']), $user, translate('Call connected.'));
+        $this->broadcastSafely(new CallAccepted($payload));
+
         Log::info('Call connected.', [
             'call_id' => $call->id,
             'caller_id' => $call->caller_id,
@@ -729,3 +733,4 @@ private function broadcastSafely(object $event): void
     }
 
 }
+

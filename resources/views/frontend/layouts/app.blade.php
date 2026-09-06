@@ -423,7 +423,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                         url: "{{ route('chat.call.start') }}",
                         method: 'POST',
                         dataType: 'json',
-                        headers: { 'X-CSRF-TOKEN': $('meta[name=\"csrf-token\"]').attr('content') },
+                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                         data: { chat_thread_id: threadId, call_type: type },
                         success: function (response) {
                             if (!response || !response.success) { return; }
@@ -1163,11 +1163,18 @@ $lang = \App\Models\Language::where('code', $locale)->first();
             }
             await window.currentCallClient.join(rtc.app_id, rtc.channel, rtc.token, rtc.uid);
             await window.currentCallClient.publish(tracks);
-            $.ajax({
-                url: '{{ route('chat.call.connect', ['call' => '__CALL__']) }}'.replace('__CALL__', call.id),
-                method: 'POST',
-                data: { _token: $('meta[name="csrf-token"]').attr('content') }
-            });
+            if (!isCaller || ['accepted', 'connected'].indexOf(String(call.status || '').toLowerCase()) !== -1) {
+                $.ajax({
+                    url: '{{ route('chat.call.connect', ['call' => '__CALL__']) }}'.replace('__CALL__', call.id),
+                    method: 'POST',
+                    data: { _token: $('meta[name="csrf-token"]').attr('content') },
+                    success: function (response) {
+                        if (response && response.success && response.data && response.data.call && typeof window.openActiveCallScreen === 'function') {
+                            window.openActiveCallScreen(response.data.call);
+                        }
+                    }
+                });
+            }
             if (typeof window.startCallTimer === 'function') {
                 window.startCallTimer();
             }
@@ -1322,6 +1329,73 @@ $lang = \App\Models\Language::where('code', $locale)->first();
 })(window);
 </script>
 
+
+<script type="text/javascript">
+(function (window, $) {
+    function callObj(event) {
+        if (!event) { return {}; }
+        if (event.call) { return event.call; }
+        if (event.data && event.data.call) { return event.data.call; }
+        return event;
+    }
+
+    function callPeer(call) {
+        var userId = parseInt(window.currentUserId || @json(Auth::id()), 10);
+        var caller = call && call.caller ? call.caller : {};
+        var receiver = call && call.receiver ? call.receiver : {};
+        var callerId = caller.id ? parseInt(caller.id, 10) : null;
+        var receiverId = receiver.id ? parseInt(receiver.id, 10) : null;
+
+        if (callerId && callerId === userId) { return receiver; }
+        if (receiverId && receiverId === userId) { return caller; }
+        return call.peer || receiver || caller || {};
+    }
+
+    window.normalizedCallMessage = function (event, fallback) {
+        var call = callObj(event);
+        var peer = callPeer(call);
+        var type = String(call.call_type || 'audio').toLowerCase() === 'video' ? '{{ translate('Video call') }}' : '{{ translate('Audio call') }}';
+        var name = peer && peer.name ? peer.name : '{{ translate('Hamqadam member') }}';
+        return name + ' - ' + (fallback || type);
+    };
+
+    var previousHandleCallSignal = window.handleCallSignal;
+    window.handleCallSignal = function (status, event) {
+        var call = callObj(event);
+        if (!call || !call.id) {
+            if (typeof previousHandleCallSignal === 'function') {
+                return previousHandleCallSignal(status, event);
+            }
+            return;
+        }
+
+        if (status === 'accepted' || status === 'connected') {
+            clearTimeout(window.currentCallTimer);
+            window.currentCallTimer = null;
+            $('#global-call-action-modal').modal('hide');
+            window.currentCallState = call;
+            window.currentCallId = call.id;
+            if (typeof window.openActiveCallScreen === 'function') {
+                window.openActiveCallScreen(call);
+            }
+            if (window.AIZ && AIZ.plugins && typeof AIZ.plugins.notify === 'function') {
+                AIZ.plugins.notify('success', '{{ translate('Call connected.') }}');
+            }
+            return;
+        }
+
+        if (['rejected', 'cancelled', 'busy', 'ended', 'missed', 'failed'].indexOf(status) !== -1) {
+            $('#global-call-action-modal').modal('hide');
+            if (typeof window.stopCallSession === 'function') {
+                window.stopCallSession();
+            }
+        }
+    };
+})(window, window.jQuery);
+</script>
 </body>
 
 </html>
+
+
+
