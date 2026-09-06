@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\VerificationRequestStatus;
 use App\Models\AdditionalAttribute;
 use App\Models\Address;
 use App\Models\AnnualSalaryRange;
@@ -33,6 +34,7 @@ use App\Models\PackagePayment;
 use App\Models\PartnerExpectation;
 use App\Models\PhysicalAttribute;
 use App\Models\ProfileMatch;
+use App\Models\ProfileVerificationRequest;
 use App\Models\Recidency;
 use App\Models\ReportedUser;
 use App\Models\Setting;
@@ -65,7 +67,7 @@ class MemberController extends Controller
         $this->middleware(['permission:deleted_member_show'])->only('deleted_members');
         $this->middleware(['permission:show_unapproved_profile_picrures'])->only('unapproved_profile_pictures');
         $this->middleware(['permission:approve_profile_picrures'])->only('approve_profile_image');
-        $this->middleware(['permission:approve_member'])->only('show_verification_info');
+        $this->middleware(['role_or_permission:admin|approve_member|review_member_verification'])->only(['show_verification_info', 'approve_verification', 'reject_verification']);
 
 
         $this->rules = [
@@ -481,8 +483,18 @@ class MemberController extends Controller
 
     public function show_verification_info($id)
     {
-        $user = User::findOrFail(decrypt($id));
-        return view('admin.members.verification_info', compact('user'));
+        $user = User::with([
+            'member',
+            'gallery_images',
+            'profile_verification_requests.documents',
+        ])->findOrFail(decrypt($id));
+
+        $verificationRequest = ProfileVerificationRequest::with(['documents', 'reviewer'])
+            ->where('user_id', $user->id)
+            ->latest()
+            ->first();
+
+        return view('admin.members.verification_info', compact('user', 'verificationRequest'));
     }
 
     public function approve_verification($id)
@@ -499,27 +511,33 @@ class MemberController extends Controller
                     $user->member->ai_verification_status = 'approved';
                     $user->member->save();
                 }
+
+                ProfileVerificationRequest::where('user_id', $user->id)
+                    ->whereIn('status', [VerificationRequestStatus::Submitted->value, VerificationRequestStatus::UnderReview->value])
+                    ->latest()
+                    ->first()?->update([
+                        'status' => VerificationRequestStatus::Approved,
+                        'reviewed_by' => auth()->id(),
+                        'reviewed_at' => now(),
+                    ]);
             });
 
             $status = 'Approved';
 
             if ($user->email != null) {
-                if (get_email_template('member_verification_email', 'status')) {
-                    EmailUtility::member_verification_email($user, $status);
-                } else {
-                    $subject = translate('Your Hamqadam account has been approved');
-                    $message = '<p>' . translate('Assalam o Alaikum') . ' ' . e($user->first_name . ' ' . $user->last_name) . ',</p>'
-                        . '<p>' . translate('Your verification is now complete. You can log in to the system and continue using your account.') . '</p>'
-                        . '<p>' . translate('Regards') . ',<br>' . e(get_setting('website_name') ?: config('app.name')) . '</p>';
+                $subject = translate('Your Hamqadam verification is approved');
+                $message = '<p>'. e($user->first_name . ' ' . $user->last_name) . ',</p>'
+                    . '<p>' . translate('Good news! Your verification has been approved.') . '</p>'
+                    . '<p>' . translate('You can now login to the Hamqadam mobile app and web portal, and continue using your account.') . '</p>'
+                    . '<p>' . translate('Regards') . ',<br>' . e(get_setting('website_name') ?: config('app.name')) . '</p>';
 
-                    try {
-                        \Notification::route('mail', $user->email)->notify(new \App\Notifications\EmailNotification($subject, $message));
-                    } catch (\Throwable $e) {
-                        \Log::warning('Verification approval email failed.', [
-                            'user_id' => $user->id,
-                            'message' => $e->getMessage(),
-                        ]);
-                    }
+                try {
+                    \Notification::route('mail', $user->email)->notify(new \App\Notifications\EmailNotification($subject, $message));
+                } catch (\Throwable $e) {
+                    \Log::warning('Verification approval email failed.', [
+                        'user_id' => $user->id,
+                        'message' => $e->getMessage(),
+                    ]);
                 }
             }
 
@@ -543,29 +561,76 @@ class MemberController extends Controller
         }
     }
 
-    public function reject_verification($id)
+    public function reject_verification(Request $request, $id)
     {
-        $user             = User::findOrFail($id);
-        $user->verification_info   = null;
-        if ($user->save()) {
+        $request->validate([
+            'reason' => ['required', 'string', 'max:1000'],
+        ]);
+
+        $user = User::with('member')->findOrFail($id);
+        $reason = trim((string) $request->reason);
+
+        try {
+            \DB::transaction(function () use ($user, $reason) {
+                $user->verification_info = null;
+                $user->approved = 0;
+                $user->save();
+
+                if ($user->member) {
+                    $user->member->verification_status = 'rejected';
+                    $user->member->ai_verification_status = 'rejected';
+                    $user->member->save();
+                }
+
+                ProfileVerificationRequest::where('user_id', $user->id)
+                    ->whereIn('status', [VerificationRequestStatus::Submitted->value, VerificationRequestStatus::UnderReview->value])
+                    ->latest()
+                    ->first()?->update([
+                        'status' => VerificationRequestStatus::Rejected,
+                        'reviewed_by' => auth()->id(),
+                        'reviewed_at' => now(),
+                        'rejection_reason' => $reason,
+                    ]);
+            });
+
             $status = 'Rejected';
 
-            // Member verification email send to members
-            if ($user->email != null && get_email_template('member_verification_email', 'status')) {
-                EmailUtility::member_verification_email($user, $status);
+            if ($user->email != null) {
+                $contactUrl = route('contact_us');
+                $subject = translate('Your Hamqadam verification was not approved');
+                $message = '<p>' . e($user->first_name . ' ' . $user->last_name) . ',</p>'
+                    . '<p>' . translate('We are sorry, but your verification could not be approved at this time.') . '</p>'
+                    . '<p><strong>' . translate('Reason') . ':</strong> ' . nl2br(e($reason)) . '</p>'
+                    . '<p>' . translate('For any query or further assistance, please contact administration using the link below.') . '</p>'
+                    . '<p><a href="' . e($contactUrl) . '">' . translate('Contact Us') . '</a></p>'
+                    . '<p>' . translate('Regards') . ',<br>' . e(get_setting('website_name') ?: config('app.name')) . '</p>';
+
+                try {
+                    \Notification::route('mail', $user->email)->notify(new \App\Notifications\EmailNotification($subject, $message));
+                } catch (\Throwable $e) {
+                    \Log::warning('Verification rejection email failed.', [
+                        'user_id' => $user->id,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
             }
 
-            flash('Member Verification Rejected.')->success();
+            flash(translate('Member Verification Rejected.'))->success();
 
             if ($user->membership === 2) {
                 return redirect()->route('premium.members.index');
             } elseif ($user->membership === 1) {
                 return redirect()->route('free.members.index');
-            } else {
-                return redirect()->route('unsubscribed.members.index');
             }
-        } else {
-            flash('Sorry! Something went wrong.')->error();
+
+            return redirect()->route('unsubscribed.members.index');
+        } catch (\Throwable $e) {
+            \Log::error('Member verification rejection failed.', [
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            flash(translate('Sorry! Something went wrong.'))->error();
             return back();
         }
     }
@@ -971,7 +1036,25 @@ class MemberController extends Controller
             $query->where('user_type', 'member')->where('approved', 1);
         }
         if ($status == 'pending') {
-            $query->where('user_type', 'member')->where('approved', 0);
+            $query->where('user_type', 'member')
+                ->where(function ($q) {
+                    $q->where('approved', 0)
+                        ->orWhereHas('member', function ($memberQuery) {
+                            $memberQuery->whereIn('verification_status', ['manual_review', 'rejected'])
+                                ->orWhereIn('ai_verification_status', ['manual_review', 'rejected']);
+                        });
+                })
+                ->where(function ($q) {
+                    $q->where('approved', 0)
+                        ->orWhereHas('member', function ($memberQuery) {
+                            $memberQuery->whereIn('verification_status', ['manual_review', 'rejected'])
+                                ->orWhereIn('ai_verification_status', ['manual_review', 'rejected']);
+                        })
+                        ->orWhereNotNull('verification_info')
+                        ->orWhereHas('profile_verification_requests', function ($requestQuery) {
+                            $requestQuery->whereIn('status', ['submitted', 'under_review']);
+                        });
+                });
         }
 
         // Apply search filter
@@ -989,7 +1072,9 @@ class MemberController extends Controller
 
 
         // Finally paginate
-        $members = $query->paginate(10);
+        $members = $query->with(['member'])
+            ->withCount('profile_verification_requests')
+            ->paginate(10);
 
         return view('admin.members.member_types', compact('members', 'sort_search', 'type'));
     }

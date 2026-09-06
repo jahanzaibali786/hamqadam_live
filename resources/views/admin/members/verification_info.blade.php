@@ -4,6 +4,7 @@
     $requestStatus = $verificationRequest?->status instanceof \BackedEnum ? $verificationRequest->status->value : $verificationRequest?->status;
     $faceMatchStatus = $verificationRequest?->face_match_status instanceof \BackedEnum ? $verificationRequest->face_match_status->value : $verificationRequest?->face_match_status;
     $manualReview = optional($user->member)->verification_status === 'manual_review' || optional($user->member)->ai_verification_status === 'manual_review';
+    $verificationRejected = optional($user->member)->verification_status === 'rejected' || optional($user->member)->ai_verification_status === 'rejected' || $requestStatus === 'rejected';
 @endphp
 
 <div class="row">
@@ -13,6 +14,8 @@
                 <h5 class="mb-0 h6">{{ translate('Member Verification') }}</h5>
                 @if($manualReview)
                     <span class="badge badge-inline badge-warning">{{ translate('Manual Review') }}</span>
+                @elseif($verificationRejected)
+                    <span class="badge badge-inline badge-danger">{{ translate('Rejected') }}</span>
                 @elseif($user->approved == 1)
                     <span class="badge badge-inline badge-success">{{ translate('Approved') }}</span>
                 @endif
@@ -104,7 +107,45 @@
                             <div class="text-muted">{{ translate('No uploaded verification documents were found.') }}</div>
                         @endif
 
-                        @if ($user->approved != 1 && ($user->verification_info != null || $verificationRequest))
+                        <h6 class="mb-3 mt-4">{{ translate('Profile & Gallery Photos') }}</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong>{{ translate('Profile Photo') }}</strong>
+                                        @if($user->photo && uploaded_asset($user->photo))
+                                            <a href="{{ uploaded_asset($user->photo) }}" target="_blank" class="btn btn-sm btn-outline-primary">{{ translate('View') }}</a>
+                                        @endif
+                                    </div>
+                                    <img src="{{ $user->photo && uploaded_asset($user->photo) ? uploaded_asset($user->photo) : static_asset('assets/img/avatar-place.png') }}" alt="{{ translate('Profile Photo') }}" class="img-fluid rounded border w-100" style="max-height:240px;object-fit:contain;">
+                                </div>
+                            </div>
+                            @forelse($user->gallery_images as $galleryImage)
+                                @php
+                                    $galleryUrl = $galleryImage->image ? uploaded_asset($galleryImage->image) : null;
+                                @endphp
+                                <div class="col-md-6 mb-3">
+                                    <div class="border rounded p-3 h-100">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong>{{ translate('Additional Photo') }} #{{ $loop->iteration }}</strong>
+                                            @if($galleryUrl)
+                                                <a href="{{ $galleryUrl }}" target="_blank" class="btn btn-sm btn-outline-primary">{{ translate('View') }}</a>
+                                            @endif
+                                        </div>
+                                        @if($galleryUrl)
+                                            <img src="{{ $galleryUrl }}" alt="{{ translate('Additional Photo') }}" class="img-fluid rounded border w-100" style="max-height:240px;object-fit:contain;">
+                                        @else
+                                            <div class="text-muted">{{ translate('No gallery file is available.') }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="col-md-6 mb-3">
+                                    <div class="border rounded p-3 h-100 text-muted">{{ translate('No additional gallery photos were found.') }}</div>
+                                </div>
+                            @endforelse
+                        </div>
+                        @if ($manualReview || $verificationRejected || ($user->approved != 1 && ($user->verification_info != null || $verificationRequest)))
                             <div class="text-right mt-4">
                                 <a href="javascript:void(0);" onclick="verify_member('{{ route('member.reject_verification', $user->id) }}','reject')" class="btn btn-sm btn-danger d-innline-block">{{ translate('Reject') }}</a>
                                 <a href="javascript:void(0);" onclick="verify_member('{{ route('member.approve_verification', $user->id) }}','approve')" class="btn btn-sm btn-success d-innline-block">{{ translate('Accept') }}</a>
@@ -128,6 +169,11 @@
                 </div>
                 <div class="modal-body text-center">
                     <p class="mt-1" id="verify_member_text"></p>
+                    <div class="form-group text-left d-none" id="reject_reason_group">
+                        <label for="reject_reason" class="form-label">{{ translate('Rejection Reason') }} <span class="text-danger">*</span></label>
+                        <textarea id="reject_reason" class="form-control" rows="4" placeholder="{{ translate('Enter the reason that will be emailed to the member') }}"></textarea>
+                        <small class="text-muted">{{ translate('This reason will be included in the rejection email.') }}</small>
+                    </div>
                     <button type="button" class="btn btn-sm btn-light mt-2" data-dismiss="modal">{{ translate('Cancel') }}</button>
                     <a type="submit" class="btn btn-sm btn-primary mt-2" id="confirm-link">{{ translate('Confirm') }}</a>
                 </div>
@@ -139,13 +185,39 @@
 @section('script')
 <script type="text/javascript">
     function verify_member(url, status){
-        var confirmation_text =  status == 'approve' ? 
-                                "{{ translate('Are you sure to approve this verification?') }}" : 
-                                "{{ translate('Are you sure to reject this verification?') }}";
+        var confirmation_text =  status == 'approve' ?
+                                "{{ translate('Are you sure to approve this verification? The member will be notified that they can now login to the app and web.') }}" :
+                                "{{ translate('Are you sure to reject this verification? Please provide a reason for the member.') }}";
 
         $('.member-verification-modal').modal('show');
         $('#verify_member_text').html(confirmation_text);
-        $('#confirm-link').attr('href', url);
+        $('#reject_reason').val('');
+        $('#reject_reason_group').toggleClass('d-none', status !== 'reject');
+        $('#confirm-link').data('url', url).data('status', status).attr('href', 'javascript:void(0);');
     }
+
+    $('#confirm-link').on('click', function () {
+        var url = $(this).data('url');
+        var status = $(this).data('status');
+
+        if (status === 'reject') {
+            var reason = $('#reject_reason').val().trim();
+            if (!reason) {
+                AIZ.plugins.notify('danger', "{{ translate('Please enter rejection reason.') }}");
+                return false;
+            }
+            window.location.href = url + '?reason=' + encodeURIComponent(reason);
+            return false;
+        }
+
+        window.location.href = url;
+        return false;
+    });
 </script>
 @endsection
+
+
+
+
+
+

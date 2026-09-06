@@ -19,6 +19,7 @@ class RoleController extends Controller
     public function index()
     {
         $this->ensureUserActivityPermission();
+        $this->ensureMemberVerificationPermission();
 
         $roles = Role::all();
         return view('admin.staff.roles.index', compact('roles'));
@@ -33,6 +34,7 @@ class RoleController extends Controller
     public function create()
     {
         $this->ensureUserActivityPermission();
+        $this->ensureMemberVerificationPermission();
 
         return view('admin.staff.roles.create');
     }
@@ -53,6 +55,7 @@ class RoleController extends Controller
     public function edit($id)
     {
         $this->ensureUserActivityPermission();
+        $this->ensureMemberVerificationPermission();
 
         $role = Role::findOrFail(decrypt($id));
         return view('admin.staff.roles.edit', compact('role'));
@@ -61,6 +64,7 @@ class RoleController extends Controller
     public function update(Request $request, $id)
     {
         $this->ensureUserActivityPermission();
+        $this->ensureMemberVerificationPermission();
 
         $role = Role::findOrFail($id);
         $role->name = $request->name;
@@ -93,6 +97,18 @@ class RoleController extends Controller
             ->update(['parent' => 'Members']);
     }
 
+    private function ensureMemberVerificationPermission(): void
+    {
+        $permission = Permission::findOrCreate('review_member_verification', 'web');
+
+        Permission::query()
+            ->where('name', 'review_member_verification')
+            ->where(function ($query) {
+                $query->whereNull('parent')->orWhere('parent', '!=', 'Members');
+            })
+            ->update(['parent' => 'Members']);
+    }
+
     private function permissionNames(array $permissions): array
     {
         return collect($permissions)
@@ -108,3 +124,5 @@ class RoleController extends Controller
             ->all();
     }
 }
+
+
