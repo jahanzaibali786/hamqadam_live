@@ -43,6 +43,20 @@ class CompatibilityScoringService
             ];
         }
 
+        $sidecar = app(\App\Services\Api\V1\Matching\MatchmakingIntegrationService::class);
+        $preview = $sidecar->compatibilityPreview($user, $candidate);
+
+        if ($preview['source'] === 'sidecar') {
+            return [
+                'percentage'     => $preview['percentage'],
+                'breakdown'      => $preview['breakdown'],
+                'reasons'        => $preview['reasons'],
+                'explanation'    => $preview['explanation'],
+                'calculated_at'  => $preview['calculated_at'],
+                'source'         => 'ai_sidecar',
+            ];
+        }
+
         $user->loadMissing([
             'member',
             'addresses',
@@ -84,12 +98,25 @@ class CompatibilityScoringService
         $score = array_sum(array_column($breakdown, 'score'));
         $percentage = (int) round(($score / $totalWeight) * 100);
 
-        return [
+        $result = [
             'percentage' => min(100, max(0, $percentage)),
             'breakdown' => $breakdown,
             'reasons' => $reasons,
             'explanation' => $this->buildExplanation($reasons, $percentage),
+            'calculated_at' => now()->toISOString(),
+            'source' => 'rule_based_integrated',
         ];
+
+        if ($preview['source'] === 'sidecar') {
+            $result['source'] = 'ai_sidecar';
+            $result['percentage'] = $preview['percentage'];
+            $result['breakdown'] = $preview['breakdown'];
+            $result['reasons'] = $preview['reasons'];
+            $result['explanation'] = $preview['explanation'];
+            $result['calculated_at'] = $preview['calculated_at'];
+        }
+
+        return $result;
     }
 
     private function evaluate(string $key, User $user, User $candidate): array

@@ -13,8 +13,91 @@ use Illuminate\Support\Str;
 
 class MatchRecommendationService
 {
-    public function __construct(private readonly CompatibilityScoringService $scoring)
+    public function __construct(
+        private readonly CompatibilityScoringService $scoring,
+        private readonly MatchmakingIntegrationService $sidecar,
+    )
     {
+    }
+
+    public function recommendations(User $user, int $perPage = 20)
+    {
+        $sidecar = $this->sidecar;
+        $limit = min($perPage, (int) (get_setting('ai_match_daily_recommendation_limit') ?: 20));
+        $minimumScore = (int) (get_setting('ai_match_minimum_score') ?: 50);
+
+        // Ask the sidecar for a ranked list. It returns a compact shape we can
+        // map back onto ProfileMatch rows so the rest of the app (resources,
+        // feedback loops, pagination) keeps working unchanged.
+        $sidecarResult = $sidecar->getMatches(
+            $user,
+            $this->candidateQuery($user)->limit($limit)->get()->all(),
+            $limit,
+            $minimumScore,
+        );
+
+        if ($sidecarResult !== null) {
+            $created = 0;
+
+            foreach ($sidecarResult['matches'] as $m) {
+                ProfileMatch::updateOrCreate(
+                    ['user_id' => $user->id, 'match_id' => (int) $m['candidate_id']],
+                    [
+                        'match_percentage'            => (int) ($m['match_score'] ?? 0),
+                        'match_status'               => $m['match_status'] ?? 'unknown',
+                        'compatibility_level'        => $m['compatibility_level'] ?? 'none',
+                        'score_breakdown'            => $m['your_preferences_match'] ?? [],
+                        'score_breakdown_their'      => $m['their_preferences_match'] ?? [],
+                        'mutual_matched_preferences' => $m['mutual_matched_preferences'] ?? [],
+                        'one_sided_preferences'      => $m['one_sided_preferences'] ?? [],
+                        'score_balance'              => $m['score_balance'] ?? null,
+                        'compatibility_reasons'      => $m['match_reasons'] ?? [],
+                        'compatibility_concerns'     => $m['concerns'] ?? [],
+                        'recommended_actions'        => $m['recommendations'] ?? [],
+                        'confidence_score'           => (int) ($m['confidence_score'] ?? 0),
+                        'model_confidence'           => $m['model_confidence'] ?? 'low',
+                        'ai_enhanced'                => (bool) ($m['ai_enhanced'] ?? false),
+                        'calculated_at'              => $m['processing_time_ms'] ? now() : now(),
+                    ]
+                );
+
+                $created++;
+            }
+
+            return ProfileMatch::query()
+                ->with(['matchedUser.member', 'matchedUser.physical_attributes', 'matchedUser.spiritual_backgrounds'])
+                ->where('user_id', $user->id)
+                ->where('match_percentage', '>=', $minimumScore)
+                ->whereNotIn('match_id', MatchSuggestionFeedback::where('user_id', $user->id)
+                    ->whereIn('feedback', ['down', 'pass'])
+                    ->pluck('suggested_user_id'))
+                ->orderByDesc('match_percentage')
+                ->orderByDesc('calculated_at')
+                ->paginate(max(1, $limit))
+                ->tap(fn ($paginator) => $paginator->setCollection(
+                    $paginator->getCollection()->map(function (ProfileMatch $pm) use ($sidecarResult) {
+                        $pm->setRelation('source_meta', [
+                            'source'            => $sidecarResult['success'] ? 'ai_sidecar' : 'rule_based',
+                            'model_version'     => $sidecarResult['model_version'],
+                            'total_evaluated'   => $sidecarResult['total_users_evaluated'],
+                            'warnings'          => $sidecarResult['warnings'],
+                        ]);
+
+                        return $pm;
+                    })
+                ));
+        }
+
+        return ProfileMatch::query()
+            ->with(['matchedUser.member', 'matchedUser.physical_attributes', 'matchedUser.spiritual_backgrounds'])
+            ->where('user_id', $user->id)
+            ->where('match_percentage', '>=', $minimumScore)
+            ->whereNotIn('match_id', MatchSuggestionFeedback::where('user_id', $user->id)
+                ->whereIn('feedback', ['down', 'pass'])
+                ->pluck('suggested_user_id'))
+            ->orderByDesc('match_percentage')
+            ->orderByDesc('calculated_at')
+            ->paginate(max(1, $limit));
     }
 
     public function recalculateFor(User $user, int $limit = 100): int
@@ -43,23 +126,6 @@ class MatchRecommendationService
             });
 
         return $count;
-    }
-
-    public function recommendations(User $user, int $perPage = 20)
-    {
-        $limit = min($perPage, (int) (get_setting('ai_match_daily_recommendation_limit') ?: 20));
-        $minimumScore = (int) (get_setting('ai_match_minimum_score') ?: 50);
-
-        return ProfileMatch::query()
-            ->with(['matchedUser.member', 'matchedUser.physical_attributes', 'matchedUser.spiritual_backgrounds'])
-            ->where('user_id', $user->id)
-            ->where('match_percentage', '>=', $minimumScore)
-            ->whereNotIn('match_id', MatchSuggestionFeedback::where('user_id', $user->id)
-                ->whereIn('feedback', ['down', 'pass'])
-                ->pluck('suggested_user_id'))
-            ->orderByDesc('match_percentage')
-            ->orderByDesc('calculated_at')
-            ->paginate(max(1, $limit));
     }
 
     public function storeFeedback(User $user, int $suggestedUserId, string $feedback, ?string $source = null, ?string $note = null): MatchSuggestionFeedback
@@ -105,7 +171,8 @@ class MatchRecommendationService
                 $query->where('hide_profile', 0);
 
                 if (filled($user->member?->gender)) {
-                    $query->where('gender', '!=', $user->member->gender);
+                    $myGender = (string) $user->member->gender;
+                    $query->whereRaw('IF(gender = ?, FALSE, TRUE)', [$myGender]);
                 }
             })
             ->whereDoesntHave('profile_privacy_setting', fn ($privacy) => $privacy->where('invisible_mode', true))

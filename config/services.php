@@ -61,4 +61,9 @@ return [
         'service_account_path' => env('FIREBASE_SERVICE_ACCOUNT_PATH', storage_path('app/firebase-service-account.json')),
     ],
 
+    'matchmaking' => [
+        'base_url' => env('MATCHMAKING_BASE_URL', 'http://127.0.0.1:8001'),
+        'timeout'  => (int) env('MATCHMAKING_TIMEOUT', 10),
+    ],
+
 ];

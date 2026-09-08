@@ -57,6 +57,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        if (class_exists(
+            \App\Services\Api\V1\Matching\MatchmakingIntegrationService::class
+        )) {
+            $this->app->singleton(
+                \App\Services\Api\V1\Matching\MatchmakingIntegrationService::class,
+                function () {
+                    return new \App\Services\Api\V1\Matching\MatchmakingIntegrationService(
+                        baseUrl: config('services.matchmaking.base_url', 'http://127.0.0.1:8001'),
+                        timeout: (int) config('services.matchmaking.timeout', 10),
+                    );
+                }
+            );
+        }
     }
 }

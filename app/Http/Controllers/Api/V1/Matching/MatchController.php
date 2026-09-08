@@ -38,6 +38,39 @@ class MatchController extends ApiController
         return $this->index($request);
     }
 
+    /**
+     * Return ALL compatibility-scored profiles for the logged-in user as a
+     * single ranked list (no pagination, no minimum-score cutoff).
+     * Used by the admin/tester flow to inspect every match.
+     */
+    public function allMatches(Request $request): JsonResponse
+    {
+        $user = $request->user()->loadMissing('member', 'partner_expectations');
+
+        // Re-run full recalculation so the listing is fresh.
+        $count = $this->matches->recalculateFor($user, 250);
+
+        $matches = ProfileMatch::query()
+            ->with(['matchedUser.member', 'matchedUser.physical_attributes', 'matchedUser.spiritual_backgrounds'])
+            ->where('user_id', $user->id)
+            ->orderByDesc('match_percentage')
+            ->orderByDesc('calculated_at')
+            ->get();
+
+        $items = $matches->map(function (ProfileMatch $pm) use ($user) {
+            // Stability: if two candidates have the same score, the one with
+            // the more recent calculation comes first.
+            return $pm;
+        })->sortByDesc(fn (ProfileMatch $pm) => [$pm->match_percentage, $pm->calculated_at->timestamp])
+          ->values();
+
+        return $this->success([
+            'total'     => $items->count(),
+            'recalculated' => $count,
+            'matches'   => $items,
+        ], 'All matches retrieved successfully.');
+    }
+
     public function show(Request $request, int $profile): JsonResponse
     {
         $match = ProfileMatch::with(['matchedUser.member', 'matchedUser.physical_attributes', 'matchedUser.spiritual_backgrounds'])

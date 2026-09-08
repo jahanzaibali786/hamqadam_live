@@ -14,18 +14,20 @@ use App\Http\Resources\Api\V1\Search\SearchProfileResource;
 use App\Models\ProfileMatch;
 use App\Models\User;
 use App\Services\Api\V1\Matching\CompatibilityScoringService;
+use App\Services\Api\V1\Matching\MatchmakingIntegrationService;
 use App\Services\Api\V1\Profile\ProfileService;
 use App\Services\Api\V1\Profile\ProfileViewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ProfileController extends ApiController
-{
-    public function __construct(
+{    public function __construct(
         private readonly ProfileService $profiles,
         private readonly CompatibilityScoringService $compatibility,
+        private readonly MatchmakingIntegrationService $sidecar,
         private readonly ProfileViewService $profileViews,
-    ) {
+    )
+    {
     }
 
     public function show(Request $request): JsonResponse
@@ -83,6 +85,7 @@ class ProfileController extends ApiController
 
     public function compatibility(Request $request, int $profile): JsonResponse
     {
+        $viewer = $request->user()->loadMissing('member', 'partner_expectations');
         $candidate = User::with([
             'member',
             'addresses',
@@ -98,30 +101,50 @@ class ProfileController extends ApiController
             ->whereKey($profile)
             ->firstOrFail();
 
-        $stored = ProfileMatch::where('user_id', $request->user()->id)
+        $stored = ProfileMatch::where('user_id', $viewer->id)
             ->where('match_id', $candidate->id)
             ->first();
 
-        $score = $stored ? [
-            'percentage' => (int) $stored->match_percentage,
-            'breakdown' => $stored->score_breakdown ?: [],
-            'reasons' => $stored->compatibility_reasons ?: [],
-            'explanation' => $stored->compatibility_explanation,
-            'calculated_at' => optional($stored->calculated_at)->toISOString(),
-            'source' => 'stored',
-        ] : $this->compatibility->score($request->user(), $candidate) + [
+        if ($stored) {
+            return $this->success([
+                'profile_id'                 => $candidate->id,
+                'compatibility_percentage'   => (int) $stored->match_percentage,
+                'compatibility_explanation'  => $stored->compatibility_explanation,
+                'compatibility_reasons'      => $stored->compatibility_reasons ?: [],
+                'score_breakdown'            => $stored->score_breakdown ?: [],
+                'calculated_at'              => optional($stored->calculated_at)->toISOString(),
+                'source'                     => 'stored',
+                'model_version'              => $stored->model_confidence ? 'ai_sidecar' : null,
+            ], 'Compatibility fetched successfully.');
+        }
+
+        $sidecarResult = $this->sidecar->compatibilityPreview($viewer, $candidate);
+
+        if ($sidecarResult['source'] === 'sidecar') {
+            return $this->success([
+                'profile_id'                 => $candidate->id,
+                'compatibility_percentage'   => $sidecarResult['percentage'],
+                'compatibility_explanation'  => $sidecarResult['explanation'],
+                'compatibility_reasons'      => $sidecarResult['reasons'],
+                'score_breakdown'            => $sidecarResult['breakdown'],
+                'calculated_at'              => $sidecarResult['calculated_at'],
+                'source'                     => 'ai_sidecar',
+            ], 'Compatibility fetched successfully.');
+        }
+
+        $score = $this->compatibility->score($viewer, $candidate) + [
             'calculated_at' => now()->toISOString(),
-            'source' => 'live_rule_based',
+            'source' => 'rule_based_integrated',
         ];
 
         return $this->success([
-            'profile_id' => $candidate->id,
-            'compatibility_percentage' => $score['percentage'],
-            'compatibility_explanation' => $score['explanation'],
-            'compatibility_reasons' => $score['reasons'],
-            'score_breakdown' => $score['breakdown'],
-            'calculated_at' => $score['calculated_at'],
-            'source' => $score['source'],
+            'profile_id'                 => $candidate->id,
+            'compatibility_percentage'   => $score['percentage'],
+            'compatibility_explanation'  => $score['explanation'],
+            'compatibility_reasons'      => $score['reasons'],
+            'score_breakdown'            => $score['breakdown'],
+            'calculated_at'              => $score['calculated_at'],
+            'source'                     => $score['source'],
         ], 'Compatibility fetched successfully.');
     }
 }
