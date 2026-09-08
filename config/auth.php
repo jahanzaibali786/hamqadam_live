@@ -33,9 +33,7 @@ return [
     |
     | Supported: "session", "token"
     |
-    */
-
-    'guards' => [
+    */        'guards' => [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
@@ -45,6 +43,11 @@ return [
             'driver' => 'token',
             'provider' => 'users',
             'hash' => false,
+        ],
+
+        'sanctum' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
         ],
     ],
 

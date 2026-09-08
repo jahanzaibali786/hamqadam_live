@@ -73,10 +73,11 @@ if (!function_exists('isHttps')) {
 
 
 if (!function_exists('getBaseURL')) {
-    function getBaseURL()
-    {
-        $root = '//' . $_SERVER['HTTP_HOST'];
-        $root .= str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']);
+function getBaseURL()
+{
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8080';
+    $root = '//' . $host;
+    $root .= str_replace(basename($_SERVER['SCRIPT_NAME'] ?? '/'), '', $_SERVER['SCRIPT_NAME'] ?? '/');
 
         return $root;
     }

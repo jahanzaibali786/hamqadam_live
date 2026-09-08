@@ -103,6 +103,7 @@ Route::middleware('auth:sanctum')->prefix('matches')->name('api.v1.matches.')->g
     Route::get('/', [MatchController::class, 'index'])->name('index');
     Route::get('/recommended', [MatchController::class, 'recommended'])->name('recommended');
     Route::get('/daily', [MatchController::class, 'daily'])->name('daily');
+    Route::get('/all', [MatchController::class, 'allMatches'])->name('all');
     Route::get('/{profile}', [MatchController::class, 'show'])->name('show');
     Route::post('/recalculate', [MatchController::class, 'recalculate'])->middleware('throttle:5,1')->name('recalculate');
     Route::post('/recalculate-async', [MatchController::class, 'recalculateAsync'])->middleware('throttle:10,1')->name('recalculate_async');
