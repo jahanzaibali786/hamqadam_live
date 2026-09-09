@@ -16,6 +16,7 @@ use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\FamilyStatusController;
 use App\Http\Controllers\FamilyValueController;
 use App\Http\Controllers\HappyStoryController;
+use App\Http\Controllers\HelpChatAdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ManualPaymentMethodController;
@@ -96,6 +97,16 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     // Contact Us page
     Route::resource('/contact-us', ContactUsController::class)->except(['destroy']);
     Route::get('/contact-us/destroy/{id}', [ContactUsController::class, 'destroy'])->name('contact-us.delete');
+
+    // Help Center chat (the app's Help button)
+    Route::controller(HelpChatAdminController::class)->prefix('help-chat')->name('admin.help-chat.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/{id}', 'show')->whereNumber('id')->name('show');
+        Route::post('/{id}/reply', 'reply')->whereNumber('id')->name('reply');
+        Route::get('/{id}/message-html', 'messageHtml')->whereNumber('id')->name('message_html');
+        Route::post('/{id}/status', 'updateStatus')->whereNumber('id')->name('status');
+        Route::get('/{id}/destroy', 'destroy')->whereNumber('id')->name('destroy');
+    });
 
     // Member Manage
     Route::resource('members', MemberController::class)->except(['destroy']);

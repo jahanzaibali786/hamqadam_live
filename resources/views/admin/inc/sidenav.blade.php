@@ -424,6 +424,21 @@
                 </li>
                 @endcan
 
+                <!-- Help Center chat (the app's Help button) -->
+                <li class="aiz-side-nav-item ">
+                    <a href="{{ route('admin.help-chat.index') }}"
+                        class="aiz-side-nav-link {{ areActiveRoutes(['admin.help-chat.index', 'admin.help-chat.show']) }}">
+                        <i class="las la-headset aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Help Center Chats') }}</span>
+                        @php
+                            $helpChatUnread = (int) \App\Models\HelpChatThread::query()->sum('admin_unread_count');
+                        @endphp
+                        @if ($helpChatUnread > 0)
+                            <span class="badge badge-danger badge-inline ml-1">{{ $helpChatUnread }}</span>
+                        @endif
+                    </a>
+                </li>
+
 
                 @if (addon_activation('referral_system'))
                 @if (auth()->user()->can('set_referral_commission') ||

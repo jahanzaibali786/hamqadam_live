@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Chat\ChatController;
 use App\Http\Controllers\Api\V1\Content\ContentController;
 use App\Http\Controllers\Api\V1\Family\FamilyController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\HelpChat\HelpChatController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\MobileRegistrationController;
 use App\Http\Controllers\Api\V1\Interest\InterestController;
@@ -170,6 +171,17 @@ Route::middleware('auth:sanctum')->prefix('chat')->name('api.v1.chat.')->group(f
         Route::post('/{call}/missed', [CallController::class, 'missed'])->whereNumber('call')->name('missed');
         Route::post('/{call}/renew-token', [CallController::class, 'renewToken'])->whereNumber('call')->name('renew_token');
     });
+});
+
+/*
+| Help Center — the real-time support chat behind the app's Help button.
+| One conversation per member; the admin replies from the admin panel and
+| both sides see each other live over the `private-help-chat.{id}` channel.
+*/
+Route::middleware('auth:sanctum')->prefix('help-chat')->name('api.v1.help_chat.')->group(function () {
+    Route::get('/thread', [HelpChatController::class, 'thread'])->name('thread');
+    Route::get('/messages', [HelpChatController::class, 'messages'])->name('messages');
+    Route::post('/messages', [HelpChatController::class, 'send'])->middleware('throttle:30,1')->name('send');
 });
 
 /*
