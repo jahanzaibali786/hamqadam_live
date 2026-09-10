@@ -75,6 +75,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'app_language' =>  \App\Http\Middleware\AppLanguage::class,
             'activated' => \App\Http\Middleware\CheckActiveUser::class,
             'check.package' => \App\Http\Middleware\CheckMemberPackage::class,
+            'manual.review' => \App\Http\Middleware\ManualReviewReadOnly::class,
         ]);
 
         $middleware->priority([
@@ -137,3 +138,4 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
     })->create();
+

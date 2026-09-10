@@ -39,6 +39,14 @@ class ViewContactController extends Controller
     public function store(Request $request)
     {
         $view_contact_by_user = Auth::user();
+
+        if ($view_contact_by_user?->isUnderManualReview()) {
+            return response()->json([
+                'status' => 0,
+                'message' => translate('Your account is under manual review. Profile viewing and coin usage are disabled until verification is complete.'),
+            ], 423);
+        }
+
         $view_contact_by_member = $view_contact_by_user->member;
         $coinCost = feature_coin_cost('contact_view', 1);
 

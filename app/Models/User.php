@@ -254,6 +254,33 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(FamilyGuardianLink::class, 'guardian_user_id');
     }
+    public function isUnderManualReview(): bool
+    {
+        return $this->user_type === 'member'
+            && ($this->member?->ai_verification_status === 'manual_review'
+                || $this->member?->verification_status === 'manual_review');
+    }
+
+    public function manualReviewState(): array
+    {
+        $member = $this->member;
+        $startedAt = $member?->manual_review_started_at
+            ?? $member?->ai_verification_last_attempt_at;
+        $expiresAt = $member?->manual_review_expires_at
+            ?? ($startedAt?->copy()->addHours(12));
+
+        return [
+            'under_review' => $this->isUnderManualReview(),
+            'status' => $this->isUnderManualReview() ? 'manual_review' : ($member?->ai_verification_status ?? 'not_started'),
+            'started_at' => $startedAt?->toISOString(),
+            'expires_at' => $expiresAt?->toISOString(),
+            'expired' => $this->isUnderManualReview() && $expiresAt?->isPast(),
+            'remaining_seconds' => $this->isUnderManualReview() && $expiresAt
+                ? max(0, now()->diffInSeconds($expiresAt, false))
+                : 0,
+            'contact_url' => route('contact_us'),
+        ];
+    }
     public function shouldBlockLoginForManualReview(): bool
     {
         if ($this->user_type !== 'member') {
@@ -266,4 +293,5 @@ class User extends Authenticatable implements MustVerifyEmail
             || in_array($member?->ai_verification_status, ['manual_review'], true);
     }
 }
+
 

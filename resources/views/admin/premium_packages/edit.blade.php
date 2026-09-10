@@ -137,6 +137,17 @@
                             </div>
                         </div>
                         <div class="form-group row">
+                            <label class="col-md-3 col-form-label">{{translate('Activate on Registration')}}</label>
+                            <div class="col-md-8 mt-3">
+                                <label class="aiz-switch aiz-switch-success mb-0">
+                                    <input type="checkbox" name="activate_on_registration" value="1" @if($package->activate_on_registration) checked @endif>
+                                    <span></span>
+                                </label>
+                                <small class="d-block text-muted mt-1">{{ translate('Selecting this package automatically disables the previous registration package.') }}</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
                             <label class="col-md-3 col-form-label">{{translate('Auto Profile Matching Show')}}</label>
                             <div class="col-md-8 mt-3">
                                 <label class="aiz-switch aiz-switch-success mb-0">

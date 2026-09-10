@@ -21,7 +21,14 @@
                 @endif
             </div>
             <div class="card-body">
-                <div class="row">
+    @if($manualReview || optional($user->member)->ai_verification_reason || $latestAiAttempt?->review_reason)
+        <div class="alert alert-warning mb-4">
+            <strong>{{ translate('AI Manual Review Reason') }}</strong>
+            <div class="mt-2">{{ optional($user->member)->ai_verification_reason ?: ($latestAiAttempt?->review_reason ?: translate('The model requested a human review, but did not provide a readable reason.')) }}</div>
+        </div>
+    @endif
+
+<div class="row">
                     <div class="col-md-4">
                         <h6 class="mb-3">{{ translate('User Info') }}</h6>
                         <div class="text-center mb-4">
@@ -80,7 +87,7 @@
 
                         <h6 class="mb-3 mt-4">{{ translate('Uploaded Documents') }}</h6>
                         @if($verificationRequest && $verificationRequest->documents && $verificationRequest->documents->count())
-                            <div class="row">
+<div class="row">
                                 @foreach($verificationRequest->documents as $document)
                                     @php
                                         $documentType = $document->type instanceof \BackedEnum ? $document->type->value : $document->type;
@@ -108,7 +115,7 @@
                         @endif
 
                         <h6 class="mb-3 mt-4">{{ translate('Profile & Gallery Photos') }}</h6>
-                        <div class="row">
+<div class="row">
                             <div class="col-md-6 mb-3">
                                 <div class="border rounded p-3 h-100">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -215,6 +222,8 @@
     });
 </script>
 @endsection
+
+
 
 
 

@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class)->name('api.v1.health');
 
-Route::middleware('auth:sanctum')->get('/admin/overview', AdminOverviewController::class)->name('api.v1.admin.overview');
+Route::middleware(['auth:sanctum', 'manual.review'])->get('/admin/overview', AdminOverviewController::class)->name('api.v1.admin.overview');
 
 Route::prefix('auth')->name('api.v1.auth.')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1')->name('register');
@@ -44,13 +44,15 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function () {
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1')->name('forgot_password');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1')->name('reset_password');
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'manual.review'])->group(function () {
         Route::get('/me', [AuthController::class, 'me'])->name('me');
         Route::post('/email/verification-code', [AuthController::class, 'requestEmailVerification'])->middleware('throttle:5,1')->name('email.verification_code');
         Route::post('/email/verify', [AuthController::class, 'verifyEmail'])->middleware('throttle:10,1')->name('email.verify');
         Route::post('/register/request-otp', [AuthController::class, 'requestRegistrationOtp'])->middleware('throttle:5,1')->name('register.request_otp');
         Route::post('/register/verify-otp', [AuthController::class, 'verifyRegistrationOtp'])->middleware('throttle:10,1')->name('register.verify_otp');
         Route::get('/devices', [AuthController::class, 'devices'])->name('devices');
+        Route::get('/manual-review/status', [AuthController::class, 'manualReviewStatus'])->name('manual_review.status');
+        Route::post('/manual-review/contact', [AuthController::class, 'submitManualReviewContact'])->name('manual_review.contact');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::post('/logout-all', [AuthController::class, 'logoutAll'])->name('logout_all');
         Route::delete('/account', [AuthController::class, 'deleteAccount'])->name('account.delete');
@@ -73,7 +75,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function () {
     });
 });
 
-Route::middleware('auth:sanctum')->prefix('profile')->name('api.v1.profile.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('profile')->name('api.v1.profile.')->group(function () {
     Route::get('/', [ProfileController::class, 'show'])->name('show');
     Route::put('/', [ProfileController::class, 'update'])->name('update');
     Route::patch('/privacy', [ProfileController::class, 'updatePrivacy'])->name('privacy.update');
@@ -82,25 +84,25 @@ Route::middleware('auth:sanctum')->prefix('profile')->name('api.v1.profile.')->g
     Route::get('/dropdown-reference-data', [DropdownReferenceController::class, 'index'])->name('dropdown_reference_data');
 });
 
-Route::middleware('auth:sanctum')->prefix('profiles')->name('api.v1.profiles.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('profiles')->name('api.v1.profiles.')->group(function () {
     Route::get('/{profile}', [ProfileController::class, 'publicProfile'])->name('show');
     Route::get('/{profile}/compatibility', [ProfileController::class, 'compatibility'])->name('compatibility');
 });
 
-Route::middleware('auth:sanctum')->prefix('profile-views')->name('api.v1.profile_views.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('profile-views')->name('api.v1.profile_views.')->group(function () {
     Route::get('/', [ProfileViewController::class, 'index'])->name('index');
     Route::get('/received', [ProfileViewController::class, 'received'])->name('received');
     Route::get('/balance', [ProfileViewController::class, 'balance'])->name('balance');
     Route::post('/{profile}', [ProfileViewController::class, 'view'])->whereNumber('profile')->name('view');
 });
 
-Route::middleware('auth:sanctum')->prefix('partner-preferences')->name('api.v1.partner_preferences.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('partner-preferences')->name('api.v1.partner_preferences.')->group(function () {
     Route::get('/', [PartnerPreferenceController::class, 'show'])->name('show');
     Route::put('/', [PartnerPreferenceController::class, 'update'])->name('update');
     Route::delete('/', [PartnerPreferenceController::class, 'clear'])->name('clear');
 });
 
-Route::middleware('auth:sanctum')->prefix('matches')->name('api.v1.matches.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('matches')->name('api.v1.matches.')->group(function () {
     Route::get('/', [MatchController::class, 'index'])->name('index');
     Route::get('/recommended', [MatchController::class, 'recommended'])->name('recommended');
     Route::get('/daily', [MatchController::class, 'daily'])->name('daily');
@@ -111,7 +113,7 @@ Route::middleware('auth:sanctum')->prefix('matches')->name('api.v1.matches.')->g
     Route::post('/feedback', [MatchController::class, 'feedback'])->middleware('throttle:60,1')->name('feedback');
 });
 
-Route::middleware('auth:sanctum')->prefix('search')->name('api.v1.search.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('search')->name('api.v1.search.')->group(function () {
     Route::get('/profiles', [SearchController::class, 'profiles'])->name('profiles');
     Route::get('/history', [SearchController::class, 'history'])->name('history');
     Route::get('/saved', [SearchController::class, 'saved'])->name('saved');
@@ -121,7 +123,7 @@ Route::middleware('auth:sanctum')->prefix('search')->name('api.v1.search.')->gro
     Route::delete('/hidden-users/{user}', [SearchController::class, 'unhideFrom'])->name('hidden_users.delete');
 });
 
-Route::middleware('auth:sanctum')->prefix('proposals')->name('api.v1.proposals.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('proposals')->name('api.v1.proposals.')->group(function () {
     Route::get('/', [ProposalController::class, 'index'])->name('index');
     Route::post('/', [ProposalController::class, 'store'])->middleware('throttle:20,1')->name('store');
     Route::get('/favourites', [ProposalController::class, 'favourites'])->name('favourites');
@@ -148,7 +150,7 @@ Route::middleware('auth:sanctum')->prefix('proposals')->name('api.v1.proposals.'
     Route::post('/relationship-status', [ProposalMeetingController::class, 'relationshipStatus'])->name('relationship_status.store');
 });
 
-Route::middleware('auth:sanctum')->prefix('chat')->name('api.v1.chat.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('chat')->name('api.v1.chat.')->group(function () {
     Route::get('/threads', [ChatController::class, 'threads'])->name('threads');
     Route::get('/threads/{thread}/messages', [ChatController::class, 'messages'])->name('messages');
     Route::get('/threads/{thread}/calls', [CallController::class, 'history'])->name('calls.history');
@@ -178,7 +180,7 @@ Route::middleware('auth:sanctum')->prefix('chat')->name('api.v1.chat.')->group(f
 | One conversation per member; the admin replies from the admin panel and
 | both sides see each other live over the `private-help-chat.{id}` channel.
 */
-Route::middleware('auth:sanctum')->prefix('help-chat')->name('api.v1.help_chat.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('help-chat')->name('api.v1.help_chat.')->group(function () {
     Route::get('/thread', [HelpChatController::class, 'thread'])->name('thread');
     Route::get('/messages', [HelpChatController::class, 'messages'])->name('messages');
     Route::post('/messages', [HelpChatController::class, 'send'])->middleware('throttle:30,1')->name('send');
@@ -192,7 +194,7 @@ Route::middleware('auth:sanctum')->prefix('help-chat')->name('api.v1.help_chat.'
 | Sending costs feature_coin_cost('express_interest') coins and returns 402 with
 | code `insufficient_coins` when the balance is short. Responding is free.
 */
-Route::middleware('auth:sanctum')->prefix('interests')->name('api.v1.interests.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('interests')->name('api.v1.interests.')->group(function () {
     Route::get('/sent', [InterestController::class, 'sent'])->name('sent');
     Route::get('/received', [InterestController::class, 'received'])->name('received');
     Route::get('/coin-balance', [InterestController::class, 'coinBalance'])->name('coin_balance');
@@ -202,7 +204,7 @@ Route::middleware('auth:sanctum')->prefix('interests')->name('api.v1.interests.'
     Route::delete('/{interest}', [InterestController::class, 'withdraw'])->whereNumber('interest')->name('withdraw');
 });
 
-Route::middleware('auth:sanctum')->prefix('verification')->name('api.v1.verification.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('verification')->name('api.v1.verification.')->group(function () {
     Route::get('/current', [VerificationController::class, 'current'])->name('current');
     Route::get('/history', [VerificationController::class, 'history'])->name('history');
     Route::post('/submit', [VerificationController::class, 'submit'])->middleware('throttle:5,1')->name('submit');
@@ -222,7 +224,7 @@ Route::middleware('auth:sanctum')->prefix('verification')->name('api.v1.verifica
     });
 });
 
-Route::middleware('auth:sanctum')->prefix('admin/verifications')->name('api.v1.admin.verifications.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('admin/verifications')->name('api.v1.admin.verifications.')->group(function () {
     Route::get('/', [VerificationController::class, 'queue'])->name('queue');
     Route::get('/{verification}', [VerificationController::class, 'show'])->name('show');
     Route::post('/{verification}/approve', [VerificationController::class, 'approve'])->name('approve');
@@ -234,7 +236,7 @@ Route::prefix('payments')->name('api.v1.payments.')->group(function () {
     Route::post('/webhooks/easypaisa', [PaymentController::class, 'easypaisaWebhook'])->name('webhooks.easypaisa');
     Route::post('/webhooks/jazzcash', [PaymentController::class, 'jazzcashWebhook'])->name('webhooks.jazzcash');
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'manual.review'])->group(function () {
         Route::get('/plans', [PaymentController::class, 'plans'])->name('plans');
         Route::get('/current', [PaymentController::class, 'current'])->name('current');
         Route::get('/gateways', [PaymentController::class, 'gateways'])->name('gateways');
@@ -249,7 +251,7 @@ Route::prefix('payments')->name('api.v1.payments.')->group(function () {
     });
 });
 
-Route::middleware('auth:sanctum')->prefix('notifications')->name('api.v1.notifications.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('notifications')->name('api.v1.notifications.')->group(function () {
     Route::get('/', [NotificationController::class, 'index'])->name('index');
     Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread_count');
     Route::post('/mark-all-read', [NotificationController::class, 'markAllRead'])->name('mark_all_read');
@@ -260,7 +262,7 @@ Route::middleware('auth:sanctum')->prefix('notifications')->name('api.v1.notific
     Route::post('/{notification}/read', [NotificationController::class, 'markRead'])->name('read');
 });
 
-Route::middleware('auth:sanctum')->prefix('family')->name('api.v1.family.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('family')->name('api.v1.family.')->group(function () {
     Route::get('/dashboard', [FamilyController::class, 'dashboard'])->name('dashboard');
     Route::get('/guardians', [FamilyController::class, 'guardians'])->name('guardians');
     Route::post('/guardians', [FamilyController::class, 'storeGuardian'])->name('guardians.store');
@@ -295,7 +297,7 @@ Route::prefix('content')->name('api.v1.content.')->group(function () {
     Route::get('/marriage-tips', [ContentController::class, 'marriageTips'])->name('marriage_tips');
     Route::get('/regional-updates', [ContentController::class, 'regionalUpdates'])->name('regional_updates');
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'manual.review'])->group(function () {
         Route::post('/success-stories', [ContentController::class, 'storeSuccessStory'])->name('success_stories.store');
         Route::post('/expert/questions', [ContentController::class, 'storeExpertQuestion'])->name('expert.questions.store');
         Route::post('/forums/{forum}/threads', [ContentController::class, 'storeThread'])->name('threads.store');
@@ -304,7 +306,7 @@ Route::prefix('content')->name('api.v1.content.')->group(function () {
     });
 });
 
-Route::middleware('auth:sanctum')->prefix('safety')->name('api.v1.safety.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('safety')->name('api.v1.safety.')->group(function () {
     Route::post('/report', [SafetyController::class, 'report'])->middleware('throttle:10,1')->name('report');
     Route::post('/block', [SafetyController::class, 'block'])->name('block');
     Route::post('/mute', [SafetyController::class, 'mute'])->name('mute');
@@ -313,12 +315,14 @@ Route::middleware('auth:sanctum')->prefix('safety')->name('api.v1.safety.')->gro
     Route::post('/moderation-cases/{case}/resolve', [SafetyController::class, 'resolve'])->name('moderation_cases.resolve');
 });
 
-Route::middleware('auth:sanctum')->prefix('ai')->name('api.v1.ai.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review'])->prefix('ai')->name('api.v1.ai.')->group(function () {
     Route::post('/bio', [AiController::class, 'bio'])->middleware('throttle:20,1')->name('bio');
     Route::post('/conversation-starters', [AiController::class, 'conversationStarters'])->middleware('throttle:20,1')->name('conversation_starters');
     Route::post('/profile-quality', [AiController::class, 'profileQuality'])->middleware('throttle:20,1')->name('profile_quality');
     Route::post('/scam-check', [AiController::class, 'scamCheck'])->middleware('throttle:30,1')->name('scam_check');
     Route::post('/red-flag-check', [AiController::class, 'redFlagCheck'])->middleware('throttle:30,1')->name('red_flag_check');
 });
+
+
 
 

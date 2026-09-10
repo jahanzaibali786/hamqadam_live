@@ -33,16 +33,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        if (auth()->user()?->shouldBlockLoginForManualReview()) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            return back()->withErrors([
-                'email' => translate('Your account is under manual review. Please wait for approval.'),
-            ]);
-        }
-
         app(UserActivityTracker::class)->trackLogin(auth()->user(), $request, 'web');
 
         if (auth()->user() != null && (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff')) {
@@ -100,5 +90,6 @@ class AuthenticatedSessionController extends Controller
         return redirect()->route($redirect_route);
     }
 }
+
 
 

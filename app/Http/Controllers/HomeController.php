@@ -393,6 +393,10 @@ class HomeController extends Controller
     public function view_member_profile($id)
     {
         $authUser= auth()->user();
+
+        if ($authUser?->isUnderManualReview()) {
+            return redirect()->route('member.listing')->with('error', translate('Your account is under manual review. Profile viewing and coin usage are disabled until verification is complete.'));
+        }
         $similar_profiles = ProfileMatch::orderBy('match_percentage', 'desc')
             ->where('user_id', $authUser->id)
             ->where('match_id', '!=', $id)

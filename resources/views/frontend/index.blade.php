@@ -36,7 +36,8 @@
             @if (!Auth::check() && get_setting('show_homepage_slider_registration') == 'on')
 
             @php
-                $registrationRewardCoins = \App\Support\RegistrationReward::rewardCoins();
+                $registrationPackage = \App\Support\RegistrationReward::registrationPackage();
+                $registrationRewardCoins = $registrationPackage?->express_interest ?? 0;
             @endphp
 
 
@@ -51,7 +52,7 @@
                     <!-- Content -->
                     <div class="text-center">
                         <div class="big-title">{{ translate('Register Now') }}</div>
-                        <div class="sub-title">{{ translate('Get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the Basic Free package') }}</div>
+                        <div class="sub-title">{{ translate('Get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('registration package') }}</div>
                     </div>
                     <div class="svg-container">
                         <!-- Your SVG -->
@@ -76,7 +77,7 @@
 
                             <div class="mb-4 text-center mt-2">
                                 <h2 class="h3 text-primary mb-0">{{ translate('Create Your Account') }}</h2>
-                                <p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the Basic Free package') }}.</p>
+                                <p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('registration package') }}.</p>
                             </div>
 
                             <form class="form-default" id="reg-form" role="form"

@@ -293,8 +293,9 @@ class AuthService
             throw new ApiException('This account is deactivated.', 403, 'account_deactivated');
         }
 
-        if ((int) $user->approved === 0) {
+        if ((int) $user->approved === 0 && ! $user->isUnderManualReview()) {
             throw new ApiException('This account is pending approval.', 403, 'account_pending_approval');
         }
     }
 }
+

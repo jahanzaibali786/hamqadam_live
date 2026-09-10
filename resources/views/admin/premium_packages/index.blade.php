@@ -53,6 +53,7 @@
 							<th>{{translate('Name')}}</th>
 							<th data-breakpoints="md">{{translate('Price')}}</th>
 							<th data-breakpoints="md">{{translate('Status')}}</th>
+							<th data-breakpoints="md">{{translate('Registration Default')}}</th>
 							<th class="text-right" width="10%">{{translate('Options')}}</th>
 						</tr>
 					</thead>
@@ -73,8 +74,19 @@
 							<span></span>
 						</label>
 					</td>
-					<td class="text-right">
-						@can('edit_package')
+					<td>
+						<label class="aiz-switch aiz-switch-success mb-0" title="{{ translate('Automatically activate this package for new registrations') }}">
+							<input type="checkbox" id="registration_default.{{ $key }}"
+								onchange="update_registration_default(this)" value="{{ $package->id }}"
+								@if($package->activate_on_registration) checked @endif
+								@if(auth()->user()->cannot('edit_package')) disabled @endif>
+							<span></span>
+						</label>
+						@if($package->activate_on_registration)
+							<span class="badge badge-inline badge-success ml-1">{{ translate('Default') }}</span>
+						@endif
+					</td>
+					<td class="text-right">						@can('edit_package')
 							<a class="btn btn-soft-info btn-icon btn-circle btn-sm" href="{{ route('packages.edit', encrypt($package->id)) }}" title="{{ translate('Edit') }}">
 								<i class="las la-edit"></i>
 							</a>
@@ -104,6 +116,29 @@
 
 @section('script')
     <script>
+        function update_registration_default(el) {
+            if (!el.checked) {
+                el.checked = true;
+                AIZ.plugins.notify('warning', '{{ translate('One registration package must remain selected. Select another package to change the default.') }}');
+                return;
+            }
+
+            $.post('{{ route('packages.update_registration_default') }}', {
+                _token: '{{ csrf_token() }}',
+                id: el.value,
+                status: 1
+            }, function (data) {
+                if (data == 1) {
+                    location.reload();
+                } else {
+                    el.checked = false;
+                    AIZ.plugins.notify('danger', '{{ translate('Unable to update the registration package.') }}');
+                }
+            }).fail(function () {
+                el.checked = false;
+                AIZ.plugins.notify('danger', '{{ translate('Unable to update the registration package.') }}');
+            });
+        }
         function update_status(el) {
             if (el.checked) {
                 var status = 1;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\VerificationRequestStatus;
 use App\Models\AdditionalAttribute;
+use App\Models\AiVerificationAttempt;
 use App\Models\Address;
 use App\Models\AnnualSalaryRange;
 use App\Models\Astrology;
@@ -494,7 +495,9 @@ class MemberController extends Controller
             ->latest()
             ->first();
 
-        return view('admin.members.verification_info', compact('user', 'verificationRequest'));
+        $latestAiAttempt = AiVerificationAttempt::where('user_id', $user->id)->latest('id')->first();
+
+        return view('admin.members.verification_info', compact('user', 'verificationRequest', 'latestAiAttempt'));
     }
 
     public function approve_verification($id)
@@ -509,6 +512,8 @@ class MemberController extends Controller
                 if ($user->member) {
                     $user->member->verification_status = 'approved';
                     $user->member->ai_verification_status = 'approved';
+                    $user->member->manual_review_started_at = null;
+                    $user->member->manual_review_expires_at = null;
                     $user->member->save();
                 }
 
@@ -579,6 +584,8 @@ class MemberController extends Controller
                 if ($user->member) {
                     $user->member->verification_status = 'rejected';
                     $user->member->ai_verification_status = 'rejected';
+                    $user->member->manual_review_started_at = null;
+                    $user->member->manual_review_expires_at = null;
                     $user->member->save();
                 }
 
@@ -1079,4 +1086,9 @@ class MemberController extends Controller
         return view('admin.members.member_types', compact('members', 'sort_search', 'type'));
     }
 }
+
+
+
+
+
 

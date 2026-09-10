@@ -9,9 +9,10 @@
 					<div class="card-body">
 
 						<div class="mb-5 text-center">
-                            @php($registrationRewardCoins = \App\Support\RegistrationReward::rewardCoins())
+                            @php($registrationPackage = \App\Support\RegistrationReward::registrationPackage())
+                            @php($registrationRewardCoins = $registrationPackage?->express_interest ?? 0)
 							<h1 class="h3 text-primary mb-0">{{ translate('Create Your Account') }}</h1>
-							<p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the Basic Free package') }}.</p>
+							<p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('registration package') }}.</p>
 						</div>
 						<form class="form-default" id="reg-form" role="form" action="{{ route('register') }}" method="POST" enctype="multipart/form-data">
 							@csrf

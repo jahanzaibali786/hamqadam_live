@@ -1658,3 +1658,89 @@ These endpoints expose app-facing connection settings in a neutral format. Sensi
 }
 ```
 
+
+## Manual Review Read-Only Access
+
+When AI identity verification returns `manual_review`, the user can still authenticate and read permitted resources, but all feature mutations are blocked until an administrator approves the account. The web portal shows a 12-hour countdown modal. Mobile clients should display the same state from the `manual_review` object.
+
+### Login and current user
+
+`POST /api/v1/auth/login/email` and `GET /api/v1/auth/me` include:
+
+```json
+{
+  "manual_review": {
+    "under_review": true,
+    "status": "manual_review",
+    "started_at": "2026-09-10T08:00:00.000000Z",
+    "expires_at": "2026-09-10T20:00:00.000000Z",
+    "expired": false,
+    "remaining_seconds": 39600,
+    "contact_url": "https://example.com/contact-us/page"
+  }
+}
+```
+
+`remaining_seconds` should drive the mobile countdown. When `expired` is `true`, show the administration contact action.
+
+### Read review status
+
+`GET /api/v1/auth/manual-review/status`
+
+Auth: `Authorization: Bearer <sanctum_token>`
+
+Returns the current review state using the same object above. This endpoint is safe to poll when the app resumes.
+
+### Submit a contact query
+
+`POST /api/v1/auth/manual-review/contact`
+
+Auth: `Authorization: Bearer <sanctum_token>`
+
+Payload type: `application/json`
+
+```json
+{
+  "message": "My 12-hour manual review window has expired. Please provide an update."
+}
+```
+
+Successful response:
+
+```json
+{
+  "success": true,
+  "message": "Your query has been sent to administration.",
+  "data": null,
+  "errors": null
+}
+```
+
+### Blocked feature action
+
+Any protected POST, PUT, PATCH, or DELETE action, plus legacy GET mutation routes, returns HTTP `423` while review is active:
+
+```json
+{
+  "success": false,
+  "message": "Your account is under manual review. This action will be available after verification.",
+  "error": {
+    "code": "manual_review_read_only",
+    "errors": []
+  },
+  "review": {
+    "under_review": true,
+    "status": "manual_review",
+    "expired": false,
+    "remaining_seconds": 39600,
+    "expires_at": "2026-09-10T20:00:00.000000Z",
+    "contact_url": "https://example.com/contact-us/page"
+  }
+}
+```
+
+After approval, the API returns `under_review: false`, the countdown modal is not shown on the web, and all normal feature actions become available. Logout remains available during review.
+
+### Manual-review reason
+
+`GET /api/v1/verification/ai/status`, `GET /api/v1/verification/ai/history`, and the response from `POST /api/v1/verification/ai/run` include `reason` / `review_reason`. The value is extracted from the model response in this order: recommendation reasons, matching reasons and warnings, fraud factors/signals, document/selfie warnings, and finally the exact `requires_human_review`, `recommendation`, and `automated` flags. The original full model response remains stored for audit.

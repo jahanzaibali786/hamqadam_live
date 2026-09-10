@@ -28,6 +28,7 @@ use App\Services\Api\V1\Auth\AuthService;
 use App\Services\Api\V1\Auth\AuthTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Models\ContactUs;
 
 class AuthController extends ApiController
 {
@@ -228,6 +229,31 @@ class AuthController extends ApiController
         return $this->success(new UserResource($request->user()->loadMissing('member.package')));
     }
 
+    public function manualReviewStatus(Request $request): JsonResponse
+    {
+        return $this->success($request->user()->manualReviewState());
+    }
+
+    public function submitManualReviewContact(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'message' => ['required', 'string', 'max:2000'],
+        ]);
+
+        $user = $request->user();
+        if (! $user->isUnderManualReview()) {
+            return $this->error('Your account is no longer under manual review.', 409, 'manual_review_not_active');
+        }
+
+        ContactUs::create([
+            'name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')),
+            'email' => $user->email,
+            'subject' => 'Manual review status query',
+            'description' => $validated['message'],
+        ]);
+
+        return $this->success(null, 'Your query has been sent to administration.', 201);
+    }
     public function devices(Request $request): JsonResponse
     {
         $sessions = UserDeviceSession::where('user_id', $request->user()->id)
@@ -262,4 +288,6 @@ class AuthController extends ApiController
         return $this->success(message: 'Account deactivated successfully.');
     }
 }
+
+
 
