@@ -105,7 +105,18 @@ class ProfileController extends ApiController
             ->where('match_id', $candidate->id)
             ->first();
 
-        if ($stored) {
+        // A stored row is a cache, not a verdict. Treat it as authoritative only
+        // when it actually carries reasoning: production has 110 of these rows
+        // and 43 sit at 0% with nothing to explain them, which is what an empty
+        // cache entry looks like, not a real incompatibility. Returning those
+        // shadowed the matchmaking model permanently — the same pair the model
+        // scores 81% was being shown to the member as 0%.
+        $storedIsInformative = $stored
+            && ((int) $stored->match_percentage > 0
+                || ! empty($stored->compatibility_explanation)
+                || ! empty($stored->score_breakdown));
+
+        if ($stored && $storedIsInformative) {
             return $this->success([
                 'profile_id'                 => $candidate->id,
                 'compatibility_percentage'   => (int) $stored->match_percentage,
@@ -114,7 +125,10 @@ class ProfileController extends ApiController
                 'score_breakdown'            => $stored->score_breakdown ?: [],
                 'calculated_at'              => optional($stored->calculated_at)->toISOString(),
                 'source'                     => 'stored',
-                'model_version'              => $stored->model_confidence ? 'ai_sidecar' : null,
+                // `model_confidence` is not present on every deployment; a missing
+                // attribute reads as null rather than throwing, so guard it
+                // explicitly instead of pretending the answer is meaningful.
+                'model_version'              => ($stored->getAttribute('model_confidence') ?? null) ? 'ai_sidecar' : null,
             ], 'Compatibility fetched successfully.');
         }
 
