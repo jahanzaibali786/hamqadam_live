@@ -173,7 +173,7 @@ Route::group(['middleware' => ['app_language']], function () {
         Route::get('/member-validate', 'member_validate');
     });
 
-    Route::group(['middleware' => ['auth:sanctum', 'api_email_verified']], function () {
+    Route::group(['middleware' => ['auth:sanctum', 'api_email_verified', 'manual.review']], function () {
 
         Route::controller(HomeController::class)->group(function () {
             Route::get('/member/dashboard', 'member_dashboard');
@@ -187,7 +187,7 @@ Route::group(['middleware' => ['app_language']], function () {
     });
 
 
-    Route::group(['middleware' => ['auth:sanctum', 'api_email_verified', 'api_member']], function () {
+    Route::group(['middleware' => ['auth:sanctum', 'api_email_verified', 'api_member', 'manual.review']], function () {
 
         Route::controller(AuthController::class)->group(function () {
             Route::post('/update-device-token', 'update_device_token');
@@ -411,3 +411,4 @@ Route::group(['middleware' => ['app_language']], function () {
     });
 });
 Route::prefix('v1/bridge')->middleware('auth:sanctum')->group(base_path('routes/api_bridge.php'));
+

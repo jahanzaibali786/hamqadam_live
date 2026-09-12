@@ -34,7 +34,7 @@ class Member extends Model
         // New controlled fields
         'profession_category_id','profession_id','job_title','organization','years_of_experience',
         'education_level_id','degree_id','field_of_study_id','institution_id','graduation_year','education_status','expected_graduation_year',
-        'sect_main_id','school_of_thought_id','tradition_id',
+        'sect_main_id','school_of_thought_id','tradition_id','manual_review_started_at','manual_review_expires_at','ai_verification_reason',
     ];
 
     protected $casts = [
@@ -55,6 +55,8 @@ class Member extends Model
         'ai_verification_attempts' => 'integer',
         'ai_verification_last_attempt_at' => 'datetime',
         'ai_verified_at' => 'datetime',
+        'manual_review_started_at' => 'datetime',
+        'manual_review_expires_at' => 'datetime',
     ];
 
     public function user()
@@ -133,3 +135,5 @@ class Member extends Model
         return $this->belongsTo(Tradition::class);
     }
 }
+
+

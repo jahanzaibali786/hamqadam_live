@@ -138,6 +138,11 @@ class GalleryImageController extends Controller
     public function store_image_view_request(Request $request)
     {
         $auth_user = auth()->user();
+
+        if ($auth_user?->isUnderManualReview()) {
+            return $this->failure_message('Your account is under manual review. Profile viewing and coin usage are disabled until verification is complete.');
+        }
+
         $exist_check = ViewGalleryImage::where('user_id', $request->id)->where('requested_by', $auth_user->id)->first();
         if (!$exist_check) {
             $view_gallert_image                = new ViewGalleryImage();

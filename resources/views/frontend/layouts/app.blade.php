@@ -423,7 +423,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                         url: "{{ route('chat.call.start') }}",
                         method: 'POST',
                         dataType: 'json',
-                        headers: { 'X-CSRF-TOKEN': $('meta[name=\"csrf-token\"]').attr('content') },
+                        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                         data: { chat_thread_id: threadId, call_type: type },
                         success: function (response) {
                             if (!response || !response.success) { return; }
@@ -1163,11 +1163,18 @@ $lang = \App\Models\Language::where('code', $locale)->first();
             }
             await window.currentCallClient.join(rtc.app_id, rtc.channel, rtc.token, rtc.uid);
             await window.currentCallClient.publish(tracks);
-            $.ajax({
-                url: '{{ route('chat.call.connect', ['call' => '__CALL__']) }}'.replace('__CALL__', call.id),
-                method: 'POST',
-                data: { _token: $('meta[name="csrf-token"]').attr('content') }
-            });
+            if (!isCaller || ['accepted', 'connected'].indexOf(String(call.status || '').toLowerCase()) !== -1) {
+                $.ajax({
+                    url: '{{ route('chat.call.connect', ['call' => '__CALL__']) }}'.replace('__CALL__', call.id),
+                    method: 'POST',
+                    data: { _token: $('meta[name="csrf-token"]').attr('content') },
+                    success: function (response) {
+                        if (response && response.success && response.data && response.data.call && typeof window.openActiveCallScreen === 'function') {
+                            window.openActiveCallScreen(response.data.call);
+                        }
+                    }
+                });
+            }
             if (typeof window.startCallTimer === 'function') {
                 window.startCallTimer();
             }
@@ -1322,6 +1329,137 @@ $lang = \App\Models\Language::where('code', $locale)->first();
 })(window);
 </script>
 
+
+<script type="text/javascript">
+(function (window, $) {
+    function callObj(event) {
+        if (!event) { return {}; }
+        if (event.call) { return event.call; }
+        if (event.data && event.data.call) { return event.data.call; }
+        return event;
+    }
+
+    function callPeer(call) {
+        var userId = parseInt(window.currentUserId || @json(Auth::id()), 10);
+        var caller = call && call.caller ? call.caller : {};
+        var receiver = call && call.receiver ? call.receiver : {};
+        var callerId = caller.id ? parseInt(caller.id, 10) : null;
+        var receiverId = receiver.id ? parseInt(receiver.id, 10) : null;
+
+        if (callerId && callerId === userId) { return receiver; }
+        if (receiverId && receiverId === userId) { return caller; }
+        return call.peer || receiver || caller || {};
+    }
+
+    window.normalizedCallMessage = function (event, fallback) {
+        var call = callObj(event);
+        var peer = callPeer(call);
+        var type = String(call.call_type || 'audio').toLowerCase() === 'video' ? '{{ translate('Video call') }}' : '{{ translate('Audio call') }}';
+        var name = peer && peer.name ? peer.name : '{{ translate('Hamqadam member') }}';
+        return name + ' - ' + (fallback || type);
+    };
+
+    var previousHandleCallSignal = window.handleCallSignal;
+    window.handleCallSignal = function (status, event) {
+        var call = callObj(event);
+        if (!call || !call.id) {
+            if (typeof previousHandleCallSignal === 'function') {
+                return previousHandleCallSignal(status, event);
+            }
+            return;
+        }
+
+        if (status === 'accepted' || status === 'connected') {
+            clearTimeout(window.currentCallTimer);
+            window.currentCallTimer = null;
+            $('#global-call-action-modal').modal('hide');
+            window.currentCallState = call;
+            window.currentCallId = call.id;
+            if (typeof window.openActiveCallScreen === 'function') {
+                window.openActiveCallScreen(call);
+            }
+            if (window.AIZ && AIZ.plugins && typeof AIZ.plugins.notify === 'function') {
+                AIZ.plugins.notify('success', '{{ translate('Call connected.') }}');
+            }
+            return;
+        }
+
+        if (['rejected', 'cancelled', 'busy', 'ended', 'missed', 'failed'].indexOf(status) !== -1) {
+            $('#global-call-action-modal').modal('hide');
+            if (typeof window.stopCallSession === 'function') {
+                window.stopCallSession();
+            }
+        }
+    };
+})(window, window.jQuery);
+</script>
+@if(auth()->check() && auth()->user()->user_type === 'member' && auth()->user()->isUnderManualReview())
+    @php($manualReviewState = auth()->user()->manualReviewState())
+    <style>
+        #manual-review-modal .modal-dialog { max-width: 430px; }
+        #manual-review-modal .modal-content { border: 0; border-radius: 18px; overflow: hidden; box-shadow: 0 18px 60px rgba(37, 24, 42, .22); }
+        #manual-review-modal .manual-review-head { background: linear-gradient(135deg, #f72f72, #d81b63); color: #fff; padding: 24px 24px 20px; flex-direction:column; text-align:center; }
+        #manual-review-modal .manual-review-clock { width: 54px; height: 54px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: rgba(255,255,255,.18); font-size: 25px; }
+        #manual-review-modal .manual-review-time { font-size: 28px; line-height: 1; font-weight: 800; letter-spacing: .04em; color: #ef2d70; }
+        #manual-review-modal .manual-review-note { color: #6d6671; font-size: 13px; }
+        #manual-review-modal .manual-review-continue { background: #f72f72; border-color: #f72f72; color: #fff; border-radius: 9px; }
+        #manual-review-modal .manual-review-contact { background: #fff0f5; border-color: #f72f72; color: #d81b63; border-radius: 9px; }
+    </style>
+    <div class="modal fade" id="manual-review-modal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="manual-review-title" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="manual-review-head d-flex align-items-center">
+                    <span class="manual-review-clock mr-3"><i class="las la-clock"></i></span>
+                    <div>
+                        <h5 id="manual-review-title" class="mb-1 text-white">{{ translate('Verification under manual review') }}</h5>
+                        <div class="small opacity-80">{{ translate('Your account is safe. We are checking your submitted identity documents.') }}</div>
+                    </div>
+                </div>
+                <div class="modal-body p-4 text-center">
+                    <div id="manual-review-countdown-wrap" class="mb-3">
+                        <div class="manual-review-note mb-2">{{ translate('Estimated review time remaining') }}</div>
+                        <div id="manual-review-countdown" class="manual-review-time">--:--:--</div>
+                    </div>
+                    <div id="manual-review-expired" class="d-none">
+                        <p class="mb-3">{{ translate('The standard 12-hour review window has passed. Please contact administration for an update.') }}</p>
+                        <a href="{{ route('contact_us') }}" class="btn manual-review-contact btn-block mb-2"><i class="las la-headset mr-1"></i>{{ translate('Contact administration') }}</a>
+                    </div>
+                    <p class="manual-review-note mb-3">{{ translate('You can browse read-only pages. Features and changes will unlock after verification.') }}</p>
+                    <button type="button" class="btn manual-review-continue btn-block" data-dismiss="modal">{{ translate('Continue in read-only mode') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            var state = @json($manualReviewState);
+            var modal = $('#manual-review-modal');
+            var countdown = document.getElementById('manual-review-countdown');
+            var countdownWrap = document.getElementById('manual-review-countdown-wrap');
+            var expired = document.getElementById('manual-review-expired');
+            var expiresAt = state.expires_at ? new Date(state.expires_at).getTime() : 0;
+            function renderReviewState() {
+                var remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+                if (!expiresAt || remaining <= 0) {
+                    countdownWrap.classList.add('d-none');
+                    expired.classList.remove('d-none');
+                    return;
+                }
+                var h = String(Math.floor(remaining / 3600)).padStart(2, '0');
+                var m = String(Math.floor((remaining % 3600) / 60)).padStart(2, '0');
+                var sec = String(remaining % 60).padStart(2, '0');
+                countdown.textContent = h + ':' + m + ':' + sec;
+            }
+            renderReviewState();
+            window.setInterval(renderReviewState, 1000);
+            $(function () { modal.modal('show'); });
+        }());
+    </script>
+@endif
 </body>
 
 </html>
+
+
+
+

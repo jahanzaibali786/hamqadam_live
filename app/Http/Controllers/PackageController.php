@@ -17,6 +17,7 @@ class PackageController extends Controller
         $this->middleware(['permission:add_package'])->only('create');
         $this->middleware(['permission:edit_package'])->only('edit');
         $this->middleware(['permission:delete_package'])->only('destroy');
+        $this->middleware(['permission:edit_package'])->only('update_registration_default');
 
         $this->package_rules = [
             'name'              => ['required', 'max:255'],
@@ -28,6 +29,7 @@ class PackageController extends Controller
             'profile_image_view' => ['required'],
             'gallery_image_view' => ['required'],
             'validity'          => ['required'],
+            'activate_on_registration' => ['nullable', 'boolean'],
         ];
 
         $this->package_messages = [
@@ -102,8 +104,16 @@ class PackageController extends Controller
         }
         $package->validity          = filter_min_value($request->validity);
         $package->image             = $request->package_image;
+        $package->activate_on_registration = $request->boolean('activate_on_registration');
+
+        if ($package->activate_on_registration) {
+            Package::where('activate_on_registration', true)->update(['activate_on_registration' => false]);
+        }
 
         if ($package->save()) {
+            if (! $package->activate_on_registration && ! Package::where('activate_on_registration', true)->exists()) {
+                $package->update(['activate_on_registration' => true]);
+            }
             flash(translate('New Package has been added successfully'))->success();
             return redirect()->route('packages.index');
         } else {
@@ -174,7 +184,18 @@ class PackageController extends Controller
         }
         $package->validity          = filter_min_value($request->validity);
         $package->image             = $request->package_image;
+        $package->activate_on_registration = $request->boolean('activate_on_registration');
+
+        if ($package->activate_on_registration) {
+            Package::where('id', '!=', $package->id)
+                ->where('activate_on_registration', true)
+                ->update(['activate_on_registration' => false]);
+        }
+
         if ($package->save()) {
+            if (! $package->activate_on_registration && ! Package::where('activate_on_registration', true)->exists()) {
+                $package->update(['activate_on_registration' => true]);
+            }
             flash(translate('Package info has been updated successfully'))->success();
             return redirect()->route('packages.index');
         } else {
@@ -183,10 +204,46 @@ class PackageController extends Controller
         }
     }
 
+    public function update_registration_default(Request $request)
+    {
+        $package = Package::findOrFail($request->id);
+
+        if (! $request->boolean('status')) {
+            if (! $package->activate_on_registration) {
+                return 1;
+            }
+
+            return 0;
+        }
+
+        Package::where('id', '!=', $package->id)
+            ->where('activate_on_registration', true)
+            ->update(['activate_on_registration' => false]);
+        $package->activate_on_registration = true;
+
+        return $package->save() ? 1 : 0;
+    }
+
     // Update Package Activate status
     public function update_status(Request $request)
     {
         $package = Package::findOrFail($request->id);
+
+        if (! (bool) $request->status && $package->activate_on_registration) {
+            $replacement = Package::where('id', '!=', $package->id)
+                ->where('active', 1)
+                ->orderBy('id')
+                ->first();
+
+            if (! $replacement) {
+                return 0;
+            }
+
+            $replacement->activate_on_registration = true;
+            $replacement->save();
+            $package->activate_on_registration = false;
+        }
+
         $package->active = $request->status;
         if ($package->save()) {
             $msg = $package->status == 1 ? translate('Enabled') : translate('Disabled');
@@ -204,7 +261,24 @@ class PackageController extends Controller
      */
     public function destroy($id)
     {
-        if (Package::destroy($id)) {
+        $package = Package::findOrFail($id);
+
+        if ($package->activate_on_registration) {
+            $replacement = Package::where('id', '!=', $package->id)
+                ->where('active', 1)
+                ->orderBy('id')
+                ->first();
+
+            if (! $replacement) {
+                flash(translate('The registration package cannot be deleted until another active package is selected.'))->error();
+                return back();
+            }
+
+            $replacement->activate_on_registration = true;
+            $replacement->save();
+        }
+
+        if ($package->delete()) {
             flash(translate('Package info has been deleted successfully'))->success();
             return redirect()->route('packages.index');
         } else {

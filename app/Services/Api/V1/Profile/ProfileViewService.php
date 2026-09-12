@@ -8,6 +8,7 @@ use App\Models\Member;
 use App\Models\PackageUsage;
 use App\Models\ProfileViewer;
 use App\Models\User;
+use App\Exceptions\ApiException;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -81,6 +82,14 @@ class ProfileViewService
 
     public function view(User $viewer, int $profileId): array
     {
+        if ($viewer->isUnderManualReview()) {
+            throw new ApiException(
+                'Your account is under manual review. Profile viewing and coin usage are disabled until verification is complete.',
+                423,
+                'manual_review_read_only'
+            );
+        }
+
         $profile = User::with([
             'member',
             'addresses',

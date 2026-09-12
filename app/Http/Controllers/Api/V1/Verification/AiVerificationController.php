@@ -86,6 +86,7 @@ class AiVerificationController extends ApiController
                 'source' => $a->source,
                 'status' => $a->status,
                 'recommendation' => $a->recommendation,
+                'reason' => $a->review_reason,
                 'identity_confidence_score' => $a->identity_confidence_score,
                 'fraud_risk_score' => $a->fraud_risk_score,
                 'fraud_risk_level' => $a->fraud_risk_level,
@@ -98,3 +99,6 @@ class AiVerificationController extends ApiController
         return $this->success(['attempts' => $attempts]);
     }
 }
+
+
+

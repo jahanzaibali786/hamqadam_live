@@ -33,7 +33,7 @@ class IsMember
             $expiresAt = Carbon::now()->addMinutes(3);
             Cache::put('user-is-online-' . Auth::user()->id, true, $expiresAt);
 
-            if (Auth::user()->approved == 0) {
+            if (Auth::user()->approved == 0 && ! Auth::user()->isUnderManualReview()) {
                 flash(translate("Please verify your account."));
                 return redirect()->route('dashboard');
             } else {
@@ -49,3 +49,4 @@ class IsMember
         }
     }
 }
+

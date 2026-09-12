@@ -160,6 +160,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('/packages', PackageController::class)->except(['destroy']);
     Route::controller(PackageController::class)->group(function () {
         Route::post('/packages/update_status', 'update_status')->name('packages.update_status');
+        Route::post('/packages/update-registration-default', 'update_registration_default')->name('packages.update_registration_default');
         Route::get('/packages/destroy/{id}', 'destroy')->name('packages.destroy');
     });
 

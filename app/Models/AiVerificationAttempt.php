@@ -29,6 +29,7 @@ class AiVerificationAttempt extends Model
         'verification_id',
         'status',
         'recommendation',
+        'review_reason',
         'identity_confidence_score',
         'fraud_risk_score',
         'fraud_risk_level',
@@ -71,3 +72,4 @@ class AiVerificationAttempt extends Model
             || $this->recommendation === 'MANUAL_REVIEW';
     }
 }
+

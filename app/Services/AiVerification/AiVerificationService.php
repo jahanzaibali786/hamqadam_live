@@ -137,6 +137,7 @@ class AiVerificationService
         return [
             'status' => $member->ai_verification_status ?? 'not_started',
             'recommendation' => $member->ai_verification_recommendation ?? null,
+            'reason' => $member->ai_verification_reason ?? $latest?->review_reason,
             'attempts' => (int) ($member->ai_verification_attempts ?? 0),
             'verified_at' => optional($member?->ai_verified_at)->toISOString(),
             'last_attempt_at' => optional($member?->ai_verification_last_attempt_at)->toISOString(),
@@ -307,10 +308,12 @@ class AiVerificationService
     ): array {
         $recommendation = (string) ($body['recommendation'] ?? 'MANUAL_REVIEW');
         $selfie = $body['selfie_detection'] ?? [];
+        $reviewReason = $this->extractReviewReason($body, $recommendation);
 
         $attempt->fill([
             'status' => AiVerificationAttempt::STATUS_COMPLETED,
             'recommendation' => $recommendation,
+            'review_reason' => $reviewReason,
             'identity_confidence_score' => $body['identity_confidence_score'] ?? null,
             'fraud_risk_score' => $body['fraud_risk_score'] ?? null,
             'fraud_risk_level' => $body['fraud_risk_level'] ?? null,
@@ -318,13 +321,14 @@ class AiVerificationService
             'response_payload' => json_encode($body),
         ])->save();
 
-        $memberStatus = match ($recommendation) {
+        $requiresHumanReview = ($body['requires_human_review'] ?? false) === true;
+        $memberStatus = $requiresHumanReview ? 'manual_review' : match ($recommendation) {
             'APPROVE' => 'approved',
             'REJECT' => 'rejected',
             default => 'manual_review',
         };
 
-        $this->updateMember($user, $memberStatus, $recommendation, $recommendation === 'APPROVE');
+        $this->updateMember($user, $memberStatus, $recommendation, $recommendation === 'APPROVE', $reviewReason);
 
         if ($request) {
             $this->applyToRequest($request, $body, $recommendation);
@@ -333,6 +337,7 @@ class AiVerificationService
         return [
             'status' => $memberStatus,
             'recommendation' => $recommendation,
+            'review_reason' => $reviewReason,
             'message' => $this->humanMessage($memberStatus, $attempt),
             'attempt_id' => $attempt->id,
         ];
@@ -377,19 +382,23 @@ class AiVerificationService
         ];
     }
 
-    private function updateMember(User $user, string $status, ?string $recommendation, bool $verified): void
+    private function updateMember(User $user, string $status, ?string $recommendation, bool $verified, ?string $reason = null): void
     {
         $member = $user->member;
         if (! $member) {
             return;
         }
 
+        $now = now();
         $member->forceFill([
             'ai_verification_status' => $status,
             'ai_verification_recommendation' => $recommendation,
+            'ai_verification_reason' => $status === 'manual_review' ? $reason : null,
             'ai_verification_attempts' => (int) ($member->ai_verification_attempts ?? 0) + 1,
-            'ai_verification_last_attempt_at' => now(),
-            'ai_verified_at' => $verified ? now() : $member->ai_verified_at,
+            'ai_verification_last_attempt_at' => $now,
+            'ai_verified_at' => $verified ? $now : $member->ai_verified_at,
+            'manual_review_started_at' => $status === 'manual_review' ? ($member->manual_review_started_at ?? $now) : null,
+            'manual_review_expires_at' => $status === 'manual_review' ? ($member->manual_review_expires_at ?? $now->copy()->addHours(12)) : null,
         ])->save();
     }
 
@@ -401,7 +410,7 @@ class AiVerificationService
     private function applyToRequest(ProfileVerificationRequest $request, array $body, string $recommendation): void
     {
         $fields = [
-            'face_match_status' => match ($recommendation) {
+            'face_match_status' => (($body['requires_human_review'] ?? false) === true) ? 'manual_review' : match ($recommendation) {
                 'APPROVE' => 'matched',
                 'REJECT' => 'not_matched',
                 default => 'manual_review',
@@ -413,7 +422,7 @@ class AiVerificationService
         ];
 
         // Auto-applying a decision is opt-in. By default a human still reviews.
-        if ($recommendation === 'APPROVE' && config('ai_verification.auto_apply.approve')) {
+        if (($body['requires_human_review'] ?? false) !== true && $recommendation === 'APPROVE' && config('ai_verification.auto_apply.approve')) {
             $fields['status'] = 'approved';
             $fields['reviewed_at'] = now();
         } elseif ($recommendation === 'REJECT' && config('ai_verification.auto_apply.reject')) {
@@ -425,15 +434,121 @@ class AiVerificationService
         $request->forceFill($fields)->save();
     }
 
-    private function firstReason(array $body): ?string
+    private function extractReviewReason(array $body, string $recommendation): ?string
     {
-        foreach ($body['recommendation_reasons'] ?? [] as $reason) {
-            if (! empty($reason['message'])) {
-                return (string) $reason['message'];
+        $reasons = [];
+        $add = function (mixed $value) use (&$reasons): void {
+            if (! is_string($value) || trim($value) === '') {
+                return;
             }
+
+            $value = $this->humanizeReviewFragment($value);
+            if ($value !== '') {
+                $reasons[] = $value;
+            }
+        };
+
+        if (($body['matching']['comparisons_made'] ?? null) === 0) {
+            $add('No face comparison could be completed because no usable comparison was available.');
+        }
+        if (($body['cnic_ocr']['is_cnic'] ?? true) === false) {
+            $add('The uploaded document was not recognized as a Pakistani CNIC.');
+        }
+        if (($body['cnic_portrait']['usable'] ?? true) === false) {
+            $add('A usable portrait could not be located on the CNIC for comparison.');
+        }
+        if (($body['selfie_detection']['occlusion']['occluded'] ?? false) === true) {
+            $add('The face in the selfie appears partially covered, which adds uncertainty to verification.');
+        }
+        if (($body['selfie_detection']['pose']['within_hard_limits'] ?? true) === false) {
+            $add('The face is not positioned clearly enough for a reliable comparison.');
+        }
+        if (
+            isset($body['cnic_ocr']['fields_present'], $body['cnic_ocr']['fields_missing'])
+            && count((array) $body['cnic_ocr']['fields_present']) < 4
+        ) {
+            $add('The CNIC image did not contain enough readable information for verification.');
         }
 
-        return null;
+        foreach (($body['recommendation_reasons'] ?? []) as $reason) {
+            if (is_string($reason)) {
+                $add($reason);
+            } elseif (is_array($reason)) {
+                $add($reason['message'] ?? null);
+                $add($reason['reason'] ?? null);
+            }
+        }
+        foreach (($body['matching']['reasons'] ?? []) as $reason) {
+            $add(is_array($reason) ? ($reason['message'] ?? $reason['reason'] ?? null) : $reason);
+        }
+        foreach (($body['matching']['warnings'] ?? []) as $warning) {
+            $add(is_array($warning) ? ($warning['message'] ?? null) : $warning);
+        }
+        foreach (($body['fraud']['top_factors'] ?? []) as $factor) {
+            $add($factor);
+        }
+        foreach (($body['fraud']['signals'] ?? []) as $signal) {
+            $add(is_array($signal) ? ($signal['message'] ?? null) : $signal);
+        }
+        foreach (($body['warnings'] ?? []) as $warning) {
+            $add(is_array($warning) ? ($warning['message'] ?? null) : $warning);
+        }
+
+        $add($body['selfie_detection']['error_message'] ?? null);
+        $add($body['cnic_ocr']['error_message'] ?? null);
+        $add($body['cnic_ocr']['findings'][0]['message'] ?? null);
+
+        if (($body['requires_human_review'] ?? false) === true) {
+            $add(sprintf(
+                'The verification model requested human review (recommendation: %s; automated decision: %s).',
+                $recommendation,
+                (($body['automated'] ?? false) ? 'yes' : 'no')
+            ));
+        }
+
+        $reasons = array_values(array_unique(array_filter(array_map('trim', $reasons))));
+        return $reasons === [] ? null : Str::limit(implode(' ', $reasons), 2000);
+    }
+
+    private function humanizeReviewFragment(string $value): string
+    {
+        $engineeringNote = 'Match thresholds are engineering defaults';
+        $notePosition = stripos($value, $engineeringNote);
+        if ($notePosition !== false) {
+            $value = substr($value, 0, $notePosition);
+        }
+
+        $value = str_replace([
+            'OCR_NOT_A_CNIC',
+            'CNIC_FACE_NOT_FOUND',
+            'PARTIAL_OCCLUSION',
+            'NO_FACE_FOUND',
+            'NO_COMPARISON',
+            'INVALID_IMAGE',
+        ], [
+            'The uploaded document was not recognized as a Pakistani CNIC.',
+            'No portrait could be found on the CNIC for comparison.',
+            'The face appears partially covered or obstructed.',
+            'No face could be found in one of the submitted images.',
+            'No face comparison was available.',
+            'The submitted image could not be processed.',
+        ], $value);
+
+        $value = str_replace([chr(9), chr(10), chr(13)], ' ', trim($value));
+        if (in_array(strtolower($value), ['string', 'additionalprop1', 'additionalprop2', 'additionalprop3'], true)) {
+            return '';
+        }
+        $value = trim($value, ' .');
+        if ($value === '') {
+            return '';
+        }
+
+        return str_ends_with($value, '.') ? $value : $value . '.';
+    }
+
+    private function firstReason(array $body): ?string
+    {
+        return $this->extractReviewReason($body, (string) ($body['recommendation'] ?? 'MANUAL_REVIEW'));
     }
 
     private function buildVerificationId(User $user, string $source): string
@@ -454,3 +569,12 @@ class AiVerificationService
         };
     }
 }
+
+
+
+
+
+
+
+
+

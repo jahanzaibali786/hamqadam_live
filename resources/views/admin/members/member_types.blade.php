@@ -46,6 +46,7 @@
                             @php
                                 $verificationStatus = optional($member->member)->verification_status;
                                 $aiVerificationStatus = optional($member->member)->ai_verification_status;
+                                $aiReason = optional($member->member)->ai_verification_reason;
                                 $hasStructuredVerification = isset($member->profile_verification_requests_count)
                                     ? $member->profile_verification_requests_count > 0
                                     : $member->profile_verification_requests()->exists();                                $isManualReview = in_array($verificationStatus, ['manual_review'], true)
@@ -84,7 +85,7 @@
                                         <span class="badge badge-inline badge-success">{{translate('Approved')}}</span>
                                     @elseif($type == 'pending')
                                         @if($isManualReview)
-                                            <span class="badge badge-inline badge-warning">{{translate('Manual Review')}}</span>
+                                            <span class="badge badge-inline badge-warning" title="{{ $aiReason ?: translate('Open verification details for the model reason.') }}">{{translate('Manual Review')}}</span>
                                         @elseif($isRejectedReview)
                                             <span class="badge badge-inline badge-danger">{{translate('Rejected')}}</span>
                                         @elseif($needsVerificationReview)
@@ -322,6 +323,8 @@
 
 </script>
 @endsection
+
+
 
 
 

@@ -53,8 +53,11 @@ class BroadcastServiceProvider extends ServiceProvider
             }
 
             return response()->json(['error' => 'Unauthenticated'], 401);
-        });
+        })->middleware('web');
 
         require base_path('routes/channels.php');
     }
 }
+
+
+

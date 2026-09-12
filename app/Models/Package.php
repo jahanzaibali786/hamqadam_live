@@ -12,6 +12,7 @@ class Package extends Model
     protected $casts = [
         'feature_flags' => 'array',
         'is_recurring' => 'boolean',
+        'activate_on_registration' => 'boolean',
     ];
 
     public function payckage_payments()

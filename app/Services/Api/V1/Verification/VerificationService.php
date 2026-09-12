@@ -124,7 +124,7 @@ class VerificationService
             ])->save();
 
             $request->user->forceFill(['approved' => 1])->save();
-            $request->user->member?->forceFill(['verification_status' => 'verified'])?->save();
+            $request->user->member?->forceFill(['verification_status' => 'verified', 'ai_verification_status' => 'approved', 'manual_review_started_at' => null, 'manual_review_expires_at' => null])?->save();
 
             return $request->fresh(['user', 'documents', 'reviewer']);
         });
@@ -145,7 +145,7 @@ class VerificationService
                 'rejection_reason' => $reason,
             ])->save();
 
-            $request->user->member?->forceFill(['verification_status' => 'rejected'])?->save();
+            $request->user->member?->forceFill(['verification_status' => 'rejected', 'manual_review_started_at' => null, 'manual_review_expires_at' => null])?->save();
 
             return $request->fresh(['user', 'documents', 'reviewer']);
         });
@@ -184,3 +184,4 @@ class VerificationService
         }
     }
 }
+

@@ -606,6 +606,10 @@ class ProfileController extends Controller
     {
         $user = User::where('id', $id)->first();
         $auth_user = auth()->user();
+
+        if ($auth_user?->isUnderManualReview()) {
+            return $this->failure_message('Your account is under manual review. Profile viewing and coin usage are disabled until verification is complete.');
+        }
         if ($user) {
             $member_known_languages = null;
             $member_mother_tongue = null;
@@ -776,6 +780,10 @@ class ProfileController extends Controller
 
     public function store_view_contact(Request $request)
     {
+        if (auth()->user()?->isUnderManualReview()) {
+            return $this->failure_message('Your account is under manual review. Profile viewing and coin usage are disabled until verification is complete.');
+        }
+
         $contact_view_check = ViewContact::where('user_id', $request->id)->where('viewed_by', auth()->id())->first();
         if (!$contact_view_check) {
             $view_contact_by_user = auth()->user();

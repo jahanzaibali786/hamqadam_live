@@ -20,5 +20,7 @@ class VerifyCsrfToken extends Middleware
         '/sslcommerz*',
         '/aamarpay*',
         '/phonepe*',
+        'broadcasting/auth',
     ];
 }
+

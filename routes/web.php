@@ -176,12 +176,12 @@ Route::post('/registration/sect-main/get-by-religion', [App\Http\Controllers\Sec
 Route::post('/registration/school-of-thought/get-by-sect', [App\Http\Controllers\SchoolOfThoughtController::class, 'get_school_of_thought_by_sect'])->name('registration.school_of_thought.get_by_sect');
 Route::post('/registration/traditions/get-by-school-of-thought', [App\Http\Controllers\TraditionController::class, 'get_traditions_by_school_of_thought'])->name('registration.traditions.get_by_school_of_thought');
 
-Route::group(['middleware' => ['member', 'verified']], function () {
+Route::group(['middleware' => ['member', 'verified', 'manual.review']], function () {
     Route::get('/member/ai-dashboard', [V1PlatformConsoleController::class, 'member'])->name('member.v1_dashboard');
 });
 
 
-Route::group(['middleware' => ['member', 'verified', 'check.package']], function () {
+Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.review']], function () {
     Route::controller(HomeController::class)->middleware('activated')->group(function () {
         Route::post('/new-user-email', 'update_email')->name('user.change.email');
         Route::post('/new-user-verification', 'new_verify')->name('user.new.verify');
@@ -311,7 +311,7 @@ Route::group(['middleware' => ['member', 'verified', 'check.package']], function
     });
 });
 
-Route::group(['middleware' => ['auth','activated']], function () {
+Route::group(['middleware' => ['auth','activated','manual.review']], function () {
 
     // member info edit
     Route::controller(MemberController::class)->group(function () {
@@ -452,3 +452,4 @@ Route::get('/api-docs', function () {
 
 //Custom page
 Route::get('/{slug}', [PageController::class, 'show_custom_page'])->name('custom-pages.show_custom_page');
+

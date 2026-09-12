@@ -12,19 +12,28 @@ use Illuminate\Support\Facades\Schema;
 
 class RegistrationReward
 {
-    public static function basicPackage(): ?Package
+    public static function registrationPackage(): ?Package
     {
+        if (Schema::hasColumn('packages', 'activate_on_registration')) {
+            $configured = Package::where('active', 1)
+                ->where('activate_on_registration', true)
+                ->orderBy('id')
+                ->first();
+
+            if ($configured) {
+                return $configured;
+            }
+        }
+
         return Package::where('active', 1)
-            ->where(function ($query) {
-                $query->where('name', 'Basic Free')
-                    ->orWhere('plan_tier', 'free');
-            })
-            ->orderByRaw("CASE WHEN name = 'Basic Free' THEN 0 ELSE 1 END")
             ->orderBy('price')
             ->orderBy('id')
-            ->first()
-            ?: Package::where('price', 0)->where('active', 1)->orderBy('id')->first()
-            ?: Package::where('id', 1)->where('active', 1)->first();
+            ->first();
+    }
+
+    public static function basicPackage(): ?Package
+    {
+        return self::registrationPackage();
     }
 
     public static function nextRecommendedPackage(?Package $currentPackage = null): ?Package
@@ -114,7 +123,7 @@ class RegistrationReward
             'payment_status' => 'Paid',
             'payment_details' => json_encode([
                 'source' => 'registration_auto_activation',
-                'note' => 'Basic package activated automatically after registration.',
+                'note' => 'Registration package activated automatically after registration.',
             ]),
             'amount' => 0,
             'offline_payment' => 0,

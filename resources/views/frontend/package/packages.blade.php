@@ -1,5 +1,6 @@
 @extends('frontend.layouts.app')
 @section('content')
+@php($registrationPackage = \App\Support\RegistrationReward::registrationPackage())
 <section class="pt-6 pb-4 bg-white text-center">
     <div class="container">
         <h1 class="mb-0 fw-600 text-dark">{{ translate('Select Your Package') }}</h1>
@@ -11,7 +12,7 @@
         <div class="alert alert-primary mb-4 text-left">
             <div class="fw-700 mb-1">{{ translate('Hamqadam Packages') }}</div>
             <div class="fs-13">
-                {{ translate('The Basic Free package is applied automatically after registration.') }}
+                {{ translate('The') }} {{ $registrationPackage?->name ?? translate('registration package') }} {{ translate('package is applied automatically after registration.') }}
             </div>
         </div>
 
@@ -136,7 +137,7 @@
                                     @endif
                                 @elseif($package->id == 1 && Auth::check())
                                     <a href="javascript:void(0);" class="btn btn-soft-success">
-                                        {{ $isPackageActive ? translate('Basic Free Package Active') : translate('Basic Free Package Auto Activated') }}
+                                        {{ $isPackageActive ? ((int) $package->id === (int) ($registrationPackage?->id ?? 0) ? translate('Registration Package Active') : translate('Package Active')) : ((int) $package->id === (int) ($registrationPackage?->id ?? 0) ? translate('Registration Package Auto Activated') : translate('Package Available')) }}
                                     </a>
                                 @elseif($package->id == 1)
                                     <button type="button" onclick="loginModal()" class="btn btn-primary">
