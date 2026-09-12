@@ -26,9 +26,30 @@ use App\Http\Controllers\Api\V1\Proposal\ProposalMeetingController;
 use App\Http\Controllers\Api\V1\Search\SearchController;
 use App\Http\Controllers\Api\V1\Safety\SafetyController;
 use App\Http\Controllers\Api\V1\Verification\VerificationController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class)->name('api.v1.health');
+
+/*
+|--------------------------------------------------------------------------
+| Broadcasting auth for the mobile app
+|--------------------------------------------------------------------------
+|
+| The app authenticates with a Sanctum bearer token and has no session, so it
+| cannot satisfy the CSRF check that guards the website's /broadcasting/auth.
+| Every channel subscription came back 419 "CSRF token mismatch", Pusher gave
+| up after three failures, and the app fell back to polling every 8-15s - no
+| live chat, no live help-center replies, no call signals.
+|
+| This is the same authorisation, reached through the `api` group where there
+| is no CSRF token to mismatch. The website's session route is left exactly as
+| it is, so nothing about the browser flow changes.
+*/
+Route::middleware('auth:sanctum')
+    ->post('/broadcasting/auth', fn (Request $request) => Broadcast::auth($request))
+    ->name('api.v1.broadcasting.auth');
 
 Route::middleware('auth:sanctum')->get('/admin/overview', AdminOverviewController::class)->name('api.v1.admin.overview');
 
