@@ -36,6 +36,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(base_path('routes/api_v1.php'));
 
+// The app tries /broadcasting/auth, /api/broadcasting/auth and
+// /api/v1/broadcasting/auth in turn and settles on whichever answers 200.
+// Both API paths are offered so an older build finds one too.
+Route::middleware('auth:sanctum')
+    ->post('/broadcasting/auth', fn (\Illuminate\Http\Request $request) => \Illuminate\Support\Facades\Broadcast::auth($request))
+    ->name('api.broadcasting.auth');
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
