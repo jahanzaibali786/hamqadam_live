@@ -111,9 +111,15 @@ class ProfileController extends ApiController
         // cache entry looks like, not a real incompatibility. Returning those
         // shadowed the matchmaking model permanently — the same pair the model
         // scores 81% was being shown to the member as 0%.
+        // "Informative" means it can explain itself, not merely that it holds a
+        // number. Production is full of legacy rule-based rows that carry a
+        // bare percentage and nothing else — 8 of the first 14 candidates for
+        // one member came back as 13-25% with zero reasons and zero criteria,
+        // while the model scores the same member 70-72% with four reasons and
+        // ten criteria. A percentage with no reasoning behind it is a leftover
+        // from an older scoring run, so it must not out-rank the live model.
         $storedIsInformative = $stored
-            && ((int) $stored->match_percentage > 0
-                || ! empty($stored->compatibility_explanation)
+            && (! empty($stored->compatibility_explanation)
                 || ! empty($stored->score_breakdown));
 
         if ($stored && $storedIsInformative) {
