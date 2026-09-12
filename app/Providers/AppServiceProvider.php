@@ -64,8 +64,9 @@ class AppServiceProvider extends ServiceProvider
                 \App\Services\Api\V1\Matching\MatchmakingIntegrationService::class,
                 function () {
                     return new \App\Services\Api\V1\Matching\MatchmakingIntegrationService(
-                        baseUrl: config('services.matchmaking.base_url', 'http://127.0.0.1:8001'),
-                        timeout: (int) config('services.matchmaking.timeout', 10),
+                        baseUrl: config('services.matchmaking.base_url', 'https://matchmaking.hamqadam.com'),
+                        timeout: (int) config('services.matchmaking.timeout', 30),
+                        apiKey: (string) config('services.matchmaking.api_key', ''),
                     );
                 }
             );

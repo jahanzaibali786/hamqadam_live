@@ -8,16 +8,18 @@ use App\Models\User;
 use Illuminate\Support\Facades\Http;
 
 /**
- * Thin client for the local AI Matchmaking sidecar.
+ * Thin client for the AI Matchmaking model at https://matchmaking.hamqadam.com.
  *
- * Backend owns the DB and auth. The sidecar runs in a separate process
- * (uvicorn app:app) on a configurable host/port and is stateless: the
- * backend always pushes the full user set via POST /users, then asks for
- * one user's matches via GET /match/{user_id}.
+ * Backend owns the DB and auth; the model owns the matchmaking intelligence.
  *
  * Flow used by MatchRecommendationService and MatchController:
- *   1) POST /users        → push logged-in + eligible candidates
- *   2) GET  /match/{uid}  → ranked mutual matches for that user
+ *   POST /match  → send the logged-in user (with their partner preferences)
+ *                  plus the candidate pool, get ranked mutual matches back.
+ *
+ * This is a single stateless call. The older two-step flow
+ * (POST /users then GET /match/{uid}) kept the pool in the model's memory,
+ * so two users matching at the same moment overwrote each other's pool and
+ * silently fell back to rule-based scoring. Do not reintroduce it.
  *
  * When the sidecar is down we degrade gracefully: the caller falls back
  * to the existing rule-based engine so the app still works offline.
@@ -25,9 +27,23 @@ use Illuminate\Support\Facades\Http;
 class MatchmakingIntegrationService
 {
     public function __construct(
-        private readonly string $baseUrl = 'http://127.0.0.1:8001',
-        private readonly int $timeout = 10,
+        private readonly string $baseUrl = 'https://matchmaking.hamqadam.com',
+        private readonly int $timeout = 30,
+        private readonly string $apiKey = '',
     ) {
+    }
+
+    /**
+     * Pending request with the shared timeout and, when the model has its API
+     * key guard switched on, the X-API-Key header.
+     */
+    private function request(): \Illuminate\Http\Client\PendingRequest
+    {
+        $req = Http::timeout($this->timeout)->acceptJson();
+
+        return $this->apiKey !== ''
+            ? $req->withHeaders(['X-API-Key' => $this->apiKey])
+            : $req;
     }
 
     public static function bind(): void
@@ -66,29 +82,49 @@ class MatchmakingIntegrationService
     ): ?array {
         $profile = $this->toModelProfile($user);
 
-        $users = array_merge([$profile], array_map(
-            fn (User $c): array => $this->toModelProfile($c),
-            $candidates,
-        ));
-
-        // 1) push the full user set so the sidecar can score both directions
-        $push = Http::timeout($this->timeout)->post("{$this->baseUrl}/users", [
-            'users' => $users,
-        ]);
-
-        if (! $push->successful()) {
-            return null;
+        // The model needs the viewer's own preferences to score anything, and
+        // rejects the whole request without them. Returning early keeps that
+        // case distinguishable from "the model is down" (which returns null).
+        if (! isset($profile['partner_preferences'])) {
+            return [
+                'success'               => false,
+                'model_version'         => 'n/a',
+                'total_users_evaluated' => count($candidates),
+                'total_matches'         => 0,
+                'matches'               => [],
+                'warnings'              => ['This user has no partner preferences set, so AI matchmaking was skipped.'],
+                'processing_time_ms'    => 0,
+            ];
         }
 
-        // 2) pull the ranked matches
+        if ($candidates === []) {
+            return [
+                'success'               => true,
+                'model_version'         => 'n/a',
+                'total_users_evaluated' => 0,
+                'total_matches'         => 0,
+                'matches'               => [],
+                'warnings'              => ['No candidates supplied.'],
+                'processing_time_ms'    => 0,
+            ];
+        }
+
         $query = http_build_query(array_filter([
             'top_n'    => $topN !== null ? (int) $topN : null,
             'min_score'=> $minScore !== null ? (int) $minScore : null,
         ], fn ($v) => $v !== null));
 
-        $res = Http::timeout($this->timeout)->get(
-            "{$this->baseUrl}/match/{$profile['user_id']}"
-            . ($query !== '' ? "?{$query}" : ''),
+        // One stateless call: the candidate pool travels with the request, so
+        // concurrent users cannot overwrite each other's pool on the model side.
+        $res = $this->request()->post(
+            "{$this->baseUrl}/match" . ($query !== '' ? "?{$query}" : ''),
+            [
+                'logged_in_user' => $profile,
+                'users'          => array_map(
+                    fn (User $c): array => $this->toModelProfile($c),
+                    array_values($candidates),
+                ),
+            ],
         );
 
         if (! $res->successful()) {
@@ -118,24 +154,11 @@ class MatchmakingIntegrationService
     {
         $profile   = $this->toModelProfile($viewer);
         $candidateProfile = $this->toModelProfile($candidate);
-        $prefs     = $this->toModelPreferences($viewer);
 
-        $push = Http::timeout(10)->post("{$this->baseUrl}/users", [
-            'users' => [$profile, $candidateProfile],
+        $res = $this->request()->post("{$this->baseUrl}/match", [
+            'logged_in_user' => $profile,
+            'users'          => [$candidateProfile],
         ]);
-
-        if (! $push->successful()) {
-            return [
-                'source' => 'sidecar_unavailable',
-                'percentage' => 0,
-                'breakdown' => [],
-                'reasons' => ['AI matchmaking sidecar unreachable — falling back to rule-based scoring.'],
-                'explanation' => 'Compatibility preview unavailable from the AI model.',
-                'calculated_at' => now()->toISOString(),
-            ];
-        }
-
-        $res = Http::timeout(10)->get("{$this->baseUrl}/match/{$profile['user_id']}");
 
         if (! $res->successful()) {
             return [
@@ -233,6 +256,9 @@ class MatchmakingIntegrationService
             'hobbies'             => $this->arrayOfStrings($member?->hobbies),
             'personality_traits'  => $this->personalityTraits($user),
             'about_me'            => $member?->introduction,
+            // The family_structure preference below is scored against this; without
+            // it every candidate came back "unknown" and lost ~4 points each.
+            'family_structure'    => $this->familyStructureLabel($member?->family_type),
             'diet'                => $user->lifestyles?->diet,
             'smoking'             => $this->yesNo($user->lifestyles?->smoke),
             'drinking'            => $this->yesNo($user->lifestyles?->drink),
@@ -266,6 +292,43 @@ class MatchmakingIntegrationService
         return $profile;
     }
 
+    /**
+     * Normalise a column that may hold a real array, a JSON-encoded array
+     * ("[1,2]" / '["smoking","dishonesty"]'), or a plain scalar, into a flat
+     * list of strings. Casting a JSON string with (array) produced a single
+     * element containing the raw JSON, which the model could never match.
+     */
+    private function toStringList($value): array
+    {
+        if ($value === null || $value === '' || $value === []) {
+            return [];
+        }
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if (str_starts_with($trimmed, '[') || str_starts_with($trimmed, '{')) {
+                $decoded = json_decode($trimmed, true);
+                $value = json_last_error() === JSON_ERROR_NONE ? $decoded : $trimmed;
+            } else {
+                $value = $trimmed;
+            }
+        }
+
+        $list = [];
+        foreach ((array) $value as $item) {
+            if (is_array($item)) {
+                $list = array_merge($list, $this->toStringList($item));
+                continue;
+            }
+            $item = trim((string) $item);
+            if ($item !== '') {
+                $list[] = $item;
+            }
+        }
+
+        return array_values(array_unique($list));
+    }
+
     private function toModelPreferences(User $user): array
     {
         $pref = $user->partner_expectations;
@@ -293,7 +356,7 @@ class MatchmakingIntegrationService
         }
 
         if ($pref->preferred_language_ids) {
-            $langs = array_map('strval', (array) $pref->preferred_language_ids);
+            $langs = $this->toStringList($pref->preferred_language_ids);
             if ($langs) {
                 $result['mother_tongue'] = $langs;
             }
@@ -355,14 +418,12 @@ class MatchmakingIntegrationService
         if ($fs) {
             $result['family_structure'] = [$fs];
         }
-        $la = $this->livingArrangementLabel($pref->living_arrangement);
-        if ($la) {
-            $result['living_arrangement'] = [$la];
-        }
-        $fi = $this->familyInvolvementLabel($pref->family_involvement);
-        if ($fi) {
-            $result['family_involvement'] = [$fi];
-        }
+        // living_arrangement and family_involvement are deliberately NOT sent.
+        // The members table has no equivalent column, so toModelProfile() cannot
+        // describe a candidate on either axis; the model scored both as "unknown"
+        // and docked every candidate the same few points, pushing borderline
+        // pairs under the is_match threshold for no informational gain.
+        // Re-enable here once the profile side can supply the matching fields.
 
         if ($pref->no_smoking === 1 || $pref->no_smoking === true || strtolower((string) $pref->no_smoking) === 'yes') {
             $result['smoking'] = true;
@@ -418,7 +479,10 @@ class MatchmakingIntegrationService
         }
 
         if ($pref->deal_breakers) {
-            $result['deal_breakers'] = array_map('strval', (array) $pref->deal_breakers);
+            $dealBreakers = $this->toStringList($pref->deal_breakers);
+            if ($dealBreakers !== []) {
+                $result['deal_breakers'] = $dealBreakers;
+            }
         }
 
         // Remove empty arrays too — FastAPI rejects [] for object-typed fields.
