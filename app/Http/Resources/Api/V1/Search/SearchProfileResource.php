@@ -57,7 +57,10 @@ class SearchProfileResource extends JsonResource
                     ? Carbon::parse($this->member->ai_verified_at)->toISOString()
                     : null,
             ],
-            'compatibility_percentage' => $this->profile_match_for_viewer?->match_percentage,
+            // A stored score wins; `ai_match_percentage` is what the controller
+            // filled in from the model for rows that have never been scored.
+            'compatibility_percentage' => $this->profile_match_for_viewer?->match_percentage
+                ?? $this->resource->getAttribute('ai_match_percentage'),
             'last_active_at' => $this->last_login_at ? Carbon::parse($this->last_login_at)->toISOString() : null,
             'created_at' => $this->created_at ? Carbon::parse($this->created_at)->toISOString() : null,
         ];
