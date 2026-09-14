@@ -26,6 +26,7 @@
 
   				</div>
 		    </div>
+            @include('admin.members.partials.filters', ['filterAction' => route('filterbyStatus', $type)])
             <div class="card-body">
                 <table class="table aiz-table mb-0">
                     <thead>

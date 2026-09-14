@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
@@ -21,18 +24,22 @@ class RoleController extends Controller
         $this->ensureUserActivityPermission();
         $this->ensureMemberVerificationPermission();
 
-        $roles = Role::all();
+        $roles = $this->visibleRoles();
         return view('admin.staff.roles.index', compact('roles'));
     }
 
     public function add_permission(Request $request)
     {
-        $permission = Permission::create(['name' => $request->name, 'parent' => $request->parent]);
+        abort_unless($this->isSuperAdmin(), 403);
+
+        Permission::create(['name' => $request->name, 'parent' => $request->parent]);
         return redirect()->route('roles.index');
     }
 
     public function create()
     {
+        abort_unless($this->isSuperAdmin(), 403);
+
         $this->ensureUserActivityPermission();
         $this->ensureMemberVerificationPermission();
 
@@ -41,6 +48,8 @@ class RoleController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless($this->isSuperAdmin(), 403);
+
         $role = Role::create(['name' => $request->name]);
         $role->syncPermissions($this->permissionNames($request->permissions ?? []));
         flash(translate('New Role has been added successfully'))->success();
@@ -49,7 +58,7 @@ class RoleController extends Controller
 
     public function show($id)
     {
-        //
+        // Role details are managed through the edit screen.
     }
 
     public function edit($id)
@@ -58,7 +67,10 @@ class RoleController extends Controller
         $this->ensureMemberVerificationPermission();
 
         $role = Role::findOrFail(decrypt($id));
-        return view('admin.staff.roles.edit', compact('role'));
+        $this->assertRoleIsVisible($role);
+        $permissions = $this->visiblePermissions();
+
+        return view('admin.staff.roles.edit', compact('role', 'permissions'));
     }
 
     public function update(Request $request, $id)
@@ -67,16 +79,20 @@ class RoleController extends Controller
         $this->ensureMemberVerificationPermission();
 
         $role = Role::findOrFail($id);
-        $role->name = $request->name;
+        $this->assertRoleIsVisible($role);
+        $role->name = $this->isSuperAdmin() ? $request->name : 'Sub Admin';
         $role->save();
         $role->syncPermissions($this->permissionNames($request->permissions ?? []));
+
         flash(translate('Role has been updated successfully'))->success();
         return back();
     }
 
     public function destroy($id)
     {
-        if(Role::destroy($id)){
+        abort_unless($this->isSuperAdmin(), 403);
+
+        if (Role::destroy($id)) {
             flash(translate('Role has been deleted successfully'))->success();
             return redirect()->route('roles.index');
         }
@@ -87,7 +103,7 @@ class RoleController extends Controller
 
     private function ensureUserActivityPermission(): void
     {
-        $permission = Permission::findOrCreate('view_user_activity', 'web');
+        Permission::findOrCreate('view_user_activity', 'web');
 
         Permission::query()
             ->where('name', 'view_user_activity')
@@ -99,7 +115,7 @@ class RoleController extends Controller
 
     private function ensureMemberVerificationPermission(): void
     {
-        $permission = Permission::findOrCreate('review_member_verification', 'web');
+        Permission::findOrCreate('review_member_verification', 'web');
 
         Permission::query()
             ->where('name', 'review_member_verification')
@@ -111,7 +127,7 @@ class RoleController extends Controller
 
     private function permissionNames(array $permissions): array
     {
-        return collect($permissions)
+        $names = collect($permissions)
             ->map(function ($permission) {
                 if (is_numeric($permission)) {
                     return Permission::find((int) $permission)?->name;
@@ -122,7 +138,50 @@ class RoleController extends Controller
             ->filter()
             ->values()
             ->all();
+
+        if (! $this->isSuperAdmin()) {
+            $names = array_values(array_intersect(
+                $names,
+                auth()->user()->getAllPermissions()->pluck('name')->all()
+            ));
+        }
+
+        return $names;
+    }
+
+    private function isSuperAdmin(): bool
+    {
+        $user = auth()->user();
+
+        return (bool) $user && (
+            in_array($user->admin_identifier, ['admin', 'superadmin'], true)
+            || $user->user_type === 'admin'
+        );
+    }
+
+    private function visibleRoles(): Collection
+    {
+        if ($this->isSuperAdmin()) {
+            return Role::query()->latest()->get();
+        }
+
+        return Role::query()
+            ->whereIn('name', ['Sub Admin', 'subadmin'])
+            ->latest()
+            ->get();
+    }
+
+    private function visiblePermissions(): Collection
+    {
+        return $this->isSuperAdmin()
+            ? Permission::query()->get()
+            : auth()->user()->getAllPermissions();
+    }
+
+    private function assertRoleIsVisible(Role $role): void
+    {
+        if (! $this->isSuperAdmin() && ! in_array(strtolower($role->name), ['sub admin', 'subadmin'], true)) {
+            abort(403, 'You may only manage the Sub Admin role.');
+        }
     }
 }
-
-

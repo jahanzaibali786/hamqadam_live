@@ -7,6 +7,7 @@ use App\Models\ContactUs;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\EmailNotification;
 use App\Models\User;
+use Illuminate\Http\Request;
 
 class ContactUsController extends Controller
 {
@@ -26,10 +27,23 @@ class ContactUsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $contact_us_queries = ContactUs::latest()->paginate(10);
-        return view('admin.contact_us.index', compact('contact_us_queries'));
+        $tab = $request->input('tab', 'issues');
+        $contact_us_queries = ContactUs::query()
+            ->when($tab === 'suggestions', function ($query) {
+                $query->where('category', 'suggestion');
+            }, function ($query) {
+                // Keep legacy uncategorized records visible under Issues.
+                $query->where(function ($query) {
+                    $query->where('category', 'issue')->orWhereNull('category');
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('admin.contact_us.index', compact('contact_us_queries', 'tab'));
     }
 
     /**

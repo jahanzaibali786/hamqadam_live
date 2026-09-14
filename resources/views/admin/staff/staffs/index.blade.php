@@ -5,12 +5,12 @@
 <div class="aiz-titlebar text-left mt-2 mb-3">
 	<div class="row align-items-center">
 		<div class="col-md-6">
-			<h1 class="h3 text-capitalize">{{translate('All Staffs')}}</h1>
+			<h1 class="h3 text-capitalize">{{translate('All Moderators')}}</h1>
 		</div>
 		@can('add_staffs')
 			<div class="col-md-6 text-md-right">
 				<a href="{{ route('staffs.create') }}" class="btn btn-circle btn-primary">
-					<span>{{translate('Add New Staffs')}}</span>
+					<span>{{translate('Add New Moderator')}}</span>
 				</a>
 			</div>
 		@endcan
@@ -19,7 +19,7 @@
 
 <div class="card">
     <div class="card-header">
-        <h5 class="mb-0 h6">{{translate('Staffs')}}</h5>
+        <h5 class="mb-0 h6">{{translate('Moderators')}}</h5>
     </div>
     <div class="card-body">
         <table class="table aiz-table mb-0">
@@ -74,3 +74,4 @@
 @section('modal')
     @include('modals.delete_modal')
 @endsection
+

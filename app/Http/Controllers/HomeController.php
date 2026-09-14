@@ -12,6 +12,11 @@ use App\Services\FirbaseNotification;
 use Kutia\Larafirebase\Facades\Larafirebase;
 use App\Models\User;
 use App\Models\Member;
+use App\Models\ExpressInterest;
+use App\Models\PackagePayment;
+use App\Models\ReportedUser;
+use App\Models\Shortlist;
+use App\Enums\ProposalStatus;
 use App\Models\PhysicalAttribute;
 use App\Models\SpiritualBackground;
 use App\Models\Career;
@@ -115,13 +120,41 @@ class HomeController extends Controller
 
     public function admin_dashboard()
     {
-        // $user = auth()->user();
-        // // $user->assignRole(['Super Admin']);
-        // // $permissions = $user->getAllPermissions();
-        // // dd($permissions);
-        // $roles = $user->getRoleNames(); // Collection of role names
-        // dd($roles);
-        return view('admin.dashboard');
+        $analytics = [
+            'total_members' => User::where('user_type', 'member')->count(),
+            'new_members_this_month' => User::where('user_type', 'member')
+                ->where('created_at', '>=', now()->startOfMonth())
+                ->count(),
+            'active_members_last_7_days' => User::where('user_type', 'member')
+                ->where('last_login_at', '>=', now()->subDays(7))
+                ->count(),
+            'total_interests' => Schema::hasTable('express_interests') ? ExpressInterest::count() : 0,
+            'pending_interests' => Schema::hasTable('express_interests')
+                ? ExpressInterest::where('status', ProposalStatus::Pending->value)->count()
+                : 0,
+            'accepted_matches' => Schema::hasTable('express_interests')
+                ? ExpressInterest::where('status', ProposalStatus::Accepted->value)->count()
+                : 0,
+            'rejected_or_closed_interests' => Schema::hasTable('express_interests')
+                ? ExpressInterest::whereIn('status', [
+                    ProposalStatus::Rejected->value,
+                    ProposalStatus::Withdrawn->value,
+                    ProposalStatus::Cancelled->value,
+                    ProposalStatus::Expired->value,
+                ])->count()
+                : 0,
+            'interests_this_month' => Schema::hasTable('express_interests')
+                ? ExpressInterest::where('created_at', '>=', now()->startOfMonth())->count()
+                : 0,
+            'shortlisted_profiles' => Schema::hasTable('shortlists') ? Shortlist::count() : 0,
+            'profile_views' => Schema::hasTable('profile_viewers') ? ProfileViewer::count() : 0,
+            'reports' => Schema::hasTable('reported_users') ? ReportedUser::count() : 0,
+            'paid_subscriptions' => Schema::hasTable('package_payments')
+                ? PackagePayment::where('payment_status', 'Paid')->count()
+                : 0,
+        ];
+
+        return view('admin.dashboard', compact('analytics'));
     }
     
     // Manage Admin Profile
@@ -771,5 +804,7 @@ class HomeController extends Controller
         }
     }
 }
+
+
 
 

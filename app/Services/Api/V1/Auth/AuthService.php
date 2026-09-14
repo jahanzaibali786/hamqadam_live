@@ -14,6 +14,7 @@ use App\Models\Member;
 use App\Models\User;
 use App\Services\Api\V1\Concerns\ExecutesInTransaction;
 use App\Services\Api\V1\Profile\ProfileCompletionService;
+use App\Services\Security\LoginSecurityService;
 use App\Support\RegistrationOnboarding;
 use App\Support\RegistrationReward;
 use Carbon\Carbon;
@@ -30,20 +31,25 @@ class AuthService
         private readonly OtpService $otpService,
         private readonly AuthTokenService $tokenService,
         private readonly ProfileCompletionService $profileCompletion,
+        private readonly LoginSecurityService $loginSecurity,
     ) {
     }
 
     public function loginWithEmail(string $email, string $password, DeviceData $deviceData): IssuedTokenData
     {
+        $this->loginSecurity->assertApiAllowed($email, request(), 'api_email');
         $user = $this->users->findForEmailLogin($email);
-        // dd($user);
+
         if (!$user || !Hash::check($password, (string) $user->password)) {
+            $this->loginSecurity->recordFailure($user, $email, request(), 'api_email', 'invalid_credentials');
             throw new ApiException('Invalid email or password.', 401, 'invalid_credentials');
         }
 
         $this->assertCanLogin($user);
+        $token = $this->transaction(fn() => $this->tokenService->issue($user, $deviceData));
+        $this->loginSecurity->recordSuccess($user, $email, request(), 'api_email');
 
-        return $this->transaction(fn() => $this->tokenService->issue($user, $deviceData));
+        return $token;
     }
 
 
@@ -105,6 +111,7 @@ class AuthService
 
     public function requestMobileLoginOtp(string $phone): array
     {
+        $this->loginSecurity->assertApiAllowed($phone, request(), 'api_otp');
         $user = $this->users->findForPhoneLogin($phone);
 
         if (!$user) {
@@ -118,7 +125,17 @@ class AuthService
 
     public function verifyMobileLoginOtp(string $phone, string $code, DeviceData $deviceData): IssuedTokenData
     {
-        $otp = $this->otpService->verify($phone, $code, OtpPurpose::Login, OtpChannel::Sms);
+        $this->loginSecurity->assertApiAllowed($phone, request(), 'api_otp');
+
+        try {
+            $otp = $this->otpService->verify($phone, $code, OtpPurpose::Login, OtpChannel::Sms);
+        } catch (ApiException $exception) {
+            if (in_array($exception->errorCode(), ['invalid_otp', 'otp_attempts_exceeded'], true)) {
+                $this->loginSecurity->recordFailure(null, $phone, request(), 'api_otp', $exception->errorCode() ?? 'invalid_otp');
+            }
+            throw $exception;
+        }
+
         $user = $otp->user ?: $this->users->findForPhoneLogin($phone);
 
         if (!$user) {
@@ -126,8 +143,10 @@ class AuthService
         }
 
         $this->assertCanLogin($user);
+        $token = $this->transaction(fn() => $this->tokenService->issue($user, $deviceData));
+        $this->loginSecurity->recordSuccess($user, $phone, request(), 'api_otp');
 
-        return $this->transaction(fn() => $this->tokenService->issue($user, $deviceData));
+        return $token;
     }
 
     public function requestEmailVerification(User $user, ?string $email = null): array

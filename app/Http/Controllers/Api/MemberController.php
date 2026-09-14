@@ -240,6 +240,8 @@ class MemberController extends Controller
                 'user_id' => $request->user_id,
                 'reported_by' => auth()->user()->id
             ]);
+            app(\App\Services\BadgeService::class)->refresh(auth()->user()->fresh(['member']));
+            app(\App\Services\BadgeService::class)->refresh(User::with('member')->find((int) $request->user_id));
             return $this->success_message('Reported to this member successfully.');
         }
         return $this->failure_message('Invalid Member to Report.');

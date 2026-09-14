@@ -55,6 +55,8 @@ class ProfileResource extends JsonResource
                 'email_verified_at' => optional($this->email_verified_at)->toISOString(),
             ],
 
+            'badges' => app(\App\Services\BadgeService::class)->payload($this->resource),
+
             // Unchanged keys, so existing clients are unaffected.
             'member' => [
                 'gender' => $member?->gender,

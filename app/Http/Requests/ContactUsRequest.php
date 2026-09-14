@@ -33,6 +33,7 @@ class ContactUsRequest extends FormRequest
             $rules = [
                 'name' => 'required',
                 'email' => 'required|email',
+                'category' => 'required|in:issue,suggestion',
                 'subject' => 'required',
                 'description' => 'required',
                 'g-recaptcha-response' => [Rule::when(get_setting('google_recaptcha_activation') == 1 && get_setting('recaptcha_contact_form') == 1, ['required', new RecaptchaRule()], ['sometimes'])]
@@ -57,6 +58,8 @@ class ContactUsRequest extends FormRequest
             'name.required' => translate('Name is required'),
             'email.required' => translate('Email is required'),
             'email.email' => translate('Email field requires an email'),
+            'category.required' => translate('Please select a ticket category'),
+            'category.in' => translate('Invalid ticket category'),
             'subject.required' => translate('Subject field is required'),
             'description.required' => translate('Description is required'),
             'g-recaptcha-response.required' => translate('Google reCAPTCHA is required'),

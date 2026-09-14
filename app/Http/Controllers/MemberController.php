@@ -123,8 +123,10 @@ class MemberController extends Controller
         }
 
 
+        $members = $this->applyMemberFilters($members, $request);
+
         $members = $members->paginate(10);
-        return view('admin.members.index', compact('members', 'sort_search'));
+        return view('admin.members.index', array_merge(compact('members', 'sort_search'), $this->memberFilterOptions()));
     }
     public function freeIndex(Request $request)
     {
@@ -149,8 +151,10 @@ class MemberController extends Controller
         }
 
 
+        $members = $this->applyMemberFilters($members, $request);
+
         $members = $members->paginate(10);
-        return view('admin.members.index', compact('members', 'sort_search'));
+        return view('admin.members.index', array_merge(compact('members', 'sort_search'), $this->memberFilterOptions()));
     }
 
     public function unsubscribedIndex(Request $request)
@@ -176,8 +180,77 @@ class MemberController extends Controller
         }
 
 
+        $members = $this->applyMemberFilters($members, $request);
+
         $members = $members->paginate(10);
-        return view('admin.members.index', compact('members', 'sort_search'));
+        return view('admin.members.index', array_merge(compact('members', 'sort_search'), $this->memberFilterOptions()));
+    }
+
+    private function applyMemberFilters($query, Request $request)
+    {
+        if ($request->filled('member_id')) {
+            $memberId = trim((string) $request->input('member_id'));
+            $query->where(function ($filter) use ($memberId) {
+                $filter->where('users.id', is_numeric($memberId) ? (int) $memberId : 0)
+                    ->orWhere('users.code', $memberId);
+            });
+        }
+
+        if ($request->filled('gender')) {
+            $query->whereHas('member', fn ($memberQuery) => $memberQuery->withTrashed()->where('gender', $request->input('gender')));
+        }
+
+        if ($request->filled('verification_status')) {
+            $verificationStatus = (string) $request->input('verification_status');
+            $query->whereHas('member', function ($memberQuery) use ($verificationStatus) {
+                $memberQuery->withTrashed()->where('verification_status', $verificationStatus)
+                    ->orWhere('ai_verification_status', $verificationStatus);
+            });
+        }
+
+        if ($request->filled('package_id')) {
+            $query->whereHas('member', fn ($memberQuery) => $memberQuery->withTrashed()->where('current_package_id', (int) $request->input('package_id')));
+        }
+
+        if ($request->filled('country_id')) {
+            $query->whereHas('addresses', fn ($addressQuery) => $addressQuery->where('country_id', (int) $request->input('country_id')));
+        }
+
+        if ($request->filled('approval_status')) {
+            $query->where('approved', (int) $request->input('approval_status'));
+        }
+
+        if ($request->filled('photo_status')) {
+            $query->where('photo_approved', (int) $request->input('photo_status'));
+        }
+
+        if ($request->filled('account_status')) {
+            match ($request->input('account_status')) {
+                'active' => $query->where('blocked', 0)->where('deactivated', 0),
+                'blocked' => $query->where('blocked', 1),
+                'deactivated' => $query->where('deactivated', 1),
+                default => null,
+            };
+        }
+
+        return $query;
+    }
+
+    private function memberFilterOptions(): array
+    {
+        return [
+            'filterCountries' => Country::where('status', 1)->orderBy('name')->get(['id', 'name']),
+            'filterPackages' => Package::orderBy('price')->orderBy('name')->get(['id', 'name']),
+            'filterVerificationStatuses' => [
+                'pending' => translate('Pending'),
+                'submitted' => translate('Submitted'),
+                'under_review' => translate('Under Review'),
+                'processing' => translate('Processing'),
+                'manual_review' => translate('Manual Review'),
+                'approved' => translate('Approved'),
+                'rejected' => translate('Rejected'),
+            ],
+        ];
     }
 
     /**
@@ -510,8 +583,10 @@ class MemberController extends Controller
                 $user->save();
 
                 if ($user->member) {
-                    $user->member->verification_status = 'approved';
+                    $user->member->verification_status = 'verified';
                     $user->member->ai_verification_status = 'approved';
+                    $user->member->verification_badge = true;
+                    $user->member->verification_badge_earned_at = now();
                     $user->member->manual_review_started_at = null;
                     $user->member->manual_review_expires_at = null;
                     $user->member->save();
@@ -584,6 +659,8 @@ class MemberController extends Controller
                 if ($user->member) {
                     $user->member->verification_status = 'rejected';
                     $user->member->ai_verification_status = 'rejected';
+                    $user->member->verification_badge = false;
+                    $user->member->verification_badge_earned_at = null;
                     $user->member->manual_review_started_at = null;
                     $user->member->manual_review_expires_at = null;
                     $user->member->save();
@@ -654,8 +731,8 @@ class MemberController extends Controller
                     ->orwhere('first_name', 'like', '%' . $sort_search . '%')->orWhere('last_name', 'like', '%' . $sort_search . '%');
             });
         }
-        $deleted_members = $deleted_members->paginate(10);
-        return view('admin.members.deleted_members', compact('deleted_members', 'sort_search'));
+        $deleted_members = $this->applyMemberFilters($deleted_members, $request)->paginate(10);
+        return view('admin.members.deleted_members', array_merge(compact('deleted_members', 'sort_search'), $this->memberFilterOptions()));
     }
 
 
@@ -925,10 +1002,10 @@ class MemberController extends Controller
         return view('frontend.member.profile.index', $data);
     }
 
-    public function unapproved_profile_pictures()
+    public function unapproved_profile_pictures(Request $request)
     {
-        $users = User::where('user_type', 'member')->where('photo_approved', 0)->latest()->paginate(10);
-        return view('admin.members.unapproved_member_profile_pictures', compact('users'));
+        $users = $this->applyMemberFilters(User::where('user_type', 'member')->where('photo_approved', 0)->latest(), $request)->paginate(10);
+        return view('admin.members.unapproved_member_profile_pictures', array_merge(compact('users'), $this->memberFilterOptions()));
     }
 
     public function approve_profile_image(Request $request)
@@ -1078,12 +1155,14 @@ class MemberController extends Controller
         }
 
 
+        $query = $this->applyMemberFilters($query, $request);
+
         // Finally paginate
         $members = $query->with(['member'])
             ->withCount('profile_verification_requests')
             ->paginate(10);
 
-        return view('admin.members.member_types', compact('members', 'sort_search', 'type'));
+        return view('admin.members.member_types', array_merge(compact('members', 'sort_search', 'type'), $this->memberFilterOptions()));
     }
 }
 

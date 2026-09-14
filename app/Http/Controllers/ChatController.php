@@ -165,6 +165,8 @@ class ChatController extends Controller
         $chat_thread->active = 0;
         $chat_thread->blocked_by_user = Auth::id();
         $chat_thread->save();
+        app(\App\Services\BadgeService::class)->refresh(Auth::user()->fresh(['member']));
+        app(\App\Services\BadgeService::class)->refresh(User::with('member')->find((int) ($chat_thread->sender_user_id === Auth::id() ? $chat_thread->receiver_user_id : $chat_thread->sender_user_id)));
         return response()->json([
             'success' => true,
             'message' => translate('Chat blocked successfully.'),
@@ -236,6 +238,8 @@ class ChatController extends Controller
         $chat_thread->active = 0;
         $chat_thread->blocked_by_user = Auth::id();
         $chat_thread->save();
+        app(\App\Services\BadgeService::class)->refresh(Auth::user()->fresh(['member']));
+        app(\App\Services\BadgeService::class)->refresh(User::with('member')->find($reportedUserId));
         return response()->json([
             'success' => true,
             'message' => translate('Chat reported successfully.'),

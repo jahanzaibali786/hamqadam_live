@@ -50,6 +50,7 @@ class SearchProfileResource extends JsonResource
              * null date, which is the honest answer for what this row can
              * cheaply know.
              */
+            'badges' => app(\App\Services\BadgeService::class)->payload($this->resource),
             'verification' => [
                 'identity_verified' => $this->member?->verification_status === 'verified'
                     || $this->member?->ai_verification_status === 'approved',

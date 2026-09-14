@@ -13,6 +13,7 @@
     <div class="card-header">
       <h5 class="mb-md-0 h6">{{ translate('Profile Pictures') }}</h5>
     </div>
+    @include('admin.members.partials.filters', ['filterAction' => url()->current()])
     <div class="card-body">
         <table class="table aiz-table mb-0">
             <thead>

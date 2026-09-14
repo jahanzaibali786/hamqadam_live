@@ -397,6 +397,10 @@ class AiVerificationService
             'ai_verification_attempts' => (int) ($member->ai_verification_attempts ?? 0) + 1,
             'ai_verification_last_attempt_at' => $now,
             'ai_verified_at' => $verified ? $now : $member->ai_verified_at,
+            'verification_badge' => $verified || $status === 'approved',
+            'verification_badge_earned_at' => ($verified || $status === 'approved')
+                ? ($member->verification_badge_earned_at ?? $now)
+                : null,
             'manual_review_started_at' => $status === 'manual_review' ? ($member->manual_review_started_at ?? $now) : null,
             'manual_review_expires_at' => $status === 'manual_review' ? ($member->manual_review_expires_at ?? $now->copy()->addHours(12)) : null,
         ])->save();

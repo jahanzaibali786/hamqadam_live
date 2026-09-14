@@ -413,30 +413,37 @@
                 </li>
                 @endcan
 
-                <!-- Contact Us -->
-                @can('show_contact_us_queries')
-                <li class="aiz-side-nav-item ">
-                    <a href="{{ route('contact-us.index') }}"
-                        class="aiz-side-nav-link {{ areActiveRoutes(['contact-us.index', 'contact-us.show']) }}">
-                        <i class="las la-tty aiz-side-nav-icon"></i>
-                        <span class="aiz-side-nav-text">{{ translate('Contact Us Queries') }}</span>
-                    </a>
-                </li>
-                @endcan
-
-                <!-- Help Center chat (the app's Help button) -->
-                <li class="aiz-side-nav-item ">
-                    <a href="{{ route('admin.help-chat.index') }}"
-                        class="aiz-side-nav-link {{ areActiveRoutes(['admin.help-chat.index', 'admin.help-chat.show']) }}">
+                <!-- Customer Support -->
+                <li class="aiz-side-nav-item">
+                    <a href="javascript:void(0);" class="aiz-side-nav-link">
                         <i class="las la-headset aiz-side-nav-icon"></i>
-                        <span class="aiz-side-nav-text">{{ translate('Help Center Chats') }}</span>
-                        @php
-                            $helpChatUnread = (int) \App\Models\HelpChatThread::query()->sum('admin_unread_count');
-                        @endphp
-                        @if ($helpChatUnread > 0)
-                            <span class="badge badge-danger badge-inline ml-1">{{ $helpChatUnread }}</span>
-                        @endif
+                        <span class="aiz-side-nav-text">{{ translate('Customer Support') }}</span>
+                        <span class="aiz-side-nav-arrow"></span>
                     </a>
+                    <ul class="aiz-side-nav-list level-2">
+                        @can('show_contact_us_queries')
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('contact-us.index') }}"
+                                class="aiz-side-nav-link {{ areActiveRoutes(['contact-us.index', 'contact-us.show']) }}">
+                                <i class="las la-tty aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Contact Us Queries') }}</span>
+                            </a>
+                        </li>
+                        @endcan
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('admin.help-chat.index') }}"
+                                class="aiz-side-nav-link {{ areActiveRoutes(['admin.help-chat.index', 'admin.help-chat.show']) }}">
+                                <i class="las la-comments aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Help Center Chats') }}</span>
+                                @php
+                                    $helpChatUnread = (int) \App\Models\HelpChatThread::query()->sum('admin_unread_count');
+                                @endphp
+                                @if ($helpChatUnread > 0)
+                                    <span class="badge badge-danger badge-inline ml-1">{{ $helpChatUnread }}</span>
+                                @endif
+                            </a>
+                        </li>
+                    </ul>
                 </li>
 
 
@@ -793,7 +800,7 @@
                 <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
                         <i class="las la-user-tie aiz-side-nav-icon"></i>
-                        <span class="aiz-side-nav-text">{{ translate('Staffs') }}</span>
+                        <span class="aiz-side-nav-text">{{ translate('Moderators') }}</span>
                         <span class="aiz-side-nav-arrow"></span>
                     </a>
                     <ul class="aiz-side-nav-list level-2">
@@ -801,7 +808,7 @@
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('staffs.index') }}"
                                 class="aiz-side-nav-link {{ areActiveRoutes(['staffs.index', 'staffs.create', 'staffs.edit']) }}">
-                                <span class="aiz-side-nav-text">{{ translate('All staffs') }}</span>
+                                <span class="aiz-side-nav-text">{{ translate('All Moderators') }}</span>
                             </a>
                         </li>
                         @endcan
@@ -809,7 +816,7 @@
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('roles.index') }}"
                                 class="aiz-side-nav-link {{ areActiveRoutes(['roles.index', 'roles.create', 'roles.edit']) }}">
-                                <span class="aiz-side-nav-text">{{ translate('Staff Roles') }}</span>
+                                <span class="aiz-side-nav-text">{{ translate('Moderator Roles') }}</span>
                             </a>
                         </li>
                         @endcan
@@ -861,6 +868,7 @@
     </div><!-- .aiz-sidebar -->
     <div class="aiz-sidebar-overlay"></div>
 </div><!-- .aiz-sidebar -->
+
 
 
 

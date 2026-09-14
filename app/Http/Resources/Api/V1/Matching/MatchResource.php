@@ -31,6 +31,7 @@ class MatchResource extends JsonResource
                 'height' => $user->physical_attributes?->height,
                 'religion_id' => $user->spiritual_backgrounds?->religion_id,
                 'verified' => (bool) $user->approved,
+                'badges' => app(\App\Services\BadgeService::class)->payload($user),
             ] : null,
         ];
     }

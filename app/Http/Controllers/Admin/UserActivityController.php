@@ -10,7 +10,10 @@ use App\Models\ProfileViewer;
 use App\Models\Shortlist;
 use App\Models\User;
 use App\Models\UserActivityLog;
+use App\Models\LoginAttempt;
 use App\Models\UserDeviceSession;
+use App\Models\Country;
+use App\Models\Package;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -45,12 +48,41 @@ class UserActivityController extends Controller
             }))
             ->when($status === 'blocked', fn ($query) => $query->where('blocked', 1))
             ->when($status === 'pending', fn ($query) => $query->where('approved', 0))
+            ->when(request('member_id'), function ($query, $memberId) {
+                $query->where(function ($filter) use ($memberId) {
+                    $filter->where('users.id', is_numeric($memberId) ? (int) $memberId : 0)
+                        ->orWhere('users.code', $memberId);
+                });
+            })
+            ->when(request('gender'), fn ($query, $gender) => $query->whereHas('member', fn ($memberQuery) => $memberQuery->where('gender', $gender)))
+            ->when(request('package_id'), fn ($query, $packageId) => $query->whereHas('member', fn ($memberQuery) => $memberQuery->where('current_package_id', (int) $packageId)))
+            ->when(request('country_id'), fn ($query, $countryId) => $query->whereHas('addresses', fn ($addressQuery) => $addressQuery->where('country_id', (int) $countryId)))
+            ->when(request('approval_status') !== null && request('approval_status') !== '', fn ($query) => $query->where('approved', (int) request('approval_status')))
+            ->when(request('photo_status') !== null && request('photo_status') !== '', fn ($query) => $query->where('photo_approved', (int) request('photo_status')))
+            ->when(request('verification_status'), function ($query, $verificationStatus) {
+                $query->whereHas('member', function ($memberQuery) use ($verificationStatus) {
+                    $memberQuery->where('verification_status', $verificationStatus)
+                        ->orWhere('ai_verification_status', $verificationStatus);
+                });
+            })
             ->latest()
             ->paginate(20);
 
         $this->decorateActivityIndexMembers($members->getCollection());
 
-        return view('admin.members.activity_index', compact('members', 'sortSearch', 'status'));
+        return view('admin.members.activity_index', array_merge(
+            compact('members', 'sortSearch', 'status'),
+            [
+                'filterCountries' => Country::where('status', 1)->orderBy('name')->get(['id', 'name']),
+                'filterPackages' => Package::orderBy('price')->orderBy('name')->get(['id', 'name']),
+                'filterVerificationStatuses' => [
+                    'pending' => translate('Pending'), 'submitted' => translate('Submitted'),
+                    'under_review' => translate('Under Review'), 'processing' => translate('Processing'),
+                    'manual_review' => translate('Manual Review'), 'approved' => translate('Approved'),
+                    'rejected' => translate('Rejected'),
+                ],
+            ]
+        ));
     }
 
     private function decorateActivityIndexMembers(Collection $members): void
@@ -103,6 +135,9 @@ class UserActivityController extends Controller
 
         $activityLogs = UserActivityLog::where('user_id', $user->id)->latest('occurred_at')->limit(50)->get();
         $deviceSessions = UserDeviceSession::where('user_id', $user->id)->latest('last_used_at')->limit(20)->get();
+        $loginAttempts = Schema::hasTable('login_attempts')
+            ? LoginAttempt::where('user_id', $user->id)->latest('occurred_at')->limit(50)->get()
+            : collect();
         $shortlists = Shortlist::with(['user.member', 'user.addresses.city', 'user.addresses.state', 'user.addresses.country'])->where('shortlisted_by', $user->id)->latest()->limit(25)->get();
         $sentProposals = ExpressInterest::with(['recipient.member', 'recipient.addresses.city'])->where('interested_by', $user->id)->latest()->limit(25)->get();
         $receivedProposals = ExpressInterest::with(['sender.member', 'sender.addresses.city'])->where('user_id', $user->id)->latest()->limit(25)->get();
@@ -115,7 +150,7 @@ class UserActivityController extends Controller
         $journey = $this->journey($user, $summary, $shortlists, $sentProposals, $receivedProposals, $matches);
         $diagnostics = $this->diagnostics($user, $summary, $matches);
 
-        return view('admin.members.activity', compact('user', 'activityLogs', 'deviceSessions', 'shortlists', 'sentProposals', 'receivedProposals', 'packagePayments', 'profileViewsMade', 'profileViewsReceived', 'matches', 'summary', 'journey', 'diagnostics'));
+        return view('admin.members.activity', compact('user', 'activityLogs', 'deviceSessions', 'loginAttempts', 'shortlists', 'sentProposals', 'receivedProposals', 'packagePayments', 'profileViewsMade', 'profileViewsReceived', 'matches', 'summary', 'journey', 'diagnostics'));
     }
 
     private function summary(User $user, Collection $activityLogs, Collection $deviceSessions): array
@@ -131,11 +166,17 @@ class UserActivityController extends Controller
             'days_since_last_login' => $lastLogin ? Carbon::parse($lastLogin)->diffInDays(now()) : null,
             'days_since_last_activity' => $lastSeen ? Carbon::parse($lastSeen)->diffInDays(now()) : null,
             'session_count' => $sessionCount,
+            'failed_login_count' => Schema::hasTable('login_attempts')
+                ? LoginAttempt::where('user_id', $user->id)->where('successful', false)->count()
+                : $activityLogs->where('event_type', 'login_failed')->count(),
+            'last_failed_login_at' => Schema::hasTable('login_attempts')
+                ? LoginAttempt::where('user_id', $user->id)->where('successful', false)->latest('occurred_at')->value('occurred_at')
+                : $activityLogs->firstWhere('event_type', 'login_failed')?->occurred_at,
             'active_status' => $this->activeStatus($user, $lastSeen),
             'latest_location' => $activityLogs->firstWhere('location')?->location ?? $deviceSessions->firstWhere('ip_address')?->ip_address ?? $user->ip_address ?? null,
             'latest_ip' => $activityLogs->firstWhere('ip_address')?->ip_address ?? $deviceSessions->firstWhere('ip_address')?->ip_address ?? $user->ip_address ?? null,
             'verification_status' => $this->verificationStatus($user),
-            'trust_badge_status' => $user->approved ? 'Allocated' : 'Not allocated',
+            'trust_badge_status' => $user->member?->trust_badge ? 'Allocated' : 'Not allocated',
             'package_name' => $user->member?->package?->name ?? 'No active package',
             'package_valid_until' => $user->member?->package_validity,
         ];
@@ -146,7 +187,7 @@ class UserActivityController extends Controller
         return [
             ['label' => 'Registration', 'status' => 'complete', 'detail' => optional($user->created_at)->format('d M Y, h:i A')],
             ['label' => 'Verification', 'status' => $user->approved ? 'complete' : 'pending', 'detail' => $this->verificationStatus($user)],
-            ['label' => 'Trust Badge', 'status' => $user->approved ? 'complete' : 'pending', 'detail' => $user->approved ? 'Allocated' : 'Waiting approval'],
+            ['label' => 'Trust Badge', 'status' => $user->member?->trust_badge ? 'complete' : 'pending', 'detail' => $user->member?->trust_badge ? 'Allocated' : 'Requires 7 clean daily logins'],
             ['label' => 'Plan', 'status' => $user->member?->current_package_id ? 'complete' : 'pending', 'detail' => $user->member?->package?->name ?? 'No package'],
             ['label' => 'Login/Sessions', 'status' => ((int) ($summary['session_count'] ?? 0) > 0 || ! empty($summary['last_seen_at'])) ? 'complete' : 'pending', 'detail' => ((int) ($summary['session_count'] ?? 0)) . ' session(s) tracked'],
             ['label' => 'Discovery', 'status' => $matches->count() || ProfileViewer::where('viewed_by', $user->id)->exists() ? 'complete' : 'pending', 'detail' => $matches->count() . ' recommended matches'],

@@ -150,6 +150,9 @@ class ChatApiService
     {
         $thread = $this->threadForUser($user, $threadId);
         $thread->forceFill(['blocked_by_user' => $user->id])->save();
+        app(\App\Services\BadgeService::class)->refresh($user->fresh(['member']));
+        $otherId = (int) ($thread->sender_user_id === $user->id ? $thread->receiver_user_id : $thread->sender_user_id);
+        app(\App\Services\BadgeService::class)->refresh(User::with('member')->find($otherId));
         return $thread->fresh(['sender', 'receiver']);
     }
     public function unblock(User $user, int $threadId): ChatThread
@@ -178,6 +181,9 @@ class ChatApiService
             'active' => 0,
             'blocked_by_user' => $user->id,
         ])->save();
+
+        app(\App\Services\BadgeService::class)->refresh($user->fresh(['member']));
+        app(\App\Services\BadgeService::class)->refresh(User::with('member')->find($reportedUserId));
 
         return $thread->fresh(['sender', 'receiver']);
     }

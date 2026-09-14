@@ -13,6 +13,22 @@
             $col++;
         }
     @endphp
+    @php($badges = app(\App\Services\BadgeService::class)->payload($user))
+    <div class="row gutters-5 mb-4">
+        <div class="col-md-6 mb-2">
+            <div class="bg-white border rounded p-3 h-100 d-flex align-items-center">
+                <i class="las la-check-circle la-2x text-success mr-3"></i>
+                <div><div class="fw-700">{{ translate('Verification Badge') }}</div><div class="fs-12 text-muted">{{ $badges['verification']['earned'] ? translate('Identity verified') : translate('Verification pending') }}</div></div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-2">
+            <div class="bg-white border rounded p-3 h-100 d-flex align-items-center">
+                <i class="las la-shield-alt la-2x text-warning mr-3"></i>
+                <div><div class="fw-700">{{ translate('Trust Badge') }}</div><div class="fs-12 text-muted">{{ $badges['trust']['earned'] ? translate('7-day clean activity achieved') : translate('Earned after 7 clean daily logins') }}</div></div>
+            </div>
+        </div>
+    </div>
+
     <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between">
         <div class="mr-3">
             <strong>{{ translate('AI matrimonial dashboard is available.') }}</strong>

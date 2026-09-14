@@ -30,6 +30,14 @@
 			<div class="absolute-full bg-white opacity-90 z--1"></div>
 			<div class="text-center">
 				<div class="text-primary fw-500 mb-1">{{ $member->first_name}}</div>
+                <div class="mt-1">
+                    @if(app(\App\Services\BadgeService::class)->isVerified($member->member))
+                        <span class="badge badge-soft-success mr-1"><i class="las la-check-circle"></i> {{ translate('Verified') }}</span>
+                    @endif
+                    @if($member->member?->trust_badge)
+                        <span class="badge badge-soft-warning"><i class="las la-shield-alt"></i> {{ translate('Trust') }}</span>
+                    @endif
+                </div>
             <div class="fs-10">
                 <span class="opacity-60">{{ translate('Member ID: ') }}</span>
                 <span class="ml-2 text-primary">{{ $member->code }}</span>

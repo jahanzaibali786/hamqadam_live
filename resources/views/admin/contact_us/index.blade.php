@@ -12,7 +12,13 @@
             <div class="card">
                 <div class="card-header row gutters-5">
                     <div class="col text-center text-md-left">
-                        <h5 class="mb-md-0 h6">{{ translate('All Contact Us Queries') }}</h5>
+                        <h5 class="mb-md-0 h6">{{ $tab === 'suggestions' ? translate('Suggestions') : translate('Issues') }}</h5>
+                    </div>
+                    <div class="col-auto">
+                        <ul class="nav nav-tabs card-header-tabs">
+                            <li class="nav-item"><a class="nav-link {{ $tab === 'issues' ? 'active' : '' }}" href="{{ route('contact-us.index', ['tab' => 'issues']) }}">{{ translate('Issues') }}</a></li>
+                            <li class="nav-item"><a class="nav-link {{ $tab === 'suggestions' ? 'active' : '' }}" href="{{ route('contact-us.index', ['tab' => 'suggestions']) }}">{{ translate('Suggestions') }}</a></li>
+                        </ul>
                     </div>
                 </div>
                 <div class="card-body">
@@ -22,6 +28,7 @@
                                 <th>#</th>
                                 <th>{{ translate('Name') }}</th>
                                 <th>{{ translate('Email') }}</th>
+                                <th>{{ translate('Category') }}</th>
                                 <th class="col-md-2">{{ translate('Subject') }}</th>
                                 <th data-breakpoints="md">{{ translate('Created At') }}</th>
                                 <th>{{ translate('Status') }}</th>
@@ -35,6 +42,7 @@
                                     </td>
                                     <td> {{ $contact_us_query->name }} </td>
                                     <td>{{ $contact_us_query->email }}</td>
+                                    <td><span class="badge badge-inline {{ $contact_us_query->category === 'suggestion' ? 'badge-info' : 'badge-primary' }}">{{ $contact_us_query->category === 'suggestion' ? translate('Suggestion') : translate('Issue') }}</span></td>
                                     <td>{{ $contact_us_query->subject }}</td>
                                     <td>{{ date('d-m-Y', strtotime($contact_us_query->created_at)) }}</td>
                                     <td>
@@ -56,7 +64,7 @@
                         </tbody>
                     </table>
                     <div class="aiz-pagination">
-                        {{ $contact_us_queries->links() }}
+                        {{ $contact_us_queries->withQueryString()->links() }}
                     </div>
                 </div>
             </div>
