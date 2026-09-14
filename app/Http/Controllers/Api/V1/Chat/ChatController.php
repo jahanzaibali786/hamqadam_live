@@ -46,6 +46,18 @@ class ChatController extends ApiController
         return $this->success(new ChatMessageResource($message), 'Message sent successfully.', 201);
     }
 
+    /**
+     * POST /chat/threads/{thread}/delivered — the recipient's app acknowledges
+     * having the messages on device, turning the sender's single tick into a
+     * double tick.
+     */
+    public function delivered(Request $request, int $thread): JsonResponse
+    {
+        $this->chat->markDelivered($request->user(), $thread);
+
+        return $this->success(message: 'Messages marked as delivered.');
+    }
+
     public function typing(Request $request, int $thread): JsonResponse
     {
         $this->chat->typing($request->user(), $thread);

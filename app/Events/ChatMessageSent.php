@@ -65,6 +65,8 @@ class ChatMessageSent implements ShouldBroadcast
             'delivered_at' => optional($this->message->delivered_at)->toISOString(),
             'read_at' => optional($this->message->read_at)->toISOString(),
             'seen' => (bool) $this->message->seen,
+            // Voice-note waveform/duration for the app's player bubble.
+            'metadata' => $this->message->metadata,
             'moderation_status' => $this->message->moderation_status ?? 'clean',
             'toxicity_score' => $this->message->toxicity_score ?? 0,
             'created_at' => optional($this->message->created_at)->toISOString(),

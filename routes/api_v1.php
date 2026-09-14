@@ -171,12 +171,13 @@ Route::middleware(['auth:sanctum', 'manual.review'])->prefix('proposals')->name(
     Route::post('/relationship-status', [ProposalMeetingController::class, 'relationshipStatus'])->name('relationship_status.store');
 });
 
-Route::middleware(['auth:sanctum', 'manual.review'])->prefix('chat')->name('api.v1.chat.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('chat')->name('api.v1.chat.')->group(function () {
     Route::get('/threads', [ChatController::class, 'threads'])->name('threads');
     Route::get('/threads/{thread}/messages', [ChatController::class, 'messages'])->name('messages');
     Route::get('/threads/{thread}/calls', [CallController::class, 'history'])->name('calls.history');
     Route::post('/threads/{thread}/messages', [ChatController::class, 'send'])->middleware('throttle:60,1')->name('messages.send');
     Route::post('/threads/{thread}/typing', [ChatController::class, 'typing'])->middleware('throttle:120,1')->name('typing');
+    Route::post('/threads/{thread}/delivered', [ChatController::class, 'delivered'])->middleware('throttle:60,1')->name('delivered');
     Route::post('/threads/{thread}/block', [ChatController::class, 'block'])->name('block');
     Route::post('/threads/{thread}/unblock', [ChatController::class, 'unblock'])->name('unblock');
     Route::post('/threads/{thread}/clear', [ChatController::class, 'clear'])->name('clear');
@@ -201,7 +202,7 @@ Route::middleware(['auth:sanctum', 'manual.review'])->prefix('chat')->name('api.
 | One conversation per member; the admin replies from the admin panel and
 | both sides see each other live over the `private-help-chat.{id}` channel.
 */
-Route::middleware(['auth:sanctum', 'manual.review'])->prefix('help-chat')->name('api.v1.help_chat.')->group(function () {
+Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('help-chat')->name('api.v1.help_chat.')->group(function () {
     Route::get('/thread', [HelpChatController::class, 'thread'])->name('thread');
     Route::get('/messages', [HelpChatController::class, 'messages'])->name('messages');
     Route::post('/messages', [HelpChatController::class, 'send'])->middleware('throttle:30,1')->name('send');

@@ -76,6 +76,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'activated' => \App\Http\Middleware\CheckActiveUser::class,
             'check.package' => \App\Http\Middleware\CheckMemberPackage::class,
             'manual.review' => \App\Http\Middleware\ManualReviewReadOnly::class,
+            'member.activity' => \App\Http\Middleware\EnsureApiMemberActivity::class,
         ]);
 
         $middleware->priority([

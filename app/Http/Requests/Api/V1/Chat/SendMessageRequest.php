@@ -16,6 +16,9 @@ class SendMessageRequest extends ApiFormRequest
             'reply_to_chat_id' => ['sometimes', 'nullable', 'integer', 'exists:chats,id'],
             'attachments' => ['sometimes', 'array', 'max:5'],
             'attachments.*' => ['file', 'max:10240'],
+            // Free-form message extras — the voice note's duration and waveform
+            // ride here so the recipient's app can draw a player bubble.
+            'metadata' => ['sometimes', 'nullable', 'array'],
         ];
     }
 }

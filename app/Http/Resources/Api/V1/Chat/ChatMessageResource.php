@@ -25,6 +25,10 @@ class ChatMessageResource extends JsonResource
             'delivered_at' => optional($this->delivered_at)->toISOString(),
             'read_at' => optional($this->read_at)->toISOString(),
             'seen' => (bool) $this->seen,
+            // Voice-note waveform/length lives here (metadata JSON on the chats
+            // table) so the app can render a proper player without fetching
+            // anything else.
+            'metadata' => $this->metadata,
             'moderation_status' => $this->moderation_status ?? 'clean',
             'toxicity_score' => $this->toxicity_score,
             'created_at' => optional($this->created_at)->toISOString(),
