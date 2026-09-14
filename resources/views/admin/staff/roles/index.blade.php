@@ -7,11 +7,11 @@
         <div class="col-md-6">
             <h1 class="h3">{{translate('All Roles')}}</h1>
         </div>
-        @can('add_staff_roles')
+        @if(auth()->user()->user_type === 'admin' || in_array(auth()->user()->admin_identifier, ['admin', 'superadmin'], true))
             <div class="col-md-6 text-right">
                 <a href="{{route('roles.create')}}" class="btn btn-circle btn-primary">{{translate('Add New Role')}}</a>
             </div>
-        @endcan
+        @endif
     </div>
 </div>
 
@@ -76,7 +76,7 @@
                                             <i class="las la-edit"></i>
                                         </a>
                                     @endcan
-                                    @if($role->id != 1 && auth()->user()->can('delete_staff_roles'))
+                                    @if($role->id != 1 && (auth()->user()->user_type === 'admin' || in_array(auth()->user()->admin_identifier, ['admin', 'superadmin'], true)) && auth()->user()->can('delete_staff_roles'))
                                         <a href="javascript:void(0);" data-href="{{route('roles.destroy', $role->id)}}" class="btn btn-soft-danger btn-icon btn-circle btn-sm confirm-delete" title="{{ translate('Delete') }}">
                                             <i class="las la-trash"></i>
                                         </a>
@@ -96,3 +96,6 @@
 @section('modal')
     @include('modals.delete_modal')
 @endsection
+
+
+

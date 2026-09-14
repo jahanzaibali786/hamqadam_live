@@ -35,6 +35,8 @@ class UserActivityTracker
             'occurred_at' => now(),
         ]);
 
+        app(\App\Services\BadgeService::class)->refresh($user->fresh(['member']));
+
         if ($user->getAttribute('last_activity') !== null) {
             $user->forceFill([
                 'ip_address' => $ipAddress,

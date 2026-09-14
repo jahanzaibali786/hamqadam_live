@@ -82,6 +82,93 @@
                 </div>
             </div>
         </div>
+
+        <div class="row gutters-10 mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <div>
+                            <h6 class="mb-1 fs-14">{{ translate('Matchmaking Analytics') }}</h6>
+                            <small class="text-muted">{{ translate('Track discovery, interest, proposal, and conversion activity.') }}</small>
+                        </div>
+                        <span class="badge badge-soft-primary">{{ translate('Live totals') }}</span>
+                    </div>
+                    <div class="card-body pb-2">
+                        <div class="row gutters-10">
+                            <div class="col-xl-3 col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="text-muted fs-12 mb-1">{{ translate('Total Interests / Proposals Sent') }}</div>
+                                    <div class="h3 mb-1 text-primary">{{ number_format($analytics['total_interests']) }}</div>
+                                    <small class="text-muted">{{ number_format($analytics['interests_this_month']) }} {{ translate('sent this month') }}</small>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="text-muted fs-12 mb-1">{{ translate('Pending Requests') }}</div>
+                                    <div class="h3 mb-1 text-warning">{{ number_format($analytics['pending_interests']) }}</div>
+                                    <small class="text-muted">{{ translate('Waiting for a response') }}</small>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="text-muted fs-12 mb-1">{{ translate('Accepted Matches') }}</div>
+                                    <div class="h3 mb-1 text-success">{{ number_format($analytics['accepted_matches']) }}</div>
+                                    <small class="text-muted">{{ translate('Successful proposal outcomes') }}</small>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="text-muted fs-12 mb-1">{{ translate('Closed / Rejected') }}</div>
+                                    <div class="h3 mb-1 text-danger">{{ number_format($analytics['rejected_or_closed_interests']) }}</div>
+                                    <small class="text-muted">{{ translate('Rejected, withdrawn, cancelled, or expired') }}</small>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="text-muted fs-12 mb-1">{{ translate('Shortlisted Profiles') }}</div>
+                                    <div class="h3 mb-1 text-info">{{ number_format($analytics['shortlisted_profiles']) }}</div>
+                                    <small class="text-muted">{{ translate('Total shortlist actions') }}</small>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="text-muted fs-12 mb-1">{{ translate('Profile Views') }}</div>
+                                    <div class="h3 mb-1 text-info">{{ number_format($analytics['profile_views']) }}</div>
+                                    <small class="text-muted">{{ translate('Discovery activity recorded') }}</small>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="text-muted fs-12 mb-1">{{ translate('Active Members') }}</div>
+                                    <div class="h3 mb-1 text-success">{{ number_format($analytics['active_members_last_7_days']) }}</div>
+                                    <small class="text-muted">{{ translate('Logged in during the last 7 days') }}</small>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="text-muted fs-12 mb-1">{{ translate('New Members') }}</div>
+                                    <div class="h3 mb-1 text-primary">{{ number_format($analytics['new_members_this_month']) }}</div>
+                                    <small class="text-muted">{{ translate('Joined this month') }}</small>
+                                    <div class="col-xl-3 col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="text-muted fs-12 mb-1">{{ translate('Paid Subscriptions') }}</div>
+                                    <div class="h3 mb-1 text-success">{{ number_format($analytics['paid_subscriptions']) }}</div>
+                                    <small class="text-muted">{{ translate('Successful package payments') }}</small>
+                                </div>
+                            </div>
+                            <div class="col-xl-3 col-md-6 mb-3">
+                                <div class="border rounded p-3 h-100">
+                                    <div class="text-muted fs-12 mb-1">{{ translate('User Reports') }}</div>
+                                    <div class="h3 mb-1 text-danger">{{ number_format($analytics['reports']) }}</div>
+                                    <small class="text-muted">{{ translate('Reports requiring moderation') }}</small>
+                                </div>
+                            </div>                        </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="row gutters-10">
             <div class="col-xxl-8 col-xl-7">
                 <div class="card shadow-sm">
@@ -304,3 +391,5 @@
     });
 </script>
 @endsection
+
+

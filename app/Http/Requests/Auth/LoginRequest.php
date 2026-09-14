@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Models\User;
+use App\Services\Security\LoginSecurityService;
 
 class LoginRequest extends FormRequest
 {
@@ -42,11 +44,21 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         $login = $this->input('email');
+        $security = app(LoginSecurityService::class);
+        $lockedFor = $security->lockoutSeconds($login, $this, 'web');
+
+        if ($lockedFor > 0) {
+            throw ValidationException::withMessages([
+                'email' => trans('auth.throttle', ['seconds' => $lockedFor, 'minutes' => ceil($lockedFor / 60)]),
+            ]);
+        }
 
         $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $user = User::where($field, $login)->first();
 
         if (! Auth::attempt([$field => $login, 'password' => $this->password], $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
+            $security->recordFailure($user, $login, $this, 'web', 'invalid_credentials');
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
@@ -54,6 +66,7 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        $security->recordSuccess(Auth::user(), $login, $this, 'web');
     }
 
     /**

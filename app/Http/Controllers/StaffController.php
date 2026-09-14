@@ -1,14 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Staff;
 use App\Models\Role;
+use App\Models\Staff;
 use App\Models\User;
-use Hash;
 use App\Utility\EmailUtility;
 use App\Utility\SmsUtility;
+use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 
 class StaffController extends Controller
 {
@@ -28,97 +31,154 @@ class StaffController extends Controller
 
     public function create()
     {
-        $roles = Role::latest()->get();
+        $roles = $this->visibleRoles();
         return view('admin.staff.staffs.create', compact('roles'));
     }
 
     public function store(Request $request)
     {
-        if(User::where('email', $request->email)->first() == null){
-            $user = new User;
-            $user->first_name = $request->first_name;
-            $user->last_name  = $request->last_name;
-            $user->email      = $request->email;
-            $user->phone      = $request->mobile;
-            $user->user_type  = 'staff';
-            $role             = Role::findOrFail($request->role_id);
-            $user->admin_identifier = str_contains(strtolower($role->name), 'sub') ? 'subadmin' : 'staff';
-            $user->password   = Hash::make($request->password);
-            if($user->save()){
-                $staff = new Staff;
-                $staff->user_id = $user->id;
-                $staff->role_id = $request->role_id;
-                $user->assignRole($role->name);
-                if($staff->save()){
-                    $role_name  = Role::where('id', $staff->role_id)->first()->name;
-
-                    if($user->email != null && get_email_template('staff_account_opening_email','status'))
-                    {
-                        EmailUtility::staff_account_opening_email($user, $request->password, $role_name);
-                    }
-
-                    if($user->phone != null && addon_activation('otp_system') && (get_sms_template('staff_account_opening','status') == 1))
-                    {
-                        SmsUtility::staff_account_opening($user, $request->password, $role_name);
-                    }
-
-                    flash(translate('Staff has been inserted successfully'))->success();
-                    return redirect()->route('staffs.index');
-                }
-            }
+        if (User::where('email', $request->email)->exists()) {
+            flash(translate('Email already used'))->error();
+            return back()->withInput();
         }
 
-        flash(translate('Email already used'))->error();
-        return back();
+        $role = $this->roleForCreator($request->role_id);
+        $user = new User;
+        $user->first_name = $request->first_name;
+        $user->last_name = $request->last_name;
+        $user->email = $request->email;
+        $user->phone = $request->mobile;
+        $user->user_type = 'staff';
+        $user->admin_identifier = $this->isSuperAdmin() ? $this->adminIdentifierForRole($role) : 'subadmin';
+        $user->password = Hash::make($request->password);
+
+        if (! $user->save()) {
+            flash(translate('Something went wrong'))->error();
+            return back()->withInput();
+        }
+
+        $staff = new Staff;
+        $staff->user_id = $user->id;
+        $staff->role_id = $role->id;
+        $user->assignRole($role->name);
+
+        if (! $staff->save()) {
+            $user->delete();
+            flash(translate('Something went wrong'))->error();
+            return back()->withInput();
+        }
+
+        $roleName = $role->name;
+        if ($user->email && get_email_template('staff_account_opening_email', 'status')) {
+            EmailUtility::staff_account_opening_email($user, $request->password, $roleName);
+        }
+        if ($user->phone && addon_activation('otp_system') && get_sms_template('staff_account_opening', 'status') == 1) {
+            SmsUtility::staff_account_opening($user, $request->password, $roleName);
+        }
+
+        flash(translate('Moderator has been inserted successfully'))->success();
+        return redirect()->route('staffs.index');
     }
 
     public function show($id)
     {
-        //
+        // Moderator details are managed through the edit screen.
     }
 
     public function edit($id)
     {
         $staff = Staff::findOrFail(decrypt($id));
-        $roles = Role::latest()->get();
-        return view('admin.staff.staffs.edit', compact('staff','roles'));
+        $this->assertStaffIsManageable($staff);
+        $roles = $this->visibleRoles();
+        return view('admin.staff.staffs.edit', compact('staff', 'roles'));
     }
 
     public function update(Request $request, $id)
     {
         $staff = Staff::findOrFail($id);
-        $user  = $staff->user;
+        $this->assertStaffIsManageable($staff);
+        $user = $staff->user;
+        $role = $this->roleForCreator($request->role_id);
+
         $user->first_name = $request->first_name;
-        $user->last_name  = $request->last_name;
-        $user->email      = $request->email;
-        $user->phone      = $request->mobile;
-        if(strlen($request->password) > 0){
+        $user->last_name = $request->last_name;
+        $user->email = $request->email;
+        $user->phone = $request->mobile;
+        if (strlen((string) $request->password) > 0) {
             $user->password = Hash::make($request->password);
         }
-        if($user->save()){
-            $staff->role_id = $request->role_id;
-            $role = Role::findOrFail($request->role_id);
-            $user->admin_identifier = str_contains(strtolower($role->name), 'sub') ? 'subadmin' : 'staff';
-            $user->syncRoles($role->name);
-            if($staff->save()){
-                flash(translate('Staff has been updated successfully'))->success();
-                return redirect()->route('staffs.index');
-            }
+        $user->admin_identifier = $this->isSuperAdmin() ? $this->adminIdentifierForRole($role) : 'subadmin';
+
+        if (! $user->save()) {
+            flash(translate('Something went wrong'))->error();
+            return back()->withInput();
+        }
+
+        $staff->role_id = $role->id;
+        $user->syncRoles([$role->name]);
+        $staff->save();
+
+        flash(translate('Moderator has been updated successfully'))->success();
+        return redirect()->route('staffs.index');
+    }
+
+    public function destroy($id)
+    {
+        $staff = Staff::findOrFail($id);
+        $this->assertStaffIsManageable($staff);
+        User::destroy($staff->user->id);
+
+        if (Staff::destroy($id)) {
+            flash(translate('Moderator has been deleted successfully'))->success();
+            return redirect()->route('staffs.index');
         }
 
         flash(translate('Something went wrong'))->error();
         return back();
     }
 
-    public function destroy($id)
+    private function isSuperAdmin(): bool
     {
-        User::destroy(Staff::findOrFail($id)->user->id);
-        if(Staff::destroy($id)){
-            flash(translate('Staff has been deleted successfully'))->success();
-            return redirect()->route('staffs.index');
+        $user = auth()->user();
+
+        return (bool) $user && (
+            in_array($user->admin_identifier, ['admin', 'superadmin'], true)
+            || $user->user_type === 'admin'
+        );
+    }
+
+    private function visibleRoles(): Collection
+    {
+        if ($this->isSuperAdmin()) {
+            return Role::query()->latest()->get();
         }
 
-        flash(translate('Something went wrong'))->error();
-        return back();
+        return Role::query()
+            ->whereIn('name', ['Sub Admin', 'subadmin'])
+            ->latest()
+            ->get();
+    }
+
+    private function roleForCreator($roleId): Role
+    {
+        $role = Role::findOrFail($roleId);
+        if (! $this->isSuperAdmin() && ! in_array(strtolower($role->name), ['sub admin', 'subadmin'], true)) {
+            abort(403, 'You may only create or manage Sub Admin moderators.');
+        }
+
+        return $role;
+    }
+
+    private function assertStaffIsManageable(Staff $staff): void
+    {
+        if (! $this->isSuperAdmin() && strtolower((string) $staff->role?->name) !== 'sub admin'
+            && strtolower((string) $staff->role?->name) !== 'subadmin') {
+            abort(403, 'You may only manage Sub Admin moderators.');
+        }
+    }
+
+    private function adminIdentifierForRole(Role $role): string
+    {
+        return in_array(strtolower($role->name), ['sub admin', 'subadmin'], true) ? 'subadmin' : 'moderator';
     }
 }

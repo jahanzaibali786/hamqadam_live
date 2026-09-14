@@ -28,6 +28,7 @@
   					</form>
   				</div>
 		    </div>
+            @include('admin.members.partials.filters', ['filterAction' => url()->current()])
             <div class="card-body">
                 <table class="table aiz-table mb-0">
                     <thead>

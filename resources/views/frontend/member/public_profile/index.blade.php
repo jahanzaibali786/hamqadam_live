@@ -42,6 +42,14 @@
                                 <span class="opacity-60">{{ translate('Member ID: ') }}</span>
                                 <span class="ml-2">{{ $user->code }}</span>
                             </div>
+                            <div class="mt-2">
+                                @if(app(\App\Services\BadgeService::class)->isVerified($user->member))
+                                    <span class="badge badge-soft-success mr-1"><i class="las la-check-circle"></i> {{ translate('Verified') }}</span>
+                                @endif
+                                @if($user->member?->trust_badge)
+                                    <span class="badge badge-soft-warning"><i class="las la-shield-alt"></i> {{ translate('Trust') }}</span>
+                                @endif
+                            </div>
                             <hr class="border-gray-500">
                             <table class="w-100">
                                 <tbody>

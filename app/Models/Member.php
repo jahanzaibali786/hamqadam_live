@@ -21,7 +21,7 @@ class Member extends Model
     use SoftDeletes;
     protected $fillable = [
         'user_id','gender','birthday','on_behalves_id','current_package_id','remaining_interest','remaining_contact_view','remaining_photo_gallery','auto_profile_match','auto_horoscope_profile_match','package_validity',
-        'introduction','video_introduction','voice_introduction','ai_generated_bio','travel_preferences','future_goals','profile_completion_percentage','hide_profile','verification_status','marital_status_id','children','annual_salary_range_id','mothere_tongue','known_languages',
+        'introduction','video_introduction','voice_introduction','ai_generated_bio','travel_preferences','future_goals','profile_completion_percentage','hide_profile','verification_status','trust_badge','trust_badge_earned_at','verification_badge','verification_badge_earned_at','marital_status_id','children','annual_salary_range_id','mothere_tongue','known_languages',
         'looking_for','life_values','personality_type','communication_style','love_language','conflict_resolution_style','disability',
         'religious_practice_level','prayer_frequency','community_biradari','hijab_beard_preference',
         'education_level','employment_status','work_location_city','annual_income',
@@ -57,6 +57,10 @@ class Member extends Model
         'ai_verified_at' => 'datetime',
         'manual_review_started_at' => 'datetime',
         'manual_review_expires_at' => 'datetime',
+        'trust_badge' => 'boolean',
+        'trust_badge_earned_at' => 'datetime',
+        'verification_badge' => 'boolean',
+        'verification_badge_earned_at' => 'datetime',
     ];
 
     public function user()

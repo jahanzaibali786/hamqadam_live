@@ -32,6 +32,14 @@
                                         </div>
                                     </div>
                                     <div class="mb-3">
+                                        <label class="form-label text-primary-grad">{{ translate('Ticket Type') }} <span class="text-danger">*</span></label>
+                                        <select class="form-control" name="category" required>
+                                            <option value="">{{ translate('Select ticket type') }}</option>
+                                            <option value="issue" @selected(old('category') === 'issue')>{{ translate('Issue') }}</option>
+                                            <option value="suggestion" @selected(old('category') === 'suggestion')>{{ translate('Suggestion') }}</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
                                         <label class="form-label text-primary-grad"> {{ translate('Subject') }} <span
                                                 class="text-danger">*</span> </label>
                                         <input type="text" class="form-control" name="subject"

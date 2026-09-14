@@ -203,7 +203,7 @@
                             class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes(['contact_us'],'bg-primary-grad') }}">
                             <a class="nav-link text-uppercase fw-700 fs-15 d-flex align-items-center bg-white py-2"
                                 href="{{ route('contact_us') }}">
-                                <span class="text-primary-grad mb-n1">{{ translate('Contact Us') }}</span>
+                                <span class="text-primary-grad mb-n1">{{ translate('Ticket') }}</span>
                             </a>
                         </li>
                     </ul>

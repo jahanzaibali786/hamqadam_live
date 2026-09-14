@@ -43,6 +43,7 @@
         ['Last Login', $fmt($summary['last_login_at']), 'la-sign-in-alt'],
         ['Last Seen', $fmt($summary['last_seen_at']), 'la-clock'],
         ['Sessions', $summary['session_count'], 'la-layer-group'],
+        ['Failed Logins', $summary['failed_login_count'], 'la-shield-alt'],
         ['Activity Status', $summary['active_status'], 'la-heartbeat'],
         ['Location / IP', ($summary['latest_location'] ?: translate('Unknown')).($summary['latest_ip'] ? ' · '.$summary['latest_ip'] : ''), 'la-map-marker'],
         ['Verification', $summary['verification_status'], 'la-id-card'],

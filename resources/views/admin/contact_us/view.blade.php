@@ -8,6 +8,7 @@
                 </div>
                 <div class="card-body">
                     <div class="div">
+                        <p><b>{{ translate('Category') }}:</b> {{ $contactUs->category === 'suggestion' ? translate('Suggestion') : translate('Issue') }}</p>
                         <h5><b> Subject :</b> {{ $contactUs->subject }}</h5>
                         <p> <b> Description :</b> {{ $contactUs->description }}</p>
                     </div>

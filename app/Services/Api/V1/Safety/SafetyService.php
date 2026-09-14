@@ -35,6 +35,9 @@ class SafetyService
             'metadata' => $data['evidence'] ?? [],
         ]);
 
+        app(\App\Services\BadgeService::class)->refresh($actor->fresh(['member']));
+        app(\App\Services\BadgeService::class)->refresh(User::with('member')->find((int) $data['user_id']));
+
         SuspiciousActivityLog::create([
             'user_id' => $data['user_id'],
             'activity_type' => 'user_reported',
@@ -68,6 +71,8 @@ class SafetyService
 
         if ($type === SafetyActionType::Block || $type === SafetyActionType::Restrict) {
             User::whereKey($data['user_id'])->update(['blocked' => $type === SafetyActionType::Restrict ? 1 : 0]);
+            app(\App\Services\BadgeService::class)->refresh($actor->fresh(['member']));
+            app(\App\Services\BadgeService::class)->refresh(User::with('member')->find((int) $data['user_id']));
         }
 
         return $action;

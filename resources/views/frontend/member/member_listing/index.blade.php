@@ -55,6 +55,14 @@
 
                                                 <h2 class="h6 fw-600 fs-18 text-truncate mb-1">
                                                     {{ $user->first_name . ' ' . $user->last_name }}</h2>
+                                                <div class="mb-2">
+                                                    @if(app(\App\Services\BadgeService::class)->isVerified($user->member))
+                                                        <span class="badge badge-soft-success mr-1"><i class="las la-check-circle"></i> {{ translate('Verified') }}</span>
+                                                    @endif
+                                                    @if($user->member?->trust_badge)
+                                                        <span class="badge badge-soft-warning"><i class="las la-shield-alt"></i> {{ translate('Trust') }}</span>
+                                                    @endif
+                                                </div>
                                                 <div class="mb-2 fs-12">
                                                     <span class="opacity-60">{{ translate('Member ID: ') }}</span>
                                                     <span class="ml-4 text-primary">{{ $user->code }}</span>
