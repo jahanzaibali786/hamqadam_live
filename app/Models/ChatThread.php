@@ -19,6 +19,7 @@ class ChatThread extends Model
         'last_message_at' => 'datetime',
         'sender_muted_at' => 'datetime',
         'receiver_muted_at' => 'datetime',
+        'disappear_after' => 'integer',
     ];
 
     public function chats(): HasMany

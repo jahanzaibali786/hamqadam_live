@@ -33,6 +33,9 @@ class ChatThreadResource extends JsonResource
                 ->count(),
             'last_message' => $lastMessage instanceof Chat ? new ChatMessageResource($lastMessage) : null,
             'last_message_at' => optional($this->last_message_at ?? $this->updated_at)->toISOString(),
+            // Remembered disappearing-message TTL (seconds; 0 = off) so both
+            // clients can show the timer chip and default the next message.
+            'disappear_after' => (int) ($this->disappear_after ?? 0),
             'created_at' => optional($this->created_at)->toISOString(),
         ];
     }

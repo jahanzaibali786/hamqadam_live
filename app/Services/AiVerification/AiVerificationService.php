@@ -321,12 +321,15 @@ class AiVerificationService
             'response_payload' => json_encode($body),
         ])->save();
 
-        $requiresHumanReview = ($body['requires_human_review'] ?? false) === true;
-        $memberStatus = $requiresHumanReview ? 'manual_review' : match ($recommendation) {
-            'APPROVE' => 'approved',
-            'REJECT' => 'rejected',
-            default => 'manual_review',
-        };
+        // POLICY: the model can only APPROVE. Everything else — an explicit
+        // REJECT, a hedged recommendation, or a request for human review —
+        // lands in the manual-review queue so a human makes the final call.
+        // A machine alone must never hard-reject a matrimonial member: a
+        // borderline selfie used to lock them out with "rejected" and no
+        // route back in.
+        $memberStatus = $recommendation === 'APPROVE' && ($body['requires_human_review'] ?? false) !== true
+            ? 'approved'
+            : 'manual_review';
 
         $this->updateMember($user, $memberStatus, $recommendation, $recommendation === 'APPROVE', $reviewReason);
 

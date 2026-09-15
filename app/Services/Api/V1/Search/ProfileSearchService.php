@@ -73,6 +73,23 @@ class ProfileSearchService
 
     private function applyFilters($query, User $viewer, array $filters): void
     {
+        // Free-text search from the Discover field: name (first / last / full)
+        // or member ID. Runs server-side so pagination keeps matching profiles
+        // reachable on every page — the client previously had to emulate this
+        // locally, which silently hid matches on unloaded pages.
+        if (! empty($filters['search'])) {
+            $term = trim((string) $filters['search']);
+            if ($term !== '') {
+                $like = '%' . str_replace(['%', '_'], ['\\%', '\\_'], $term) . '%';
+                $query->where(function ($q) use ($like) {
+                    $q->where('first_name', 'like', $like)
+                        ->orWhere('last_name', 'like', $like)
+                        ->orWhereRaw("CONCAT(TRIM(COALESCE(first_name, '')), ' ', TRIM(COALESCE(last_name, ''))) LIKE ?", [$like])
+                        ->orWhere('code', 'like', $like);
+                });
+            }
+        }
+
         if (! empty($filters['verified_only'])) {
             $query->where('approved', 1);
         }

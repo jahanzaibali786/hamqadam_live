@@ -41,6 +41,9 @@ class ProfileSearchRequest extends ApiFormRequest
             'compatibility_min' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:100'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
             'sort' => ['sometimes', 'nullable', 'string', 'in:newest,compatibility,recently_active'],
+            // Free-text keyword from the Discover search field: matches the
+            // member's name (first/last/full) or their member ID (code).
+            'search' => ['sometimes', 'nullable', 'string', 'max:100'],
         ];
     }
 }

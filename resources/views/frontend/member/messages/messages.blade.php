@@ -60,6 +60,26 @@
 
         <div class="d-flex align-items-center">
 
+            <div class="mr-2 text-right">
+
+                <div class="fs-11 text-muted" id="chat-partner-presence">
+
+                    @php $partnerLastSeen = \Cache::has('user-is-online-' . $chat_thread->$user_to_show->id) ? null : optional($chat_thread->$user_to_show->last_active_at ?? $chat_thread->$user_to_show->last_login_at); @endphp
+
+                    @if (\Cache::has('user-is-online-' . $chat_thread->$user_to_show->id))
+
+                        <span class="text-success fw-600">{{ translate('Online') }}</span>
+
+                    @elseif($partnerLastSeen)
+
+                        {{ translate('Last seen') }} {{ $partnerLastSeen->diffForHumans() }}
+
+                    @endif
+
+                </div>
+
+            </div>
+
             <button type="button" class="btn btn-icon btn-circle btn-soft-success mr-2" onclick="startCall('audio')" title="{{ translate('Audio Call') }}" {{ !empty($chat_is_blocked) ? 'disabled' : '' }}>
 
                 <i class="las la-phone"></i>
@@ -180,15 +200,35 @@
 
                 <input type="hidden" id="chat_thread_id" name="chat_thread_id" value="{{ $chat_thread->id }}">
 
+                <input type="hidden" name="disappear_after" id="disappear_after" value="{{ (int) ($chat_thread->disappear_after ?? 0) }}">
+
                 <input type="text" class="form-control" name="message" id="message" placeholder="Your Message.." autocomplete="off" {{ !empty($chat_is_blocked) ? "disabled" : "" }}>
 
                 <input type="hidden" class="" name="attachment" id="attachment">
 
                 <div class="input-group-append">
 
+                    <button class="btn btn-circle btn-icon" type="button" id="emoji-toggle" title="{{ translate('Emoji') }}" {{ !empty($chat_is_blocked) ? "disabled" : "" }}>
+
+                        <i class="lar la-smile"></i>
+
+                    </button>
+
+                    <button class="btn btn-circle btn-icon" type="button" id="disappear-toggle" title="{{ translate('Disappearing messages') }}" {{ !empty($chat_is_blocked) ? "disabled" : "" }}>
+
+                        <i class="lar la-clock"></i>
+
+                    </button>
+
                     <button class="btn btn-circle btn-icon chat-attachment" type="button" {{ !empty($chat_is_blocked) ? "disabled" : "" }}>
 
                         <i class="las la-paperclip"></i>
+
+                    </button>
+
+                    <button class="btn btn-circle btn-icon" type="button" id="voice-record-btn" title="{{ translate('Record voice note') }}" {{ !empty($chat_is_blocked) ? "disabled" : "" }}>
+
+                        <i class="las la-microphone"></i>
 
                     </button>
 
@@ -199,6 +239,34 @@
                     </button>
 
                 </div>
+
+            </div>
+
+            <div id="disappear-menu" style="display:none;" class="mt-2 p-2 border rounded bg-white">
+
+                <div class="fs-12 text-muted mb-1">{{ translate('New messages disappear after') }}</div>
+
+                <button type="button" class="btn btn-sm btn-light mr-1 disappear-option" data-ttl="0">{{ translate('Off') }}</button>
+
+                <button type="button" class="btn btn-sm btn-light mr-1 disappear-option" data-ttl="86400">{{ translate('24 hours') }}</button>
+
+                <button type="button" class="btn btn-sm btn-light mr-1 disappear-option" data-ttl="604800">{{ translate('7 days') }}</button>
+
+                <button type="button" class="btn btn-sm btn-light disappear-option" data-ttl="7776000">{{ translate('90 days') }}</button>
+
+            </div>
+
+            <div id="emoji-panel" style="display:none;" class="mt-2 p-2 border rounded bg-white"></div>
+
+            <div id="voice-record-bar" style="display:none;" class="mt-2 p-2 border rounded">
+
+                <span class="text-danger mr-2">●</span>
+
+                <span id="voice-record-time" class="fw-600 mr-3">00:00</span>
+
+                <button type="button" class="btn btn-sm btn-light mr-1" id="voice-cancel">{{ translate('Cancel') }}</button>
+
+                <button type="button" class="btn btn-sm btn-primary" id="voice-send">{{ translate('Send') }}</button>
 
             </div>
 
@@ -972,9 +1040,11 @@
 
             var attachment = $('#attachment').val();
 
+            var disappear = $('#disappear_after').val() || 0;
+
             if(message.length > 0 || attachment.length > 0){
 
-                $.post('{{ route('chat.reply') }}',{_token:'{{ csrf_token() }}', chat_thread_id:chat_thread_id, message:message, attachment:attachment}, function(data){
+                $.post('{{ route('chat.reply') }}',{_token:'{{ csrf_token() }}', chat_thread_id:chat_thread_id, message:message, attachment:attachment, disappear_after:disappear}, function(data){
 
                     $('#message').val('');
 
@@ -989,6 +1059,168 @@
             }
 
         }
+
+        // ---- Typing ping (web parity with the app) --------------------------
+
+        var typingThrottle = 0;
+
+        $('#message').on('input', function () {
+
+            var now = Date.now();
+
+            if (now - typingThrottle < 2500) return;
+
+            typingThrottle = now;
+
+            $.post('{{ route('chat.typing') }}', {_token:'{{ csrf_token() }}', chat_thread_id: $('#chat_thread_id').val()});
+
+        });
+
+        // ---- Disappearing messages (web parity) -----------------------------
+
+        $('#disappear-toggle').on('click', function () {
+
+            $('#disappear-menu').toggle();
+
+        });
+
+        $(document).on('click', '.disappear-option', function () {
+
+            var ttl = $(this).data('ttl');
+
+            $.post('{{ route('chat.disappear') }}', {_token:'{{ csrf_token() }}', chat_thread_id: $('#chat_thread_id').val(), disappear_after: ttl}, function (res) {
+
+                $('#disappear_after').val(res.disappear_after);
+
+                $('#disappear-menu').hide();
+
+                var label = res.disappear_after > 0 ? ('Timer on: ' + Math.round(res.disappear_after / 86400 * 10) / 10 + 'd') : 'Timer off';
+
+                $('#disappear-toggle').toggleClass('text-primary', res.disappear_after > 0);
+
+            });
+
+        });
+
+        // ---- Emoji quick panel ----------------------------------------------
+
+        var EMOJIS = ['😀','😁','😂','🤣','😊','😍','😘','😜','🤗','🤔','😐','😴','😢','😭','😡','👍','👎','🙏','👏','💪','❤️','💔','🌹','🎉','🤲','🕌','⭐','✨','🔥'];
+
+        (function buildEmojiPanel(){
+
+            var html = '';
+
+            EMOJIS.forEach(function (e) { html += '<button type="button" class="btn btn-sm btn-light mr-1 mb-1 emoji-pick">' + e + '</button>'; });
+
+            $('#emoji-panel').html(html);
+
+        })();
+
+        $('#emoji-toggle').on('click', function () {
+
+            $('#emoji-panel').toggle();
+
+        });
+
+        $(document).on('click', '.emoji-pick', function () {
+
+            var el = $('#message');
+
+            el.val(el.val() + $(this).text()).focus();
+
+        });
+
+        // ---- Voice notes (MediaRecorder, web parity with the app) -----------
+
+        var voiceRecorder = null, voiceChunks = [], voiceStarted = 0, voiceTimer = null;
+
+        $('#voice-record-btn').on('click', function () {
+
+            if (!navigator.mediaDevices || !window.MediaRecorder) {
+
+                alert('{{ translate('Voice recording is not supported in this browser.') }}');
+
+                return;
+
+            }
+
+            navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+
+                voiceChunks = [];
+
+                voiceRecorder = new MediaRecorder(stream);
+
+                voiceRecorder.ondataavailable = function (e) { voiceChunks.push(e.data); };
+
+                voiceRecorder.start();
+
+                voiceStarted = Date.now();
+
+                $('#voice-record-bar').show();
+
+                voiceTimer = setInterval(function () {
+
+                    var s = Math.floor((Date.now() - voiceStarted) / 1000);
+
+                    $('#voice-record-time').text(('0' + Math.floor(s / 60)).slice(-2) + ':' + ('0' + (s % 60)).slice(-2));
+
+                }, 500);
+
+            }).catch(function () {
+
+                alert('{{ translate('Microphone permission is required for voice notes.') }}');
+
+            });
+
+        });
+
+        function stopVoiceRecording(send) {
+
+            if (!voiceRecorder) return;
+
+            clearInterval(voiceTimer);
+
+            var rec = voiceRecorder; voiceRecorder = null;
+
+            var elapsed = Math.floor((Date.now() - voiceStarted) / 1000);
+
+            rec.onstop = function () {
+
+                rec.stream.getTracks().forEach(function (t) { t.stop(); });
+
+                $('#voice-record-bar').hide();
+
+                if (!send || elapsed < 1) return;
+
+                var blob = new Blob(voiceChunks, { type: rec.mimeType || 'audio/webm' });
+
+                var fd = new FormData();
+
+                fd.append('_token', '{{ csrf_token() }}');
+
+                fd.append('chat_thread_id', $('#chat_thread_id').val());
+
+                fd.append('duration', elapsed);
+
+                fd.append('voice', blob, 'voice-note.webm');
+
+                $.ajax({ url: '{{ route('chat.voice_reply') }}', type: 'POST', data: fd, processData: false, contentType: false, success: function (data) {
+
+                    $('#chat-messages').append(data);
+
+                    AIZ.extra.scrollToBottom();
+
+                }});
+
+            };
+
+            rec.stop();
+
+        }
+
+        $('#voice-cancel').on('click', function () { stopVoiceRecording(false); });
+
+        $('#voice-send').on('click', function () { stopVoiceRecording(true); });
 
         $(document).on('click','.chat-attachment',function(){
 

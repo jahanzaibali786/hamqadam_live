@@ -178,6 +178,7 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::post('/threads/{thread}/messages', [ChatController::class, 'send'])->middleware('throttle:60,1')->name('messages.send');
     Route::post('/threads/{thread}/typing', [ChatController::class, 'typing'])->middleware('throttle:120,1')->name('typing');
     Route::post('/threads/{thread}/delivered', [ChatController::class, 'delivered'])->middleware('throttle:60,1')->name('delivered');
+    Route::post('/threads/{thread}/disappear', [ChatController::class, 'setDisappear'])->middleware('throttle:30,1')->name('disappear');
     Route::post('/threads/{thread}/block', [ChatController::class, 'block'])->name('block');
     Route::post('/threads/{thread}/unblock', [ChatController::class, 'unblock'])->name('unblock');
     Route::post('/threads/{thread}/clear', [ChatController::class, 'clear'])->name('clear');

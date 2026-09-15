@@ -42,12 +42,45 @@ class ChatApiService
     {
         $thread = $this->threadForUser($user, $threadId);
         $this->markRead($user, $thread);
+        $this->pruneExpired($thread);
         return Chat::with(['sender', 'replyTo.sender'])
             ->where('chat_thread_id', $thread->id)
             ->whereNull($this->deleteColumnFor($thread, $user))
+            // Disappearing messages: anything past its deadline is hidden
+            // (and hard-deleted by the prune above) for BOTH sides.
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->latest()
             ->paginate($perPage);
     }
+
+    /**
+     * Hard-deletes messages whose disappearing TTL has run out. Runs inline on
+     * history reads so the feature works even without a scheduler; cheap
+     * because the index on expires_at keeps the scan tiny.
+     */
+    public function pruneExpired(ChatThread $thread): int
+    {
+        return Chat::where('chat_thread_id', $thread->id)
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now())
+            ->delete();
+    }
+
+    /**
+     * Persists the thread's disappearing-message default (seconds; 0 = off).
+     * Both clients read this back on the thread resource and apply it to new
+     * messages, so the two sides stay in agreement without per-message picks.
+     */
+    public function setDisappearAfter(User $user, int $threadId, int $seconds): int
+    {
+        $thread = $this->threadForUser($user, $threadId);
+        $value = max(0, min($seconds, 31536000));
+        $thread->forceFill(['disappear_after' => $value])->save();
+        return $value;
+    }
+
     public function send(User $user, int $threadId, array $data, array $files = []): Chat
     {
         $thread = $this->threadForUser($user, $threadId);
@@ -57,6 +90,20 @@ class ChatApiService
         }
         $attachments = array_map(fn (UploadedFile $file) => upload_api_file($file), $files);
         return DB::transaction(function () use ($thread, $user, $data, $attachments) {
+            // Disappearing TTL: seconds until the message vanishes. Resolution
+            // order: explicit per-message value → the thread's remembered
+            // setting → off. The chosen value is remembered on the thread so
+            // the other side (and the next message) stays consistent.
+            $ttl = (int) ($data['disappear_after'] ?? 0);
+            if ($ttl <= 0 && array_key_exists('disappear_after', $data)) {
+                $ttl = 0; // explicit "off" wins over the thread default
+            } elseif ($ttl <= 0) {
+                $ttl = (int) ($thread->disappear_after ?? 0);
+            }
+            if ($ttl > 0) {
+                $thread->forceFill(['disappear_after' => $ttl])->save();
+            }
+
             $message = Chat::create([
                 'chat_thread_id' => $thread->id,
                 'sender_user_id' => $user->id,
@@ -73,6 +120,7 @@ class ChatApiService
                 'moderation_status' => 'clean',
                 'toxicity_score' => 0,
                 'metadata' => $data['metadata'] ?? null,
+                'expires_at' => $ttl > 0 ? now()->addSeconds(min($ttl, 31536000)) : null,
             ]);
             $thread->forceFill(['last_message_at' => now()])->save();
             $message = $message->load(['sender', 'replyTo.sender']);
@@ -239,6 +287,9 @@ class ChatApiService
         return Chat::with(['sender', 'replyTo.sender'])
             ->where('chat_thread_id', $thread->id)
             ->whereNull($this->deleteColumnFor($thread, $user))
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->latest()
             ->first();
     }

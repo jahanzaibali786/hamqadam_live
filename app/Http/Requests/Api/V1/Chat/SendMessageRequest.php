@@ -19,6 +19,9 @@ class SendMessageRequest extends ApiFormRequest
             // Free-form message extras — the voice note's duration and waveform
             // ride here so the recipient's app can draw a player bubble.
             'metadata' => ['sometimes', 'nullable', 'array'],
+            // Disappearing-message TTL in seconds. 0/omitted = keep forever;
+            // the app offers 86400 (24h), 604800 (7d), 7776000 (90d).
+            'disappear_after' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:31536000'],
         ];
     }
 }

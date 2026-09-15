@@ -39,7 +39,18 @@ class ManualReviewReadOnly
             'api.v1.partner_preferences.update',
         ]);
 
+        // The help center MUST stay reachable during review: a member who
+        // believes their data was entered correctly has to be able to ask the
+        // team to re-check their case. Read routes pass anyway (method-safe);
+        // these are the member-facing WRITE routes the gate leaves open.
+        $helpCenterAllowed = $request->routeIs([
+            'api.v1.help_chat.*',
+            'api.v1.help.*',
+            'api.v1.safety.*',
+        ]);
+
         if ($profileSettingsRoute
+            || $helpCenterAllowed
             || ($request->isMethodSafe() && ! $legacyMutation)
             || $request->routeIs('api.v1.auth.manual_review.contact', 'api.v1.auth.logout', 'api.v1.auth.logout_all') || str_ends_with($routeName, '.logout')) {
             return $next($request);

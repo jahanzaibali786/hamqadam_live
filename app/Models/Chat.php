@@ -21,6 +21,7 @@ class Chat extends Model
         'read_at' => 'datetime',
         'deleted_by_sender_at' => 'datetime',
         'deleted_by_receiver_at' => 'datetime',
+        'expires_at' => 'datetime',
         'metadata' => 'array',
     ];
 

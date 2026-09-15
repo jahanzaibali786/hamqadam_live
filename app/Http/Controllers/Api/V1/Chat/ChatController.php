@@ -65,6 +65,26 @@ class ChatController extends ApiController
         return $this->success(message: 'Typing indicator updated.');
     }
 
+    /**
+     * Sets the thread's disappearing-message TTL (seconds; 0 = off).
+     * Afterwards every new message on BOTH clients inherits this default.
+     */
+    public function setDisappear(Request $request, int $thread): JsonResponse
+    {
+        $validated = $request->validate([
+            'disappear_after' => ['required', 'integer', 'min:0', 'max:31536000'],
+        ]);
+
+        $value = $this->chat->setDisappearAfter($request->user(), $thread, (int) $validated['disappear_after']);
+
+        return $this->success(
+            data: ['disappear_after' => $value],
+            message: $value > 0
+                ? 'New messages will disappear after ' . now()->addSeconds($value)->diffForHumans(now(), ['parts' => 1]) . '.'
+                : 'Disappearing messages turned off.'
+        );
+    }
+
     public function deleteForMe(Request $request, int $message): JsonResponse
     {
         $this->chat->deleteMessageForMe($request->user(), $message);

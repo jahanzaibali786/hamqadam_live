@@ -1,5 +1,39 @@
 
-@if ($chat->message != null)
+@php
+    $voiceMeta = $chat->metadata;
+    $isVoice = ($chat->message_type ?? 'text') === 'voice' || (is_array($voiceMeta) && ($voiceMeta['voice'] ?? false));
+@endphp
+@if ($isVoice)
+    <div class="chat-coversation right">
+        <div class="media">
+            <div class="media-body">
+                <div class="text bg-soft-primary text-dark p-2">
+                    @php
+                        $voiceUpload = \App\Models\Upload::find(trim((string) $chat->attachment));
+                    @endphp
+                    @if ($voiceUpload != null)
+                        <audio controls preload="none" style="max-width: 240px; height: 36px;">
+                            <source src="{{ uploaded_asset($voiceUpload->id) }}" type="{{ $voiceUpload->extension === 'm4a' ? 'audio/mp4' : 'audio/mpeg' }}">
+                        </audio>
+                    @endif
+                    <span class="fs-11 text-muted ml-2">
+                        🎙 {{ translate('Voice note') }}@if(is_array($voiceMeta) && !empty($voiceMeta['duration'])) · {{ (int) $voiceMeta['duration'] }}s @endif
+                    </span>
+                </div>
+                <div class="d-flex justify-content-end align-items-center mt-1">
+                    <span class="time">{{ Carbon\Carbon::parse($chat->created_at)->diffForHumans() }}</span>
+                </div>
+            </div>
+            <span class="avatar avatar-xs flex-shrink-0">
+                @if ($chat->sender->photo != null)
+                    <img src="{{ uploaded_asset($chat->sender->photo) }}">
+                @else
+                    <img src="{{ static_asset('assets/img/avatar-place.png') }}">
+                @endif
+            </span>
+        </div>
+    </div>
+@elseif ($chat->message != null)
     <div class="chat-coversation right">
         <div class="media">
             <div class="media-body">
