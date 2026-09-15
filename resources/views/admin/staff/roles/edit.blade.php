@@ -25,7 +25,7 @@
                 <div class="card-header bord-btm">
                     <h5 class="mb-md-0 h6">{{ translate('Permissions') }}</h5>
                     @if(auth()->user()->admin_identifier === 'subadmin')
-                        <small class="text-muted">{{ translate('Only permissions assigned to your account are available.') }}</small>
+                        <small class="text-muted">{{ translate('All permissions assigned to the Admin role are available here. You can enable or disable them for Sub Admins.') }}</small>
                     @endif
                 </div>
                 <br>
@@ -75,3 +75,4 @@
     </div>
 
 @endsection
+
