@@ -751,6 +751,55 @@ if (!function_exists('show_profile_picture')) {
     }
 }
 
+/**
+ * Classifies an uploaded file the way the web uploader (AizUploadController)
+ * does: image / audio / video / document / archive / file.
+ *
+ * The MIME type decides first because it is the only thing that separates the
+ * containers shared by audio and video — a voice note recorded in the browser
+ * arrives as .webm or .ogg, exactly the extensions a video would use.
+ */
+if (!function_exists('upload_type_for_file')) {
+    function upload_type_for_file($file): string
+    {
+        $mime = '';
+        try {
+            $mime = strtolower((string) $file->getMimeType());
+        } catch (\Throwable $e) {
+            $mime = '';
+        }
+
+        if (str_starts_with($mime, 'image/')) {
+            return 'image';
+        }
+        if (str_starts_with($mime, 'audio/')) {
+            return 'audio';
+        }
+        if (str_starts_with($mime, 'video/')) {
+            return 'video';
+        }
+
+        $map = [
+            'jpg' => 'image', 'jpeg' => 'image', 'png' => 'image', 'svg' => 'image',
+            'webp' => 'image', 'gif' => 'image', 'bmp' => 'image', 'heic' => 'image', 'heif' => 'image',
+            // m4a is what iOS records voice notes as; the web uploader's own map
+            // is missing it, which is part of why voice notes were typed wrong.
+            'mp3' => 'audio', 'm4a' => 'audio', 'aac' => 'audio', 'wav' => 'audio',
+            'wma' => 'audio', 'flac' => 'audio', 'opus' => 'audio', 'amr' => 'audio',
+            'mp4' => 'video', 'mpg' => 'video', 'mpeg' => 'video', 'avi' => 'video',
+            'mov' => 'video', 'flv' => 'video', 'swf' => 'video', 'mkv' => 'video', 'wmv' => 'video',
+            'zip' => 'archive', 'rar' => 'archive', '7z' => 'archive',
+            'doc' => 'document', 'docx' => 'document', 'txt' => 'document', 'pdf' => 'document',
+            'csv' => 'document', 'xml' => 'document', 'ods' => 'document', 'xlr' => 'document',
+            'xls' => 'document', 'xlsx' => 'document',
+        ];
+
+        $extension = strtolower((string) $file->getClientOriginalExtension());
+
+        return $map[$extension] ?? 'file';
+    }
+}
+
 // file upload for api
 if (!function_exists('upload_api_file')) {
     function upload_api_file($image)
@@ -762,7 +811,10 @@ if (!function_exists('upload_api_file')) {
         $upload->file_name = $image->store('uploads/all');
         $upload->user_id = auth()->id();
         $upload->extension = $image->getClientOriginalExtension();
-        $upload->type = 'image';
+        // Was hard-coded to 'image' for every upload, so a voice note came back
+        // to the apps typed as an image: the chat then drew it in the image
+        // grid as a broken thumbnail instead of a player.
+        $upload->type = upload_type_for_file($image);
         $upload->file_size = $image->getSize();
         $upload->save();
 
