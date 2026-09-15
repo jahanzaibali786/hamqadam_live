@@ -31,3 +31,9 @@ install.zip
 /nbproject/private/
 /nbproject
 matrimonial_laravel.zip
+
+# env backups (never commit - contain secrets)
+.env.bak.*
+.env_live
+.env_live.bak.*
+.env.*.bak.*

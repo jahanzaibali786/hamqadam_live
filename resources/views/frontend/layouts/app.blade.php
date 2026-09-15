@@ -193,6 +193,8 @@ $lang = \App\Models\Language::where('code', $locale)->first();
 
     @include('frontend.partials.global_call_modals')
 
+    @include('frontend.partials.manual_review_modal')
+
     <div class="modal fade account_status_change_modal" id="modal-zoom">
         <div class="modal-dialog modal-dialog-centered modal-dialog-zoom">
             <div class="modal-content">

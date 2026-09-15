@@ -25,6 +25,12 @@ class ChatMessageResource extends JsonResource
             'delivered_at' => optional($this->delivered_at)->toISOString(),
             'read_at' => optional($this->read_at)->toISOString(),
             'seen' => (bool) $this->seen,
+            // Voice-note waveform/length lives here (metadata JSON on the chats
+            // table) so the app can render a proper player without fetching
+            // anything else.
+            'metadata' => $this->metadata,
+            // Disappearing message: when this row will vanish (null = never).
+            'expires_at' => optional($this->expires_at)->toISOString(),
             'moderation_status' => $this->moderation_status ?? 'clean',
             'toxicity_score' => $this->toxicity_score,
             'created_at' => optional($this->created_at)->toISOString(),
@@ -39,9 +45,19 @@ class ChatMessageResource extends JsonResource
 
         $ids = array_filter(array_map('trim', explode(',', (string) $this->attachment)));
 
-        return array_map(fn (string $id) => [
-            'id' => (int) $id,
-            'url' => uploaded_asset((int) $id),
-        ], $ids);
+        return array_map(function (string $id) {
+            $upload = \App\Models\Upload::find((int) $id);
+            return [
+                'id' => (int) $id,
+                'url' => uploaded_asset((int) $id),
+                // Web-sent files keep richer payloads than the API's own
+                // uploads; expose the type so clients can render audio/voice
+                // bubbles from any sender.
+                'type' => $upload?->type ?? 'file',
+                'original_name' => $upload?->file_original_name ?? null,
+                'extension' => $upload?->extension ?? null,
+                'size' => $upload?->file_size ?? null,
+            ];
+        }, $ids);
     }
 }

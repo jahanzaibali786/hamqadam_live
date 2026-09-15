@@ -8,6 +8,7 @@ use App\Models\ChatThread;
 use App\Models\Call;
 use App\Models\ReportedUser;
 use App\Models\User;
+use App\Services\Api\V1\Chat\ChatApiService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -115,6 +116,12 @@ class ChatController extends Controller
         if ($request->attachment != null) {
             $chat->attachment = json_encode(explode(',', $request->attachment));
         }
+        // Disappearing TTL: explicit per-message value wins, else the thread's
+        // remembered setting (kept in step with the API clients).
+        $ttl = $request->filled('disappear_after')
+            ? max(0, (int) $request->input('disappear_after'))
+            : (int) ($chat_thread->disappear_after ?? 0);
+        $chat->expires_at = $ttl > 0 ? now()->addSeconds(min($ttl, 31536000)) : null;
         $chat->save();
         $recipientId = (int) $chat_thread->sender_user_id === (int) Auth::id()
             ? (int) $chat_thread->receiver_user_id
@@ -270,7 +277,85 @@ class ChatController extends Controller
     {
         return $chat_thread->chats()
             ->whereNull($this->deleteColumnFor($chat_thread, Auth::user()))
+            // Disappearing messages: past-deadline rows are hidden for both
+            // sides (and pruned hard below).
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->with('sender', 'replyTo.sender');
+    }
+
+    /**
+     * Web parity for the API's disappearing messages: per-message TTL, the
+     * thread's remembered default, and hard-delete of anything expired.
+     */
+    public function set_disappear(Request $request)
+    {
+        $chat_thread = ChatThread::findOrFail((int) $request->chat_thread_id);
+        $this->ensureParticipant($chat_thread);
+        $ttl = max(0, (int) $request->input('disappear_after', 0));
+        $chat_thread->forceFill(['disappear_after' => min($ttl, 31536000)])->save();
+
+        return response()->json(['disappear_after' => (int) $chat_thread->disappear_after]);
+    }
+
+    /**
+     * Web voice notes: stores the clip through the same uploader the API
+     * uses, saves the message with a voice payload the API clients can play,
+     * and broadcasts to both sides. Returns the same single-message blade the
+     * text path renders so the sender's list updates immediately.
+     */
+    public function voice_reply(Request $request)
+    {
+        $chat_thread = ChatThread::findOrFail((int) $request->chat_thread_id);
+        $this->ensureParticipant($chat_thread);
+        if ($this->isBlocked($chat_thread)) {
+            return response()->json(['message' => translate('This chat is blocked.')], 403);
+        }
+        $request->validate([
+            'voice' => ['required', 'file', 'max:20480', 'mimes:mp3,wav,m4a,aac,ogg,webm'],
+            'duration' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $uploadId = upload_api_file($request->file('voice'));
+        $duration = (int) round((float) $request->input('duration', 0));
+        $ttl = (int) ($chat_thread->disappear_after ?? 0);
+
+        $chat = new Chat();
+        $chat->chat_thread_id = $chat_thread->id;
+        $chat->sender_user_id = Auth::user()->id;
+        $chat->message = '';
+        $chat->message_type = 'voice';
+        $chat->attachment = (string) $uploadId;
+        $chat->metadata = [
+            'duration' => $duration,
+            'waveform' => [],
+            'voice' => true,
+        ];
+        $chat->expires_at = $ttl > 0 ? now()->addSeconds($ttl) : null;
+        $chat->save();
+
+        $chat_thread->forceFill(['last_message_at' => now()])->save();
+
+        $recipientId = (int) $chat_thread->sender_user_id === (int) Auth::id()
+            ? (int) $chat_thread->receiver_user_id
+            : (int) $chat_thread->sender_user_id;
+        $this->broadcastSafely(new ChatMessageSent($chat->load('sender', 'replyTo.sender'), Auth::user(), (int) $chat->chat_thread_id, $recipientId));
+
+        return view('frontend.member.messages.messages_right_single', compact('chat'));
+    }
+
+    /**
+     * Web typing ping — reuses the exact API service so both clients share
+     * one broadcast (the app's Pusher channel picks this up unchanged).
+     */
+    public function typing_ping(Request $request)
+    {
+        $chat_thread = ChatThread::findOrFail((int) $request->chat_thread_id);
+        $this->ensureParticipant($chat_thread);
+        app(ChatApiService::class)->typing(Auth::user(), (int) $chat_thread->id);
+
+        return response()->json(['ok' => true]);
     }
     private function deleteColumnFor(ChatThread $thread, User $user): string
     {

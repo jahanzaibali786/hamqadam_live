@@ -126,6 +126,8 @@ class VerificationService
             $request->user->forceFill(['approved' => 1])->save();
             $request->user->member?->forceFill(['verification_status' => 'verified', 'ai_verification_status' => 'approved', 'verification_badge' => true, 'verification_badge_earned_at' => now(), 'manual_review_started_at' => null, 'manual_review_expires_at' => null])?->save();
 
+            $this->notifyDecisionByEmail($request->user, true, null);
+
             return $request->fresh(['user', 'documents', 'reviewer']);
         });
     }
@@ -147,8 +149,55 @@ class VerificationService
 
             $request->user->member?->forceFill(['verification_status' => 'rejected', 'verification_badge' => false, 'verification_badge_earned_at' => null, 'manual_review_started_at' => null, 'manual_review_expires_at' => null])?->save();
 
+            $this->notifyDecisionByEmail($request->user, false, $reason);
+
             return $request->fresh(['user', 'documents', 'reviewer']);
         });
+    }
+
+    /**
+     * Decision email to the member's registered address — the same contract
+     * the admin web panel (MemberController) already honours, now also fired
+     * from the API review actions.
+     *
+     * Approved → the member is told to log in again. Rejected → they get the
+     * reason and are asked to re-apply for verification (or reach the help
+     * center if they believe their data was correct).
+     */
+    private function notifyDecisionByEmail($user, bool $approved, ?string $reason): void
+    {
+        if (! $user || ! $user->email) {
+            return;
+        }
+
+        $name = trim((string) ($user->first_name . ' ' . $user->last_name));
+        $siteName = get_setting('website_name') ?: config('app.name');
+
+        if ($approved) {
+            $subject = 'Your ' . $siteName . ' verification is approved';
+            $message = '<p>' . e($name) . ',</p>'
+                . '<p>Good news! Your verification has been approved.</p>'
+                . '<p>You can now log in to the ' . e($siteName) . ' mobile app and web portal, and continue using your account.</p>'
+                . '<p>Regards,<br>' . e($siteName) . '</p>';
+        } else {
+            $subject = 'Your ' . $siteName . ' verification was not approved';
+            $message = '<p>' . e($name) . ',</p>'
+                . '<p>We are sorry, but your verification could not be approved at this time.</p>'
+                . '<p><strong>Reason:</strong> ' . nl2br(e((string) $reason)) . '</p>'
+                . '<p>If you believe your information was correct, please re-apply for verification with clearer documents — or contact our Help Center and our team will review your case again.</p>'
+                . '<p><a href="' . e(route('contact_us')) . '">Contact Us</a></p>'
+                . '<p>Regards,<br>' . e($siteName) . '</p>';
+        }
+
+        try {
+            \Notification::route('mail', $user->email)
+                ->notify(new \App\Notifications\EmailNotification($subject, $message));
+        } catch (\Throwable $e) {
+            \Log::warning('Verification decision email failed.', [
+                'user_id' => $user->id,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     private function storeDocument(

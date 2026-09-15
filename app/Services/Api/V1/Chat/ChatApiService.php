@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace App\Services\Api\V1\Chat;
 use App\Enums\ApiErrorCode;
 use App\Enums\ChatMessageType;
+use App\Events\ChatMessageDelivered;
 use App\Events\ChatMessageRead;
 use App\Events\ChatMessageSent;
 use App\Events\ChatTypingIndicator as ChatTypingIndicatorEvent;
@@ -41,12 +42,45 @@ class ChatApiService
     {
         $thread = $this->threadForUser($user, $threadId);
         $this->markRead($user, $thread);
+        $this->pruneExpired($thread);
         return Chat::with(['sender', 'replyTo.sender'])
             ->where('chat_thread_id', $thread->id)
             ->whereNull($this->deleteColumnFor($thread, $user))
+            // Disappearing messages: anything past its deadline is hidden
+            // (and hard-deleted by the prune above) for BOTH sides.
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->latest()
             ->paginate($perPage);
     }
+
+    /**
+     * Hard-deletes messages whose disappearing TTL has run out. Runs inline on
+     * history reads so the feature works even without a scheduler; cheap
+     * because the index on expires_at keeps the scan tiny.
+     */
+    public function pruneExpired(ChatThread $thread): int
+    {
+        return Chat::where('chat_thread_id', $thread->id)
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now())
+            ->delete();
+    }
+
+    /**
+     * Persists the thread's disappearing-message default (seconds; 0 = off).
+     * Both clients read this back on the thread resource and apply it to new
+     * messages, so the two sides stay in agreement without per-message picks.
+     */
+    public function setDisappearAfter(User $user, int $threadId, int $seconds): int
+    {
+        $thread = $this->threadForUser($user, $threadId);
+        $value = max(0, min($seconds, 31536000));
+        $thread->forceFill(['disappear_after' => $value])->save();
+        return $value;
+    }
+
     public function send(User $user, int $threadId, array $data, array $files = []): Chat
     {
         $thread = $this->threadForUser($user, $threadId);
@@ -56,6 +90,20 @@ class ChatApiService
         }
         $attachments = array_map(fn (UploadedFile $file) => upload_api_file($file), $files);
         return DB::transaction(function () use ($thread, $user, $data, $attachments) {
+            // Disappearing TTL: seconds until the message vanishes. Resolution
+            // order: explicit per-message value → the thread's remembered
+            // setting → off. The chosen value is remembered on the thread so
+            // the other side (and the next message) stays consistent.
+            $ttl = (int) ($data['disappear_after'] ?? 0);
+            if ($ttl <= 0 && array_key_exists('disappear_after', $data)) {
+                $ttl = 0; // explicit "off" wins over the thread default
+            } elseif ($ttl <= 0) {
+                $ttl = (int) ($thread->disappear_after ?? 0);
+            }
+            if ($ttl > 0) {
+                $thread->forceFill(['disappear_after' => $ttl])->save();
+            }
+
             $message = Chat::create([
                 'chat_thread_id' => $thread->id,
                 'sender_user_id' => $user->id,
@@ -64,9 +112,15 @@ class ChatApiService
                 'reply_to_chat_id' => $data['reply_to_chat_id'] ?? null,
                 'attachment' => $attachments !== [] ? implode(',', $attachments) : null,
                 'seen' => 0,
-                'delivered_at' => now(),
+                // Delivered stays NULL until the recipient's app ACKs via
+                // POST /chat/threads/{thread}/delivered — that is what gives
+                // the sender's tick its meaning: single = server has it,
+                // double = on the recipient's device, blue = they read it.
+                'delivered_at' => null,
                 'moderation_status' => 'clean',
                 'toxicity_score' => 0,
+                'metadata' => $data['metadata'] ?? null,
+                'expires_at' => $ttl > 0 ? now()->addSeconds(min($ttl, 31536000)) : null,
             ]);
             $thread->forceFill(['last_message_at' => now()])->save();
             $message = $message->load(['sender', 'replyTo.sender']);
@@ -108,6 +162,28 @@ class ChatApiService
             now()->addSeconds(10)->toISOString()
         ));
     }
+    /**
+     * Records that the recipient's app has the thread's messages on device —
+     * the sender's single tick becomes a double tick. Reading (blue tick) is a
+     * separate, stricter step handled by [markRead].
+     */
+    public function markDelivered(User $user, int $threadId): void
+    {
+        $thread = $this->threadForUser($user, $threadId);
+
+        $messageIds = Chat::where('chat_thread_id', $thread->id)
+            ->where('sender_user_id', '!=', $user->id)
+            ->whereNull('delivered_at')
+            ->pluck('id')
+            ->all();
+        if ($messageIds === []) {
+            return;
+        }
+
+        Chat::whereIn('id', $messageIds)->update(['delivered_at' => now()]);
+        $this->broadcastSafely(new ChatMessageDelivered((int) $thread->id, $messageIds, (int) $user->id, now()->toISOString()));
+    }
+
     public function markRead(User $user, ChatThread $thread): void
     {
         $messageIds = Chat::where('chat_thread_id', $thread->id)
@@ -211,6 +287,9 @@ class ChatApiService
         return Chat::with(['sender', 'replyTo.sender'])
             ->where('chat_thread_id', $thread->id)
             ->whereNull($this->deleteColumnFor($thread, $user))
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
             ->latest()
             ->first();
     }

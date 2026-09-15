@@ -20,12 +20,14 @@
                                         <label class="form-label text-primary-grad"> {{ translate('Name') }} <span
                                                 class="text-danger">*</span> </label>
                                         <input type="text" class="form-control" name="name"
+                                            value="{{ old('name', auth()->check() ? trim(auth()->user()->first_name . ' ' . auth()->user()->last_name) : '') }}"
                                             placeholder="{{ translate('Enter your full name') }}" required>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label text-primary-grad"> {{ translate('Email') }} <span
                                                 class="text-danger">*</span></label>
                                         <input type="email" class="form-control" name="email"
+                                            value="{{ old('email', auth()->check() ? auth()->user()->email : '') }}"
                                             placeholder="{{ translate('Enter Your E-mail') }}" required>
                                         <div class="form-text">
                                             {{ translate('Please, enter the email address where you wish to receive our answer.') }}
@@ -35,21 +37,22 @@
                                         <label class="form-label text-primary-grad">{{ translate('Ticket Type') }} <span class="text-danger">*</span></label>
                                         <select class="form-control" name="category" required>
                                             <option value="">{{ translate('Select ticket type') }}</option>
-                                            <option value="issue" @selected(old('category') === 'issue')>{{ translate('Issue') }}</option>
-                                            <option value="suggestion" @selected(old('category') === 'suggestion')>{{ translate('Suggestion') }}</option>
+                                            <option value="issue" @selected(old('category', request('category')) === 'issue')>{{ translate('Issue') }}</option>
+                                            <option value="suggestion" @selected(old('category', request('category')) === 'suggestion')>{{ translate('Suggestion') }}</option>
                                         </select>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label text-primary-grad"> {{ translate('Subject') }} <span
                                                 class="text-danger">*</span> </label>
                                         <input type="text" class="form-control" name="subject"
+                                            value="{{ old('subject', request('subject')) }}"
                                             placeholder="{{ translate('Write the subject here') }}" required>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label text-primary-grad"> {{ translate('Description') }} <span
                                                 class="text-danger">*</span> </label>
                                         <textarea class="form-control" rows="8" placeholder=" {{ translate('Write your description here') }}"
-                                            name="description" required style="resize: none;"></textarea>
+                                            name="description" required style="resize: none;">{{ old('description', request('description')) }}</textarea>
                                     </div>
                                     <!-- Recaptcha -->
                                     @if(get_setting('google_recaptcha_activation') == 1 && get_setting('recaptcha_user_register') == 1)

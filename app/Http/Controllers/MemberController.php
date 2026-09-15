@@ -685,7 +685,8 @@ class MemberController extends Controller
                 $message = '<p>' . e($user->first_name . ' ' . $user->last_name) . ',</p>'
                     . '<p>' . translate('We are sorry, but your verification could not be approved at this time.') . '</p>'
                     . '<p><strong>' . translate('Reason') . ':</strong> ' . nl2br(e($reason)) . '</p>'
-                    . '<p>' . translate('For any query or further assistance, please contact administration using the link below.') . '</p>'
+                    . '<p>' . translate('You can apply for verification again with clearer documents from your account.') . '</p>'
+                    . '<p>' . translate('If you believe your information was entered correctly, contact our Help Center using the link below and our team will review your case again.') . '</p>'
                     . '<p><a href="' . e($contactUrl) . '">' . translate('Contact Us') . '</a></p>'
                     . '<p>' . translate('Regards') . ',<br>' . e(get_setting('website_name') ?: config('app.name')) . '</p>';
 
