@@ -180,9 +180,13 @@ class RoleController extends Controller
 
     private function permissionsForRole(Role $role): Collection
     {
-        return $this->isSubAdminRole($role)
-            ? $this->adminRolePermissions()
-            : $this->visiblePermissions();
+        // Admin is the master list. Sub Admin sees the same list, with its
+        // own assigned permissions represented by the checkbox state.
+        if ($this->isAdminRole($role) || $this->isSubAdminRole($role)) {
+            return $this->adminRolePermissions();
+        }
+
+        return $this->visiblePermissions();
     }
 
     /**
@@ -200,6 +204,11 @@ class RoleController extends Controller
         return $adminRole?->permissions ?? collect();
     }
 
+    private function isAdminRole(Role $role): bool
+    {
+        return in_array(strtolower($role->name), ['admin'], true);
+    }
+
     private function isSubAdminRole(Role $role): bool
     {
         return in_array(strtolower($role->name), ['sub admin', 'subadmin'], true);
@@ -212,6 +221,7 @@ class RoleController extends Controller
         }
     }
 }
+
 
 
 

@@ -166,14 +166,14 @@
                     </div>
                     <div class="card-body">
                         <div class="row gutters-10">
-                            <div class="col-xl-3 col-md-6 mb-0">
+                            <div class="col-lg-6 col-md-6 mb-0">
                                 <div class="border rounded p-3 h-100">
                                     <div class="text-muted fs-12 mb-1">{{ translate('Paid Subscriptions') }}</div>
                                     <div class="h3 mb-1 text-success">{{ number_format($analytics['paid_subscriptions']) }}</div>
                                     <small class="text-muted">{{ translate('Successful package payments') }}</small>
                                 </div>
                             </div>
-                            <div class="col-xl-3 col-md-6 mb-0">
+                            <div class="col-lg-6 col-md-6 mb-0">
                                 <div class="border rounded p-3 h-100">
                                     <div class="text-muted fs-12 mb-1">{{ translate('User Reports') }}</div>
                                     <div class="h3 mb-1 text-danger">{{ number_format($analytics['reports']) }}</div>
@@ -407,6 +407,7 @@
     });
 </script>
 @endsection
+
 
 
 
