@@ -27,14 +27,40 @@ class ChatMessageResource extends JsonResource
             'seen' => (bool) $this->seen,
             // Voice-note waveform/length lives here (metadata JSON on the chats
             // table) so the app can render a proper player without fetching
-            // anything else.
-            'metadata' => $this->metadata,
+            // anything else. Normalized (ints, never strings) because multipart
+            // form-data delivers every value as a string.
+            'metadata' => $this->normalizedMetadata(),
             // Disappearing message: when this row will vanish (null = never).
             'expires_at' => optional($this->expires_at)->toISOString(),
             'moderation_status' => $this->moderation_status ?? 'clean',
             'toxicity_score' => $this->toxicity_score,
             'created_at' => optional($this->created_at)->toISOString(),
         ];
+    }
+
+    /**
+     * Multipart uploads arrive with every field as a string ("duration" => "7",
+     * "waveform" => ["3","9"]) which crashes client-side int casts. Store and
+     * serve the voice-note fields as proper integers.
+     */
+    private function normalizedMetadata(): ?array
+    {
+        $meta = $this->metadata;
+        if (is_string($meta) && $meta !== '') {
+            $decoded = json_decode($meta, true);
+            $meta = is_array($decoded) ? $decoded : null;
+        }
+        if (! is_array($meta)) {
+            return null;
+        }
+        if (array_key_exists('duration', $meta) && $meta['duration'] !== null) {
+            $meta['duration'] = (int) $meta['duration'];
+        }
+        if (isset($meta['waveform']) && is_array($meta['waveform'])) {
+            $meta['waveform'] = array_map(static fn ($value) => (int) $value, $meta['waveform']);
+        }
+
+        return $meta;
     }
 
     private function attachments(): array
