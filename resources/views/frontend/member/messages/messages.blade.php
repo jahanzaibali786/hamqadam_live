@@ -942,6 +942,69 @@
 
 </style>
 
+<style>
+    /* ---- WhatsApp-style voice player (_voice_player.blade.php) ---- */
+    .hv-voice {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 260px;
+        min-width: 190px;
+        padding: 4px 6px;
+    }
+    .hv-voice .hv-play {
+        width: 36px;
+        height: 36px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(255, 47, 132, 0.12);
+        color: #ff2f84;
+        font-size: 20px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex: 0 0 auto;
+        padding: 0;
+    }
+    .hv-voice .hv-wave {
+        flex: 1 1 auto;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        cursor: pointer;
+    }
+    .hv-voice .hv-wave span {
+        width: 3px;
+        border-radius: 2px;
+        background: rgba(0, 0, 0, 0.22);
+        transition: background 0.12s linear;
+        display: inline-block;
+    }
+    .hv-voice .hv-wave span.played {
+        background: #ff2f84;
+    }
+    .hv-voice .hv-time {
+        font-size: 11px;
+        font-weight: 600;
+        color: #8a94a6;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+        min-width: 34px;
+        text-align: right;
+    }
+    .hv-expired {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-style: italic;
+        opacity: 0.65;
+    }
+</style>
+
 
 
 @section('script')
@@ -2560,6 +2623,109 @@
             };
         }
     })(window, window.jQuery);
+    </script>
+    <script type="text/javascript">
+    // ---- WhatsApp-style voice-note players (_voice_player.blade.php) ----
+    (function () {
+        var sharedAudio = null;      // one <audio> element for the whole page
+        var sharedPlayerEl = null;   // the .hv-voice currently bound to it
+
+        function fmt(s) {
+            s = Math.max(0, Math.round(s));
+            return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+        }
+        function initialDuration(player) {
+            var d = parseInt(player.getAttribute('data-duration'), 10) || 0;
+            return d ? fmt(d) : 'Voice';
+        }
+        function setIcon(player, which) {
+            var i = player.querySelector('.hv-play i');
+            if (i) { i.className = which === 'pause' ? 'las la-pause' : 'las la-play'; }
+        }
+        function setTime(player, text) {
+            var t = player.querySelector('.hv-time');
+            if (t) { t.textContent = text; }
+        }
+        function setProgress(player, frac) {
+            var bars = player.querySelectorAll('.hv-wave span');
+            var n = Math.round(frac * bars.length);
+            bars.forEach(function (b, idx) { b.classList.toggle('played', idx < n); });
+        }
+        function buildWave(player) {
+            var wave = player.querySelector('.hv-wave');
+            if (!wave || wave.childElementCount) { return; }
+            var amps = (player.getAttribute('data-wave') || '').split(',').filter(Boolean).map(Number);
+            var max = Math.max.apply(null, amps.concat([1]));
+            for (var i = 0; i < amps.length; i++) {
+                var bar = document.createElement('span');
+                bar.style.height = (6 + 18 * (amps[i] / max)) + 'px';
+                wave.appendChild(bar);
+            }
+        }
+        function detach() {
+            if (sharedPlayerEl) {
+                setIcon(sharedPlayerEl, 'play');
+                setProgress(sharedPlayerEl, 0);
+                setTime(sharedPlayerEl, initialDuration(sharedPlayerEl));
+            }
+            if (sharedAudio) { sharedAudio.pause(); }
+            sharedPlayerEl = null;
+        }
+        function bind(player) {
+            buildWave(player);
+            setTime(player, initialDuration(player));
+
+            player.querySelector('.hv-play').addEventListener('click', function () {
+                if (sharedPlayerEl && sharedPlayerEl !== player) { detach(); }
+                if (!sharedAudio) { sharedAudio = new Audio(); }
+                if (sharedPlayerEl === player && !sharedAudio.paused) {
+                    sharedAudio.pause();
+                    setIcon(player, 'play');
+                    return;
+                }
+                if (player.getAttribute('data-src') !== sharedAudio.src) {
+                    sharedAudio.src = player.getAttribute('data-src');
+                }
+                sharedPlayerEl = player;
+                sharedAudio.play().catch(function () {});
+                setIcon(player, 'pause');
+
+                sharedAudio.ontimeupdate = function () {
+                    var dur = sharedAudio.duration || parseInt(player.getAttribute('data-duration'), 10) || 0;
+                    setProgress(player, dur ? sharedAudio.currentTime / dur : 0);
+                    setTime(player, fmt(sharedAudio.currentTime));
+                };
+                sharedAudio.onended = function () {
+                    setIcon(player, 'play');
+                    setProgress(player, 0);
+                    setTime(player, initialDuration(player));
+                    sharedPlayerEl = null;
+                };
+            });
+
+            // Seek by clicking anywhere on the waveform
+            var wave = player.querySelector('.hv-wave');
+            if (wave) {
+                wave.addEventListener('click', function (ev) {
+                    if (!sharedAudio || sharedPlayerEl !== player) { return; }
+                    var rect = wave.getBoundingClientRect();
+                    var frac = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width));
+                    var dur = sharedAudio.duration || parseInt(player.getAttribute('data-duration'), 10) || 0;
+                    if (dur) { sharedAudio.currentTime = frac * dur; }
+                });
+            }
+        }
+        function maybeBind(p) {
+            if (!p.dataset.bound) { p.dataset.bound = '1'; bind(p); }
+        }
+
+        document.querySelectorAll('.hv-voice').forEach(maybeBind);
+        // Realtime-inserted bubbles (Pusher re-renders the list) get bound too.
+        var mo = new MutationObserver(function () {
+            document.querySelectorAll('.hv-voice').forEach(maybeBind);
+        });
+        mo.observe(document.body, { childList: true, subtree: true });
+    })();
     </script>
 @endsection
 

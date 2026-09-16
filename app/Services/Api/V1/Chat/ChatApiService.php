@@ -119,7 +119,9 @@ class ChatApiService
                 'delivered_at' => null,
                 'moderation_status' => 'clean',
                 'toxicity_score' => 0,
-                'metadata' => $data['metadata'] ?? null,
+                // Multipart delivers metadata values as strings ("7", "3");
+                // normalize to ints so client casts never crash.
+                'metadata' => $this->normalizeMetadata($data['metadata'] ?? null),
                 'expires_at' => $ttl > 0 ? now()->addSeconds(min($ttl, 31536000)) : null,
             ]);
             $thread->forceFill(['last_message_at' => now()])->save();
@@ -306,6 +308,29 @@ class ChatApiService
     private function detectType(array $attachments): string
     {
         return $attachments === [] ? ChatMessageType::Text->value : ChatMessageType::Mixed->value;
+    }
+
+    /**
+     * Voice-note extras ride in as form-data strings; cast the known numeric
+     * fields so the resource (and both clients) always see real integers.
+     */
+    private function normalizeMetadata(mixed $metadata): ?array
+    {
+        if (is_string($metadata) && $metadata !== '') {
+            $decoded = json_decode($metadata, true);
+            $metadata = is_array($decoded) ? $decoded : null;
+        }
+        if (! is_array($metadata)) {
+            return null;
+        }
+        if (array_key_exists('duration', $metadata) && $metadata['duration'] !== null) {
+            $metadata['duration'] = (int) $metadata['duration'];
+        }
+        if (isset($metadata['waveform']) && is_array($metadata['waveform'])) {
+            $metadata['waveform'] = array_map(static fn ($value) => (int) $value, $metadata['waveform']);
+        }
+
+        return $metadata;
     }
     private function broadcastSafely(object $event): void
     {

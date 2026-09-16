@@ -16,12 +16,18 @@
                 <div class="media-body">
                     <div class="text p-2">
                         @php
-                            $voiceUpload = \App\Models\Upload::find(trim((string) $chat->attachment));
+                            // attachment is a comma-separated id list for
+                            // API-sent notes but a JSON array for web ones.
+                            $attRaw = trim((string) $chat->attachment);
+                            if ($attRaw !== '' && $attRaw[0] === '[') {
+                                $attIds = collect((array) json_decode($attRaw, true))->map(fn ($v) => (int) $v)->filter()->values();
+                            } else {
+                                $attIds = collect(explode(',', $attRaw))->map(fn ($v) => (int) trim($v))->filter()->values();
+                            }
+                            $voiceUpload = $attIds->isNotEmpty() ? \App\Models\Upload::find($attIds->first()) : null;
                         @endphp
                         @if ($voiceUpload != null)
-                            <audio controls preload="none" style="max-width: 240px; height: 36px;">
-                                <source src="{{ uploaded_asset($voiceUpload->id) }}" type="{{ $voiceUpload->extension === 'm4a' ? 'audio/mp4' : 'audio/mpeg' }}">
-                            </audio>
+                            @include('frontend.member.messages._voice_player', ['voiceUrl' => uploaded_asset($voiceUpload->id), 'voiceMeta' => $voiceMeta, 'voicePlayerId' => 'hv-voice-' . $chat->id])
                         @endif
                         <span class="fs-11 text-muted ml-2">
                             🎙 {{ translate('Voice note') }}@if(is_array($voiceMeta) && !empty($voiceMeta['duration'])) · {{ (int) $voiceMeta['duration'] }}s @endif
