@@ -39,6 +39,12 @@ class ProfileResource extends JsonResource
         $education = $this->firstOf($education);
         $career = $this->firstOf($career);
 
+        // The newest AI verification attempt drives the face/liveness rows of
+        // the trust checklist — it is the freshest verdict the model gave.
+        $latestAttempt = \App\Models\AiVerificationAttempt::where('user_id', $this->id)
+            ->orderByDesc('id')
+            ->first();
+
         return [
             'user' => [
                 'id' => $this->id,
@@ -231,6 +237,31 @@ class ProfileResource extends JsonResource
                     'verified_at' => optional($member?->ai_verified_at)->toISOString(),
                     'last_attempt_at' => optional($member?->ai_verification_last_attempt_at)->toISOString(),
                 ],
+            ],
+
+            /*
+             * Trust checklist — one boolean per thing members ask "is this real?"
+             * about, computed HERE on the server from the actual records so the
+             * app can render the list straight and every client agrees.
+             *
+             *   identity — a moderator approved the CNIC documents
+             *   face     — the AI face comparison saw a face in the submitted selfie
+             *   liveness — the AI pre-screen came back APPROVE (live person, no fraud)
+             *   phone    — the mobile OTP round completed (verification_code consumed)
+             *   email    — email_verified_at is stamped
+             *   profile  — the account carries the team's approval (admin reviewed)
+             *   intent   — the profile was created for the member by someone on
+             *              their behalf (wali/family), i.e. a marriage intent on record
+             */
+            'checks' => [
+                'identity' => ($member?->verification_status === 'verified'),
+                'face' => (bool) $latestAttempt?->face_detected,
+                'liveness' => $latestAttempt?->recommendation === 'APPROVE'
+                    || ($member?->ai_verification_status === 'approved'),
+                'phone' => filled($this->phone) && blank($this->verification_code),
+                'email' => filled($this->email_verified_at),
+                'profile' => (bool) $this->approved,
+                'intent' => filled($member?->on_behalves_id) && (int) $member->on_behalves_id > 0,
             ],
 
             'registration' => [
