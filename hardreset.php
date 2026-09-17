@@ -3,51 +3,66 @@
 /**
  * HARD RESET — production cache purge (web-callable, key protected).
  *
- * Why this exists: deploys happen via FTP mirror which never touches
- * bootstrap/cache/*.php, and PHP opcache can keep serving STALE compiled
- * versions of just-uploaded files. That combination produces boot-level
- * failures on every route ("Target class [view] does not exist", 500s) even
- * when the uploaded code is healthy.
+ * Why this exists: deploys happen via FTP mirror that never touches
+ * bootstrap/cache/*.php, and opcache can serve stale compiled files.
+ * That combination breaks boot on every route ("Target class [view]
+ * does not exist", 500s) even when the uploaded code is healthy.
  *
  * What it does:
- *   1. Deletes bootstrap/cache/*.php (config, routes, services, packages, compiled)
- *   2. Clears storage/framework/{cache,views} compiled files
- *   3. Warms the service container fresh (boots the console kernel)
- *   4. Resets PHP opcache if available
- *   5. Prints a health check of key routes
+ *   1. Deletes bootstrap/cache/*.php (config, routes, services, packages)
+ *   2. Clears storage/framework/views + cache compiled files
+ *   3. Resets PHP opcache when available
+ *   4. Warms the service container fresh
+ *   5. HTTP health checks
  *
- * Usage (one-time, from the server's htdocs root):
- *   https://hamqadam.com/hardreset.php?key=<CACHE_RESET_KEY>
+ * Setup (one time):
+ *   1. Put this file at the DOCROOT ROOT next to index.php (hamqadam.com/hardreset.php)
+ *   2. Add to the server's .env:
+ *        CACHE_RESET_KEY=<a long random string>
+ *   3. Add the SAME value as the GitHub secret CACHE_RESET_KEY
+ *   4. Call once: https://hamqadam.com/hardreset.php?key=...  (deploys call it automatically)
  *
- * The key must match the CACHE_RESET_KEY GitHub secret used by the deploy
- * workflow. If you did not set that secret yet, set it to the same value you
- * edit into this file's $EXPECTED_KEY below. DELETE this line's real key and
- * keep it long & random — do not commit a weak one.
- *
- * NOTE: this file lives at the DOCROOT ROOT (next to index.php), not in
- * public/, so it is reachable as /hardreset.php on cPanel deployments where
- * the domain points at the project root.
+ * To disable: remove the script from the server or remove the .env key.
  */
 
-$EXPECTED_KEY = 'CHANGE_ME_TO_A_LONG_RANDOM_STRING'; // keep in sync with GitHub secret CACHE_RESET_KEY
+function hardreset_env(string $key): ?string
+{
+    $path = __DIR__ . '/.env';
+    if (!is_readable($path)) {
+        return null;
+    }
+    foreach (file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) {
+            continue;
+        }
+        [$k, $v] = explode('=', $line, 2);
+        if (trim($k) === $key) {
+            return trim($v, " \t\n\r\0\x0B\"'");
+        }
+    }
 
-header('Content-Type: text/plain; charset=utf-8');
+    return null;
+}
 
-$key = $_GET['key'] ?? '';
-if (!hash_equals($EXPECTED_KEY, (string) $key)) {
+$root     = __DIR__; // docroot root = Laravel project root here
+$expected = hardreset_env('CACHE_RESET_KEY');
+$key      = $_GET['key'] ?? '';
+
+if (!$expected || !hash_equals($expected, (string) $key)) {
     http_response_code(403);
+    header('Content-Type: text/plain; charset=utf-8');
     echo "Forbidden\n";
     exit;
 }
 
 @set_time_limit(120);
+header('Content-Type: text/plain; charset=utf-8');
 echo "== Hamqadam hard reset ==\n";
 echo 'time: ' . date('c') . "\n";
 echo 'php: ' . PHP_VERSION . "\n\n";
 
-$root = __DIR__;
-
-// 1. Purge compiled bootstrap caches ---------------------------------------
+// 1. Purge compiled bootstrap caches ----------------------------------------
 $bootstrapCache = $root . '/bootstrap/cache';
 if (!is_dir($bootstrapCache)) {
     @mkdir($bootstrapCache, 0755, true);
@@ -61,7 +76,7 @@ foreach (glob($bootstrapCache . '/*.php') ?: [] as $file) {
 }
 echo "bootstrap/cache purged: {$purged} file(s)\n";
 
-// 2. Purge compiled views + data cache --------------------------------------
+// 2. Purge framework views + data cache --------------------------------------
 $purged = 0;
 foreach ([
     $root . '/storage/framework/views',
@@ -84,14 +99,14 @@ foreach ([
 }
 echo "framework views/cache purged: {$purged} file(s)\n";
 
-// 3. Reset opcache ----------------------------------------------------------
+// 3. opcache reset -----------------------------------------------------------
 if (function_exists('opcache_reset')) {
     echo 'opcache: ' . (opcache_reset() ? 'reset' : 'reset FAILED') . "\n";
 } else {
-    echo "opcache: not available (shared hosting often disables it for CLI/web resets)\n";
+    echo "opcache: not available (cPanel may not allow web opcache reset)\n";
 }
 
-// 4. Warm the container fresh ------------------------------------------------
+// 4. Warm the container fresh -------------------------------------------------
 echo "\n== warming container ==\n";
 try {
     require $root . '/vendor/autoload.php';
@@ -107,7 +122,7 @@ try {
     exit;
 }
 
-// 5. Health snapshot ---------------------------------------------------------
+// 5. Health checks ------------------------------------------------------------
 echo "\n== health checks (HTTP) ==\n";
 $checks = [
     'web home'  => 'https://hamqadam.com/',
@@ -120,7 +135,6 @@ foreach ($checks as $label => $url) {
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 15,
-            CURLOPT_NOBODY         => false,
         ]);
         curl_exec($ch);
         $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
