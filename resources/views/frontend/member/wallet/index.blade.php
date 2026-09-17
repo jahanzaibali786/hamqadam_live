@@ -32,6 +32,16 @@
           </div>
         </a>
       </div>
+      <div class="col-md-4 mx-auto mb-3" >
+        <a href="{{ route('custom_coins.form') }}">
+          <div class="p-3 rounded mb-3 c-pointer text-center bg-white shadow-sm hov-shadow-lg has-transition bg-soft-primary">
+              <span class="size-60px rounded-circle mx-auto bg-primary d-flex align-items-center justify-content-center mb-3">
+                  <i class="las la-coins la-3x text-white"></i>
+              </span>
+              <div class="fs-18 text-primary">{{ translate('Buy Custom Coins') }}</div>
+          </div>
+        </a>
+      </div>
     </div>
     <div class="card">
       <div class="card-header">

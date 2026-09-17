@@ -23,7 +23,11 @@
                       <tr>
                           <td>{{ ($key+1) + ($package_payments->currentPage() - 1)*$package_payments->perPage() }}</td>
                           <td>{{ $package_payment->payment_code }}</td>
-                          <td>{{ $package_payment->package->name }}</td>
+                          <td>@if(\App\Services\Api\V1\Payment\CustomCoinService::payloadOf($package_payment))
+                              {{ \App\Services\Api\V1\Payment\CustomCoinService::payloadOf($package_payment)['coins'] . ' ' . translate('Custom Coins') }}
+                            @else
+                              {{ $package_payment->package?->name ?? translate('Package') }}
+                            @endif</td>
                           <td>
                             @if($package_payment->payment_method == "manual_payment")
                               {{ $package_payment->custom_payment_name }}

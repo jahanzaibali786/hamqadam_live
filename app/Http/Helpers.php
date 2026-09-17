@@ -420,6 +420,28 @@ if (!function_exists('feature_coin_cost')) {
     }
 }
 
+if (!function_exists('custom_coin_unit_price')) {
+    /** Admin-configured price for ONE coin (2 decimals, min 0.01). */
+    function custom_coin_unit_price(): float
+    {
+        return round(max(0.01, (float) get_setting('custom_coin_unit_price', 1)), 2);
+    }
+}
+
+if (!function_exists('credit_coins_to_wallet')) {
+    /**
+     * Credit purchased coins to the member's coin balance (remaining_interest).
+     * Returns the new balance.
+     */
+    function credit_coins_to_wallet($member, int $coins): int
+    {
+        $member->remaining_interest = (int) $member->remaining_interest + $coins;
+        $member->save();
+
+        return (int) $member->remaining_interest;
+    }
+}
+
 //
 if (!function_exists('package_validity')) {
     function package_validity($id)

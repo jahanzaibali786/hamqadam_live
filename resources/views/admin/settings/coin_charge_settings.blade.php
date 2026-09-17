@@ -38,6 +38,12 @@
                                         <input type="hidden" name="types[]" value="feature_coin_cost_gallery_image_view">
                                         <input type="number" min="0" name="feature_coin_cost_gallery_image_view" class="form-control" value="{{ get_setting('feature_coin_cost_gallery_image_view', 1) }}">
                                     </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">{{ translate('Custom Coin Price (per coin)') }}</label>
+                                        <input type="hidden" name="types[]" value="custom_coin_unit_price">
+                                        <input type="number" min="0.01" step="0.01" name="custom_coin_unit_price" class="form-control" value="{{ get_setting('custom_coin_unit_price', 1) }}">
+                                        <small class="text-muted">{{ translate('Members can buy custom coins at this price per coin.') }}</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>

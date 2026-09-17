@@ -106,6 +106,27 @@ class EmailUtility
         }
     }
 
+    /** Invoice email for a custom-coin purchase — same template as package purchase. */
+    public static function custom_coin_purchase_email($user = '', $package_payment = '', $coins = 0)
+    {
+        $subject    = get_email_template('package_purchase_email','subject');
+        $email_body = get_email_template('package_purchase_email','body');
+        $email_body = str_replace('[[name]]', $user->first_name.' '.$user->last_name, $email_body);
+        $email_body = str_replace('[[site_name]]', get_setting('website_name'), $email_body);
+        $email_body = str_replace('[[account_type]]', 'Preminum', $email_body);
+        $email_body = str_replace('[[payment_code]]', $package_payment->payment_code, $email_body);
+        $email_body = str_replace('[[package]]', $coins.' '.__('Custom Coins'), $email_body);
+        $email_body = str_replace('[[amount]]', $package_payment->amount, $email_body);
+        $email_body = str_replace('[[from]]', env('MAIL_FROM_NAME'), $email_body);
+
+        try{
+            Notification::send($user, new EmailNotification($subject, $email_body));
+        }
+        catch(\Exception $e){
+            // dd($e);
+        }
+    }
+
     public static function manual_payment_approval_email($user = '', $package_payment = '')
     {
         $account_type = $package_payment->package_id== 1 ? 'Free' : 'Preminum';
