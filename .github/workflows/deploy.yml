@@ -71,6 +71,23 @@ jobs:
           bye
           EOF
       ###########################################################
+      # Clear server caches (compiled + opcache) after FTP upload
+      # FTP mirror never touches bootstrap/cache/*.php and opcache
+      # can serve stale compiled files — both cause boot-level 500s.
+      ###########################################################
+      - name: Clear server caches
+        env:
+          CACHE_RESET_KEY: ${{ secrets.CACHE_RESET_KEY }}
+        run: |
+          sleep 3
+          code=$(curl -s -o /tmp/reset.out -w "%{http_code}" --max-time 90 "https://hamqadam.com/hardreset.php?key=$CACHE_RESET_KEY")
+          echo "cache reset HTTP: $code"
+          cat /tmp/reset.out
+          if [ "$code" != "200" ]; then
+            echo "::warning::Cache reset endpoint did not return 200 — check hardreset.php key on server"
+          fi
+
+      ###########################################################
       # Done
       ###########################################################
       - name: Deployment Complete
