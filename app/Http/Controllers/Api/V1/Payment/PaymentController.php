@@ -64,6 +64,20 @@ class PaymentController extends ApiController
         ], 'Payment gateways fetched successfully.');
     }
 
+    /** GET /payments/coins/pricing — admin-configured per-coin charge + limits. */
+    public function coinPricing(Request $request): JsonResponse
+    {
+        $unit = custom_coin_unit_price();
+        $currency = \App\Models\Currency::find(get_setting('system_default_currency'))->code ?? 'PKR';
+
+        return $this->success([
+            'unit_price' => $unit,
+            'currency' => strtoupper($currency),
+            'min_coins' => 1,
+            'max_coins' => 1000000,
+        ], 'Coin pricing fetched successfully.');
+    }
+
     public function gateway(Request $request, int $gateway): JsonResponse
     {
         return $this->success(

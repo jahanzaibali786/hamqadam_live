@@ -58,7 +58,14 @@
                                         </thead>
                                         <tbody>
                                         <tr>
-                                        <td>{{ translate('Package Name: ').' '.$payment->package->name }}</td>
+                                        @php
+                                            $coinPayload = \App\Services\Api\V1\Payment\CustomCoinService::payloadOf($payment);
+                                        @endphp
+                                        <td>@if($coinPayload)
+                                                {{ translate('Custom Coins: ') . $coinPayload['coins'] . ' × ' . single_price($coinPayload['unit_price']) }}
+                                            @else
+                                                {{ translate('Package Name: ').' '.($payment->package?->name ?? translate('Package')) }}
+                                            @endif</td>
                                         <td class="text-center">{{single_price($payment->amount)}}</td>
                                         </tr>
                                             <tr>

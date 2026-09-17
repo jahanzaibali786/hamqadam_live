@@ -297,6 +297,8 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
             Route::get('/wallet', 'index')->name('wallet.index');
             Route::get('/wallet-recharge-methods', 'wallet_recharge_methods')->name('wallet.recharge_methods');
             Route::post('/recharge', 'recharge')->name('wallet.recharge');
+            Route::get('/custom-coins', 'custom_coins_form')->name('custom_coins.form');
+            Route::post('/custom-coins/purchase', 'custom_coins_purchase')->name('custom_coins.purchase');
         });
 
         Route::get('/member/notifications', [NotificationController::class, 'frontend_notify_listing'])->name('frontend.notifications');

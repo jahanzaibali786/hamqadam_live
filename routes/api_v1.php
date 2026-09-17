@@ -261,6 +261,7 @@ Route::prefix('payments')->name('api.v1.payments.')->group(function () {
 
     Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->group(function () {
         Route::get('/plans', [PaymentController::class, 'plans'])->name('plans');
+        Route::get('/coins/pricing', [PaymentController::class, 'coinPricing'])->name('coins.pricing');
         Route::get('/current', [PaymentController::class, 'current'])->name('current');
         Route::get('/gateways', [PaymentController::class, 'gateways'])->name('gateways');
         Route::get('/gateways/{gateway}', [PaymentController::class, 'gateway'])->whereNumber('gateway')->name('gateways.show');

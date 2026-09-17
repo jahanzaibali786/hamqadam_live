@@ -62,6 +62,10 @@ class StripeController extends Controller
                 $walletController = new WalletController;
                 return $walletController->wallet_payment_done(session()->get('payment_data'), json_encode($payment));
               }
+              elseif (Session::get('payment_type') == 'custom_coins') {
+                $walletController = new WalletController;
+                return $walletController->custom_coins_payment_done(session()->get('payment_data'), json_encode($payment));
+              }
             }
         }
         catch (\Exception $e) {

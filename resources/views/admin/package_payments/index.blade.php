@@ -42,7 +42,9 @@
                                 @endif
                             </td>
                             <td>
-                                @if($package_payment->package != null)
+                                @if(\App\Services\Api\V1\Payment\CustomCoinService::payloadOf($package_payment))
+                                    {{ \App\Services\Api\V1\Payment\CustomCoinService::payloadOf($package_payment)['coins'] . ' ' . translate('Custom Coins') }}
+                                @elseif($package_payment->package != null)
                                     {{ $package_payment->package->name }}
                                 @endif
                             </td>

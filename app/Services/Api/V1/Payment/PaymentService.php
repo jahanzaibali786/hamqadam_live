@@ -17,6 +17,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use App\Services\Api\V1\Payment\CustomCoinService;
 use Illuminate\Support\Str;
 
 class PaymentService
@@ -89,6 +90,52 @@ class PaymentService
 
     public function checkout(User $user, array $data): array
     {
+        $isCustomCoins = (int) ($data['custom_coins'] ?? 0) === 1;
+
+        if ($isCustomCoins) {
+            $coins = (int) ($data['coins'] ?? 0);
+            if ($coins < 1 || $coins > 1000000) {
+                throw new ApiException('Please enter a valid number of coins.', 422, ApiErrorCode::ValidationFailed->value);
+            }
+
+            $gateway = $this->resolveGateway($data);
+            $this->assertGatewayAvailable($gateway);
+            $reference = $gateway->value . '_' . Str::uuid()->toString();
+            $checkoutToken = Str::random(64);
+            $checkoutTokenHash = hash_hmac('sha256', $checkoutToken, config('app.key'));
+            $checkoutTokenExpiresAt = now()->addMinutes(15);
+
+            $payment = CustomCoinService::createPurchase($user->member, $coins, [
+                'gateway' => $gateway->value,
+                'gateway_reference' => $reference,
+                'currency' => strtoupper($data['currency'] ?? 'PKR'),
+            ]);
+
+            $payment->forceFill([
+                'metadata' => array_merge((array) ($payment->metadata ?? []), [
+                    'success_url' => $data['success_url'] ?? null,
+                    'cancel_url' => $data['cancel_url'] ?? null,
+                    'easypaisa_phone' => $data['easypaisa_phone'] ?? null,
+                    'jazzcash_phone' => $data['jazzcash_phone'] ?? null,
+                    'checkout_token_hash' => $checkoutTokenHash,
+                    'checkout_token_expires_at' => $checkoutTokenExpiresAt->toISOString(),
+                ]),
+            ])->save();
+
+            return [
+                'payment' => $payment->fresh(),
+                'gateway' => $gateway->value,
+                'gateway_id' => $gateway->id(),
+                'checkout' => $this->checkoutInstructions($gateway, $payment),
+                'security' => [
+                    'checkout_token' => $checkoutToken,
+                    'checkout_token_expires_at' => $checkoutTokenExpiresAt->toISOString(),
+                    'status_endpoint' => url('/api/v1/payments/checkout/' . $payment->id . '/status'),
+                    'payment_id' => $payment->id,
+                ],
+            ];
+        }
+
         $package = $this->activePackage((int) $data['package_id']);
         $coupon = ! empty($data['coupon_code']) ? $this->couponByCode($data['coupon_code']) : null;
         $discount = $coupon ? $this->discountFor($coupon, (float) $package->price) : 0.0;
@@ -224,6 +271,20 @@ class PaymentService
     {
         if ($payment->payment_status === 'Paid') {
             return $payment;
+        }
+
+        // Custom-coin purchases credit coins instead of activating a package.
+        if (CustomCoinService::payloadOf($payment) !== null) {
+            $payment->forceFill([
+                'payment_status' => 'Paid',
+                'gateway_status' => 'paid',
+                'paid_at' => now(),
+                'payment_details' => json_encode($details),
+            ])->save();
+
+            CustomCoinService::deliverIfPaid($payment->fresh());
+
+            return $payment->fresh();
         }
 
         $package = Package::findOrFail($payment->package_id);

@@ -362,6 +362,21 @@ class PackagePaymentController extends Controller
     {
         $package_payment    = PackagePayment::findOrFail($id);
         $user               = User::where('id', $package_payment->user_id)->first();
+
+        // Custom-coin purchases credit coins instead of activating a package.
+        if (\App\Services\Api\V1\Payment\CustomCoinService::payloadOf($package_payment) !== null) {
+            $package_payment->forceFill([
+                'payment_status' => 'Paid',
+                'gateway_status' => 'paid',
+                'paid_at' => Carbon::now(),
+            ])->save();
+
+            \App\Services\Api\V1\Payment\CustomCoinService::deliverIfPaid($package_payment->fresh());
+
+            flash(translate('Custom coins payment accepted successfully.'))->success();
+            return back();
+        }
+
         $member             = Member::where('user_id', $user->id)->first();
         $package            = Package::where('id', $package_payment->package_id)->first();
 
