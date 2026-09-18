@@ -13,7 +13,9 @@
             $col++;
         }
     @endphp
-    @php($badges = app(\App\Services\BadgeService::class)->payload($user))
+        @php
+        $badges = app(\App\Services\BadgeService::class)->payload($user);
+    @endphp
     <div class="row gutters-5 mb-4">
         <div class="col-md-6 mb-2">
             <div class="bg-white border rounded p-3 h-100 d-flex align-items-center">
@@ -24,7 +26,18 @@
         <div class="col-md-6 mb-2">
             <div class="bg-white border rounded p-3 h-100 d-flex align-items-center">
                 <i class="las la-shield-alt la-2x text-warning mr-3"></i>
-                <div><div class="fw-700">{{ translate('Trust Badge') }}</div><div class="fs-12 text-muted">{{ $badges['trust']['earned'] ? translate('7-day clean activity achieved') : translate('Earned after 7 clean daily logins') }}</div></div>
+                <div>
+                    <div class="fw-700">{{ translate('Trust Badge') }}</div>
+                    <div class="fs-12 text-muted">
+                        {{ $badges['trust']['earned'] ? translate('7-day streak achieved') : translate('Complete a 7-day login streak') }}
+                        <span class="ml-1">({{ $badges['trust']['current_streak'] ?? 0 }}/{{ $badges['trust']['target_streak'] ?? 7 }} {{ translate('days') }})</span>
+                    </div>
+                    <div class="d-flex align-items-center mt-1" aria-label="{{ translate('Login streak') }}">
+                        @for($fire = 1; $fire <= ($badges['trust']['target_streak'] ?? 7); $fire++)
+                            <i class="las la-fire mr-1 {{ $fire <= ($badges['trust']['current_streak'] ?? 0) ? 'text-danger' : 'text-muted opacity-50' }}" title="{{ $fire <= ($badges['trust']['current_streak'] ?? 0) ? translate('Completed streak day') : translate('Streak day not completed') }}"></i>
+                        @endfor
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -58,7 +71,19 @@
         };
     @endphp
 
-    @if(!$aiVerified)
+    @php
+        // Keep the dashboard renderable for legacy members or incomplete verification records.
+        $aiStatus = $aiStatus ?? 'not_started';
+        $aiRecommendation = $aiRecommendation ?? null;
+        $aiAttempts = (int) ($aiAttempts ?? 0);
+        $aiVerified = (bool) ($aiVerified ?? false);
+        $aiMeta = $aiMeta ?? [
+            'alert-secondary',
+            'la-id-card',
+            translate('Your identity is not verified yet.'),
+        ];
+    @endphp
+    @if(!($aiVerified ?? false))
         <div class="alert {{ $aiMeta[0] }} d-flex flex-wrap align-items-center justify-content-between">
             <div class="mr-3">
                 <strong>
@@ -566,6 +591,10 @@
 
 
 @endsection
+
+
+
+
 
 
 
