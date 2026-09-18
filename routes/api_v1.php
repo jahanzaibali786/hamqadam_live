@@ -108,6 +108,7 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('profiles')->name('api.v1.profiles.')->group(function () {
     Route::get('/{profile}', [ProfileController::class, 'publicProfile'])->name('show');
     Route::get('/{profile}/compatibility', [ProfileController::class, 'compatibility'])->name('compatibility');
+    Route::get('/{profile}/trust', [ProfileController::class, 'trust'])->name('trust');
 });
 
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('profile-views')->name('api.v1.profile_views.')->group(function () {
