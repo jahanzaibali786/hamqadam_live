@@ -39,9 +39,15 @@ class ProfileResource extends JsonResource
         $education = $this->firstOf($education);
         $career = $this->firstOf($career);
 
-        // The newest AI verification attempt drives the face/liveness rows of
-        // the trust checklist — it is the freshest verdict the model gave.
+        // The newest AI verification attempt and the newest CNIC/selfie
+        // verification request drive the trust checklist — the SAME records
+        // the app's "Identity verification" card reads, so the two can never
+        // disagree.
         $latestAttempt = \App\Models\AiVerificationAttempt::where('user_id', $this->id)
+            ->orderByDesc('id')
+            ->first();
+        $verificationRequest = \App\Models\ProfileVerificationRequest::with('documents')
+            ->where('user_id', $this->id)
             ->orderByDesc('id')
             ->first();
 
@@ -253,16 +259,12 @@ class ProfileResource extends JsonResource
              *   intent   — the profile was created for the member by someone on
              *              their behalf (wali/family), i.e. a marriage intent on record
              */
-            'checks' => [
-                'identity' => ($member?->verification_status === 'verified'),
-                'face' => (bool) $latestAttempt?->face_detected,
-                'liveness' => $latestAttempt?->recommendation === 'APPROVE'
-                    || ($member?->ai_verification_status === 'approved'),
-                'phone' => filled($this->phone) && blank($this->verification_code),
-                'email' => filled($this->email_verified_at),
-                'profile' => (bool) $this->approved,
-                'intent' => filled($member?->on_behalves_id) && (int) $member->on_behalves_id > 0,
-            ],
+            'checks' => \App\Services\Api\V1\Profile\TrustChecklist::compute(
+                $member,
+                $this->resource,
+                $latestAttempt,
+                $verificationRequest,
+            ),
 
             'registration' => [
                 'completion_percentage' => (int) ($member?->profile_completion_percentage ?? 0),
