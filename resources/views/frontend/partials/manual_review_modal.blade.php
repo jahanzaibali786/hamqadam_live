@@ -25,7 +25,7 @@
         <div class="modal fade" id="manual-review-modal" tabindex="-1" role="dialog"
              data-backdrop="static" data-keyboard="false" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content border-0 shadow">
+                <div class="modal-content hq-manual-review-content border-0 shadow">
                     <div class="modal-body text-center p-4">
                         <div class="mb-3">
                             <i class="las la-user-shield" style="font-size: 54px; color: #f0a202;"></i>

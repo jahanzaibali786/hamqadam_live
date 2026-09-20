@@ -146,6 +146,7 @@
                 AIZ.extra.scrollToBottom();
                 initializeLoadMore();
                 bindChatThreadRealtime();
+                updateChatDisappearStatus($("#disappear_after").val());
                 window.activeChatThreadId = $("#chat_thread_id").length ? parseInt($("#chat_thread_id").val()) : window.activeChatThreadId;
                 refreshOpenedThread($(el));
                 if (typeof checkUnreadChats === "function") {
@@ -515,6 +516,215 @@
             );
         });
 
+        /*
+         * These controls are delegated from the page shell because the selected
+         * conversation is injected into #single_chat through AJAX.
+         */
+        var chatVoiceRecorder = null;
+        var chatVoiceChunks = [];
+        var chatVoiceStarted = 0;
+        var chatVoiceTimer = null;
+
+        /*
+         * Premium inline voice-note player. Conversation HTML is injected through
+         * AJAX/Pusher, so this binding intentionally lives on the page shell.
+         */
+        (function () {
+            var audio = null;
+            var activePlayer = null;
+
+            function formatTime(seconds) {
+                seconds = Math.max(0, Math.round(seconds || 0));
+                return Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0');
+            }
+
+            function resetPlayer(player) {
+                if (!player) return;
+                player.classList.remove('is-playing');
+                var icon = player.querySelector('.hv-play i');
+                if (icon) icon.className = 'las la-play';
+                player.querySelectorAll('.hv-wave span').forEach(function (bar) {
+                    bar.classList.remove('played');
+                });
+                var time = player.querySelector('.hv-time');
+                if (time) time.textContent = formatTime(player.dataset.duration || 0);
+            }
+
+            function buildWave(player) {
+                var wave = player.querySelector('.hv-wave');
+                if (!wave || wave.children.length) return;
+                var raw = (player.dataset.wave || '').split(',').filter(Boolean).map(Number);
+                if (!raw.length) {
+                    raw = [7, 12, 18, 10, 15, 22, 11, 17, 8, 20, 14, 18, 9, 16, 12, 21, 10, 15];
+                }
+                var max = Math.max.apply(null, raw.concat([1]));
+                raw.forEach(function (height) {
+                    var bar = document.createElement('span');
+                    bar.style.height = Math.max(6, Math.round(6 + (height / max) * 20)) + 'px';
+                    wave.appendChild(bar);
+                });
+            }
+
+            function paintProgress(player) {
+                if (!audio || !player) return;
+                var ratio = audio.duration ? audio.currentTime / audio.duration : 0;
+                player.querySelectorAll('.hv-wave span').forEach(function (bar, index, bars) {
+                    bar.classList.toggle('played', index < Math.round(ratio * bars.length));
+                });
+                var time = player.querySelector('.hv-time');
+                if (time) time.textContent = formatTime(audio.currentTime);
+            }
+
+            $(document).off('click.hqVoice', '.hv-play').on('click.hqVoice', '.hv-play', function (event) {
+                event.preventDefault();
+                var player = $(this).closest('.hv-voice')[0];
+                if (!player || !player.dataset.src) return;
+                buildWave(player);
+
+                if (!audio) audio = new Audio();
+                if (activePlayer === player && !audio.paused) {
+                    audio.pause();
+                    resetPlayer(player);
+                    return;
+                }
+
+                if (activePlayer && activePlayer !== player) resetPlayer(activePlayer);
+                activePlayer = player;
+                audio.src = player.dataset.src;
+                audio.play().then(function () {
+                    player.classList.add('is-playing');
+                    var icon = player.querySelector('.hv-play i');
+                    if (icon) icon.className = 'las la-pause';
+                }).catch(function () {
+                    resetPlayer(player);
+                    if (window.AIZ && AIZ.plugins && AIZ.plugins.notify) {
+                        AIZ.plugins.notify('danger', 'Unable to play this voice message.');
+                    }
+                });
+
+                audio.ontimeupdate = function () { paintProgress(activePlayer); };
+                audio.onended = function () {
+                    resetPlayer(activePlayer);
+                    activePlayer = null;
+                };
+            });
+
+            $(document).off('click.hqVoiceSeek', '.hv-wave').on('click.hqVoiceSeek', '.hv-wave', function (event) {
+                if (!audio || !activePlayer) return;
+                var player = $(this).closest('.hv-voice')[0];
+                if (player !== activePlayer || !audio.duration) return;
+                var rect = this.getBoundingClientRect();
+                audio.currentTime = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)) * audio.duration;
+                paintProgress(player);
+            });
+
+            $(document).on('mouseenter.hqVoice', '.hv-voice', function () { buildWave(this); });
+        })();
+
+        function updateChatDisappearStatus(value) {
+            var ttl = Number(value || 0);
+            var label = ttl <= 0 ? "" : (ttl % 86400 === 0 ? Math.round(ttl / 86400) + "d" : Math.round(ttl / 3600) + "h");
+            $(".chat-disappear-toggle").toggleClass("text-primary", ttl > 0);
+            $(".chat-disappear-status").toggleClass("d-none", ttl <= 0).text(label);
+        }
+
+        $(document)
+            .off('click.chatControls', '.chat-disappear-toggle')
+            .on('click.chatControls', '.chat-disappear-toggle', function () {
+                $('#disappear-menu').toggle();
+                $('#emoji-panel').hide();
+            })
+            .off('click.chatControls', '.disappear-option')
+            .on('click.chatControls', '.disappear-option', function () {
+                $.post('{{ route('chat.disappear') }}', {
+                    _token: '{{ csrf_token() }}',
+                    chat_thread_id: $('#chat_thread_id').val(),
+                    disappear_after: $(this).data('ttl')
+                }).done(function (response) {
+                    $('#disappear_after').val(response.disappear_after || 0);
+                    $('#disappear-menu').hide();
+                    $('.chat-disappear-toggle').toggleClass('text-primary', Number(response.disappear_after) > 0);
+                });
+            })
+            .off('click.chatControls', '#emoji-toggle')
+            .on('click.chatControls', '#emoji-toggle', function () {
+                var panel = $('#emoji-panel');
+                if (!panel.children().length) {
+                    var emojis = ['😀','😁','😂','🤣','😊','😍','😘','😜','🤗','🤔','😐','😴','😢','😭','😡','👍','👎','🙏','👏','💪','❤️','💔','🌹','🎉','🤲','🕌','⭐','✨','🔥'];
+                    panel.html(emojis.map(function (emoji) {
+                        return '<button type="button" class="btn btn-sm btn-light emoji-pick">' + emoji + '</button>';
+                    }).join(' '));
+                }
+                panel.toggle();
+                $('#disappear-menu').hide();
+            })
+            .off('click.chatControls', '.emoji-pick')
+            .on('click.chatControls', '.emoji-pick', function () {
+                $('#message').val(($('#message').val() || '') + $(this).text()).trigger('input').focus();
+            })
+            .off('click.chatControls', '#voice-record-btn')
+            .on('click.chatControls', '#voice-record-btn', function () {
+                if (chatVoiceRecorder) return;
+                if (!navigator.mediaDevices || !window.MediaRecorder) {
+                    AIZ.plugins.notify('danger', '{{ translate('Voice recording is not supported in this browser.') }}');
+                    return;
+                }
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+                    chatVoiceChunks = [];
+                    chatVoiceRecorder = new MediaRecorder(stream);
+                    chatVoiceStarted = Date.now();
+                    chatVoiceRecorder.ondataavailable = function (event) {
+                        if (event.data && event.data.size) chatVoiceChunks.push(event.data);
+                    };
+                    chatVoiceRecorder.start();
+                    $('#voice-record-bar').show();
+                    $('#voice-record-btn').addClass('text-danger');
+                    chatVoiceTimer = window.setInterval(function () {
+                        var seconds = Math.floor((Date.now() - chatVoiceStarted) / 1000);
+                        $('#voice-record-time').text(('0' + Math.floor(seconds / 60)).slice(-2) + ':' + ('0' + (seconds % 60)).slice(-2));
+                    }, 500);
+                }).catch(function () {
+                    AIZ.plugins.notify('danger', '{{ translate('Microphone permission is required for voice notes.') }}');
+                });
+            })
+            .off('click.chatControls', '#voice-cancel')
+            .on('click.chatControls', '#voice-cancel', function () { stopChatVoiceRecording(false); })
+            .off('click.chatControls', '#voice-send')
+            .on('click.chatControls', '#voice-send', function () { stopChatVoiceRecording(true); });
+
+        function stopChatVoiceRecording(shouldSend) {
+            if (!chatVoiceRecorder) return;
+            var recorder = chatVoiceRecorder;
+            var elapsed = Math.max(1, Math.floor((Date.now() - chatVoiceStarted) / 1000));
+            chatVoiceRecorder = null;
+            window.clearInterval(chatVoiceTimer);
+            chatVoiceTimer = null;
+            recorder.onstop = function () {
+                recorder.stream.getTracks().forEach(function (track) { track.stop(); });
+                $('#voice-record-bar').hide();
+                $('#voice-record-btn').removeClass('text-danger');
+                if (!shouldSend) return;
+                var formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('chat_thread_id', $('#chat_thread_id').val());
+                formData.append('duration', elapsed);
+                formData.append('voice', new Blob(chatVoiceChunks, { type: recorder.mimeType || 'audio/webm' }), 'voice-note.webm');
+                $.ajax({
+                    url: '{{ route('chat.voice_reply') }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false
+                }).done(function (response) {
+                    $('#chat-messages').append(response);
+                    AIZ.extra.scrollToBottom();
+                }).fail(function (xhr) {
+                    var message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : '{{ translate('Unable to send voice note.') }}';
+                    AIZ.plugins.notify('danger', message);
+                });
+            };
+            recorder.stop();
+        }
         $(document).ready(function () {
             bindChatThreadRealtime();
         });
@@ -524,7 +734,9 @@
                 $.post('{{ route('get-old-message') }}', {_token:'{{ csrf_token() }}', first_message_id:$(this).data('first')}, function(data){
                     if (data.first_message_id > 0) {
                         $('#chat-messages').prepend(data.messages);
-                        $('.load-more-btn').data('first', data.first_message_id);
+                        $('.load-more-btn').data('first', data.first_message_id).show();
+                    } else {
+                        $('.load-more-btn').hide();
                     }
                 });
             });

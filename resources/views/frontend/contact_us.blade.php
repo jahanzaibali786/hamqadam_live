@@ -1,13 +1,13 @@
 @extends('frontend.layouts.app')
 
 @section('content')
-    <div class="container">
-        <div class="contact-us">
+    <section class="hq-ticket-page"><div class="container">
+        <div class="contact-us hq-ticket-wrap">
             <div class="row">
                 <div class="col-md-6 offset-md-3">
-                    <div class="contact-us my-5">
+                    <div class="contact-us my-5 hq-ticket-content">
                         <h2 class="text-center mb-4">{{ translate('Can we help you?') }}</h2>
-                        <div class="card">
+                        <div class="card hq-ticket-card">
                             <div class="card-body">
                                 @if ($errors->any())
                                     @foreach ($errors->all() as $error)
@@ -72,7 +72,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div></section>
 @endsection
 
 @section('script')

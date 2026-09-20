@@ -52,8 +52,14 @@
 
                     @endif
 
-                </h6>
-
+                @php $inlinePartnerLastSeen = Cache::has('user-is-online-' . $chat_thread->$user_to_show->id) ? null : optional($chat_thread->$user_to_show->last_active_at ?? $chat_thread->$user_to_show->last_login_at); @endphp
+                <div class="fs-11 text-muted chat-partner-presence-inline">
+                    @if (Cache::has('user-is-online-' . $chat_thread->$user_to_show->id))
+                        <span class="text-success fw-600">{{ translate('Online') }}</span>
+                    @elseif($inlinePartnerLastSeen)
+                        {{ translate('Last seen') }} {{ $inlinePartnerLastSeen->diffForHumans() }}
+                    @endif
+                </div>
             </div>
 
         </div>
@@ -130,6 +136,11 @@
 
                     @endif
 
+                    <button class="dropdown-item chat-disappear-toggle" type="button" title="{{ translate('Disappearing messages') }}" {{ !empty($chat_is_blocked) ? "disabled" : "" }}>
+                        <i class="lar la-clock mr-2"></i>{{ translate("Disappearing Messages") }}
+                        <span class="chat-disappear-status d-none ml-1"></span>
+                    </button>
+
                     <a class="dropdown-item" href="javascript:void(0)" onclick="clearChatThread()">
 
                         <i class="las la-broom mr-2"></i>{{ translate("Clear This Chat") }}
@@ -146,6 +157,8 @@
 
             </div>
 
+            
+
             <button class="btn btn-icon btn-circle btn-soft-primary chat-info" data-toggle="class-toggle" data-target=".chat-info-wrap"><i class="las la-info-circle"></i></button>
 
         </div>
@@ -154,7 +167,7 @@
 
     <div class="chat-list-wrap c-scrollbar-light scroll-to-btm" id="parentDiv">
 
-        @if (count($chats) > 0)
+        @if (!empty($hasOlderMessages))
 
             <div class="chat-coversation-load text-center">
 
@@ -165,10 +178,17 @@
         @endif
 
         <div class="chat-list px-4" id="chat-messages">
-
-            @include('frontend.member.messages.messages_part',['chats' => $chats])
-
-            @include('frontend.member.messages.calls_part', ['calls' => $call_logs ?? collect()])
+            @foreach (($timeline ?? collect()) as $timelineEvent)
+                @if ($timelineEvent['kind'] === 'chat')
+                    @if ((int) $timelineEvent['item']->sender_user_id === (int) Auth::id())
+                        @include('frontend.member.messages.messages_right_single', ['chat' => $timelineEvent['item']])
+                    @else
+                        @include('frontend.member.messages.messages_left_single', ['chats' => collect([$timelineEvent['item']])])
+                    @endif
+                @else
+                    @include('frontend.member.messages.calls_part', ['calls' => collect([$timelineEvent['item']])])
+                @endif
+            @endforeach
 
         </div>
 
@@ -202,23 +222,12 @@
 
                 <input type="hidden" name="disappear_after" id="disappear_after" value="{{ (int) ($chat_thread->disappear_after ?? 0) }}">
 
+                <button class="btn btn-circle btn-icon chat-emoji-inline" type="button" id="emoji-toggle" title="{{ translate('Emoji') }}" {{ !empty($chat_is_blocked) ? "disabled" : "" }}><i class="lar la-smile"></i></button>
                 <input type="text" class="form-control" name="message" id="message" placeholder="Your Message.." autocomplete="off" {{ !empty($chat_is_blocked) ? "disabled" : "" }}>
 
                 <input type="hidden" class="" name="attachment" id="attachment">
 
                 <div class="input-group-append">
-
-                    <button class="btn btn-circle btn-icon" type="button" id="emoji-toggle" title="{{ translate('Emoji') }}" {{ !empty($chat_is_blocked) ? "disabled" : "" }}>
-
-                        <i class="lar la-smile"></i>
-
-                    </button>
-
-                    <button class="btn btn-circle btn-icon" type="button" id="disappear-toggle" title="{{ translate('Disappearing messages') }}" {{ !empty($chat_is_blocked) ? "disabled" : "" }}>
-
-                        <i class="lar la-clock"></i>
-
-                    </button>
 
                     <button class="btn btn-circle btn-icon chat-attachment" type="button" {{ !empty($chat_is_blocked) ? "disabled" : "" }}>
 

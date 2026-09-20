@@ -40,6 +40,7 @@ class ChatController extends Controller
             $this->broadcastSafely(new ChatMessageRead($chat_thread->id, $readIds, Auth::id(), now()->toISOString()));
         }
         $chats = $this->visibleChats($chat_thread)->latest()->limit(20)->with('sender', 'replyTo.sender')->get();
+        $hasOlderMessages = $chats->isNotEmpty() && $this->visibleChats($chat_thread)->where('id', '<', $chats->last()->id)->exists();
         $chat_partner = $this->chatPartner($chat_thread);
         $chat_is_blocked = $this->isBlocked($chat_thread);
         $chat_blocked_by_me = (int) $chat_thread->blocked_by_user === (int) Auth::id();
@@ -51,8 +52,16 @@ class ChatController extends Controller
             ->latest()
             ->limit(20)
             ->get();
+        $timeline = collect();
+        foreach ($chats as $chat) {
+            $timeline->push(['kind' => 'chat', 'item' => $chat, 'at' => $chat->created_at]);
+        }
+        foreach ($call_logs as $call) {
+            $timeline->push(['kind' => 'call', 'item' => $call, 'at' => $call->started_at ?? $call->created_at]);
+        }
+        $timeline = $timeline->sortBy(fn ($event) => strtotime((string) $event['at']))->values();
         $user_to_show = $this->userToShow($chat_thread);
-        return view('frontend.member.messages.messages', compact('chats', 'chat_thread', 'chat_partner', 'chat_is_blocked', 'chat_blocked_by_me', 'chat_blocked_by_other', 'chat_blocker_name', 'can_send_message', 'user_to_show', 'call_logs'));
+        return view('frontend.member.messages.messages', compact('chats', 'chat_thread', 'chat_partner', 'chat_is_blocked', 'chat_blocked_by_me', 'chat_blocked_by_other', 'chat_blocker_name', 'can_send_message', 'user_to_show', 'call_logs', 'timeline', 'hasOlderMessages'));
     }
     public function get_old_messages(Request $request)
     {
