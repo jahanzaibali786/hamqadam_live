@@ -32,7 +32,7 @@ class PublicDiscoverController extends ApiController
         $search = trim((string) $request->query('search', ''));
 
         $query = User::query()
-            ->with(['member', 'addresses.city', 'spiritual_backgrounds'])
+            ->with(['member', 'addresses.city', 'spiritual_backgrounds', 'profile_privacy_setting'])
             ->where('user_type', 'member')
             ->where('blocked', 0)
             ->where('deactivated', 0)
@@ -62,15 +62,12 @@ class PublicDiscoverController extends ApiController
                 'id' => $u->id,
                 'code' => $u->code,
                 'name' => trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')),
-                // Same photo gate the signed-in surfaces use: a guest never
-                // sees a picture the member kept behind the privacy setting or
-                // that a moderator has not approved yet — avatar placeholder
-                // instead (MaleResource parity via show_profile_picture()).
-                'photo' => show_profile_picture($u)
-                    ? uploaded_asset($u->photo)
-                    : static_asset($u->member?->gender == 1
-                        ? 'assets/img/avatar-place.png'
-                        : 'assets/img/female-avatar-place.png'),
+                // Guests see REAL photos for approved uploads — the preview is
+                // the marketing moment and grey placeholders do not sell. The
+                // member's own "show my photo" privacy switch still wins, and
+                // photos awaiting admin approval stay behind the placeholder
+                // (see guestPhotoUrl() below).
+                'photo' => self::guestPhotoUrl($u),
                 'age' => $u->member?->birthday ? \Carbon\Carbon::parse($u->member->birthday)->age : null,
                 'gender' => $u->member?->gender,
                 'city' => $city,
@@ -90,5 +87,35 @@ class PublicDiscoverController extends ApiController
                 ->where('deactivated', 0)
                 ->count(),
         ]);
+    }
+
+    /**
+     * The photo URL a guest may see. An approved upload always shows unless
+     * the member themselves turned "show my photo" OFF — unlike the
+     * signed-in surfaces we do NOT run the site-wide guest privacy setting
+     * (`profile_picture_privacy`) here: that setting gates the stock web
+     * theme's public profiles, while this feed is the app's own marketing
+     * screen and real pictures are its whole point. Unapproved uploads and
+     * members without a photo fall back to the gendered avatar placeholder,
+     * exactly like the signed-in search does.
+     */
+    private static function guestPhotoUrl(User $u): string
+    {
+        if ($u->profile_privacy_setting?->show_photo === false) {
+            return self::avatarFallback($u);
+        }
+
+        if ($u->photo != null && (int) $u->photo_approved === 1) {
+            return uploaded_asset($u->photo);
+        }
+
+        return self::avatarFallback($u);
+    }
+
+    private static function avatarFallback(User $u): string
+    {
+        return static_asset($u->member?->gender == 1
+            ? 'assets/img/avatar-place.png'
+            : 'assets/img/female-avatar-place.png');
     }
 }
