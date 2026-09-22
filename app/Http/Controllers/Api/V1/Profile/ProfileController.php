@@ -11,12 +11,15 @@ use App\Http\Requests\Api\V1\Profile\UpdateVisibilityRequest;
 use App\Http\Resources\Api\V1\Profile\ProfilePrivacyResource;
 use App\Http\Resources\Api\V1\Profile\ProfileResource;
 use App\Http\Resources\Api\V1\Search\SearchProfileResource;
+use App\Models\AiVerificationAttempt;
+use App\Models\ProfileVerificationRequest;
 use App\Models\ProfileMatch;
 use App\Models\User;
 use App\Services\Api\V1\Matching\CompatibilityScoringService;
 use App\Services\Api\V1\Matching\MatchmakingIntegrationService;
 use App\Services\Api\V1\Profile\ProfileService;
 use App\Services\Api\V1\Profile\ProfileViewService;
+use App\Services\Api\V1\Profile\TrustChecklist;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -81,6 +84,36 @@ class ProfileController extends ApiController
                 ],
             ]
         );
+    }
+
+    public function trust(Request $request, int $profile): JsonResponse
+    {
+        // Lightweight card for the Discover blue-tick tap. Reads the SAME
+        // records the identity-verification flows read, but deliberately does
+        // NOT go through ProfileViewService::view — no coin is consumed just
+        // for glancing at someone's verification badges.
+        $candidate = User::query()
+            ->with(['member'])
+            ->where('user_type', 'member')
+            ->where('blocked', 0)
+            ->where('deactivated', 0)
+            ->whereKey($profile)
+            ->firstOrFail();
+
+        $latestAttempt = AiVerificationAttempt::where('user_id', $candidate->id)
+            ->orderByDesc('id')
+            ->first();
+        $verificationRequest = ProfileVerificationRequest::with('documents')
+            ->where('user_id', $candidate->id)
+            ->orderByDesc('id')
+            ->first();
+
+        return $this->success([
+            'user_id' => $candidate->id,
+            'name' => trim(($candidate->first_name ?? '').' '.($candidate->last_name ?? '')),
+            'photo' => $candidate->photo ? uploaded_asset($candidate->photo) : null,
+            'checks' => TrustChecklist::compute($candidate->member, $candidate, $latestAttempt, $verificationRequest),
+        ]);
     }
 
     public function compatibility(Request $request, int $profile): JsonResponse

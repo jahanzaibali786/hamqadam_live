@@ -108,6 +108,7 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('profiles')->name('api.v1.profiles.')->group(function () {
     Route::get('/{profile}', [ProfileController::class, 'publicProfile'])->name('show');
     Route::get('/{profile}/compatibility', [ProfileController::class, 'compatibility'])->name('compatibility');
+    Route::get('/{profile}/trust', [ProfileController::class, 'trust'])->name('trust');
 });
 
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('profile-views')->name('api.v1.profile_views.')->group(function () {
@@ -308,6 +309,18 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::get('/digest/preview', [FamilyController::class, 'digestPreview'])->name('digest.preview');
 });
 
+/*
+| Guest (no-auth) endpoints. These intentionally sit OUTSIDE the sanctum
+| group: they power the pre-login "Proposals for you" preview screen, and
+| they only ever expose the public marketing slice of a profile (name, age,
+| city, profession, short introduction, verified flag) — never contact
+| details, photos beyond the avatar, or anything privacy-gated.
+*/
+Route::prefix('public')->name('api.v1.public.')->group(function () {
+    Route::get('/discover', [\App\Http\Controllers\Api\V1\PublicDiscoverController::class, 'index'])
+        ->middleware('throttle:30,1')->name('discover');
+});
+
 Route::prefix('content')->name('api.v1.content.')->group(function () {
     Route::get('/articles', [ContentController::class, 'articles'])->name('articles');
     Route::get('/articles/{slug}', [ContentController::class, 'article'])->name('articles.show');
@@ -337,6 +350,16 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::post('/restrict', [SafetyController::class, 'restrict'])->name('restrict');
     Route::get('/moderation-cases', [SafetyController::class, 'queue'])->name('moderation_cases');
     Route::post('/moderation-cases/{case}/resolve', [SafetyController::class, 'resolve'])->name('moderation_cases.resolve');
+});
+
+/*
+| API catch-all: unknown /api/v1/* paths must answer JSON 404, never fall
+| through to the website. Without this, a missing route inherits the web
+| catch-all (`/{slug}` → PageController) and the SPA serves its homepage
+| HTML after a redirect — the app then parses `<html>` instead of JSON.
+*/
+Route::fallback(function () {
+    return \App\Support\Api\ApiResponse::error('API route not found.', 404, 'not_found');
 });
 
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('ai')->name('api.v1.ai.')->group(function () {

@@ -90,6 +90,10 @@ class ProfileViewService
             );
         }
 
+        // Visibility rules MUST match the Discover listing (ProfileSearchService):
+        // the list does not hard-require `approved` (it is only a filter), so a
+        // profile shown in Discover must also open here — previously this 404'd
+        // on every not-yet-approved profile the feed displayed.
         $profile = User::with([
             'member',
             'addresses',
@@ -100,9 +104,10 @@ class ProfileViewService
             'profile_match_for_viewer' => fn ($query) => $query->where('user_id', $viewer->id),
         ])
             ->where('user_type', 'member')
-            ->where('approved', 1)
             ->where('blocked', 0)
             ->where('deactivated', 0)
+            ->whereHas('member', fn ($query) => $query->where('hide_profile', 0))
+            ->whereDoesntHave('profile_privacy_setting', fn ($privacy) => $privacy->where('invisible_mode', true))
             ->whereKey($profileId)
             ->firstOrFail();
 
