@@ -127,6 +127,45 @@ class BadgeService
         return true;
     }
 
+    public function trustStreak(?User $user): int
+    {
+        if (! $user || ! Schema::hasTable('user_activity_logs')) {
+            return 0;
+        }
+
+        $days = UserActivityLog::query()
+            ->where('user_id', $user->id)
+            ->where('event_type', 'login')
+            ->orderByDesc('occurred_at')
+            ->get(['occurred_at'])
+            ->map(fn (UserActivityLog $log): string => $log->occurred_at->toDateString())
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($days === []) {
+            return 0;
+        }
+
+        $today = now()->startOfDay();
+        $latestLoginDay = \Carbon\Carbon::parse($days[0])->startOfDay();
+
+        // The current day is still active; a full missed day resets the streak.
+        if ($latestLoginDay->lt($today->copy()->subDay())) {
+            return 0;
+        }
+
+        $streak = 0;
+        $cursor = $latestLoginDay->copy();
+        $loggedDays = array_fill_keys($days, true);
+
+        while (isset($loggedDays[$cursor->toDateString()])) {
+            $streak++;
+            $cursor->subDay();
+        }
+
+        return min($streak, self::TRUST_DAYS);
+    }
     public function payload(?User $user): array
     {
         $member = $user?->member;
@@ -138,6 +177,8 @@ class BadgeService
                 'name' => 'Trust Badge',
                 'requirement' => '7 consecutive daily logins with no report or block activity',
                 'earned_at' => optional($member?->trust_badge_earned_at)->toISOString(),
+                'current_streak' => $this->trustStreak($user),
+                'target_streak' => self::TRUST_DAYS,
             ],
             'verification' => [
                 'earned' => $verified,

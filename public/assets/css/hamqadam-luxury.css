@@ -1,0 +1,1324 @@
+/* HamQadam luxury public-site theme. Presentation only; application behavior remains in existing views/scripts. */
+:root {
+    --hq-wine: #67051f;
+    --hq-wine-dark: #490313;
+    --hq-rose: #d85f87;
+    --hq-pink: #ee91ae;
+    --hq-blush: #fff1f5;
+    --hq-paper: #fffaf9;
+    --hq-ink: #2c1720;
+    --hq-muted: #75666c;
+    --hq-line: rgba(132, 30, 62, .18);
+    --hq-shadow: 0 18px 45px rgba(103, 5, 31, .10);
+}
+
+.hq-site {
+    background: var(--hq-paper);
+    color: var(--hq-ink);
+    font-family: 'Poppins', sans-serif;
+}
+
+.hq-site h1,
+.hq-site h2,
+.hq-site .section-title h2,
+.hq-page-heading h1 {
+    color: var(--hq-wine) !important;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 600 !important;
+    letter-spacing: 0;
+}
+
+.hq-site .btn-primary,
+.hq-site .bg-primary-grad,
+.hq-site .round-btn {
+    border: 0;
+    border-radius: 999px !important;
+    background: linear-gradient(100deg, #ee91ae, #cf4b78) !important;
+    box-shadow: 0 10px 24px rgba(207, 75, 120, .22);
+    color: #fff !important;
+}
+
+.hq-site .btn-primary:hover,
+.hq-site .bg-primary-grad:hover {
+    background: linear-gradient(100deg, #df7699, #b93665) !important;
+    transform: translateY(-1px);
+}
+
+/* Header */
+.hq-site-header .top-navbar {
+    background: rgba(255, 250, 251, .96) !important;
+    border-color: rgba(103, 5, 31, .08) !important;
+    color: #44343a;
+}
+
+.hq-site-header .aiz-header {
+    background: rgba(255, 247, 250, .96) !important;
+    border: 0 !important;
+    box-shadow: 0 8px 30px rgba(94, 10, 37, .07) !important;
+    backdrop-filter: blur(15px);
+}
+
+.hq-site-header .aiz-navbar .container {
+    max-width: 1380px;
+}
+
+.hq-site-header .logo img {
+    width: auto !important;
+    height: 72px !important;
+    object-fit: contain;
+}
+
+.hq-site-header .aiz-navbar .nav-link {
+    background: transparent !important;
+    color: #3b2029 !important;
+    font-size: 13px !important;
+    letter-spacing: 0;
+    padding: 26px 20px !important;
+}
+
+.hq-site-header .aiz-navbar .nav-link span {
+    background: none !important;
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+.hq-site-header .aiz-navbar li {
+    position: relative;
+    background: transparent !important;
+}
+
+.hq-site-header .aiz-navbar li.bg-primary-grad::after,
+.hq-site-header .aiz-navbar li:hover::after {
+    position: absolute;
+    right: 18px;
+    bottom: 14px;
+    left: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--hq-rose);
+    content: '';
+}
+
+/* Hero */
+.hq-home-hero {
+    min-height: 790px !important;
+    background: #fcecf0 url('../img/hamqadam-luxury/hero-hearts.png') center / cover no-repeat;
+}
+
+.hq-home-hero > .absolute-full {
+    display: none;
+}
+
+.hq-home-hero::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(255,247,249,.94) 0%, rgba(255,247,249,.76) 36%, rgba(255,247,249,0) 67%);
+    content: '';
+}
+
+.hq-home-hero > .container {
+    z-index: 2;
+}
+
+.hq-home-hero .home-slider-text {
+    max-width: 650px;
+}
+
+.hq-home-hero .home-slider-text h1,
+.hq-home-hero .home-slider-text h2 {
+    margin-bottom: 24px;
+    color: var(--hq-wine) !important;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(48px, 5.2vw, 82px) !important;
+    font-weight: 600 !important;
+    line-height: .98;
+}
+
+.hq-home-hero .home-slider-text p {
+    max-width: 610px;
+    color: #493b40;
+    font-size: 17px;
+    line-height: 1.8;
+}
+
+.hq-home-hero .account-btn {
+    width: 100%;
+    max-width: 365px;
+    min-height: 108px;
+    margin-left: auto;
+    border: 1px solid rgba(255,255,255,.8);
+    border-radius: 22px;
+    background: rgba(255,255,255,.74);
+    box-shadow: var(--hq-shadow);
+    color: var(--hq-wine);
+    backdrop-filter: blur(14px);
+}
+
+.hq-home-hero .account-btn .big-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.hq-home-hero .account-btn .sub-title {
+    color: var(--hq-muted);
+}
+
+.hq-home-hero .form-slide-wrapper {
+    z-index: 1050;
+}
+
+/* Shared public sections */
+.hq-section {
+    position: relative;
+    overflow: hidden;
+    padding-top: 88px !important;
+    padding-bottom: 88px !important;
+}
+
+.hq-section .container {
+    position: relative;
+    z-index: 2;
+}
+
+.hq-section .section-title h2,
+.hq-section > .container > .row h2,
+.hq-page-heading h1 {
+    font-size: clamp(42px, 4.6vw, 68px);
+    line-height: 1;
+}
+
+.hq-section .section-title p,
+.hq-section .section-title + p {
+    color: var(--hq-muted) !important;
+    opacity: 1 !important;
+}
+
+.hq-premium-members,
+.hq-new-members,
+.hq-happy-stories,
+.hq-reviews,
+.hq-watercolor-bg,
+.hq-ticket-page {
+    background: #fffdfa url('../img/hamqadam-luxury/watercolor-frame.png') center / cover no-repeat !important;
+}
+
+.hq-premium-members::before,
+.hq-new-members::before {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,.24);
+    content: '';
+}
+
+/* Member cards */
+.hq-member-card {
+    margin: 8px 5px 26px;
+    border: 1px solid rgba(132,30,62,.30) !important;
+    border-radius: 15px !important;
+    background: rgba(255,255,255,.88);
+    box-shadow: 0 13px 28px rgba(108, 20, 48, .10);
+    transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.hq-member-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(108,20,48,.16);
+}
+
+.hq-member-card > a > img {
+    height: 300px !important;
+    border-radius: 14px 14px 0 0;
+}
+
+.hq-member-card .absolute-bottom-left {
+    position: relative !important;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    min-height: 112px;
+    padding: 18px 12px !important;
+    background: rgba(255,239,244,.92);
+}
+
+.hq-member-card .absolute-bottom-left > .absolute-full {
+    display: none;
+}
+
+.hq-member-card .text-primary {
+    color: var(--hq-wine) !important;
+    font-size: 20px;
+    font-weight: 600 !important;
+}
+
+.hq-member-card .badge {
+    border-radius: 999px;
+    background: rgba(239,145,174,.16) !important;
+    color: #9e3158 !important;
+}
+
+/* Offers and steps */
+.hq-luxury-offers {
+    background: #fff !important;
+}
+
+.hq-luxury-offers .col-xl > div {
+    overflow: hidden;
+    border: 1px solid var(--hq-line);
+    border-radius: 18px;
+    background: linear-gradient(135deg, #fff8fa, #fbe2eb);
+    box-shadow: var(--hq-shadow);
+}
+
+.hq-luxury-offers img {
+    min-height: 245px;
+    object-fit: cover;
+}
+
+.hq-how-it-works {
+    background: linear-gradient(180deg, #fff8fa, #fcecf1) !important;
+}
+
+.hq-how-it-works .border {
+    min-height: 180px;
+    border: 1px solid rgba(255,255,255,.9) !important;
+    border-radius: 18px;
+    background: rgba(255,255,255,.62);
+    box-shadow: 0 12px 30px rgba(113,25,53,.08);
+}
+
+.hq-how-it-works .h1 {
+    color: var(--hq-rose) !important;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.hq-how-it-works .text-secondary {
+    color: var(--hq-wine) !important;
+}
+
+/* Trust */
+.hq-trusted {
+    min-height: 720px;
+    background: #fff8f6 url('../img/hamqadam-luxury/silk-trust.png') center / cover no-repeat !important;
+    color: var(--hq-ink) !important;
+}
+
+.hq-trusted .container {
+    padding: 70px 80px;
+    border: 1px solid rgba(255,255,255,.88);
+    border-radius: 28px;
+    background: rgba(255,255,255,.30);
+    box-shadow: 0 18px 52px rgba(91,24,45,.08);
+    backdrop-filter: blur(4px);
+}
+
+.hq-trusted h2 {
+    font-size: clamp(54px, 5vw, 80px) !important;
+}
+
+.hq-trusted .pb-12 {
+    padding-bottom: 55px !important;
+}
+
+.hq-trusted .rounded {
+    border: 1px solid rgba(255,255,255,.95) !important;
+    border-radius: 18px !important;
+    background: rgba(255,255,255,.58);
+    box-shadow: 0 12px 28px rgba(104,19,47,.10);
+}
+
+.hq-trusted .rounded .bg-dark {
+    display: none;
+}
+
+.hq-trusted .rounded span {
+    color: var(--hq-wine);
+    font-weight: 600;
+}
+
+/* Stories */
+.hq-happy-stories {
+    color: var(--hq-ink) !important;
+}
+
+.hq-happy-stories .card,
+.hq-story-card {
+    overflow: hidden;
+    border: 1px solid rgba(128,29,60,.30) !important;
+    border-radius: 18px !important;
+    background: rgba(255,255,255,.92);
+    box-shadow: var(--hq-shadow) !important;
+}
+
+.hq-happy-stories .card img,
+.hq-story-card img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+}
+
+.hq-happy-stories .absolute-bottom-left {
+    right: 0;
+}
+
+.hq-happy-stories .absolute-bottom-left .bg-dark {
+    background: rgba(255,239,244,.94) !important;
+    opacity: 1 !important;
+}
+
+.hq-happy-stories .absolute-bottom-left h2,
+.hq-happy-stories .absolute-bottom-left .text-primary {
+    color: var(--hq-wine) !important;
+}
+
+/* Packages */
+.hq-packages,
+.hq-package-page {
+    background-color: #fffafa !important;
+}
+
+.hq-packages .carousel-box > div,
+.hq-package-card {
+    height: calc(100% - 24px);
+    margin: 8px 12px 24px;
+    border: 1px solid rgba(122,19,51,.42) !important;
+    border-radius: 20px;
+    background: rgba(255,255,255,.94);
+    box-shadow: var(--hq-shadow);
+}
+
+.hq-packages .card-body,
+.hq-package-card .card-body {
+    padding: 28px;
+}
+
+.hq-packages h5,
+.hq-package-card h5 {
+    color: var(--hq-wine);
+    font-size: 24px;
+}
+
+.hq-packages .display-4,
+.hq-package-card .display-4 {
+    color: var(--hq-wine);
+}
+
+.hq-packages .list-group-item,
+.hq-package-card .list-group-item {
+    border: 0;
+    background: transparent;
+}
+
+/* Reviews */
+.hq-reviews {
+    background: #fffdfa url('../img/hamqadam-luxury/watercolor-frame.png') center / cover no-repeat !important;
+    color: var(--hq-ink) !important;
+}
+
+.hq-reviews .col-xxl-10 {
+    padding: 46px 70px;
+    border-radius: 28px;
+    background: rgba(255,249,250,.88);
+    box-shadow: var(--hq-shadow);
+}
+
+.hq-reviews img {
+    width: 150px !important;
+    height: 150px !important;
+    border-color: #fff !important;
+}
+
+.hq-reviews .font-italic {
+    color: #46343b;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 28px !important;
+}
+
+.hq-blog .card {
+    border: 1px solid var(--hq-line);
+    border-radius: 16px;
+}
+
+/* Ticket and standalone pages */
+.hq-ticket-page {
+    min-height: calc(100vh - 120px);
+    padding: 70px 0 100px;
+}
+
+.hq-ticket-content h2 {
+    font-size: clamp(48px, 5vw, 72px);
+}
+
+.hq-ticket-card {
+    border: 1px solid rgba(255,255,255,.9);
+    border-radius: 22px;
+    background: rgba(255,250,251,.86);
+    box-shadow: 0 24px 55px rgba(103,5,31,.13);
+    backdrop-filter: blur(10px);
+}
+
+.hq-ticket-card .card-body {
+    padding: 36px 44px;
+}
+
+.hq-ticket-card .form-control {
+    min-height: 48px;
+    border: 1px solid rgba(103,5,31,.26);
+    border-radius: 7px;
+    background: rgba(255,255,255,.94);
+}
+
+.hq-ticket-card textarea.form-control {
+    min-height: 130px;
+}
+
+.hq-page-heading {
+    padding-top: 82px !important;
+}
+
+/* Footer */
+.hq-site-footer {
+    background: #5a071f !important;
+    color: #fff2f5 !important;
+}
+
+.hq-site-footer .text-primary,
+.hq-site-footer a:hover {
+    color: #f4a6be !important;
+}
+
+.hq-site-footer .border-primary {
+    border-color: rgba(255,255,255,.18) !important;
+}
+
+@media (max-width: 991.98px) {
+    .hq-site-header .aiz-navbar .nav-link {
+        padding: 14px 12px !important;
+    }
+
+    .hq-home-hero {
+        min-height: 720px !important;
+        background-position: 62% center;
+    }
+
+    .hq-home-hero::after {
+        background: rgba(255,247,249,.80);
+    }
+
+    .hq-home-hero .row {
+        align-content: center;
+        padding-top: 140px !important;
+    }
+
+    .hq-home-hero .account-btn {
+        margin: 28px auto 0 0;
+    }
+
+    .hq-trusted .container {
+        padding: 50px 24px;
+        border-radius: 0;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .hq-section {
+        padding-top: 58px !important;
+        padding-bottom: 58px !important;
+    }
+
+    .hq-home-hero {
+        min-height: 690px !important;
+        background-position: 70% center;
+    }
+
+    .hq-home-hero .home-slider-text h1,
+    .hq-home-hero .home-slider-text h2 {
+        font-size: 47px !important;
+    }
+
+    .hq-home-hero .home-slider-text p {
+        font-size: 15px;
+    }
+
+    .hq-member-card > a > img {
+        height: 330px !important;
+    }
+
+    .hq-ticket-card .card-body {
+        padding: 24px 20px;
+    }
+
+    .hq-reviews .col-xxl-10 {
+        padding: 32px 18px;
+    }
+}
+
+.hq-hero-copy h1 span { color: #bd587b; }
+.hq-hero-actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 30px; }
+.hq-hero-btn { min-width: 190px; padding: 14px 28px; font-size: 16px; font-weight: 600; }
+.hq-hero-btn-outline { border: 1px solid #ce7391; border-radius: 999px; background: rgba(255,255,255,.38); color: #a73d62; }
+.hq-hero-btn-outline:hover { background: #fff; color: var(--hq-wine); }
+.hq-hero-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; max-width: 670px; margin-top: 70px; }
+.hq-hero-stats > div { position: relative; min-height: 54px; padding-left: 42px; }
+.hq-hero-stats i { position: absolute; top: 2px; left: 0; color: var(--hq-rose); font-size: 28px; }
+.hq-hero-stats strong, .hq-hero-stats small { display: block; }
+.hq-hero-stats strong { color: var(--hq-wine); font-size: 14px; }
+.hq-hero-stats small { margin-top: 3px; color: var(--hq-muted); font-size: 11px; }
+@media (max-width:575.98px) {
+  .hq-hero-actions { gap: 10px; }
+  .hq-hero-btn { min-width: 145px; padding: 12px 18px; }
+  .hq-hero-stats { grid-template-columns: 1fr; gap: 10px; margin-top: 34px; }
+}
+/* Authentication and registration */
+.hq-route-login .aiz-main-wrapper,
+.hq-route-register .aiz-main-wrapper { background: #fffdfa url('../img/hamqadam-luxury/watercolor-frame.png') center / cover fixed no-repeat !important; }
+.hq-route-login .aiz-main-wrapper > .py-4,
+.hq-route-register .aiz-main-wrapper > .py-4 { padding-top: 85px !important; padding-bottom: 100px !important; }
+.hq-route-login .card,
+.hq-route-register .card { overflow: visible; border: 1px solid rgba(255,255,255,.92); border-radius: 22px; background: rgba(255,250,251,.91); box-shadow: 0 24px 60px rgba(103,5,31,.13); backdrop-filter: blur(12px); }
+.hq-route-login .card-body,
+.hq-route-register .card-body { padding: 42px; }
+.hq-route-login .form-control,
+.hq-route-register .form-control { min-height: 50px; border: 1px solid rgba(103,5,31,.22); border-radius: 8px; background-color: rgba(255,255,255,.94); }
+.hq-route-login .h3,
+.hq-route-register .h3 { font-family: 'Cormorant Garamond',Georgia,serif; font-size: 43px; color: var(--hq-wine) !important; }
+
+/* Member listing and user panels */
+.hq-route-member-listing .aiz-main-wrapper > section,
+.hq-route-dashboard .aiz-main-wrapper > section,
+.hq-route-profile-settings .aiz-main-wrapper > section { background: #fffdfa url('../img/hamqadam-luxury/watercolor-frame.png') center top / cover fixed no-repeat !important; }
+.hq-route-member-listing .col-xl-9 > .mb-5 > .row { overflow: hidden; padding: 14px; border: 1px solid rgba(126,25,57,.17) !important; border-radius: 18px !important; background: rgba(255,255,255,.90); box-shadow: 0 12px 34px rgba(94,17,42,.08); }
+.hq-route-member-listing .member-listing-md-img { border-radius: 14px !important; }
+.hq-route-member-listing .col-xl-9 h1 { color: var(--hq-wine) !important; font-family: 'Cormorant Garamond',Georgia,serif; font-size: 38px !important; }
+.hq-route-member-listing .aiz-filter-sidebar,
+.aiz-user-sidenav,
+.aiz-user-panel .card { border: 1px solid rgba(126,25,57,.14) !important; border-radius: 16px !important; background: rgba(255,255,255,.92) !important; box-shadow: 0 12px 32px rgba(94,17,42,.07); }
+.aiz-user-panel .card-header { border-color: rgba(126,25,57,.10); background: #fff7f9; }
+.aiz-user-panel h1,
+.aiz-user-panel h2,
+.aiz-user-panel h3,
+.aiz-user-panel h4,
+.aiz-user-panel .card-title { color: var(--hq-wine); }
+
+/* Consistent controls */
+.hq-site .form-control,
+.hq-site .bootstrap-select .dropdown-toggle { border-color: rgba(103,5,31,.18); border-radius: 8px; }
+.hq-site .form-control:focus,
+.hq-site .bootstrap-select.show .dropdown-toggle { border-color: var(--hq-rose); box-shadow: 0 0 0 3px rgba(216,95,135,.12); }
+.hq-site .badge-primary,
+.hq-site .bg-primary { background-color: var(--hq-rose) !important; }
+.hq-site .text-primary { color: #bc3e69 !important; }
+.hq-site .aiz-pagination .page-link { border-color: var(--hq-line); color: var(--hq-wine); }
+.hq-site .aiz-pagination .active .page-link { background: var(--hq-rose); color: #fff; }
+
+@media (max-width:575.98px) {
+  .hq-route-login .card-body,
+  .hq-route-register .card-body { padding: 28px 20px; }
+  .hq-route-member-listing .col-xl-9 > .mb-5 > .row { padding: 8px; }
+}
+/* The hero uses the compact Get Started CTA; the original registration panel trigger remains programmatically available. */
+.hq-home-hero .account-btn {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+/* Navigation active state: underline only. */
+.hq-site-header .aiz-navbar li,
+.hq-site-header .aiz-navbar li.bg-primary-grad,
+.hq-site-header .aiz-navbar li.round-btn {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Reference-aligned member cards. */
+.hq-premium-members .slick-track,
+.hq-new-members .slick-track {
+  display: flex;
+}
+.hq-premium-members .slick-slide,
+.hq-new-members .slick-slide,
+.hq-premium-members .slick-slide > div,
+.hq-new-members .slick-slide > div,
+.hq-premium-members .carousel-box,
+.hq-new-members .carousel-box {
+  height: auto;
+}
+.hq-member-card {
+  height: calc(100% - 28px);
+  min-height: 430px;
+  margin: 8px 7px 20px;
+  border: 1px solid rgba(123,20,52,.38) !important;
+  border-radius: 17px !important;
+  background: rgba(255,255,255,.70);
+}
+.hq-member-card > a {
+  display: flex !important;
+  height: 100%;
+  flex-direction: column;
+}
+.hq-member-media {
+  position: relative;
+  height: 318px;
+  min-height: 318px;
+  margin: 10px 10px 0;
+  overflow: hidden;
+  border-radius: 13px 13px 8px 8px;
+  background: #f7dfe6;
+}
+.hq-member-media > img,
+.hq-member-card > a > .hq-member-media > img {
+  width: 100%;
+  height: 100% !important;
+  object-fit: cover;
+}
+.hq-member-photo-locked {
+  filter: blur(9px) saturate(.75);
+  transform: scale(1.08);
+}
+.hq-member-lock {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 66px;
+  height: 66px;
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 50%;
+  background: rgba(255,238,243,.82);
+  box-shadow: 0 10px 26px rgba(81,8,31,.15);
+  color: #fff;
+  transform: translate(-50%,-50%);
+  backdrop-filter: blur(5px);
+}
+.hq-member-lock i {
+  color: #fff;
+  font-size: 30px;
+  text-shadow: 0 1px 8px rgba(98,11,38,.20);
+}
+.hq-member-info {
+  position: relative;
+  display: flex;
+  min-height: 122px;
+  margin-top: -8px;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px 18px 14px 14px;
+  background: rgba(255,239,243,.96);
+  box-shadow: 0 -6px 18px rgba(112,23,52,.05);
+}
+.hq-member-info .text-primary {
+  color: #9e1646 !important;
+  font-size: 21px;
+  font-weight: 600 !important;
+}
+.hq-member-info .fs-10 {
+  color: #4c4044;
+  font-size: 11px !important;
+}
+.hq-member-badges {
+  min-height: 24px;
+}
+.hq-member-badges .badge {
+  display: inline-flex;
+  padding: 5px 9px;
+  align-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: #f9dbe5 !important;
+  color: #a8325c !important;
+  font-size: 10px;
+}
+.hq-member-badges .badge .la-check-circle {
+  margin-left: 4px;
+  color: #2dbb73;
+}
+
+/* Auth pages and registration panel share the Ticket form language. */
+.hq-route-login .card,
+.hq-route-register .card,
+.hq-home-hero #register-form-container .card {
+  border: 1px solid rgba(255,255,255,.95) !important;
+  border-radius: 22px !important;
+  background: rgba(255,249,251,.92) !important;
+  box-shadow: 0 24px 60px rgba(103,5,31,.13) !important;
+}
+.hq-route-login label,
+.hq-route-register label,
+.hq-home-hero #register-form-container label {
+  color: #552033;
+  font-weight: 600;
+}
+.hq-route-login .form-control,
+.hq-route-register .form-control,
+.hq-home-hero #register-form-container .form-control,
+.hq-route-register .bootstrap-select > .dropdown-toggle,
+.hq-home-hero #register-form-container .bootstrap-select > .dropdown-toggle {
+  min-height: 50px;
+  border: 1px solid #d7a6b7 !important;
+  border-radius: 8px !important;
+  background: rgba(255,255,255,.96) !important;
+  color: #45383d !important;
+}
+.hq-route-login .form-control:focus,
+.hq-route-register .form-control:focus,
+.hq-home-hero #register-form-container .form-control:focus,
+.hq-route-register .bootstrap-select.show > .dropdown-toggle,
+.hq-home-hero #register-form-container .bootstrap-select.show > .dropdown-toggle {
+  border-color: #d75f87 !important;
+  box-shadow: 0 0 0 3px rgba(215,95,135,.13) !important;
+}
+.hq-route-login .btn-primary,
+.hq-route-register .btn-primary,
+.hq-home-hero #register-form-container .btn-primary,
+.hq-home-hero #register-form-container .registration-next-btn,
+.hq-home-hero #register-form-container .registration-prev-btn {
+  min-height: 50px;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: linear-gradient(100deg,#ee91ae,#c94c78) !important;
+  color: #fff !important;
+  font-weight: 600;
+  box-shadow: 0 10px 24px rgba(201,76,120,.22);
+}
+.hq-site .bootstrap-select .dropdown-menu,
+.hq-site .dropdown-menu[role='combobox'] {
+  z-index: 1100 !important;
+  overflow: hidden;
+  border: 1px solid #e1b6c4;
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(91,15,39,.14);
+}
+.hq-site .bootstrap-select .dropdown-item.active,
+.hq-site .bootstrap-select .dropdown-item:active,
+.hq-site .bootstrap-select .dropdown-item:hover {
+  background: #f8dce5 !important;
+  color: #711331 !important;
+}
+
+/* Luxury login prompt shown from locked member cards. */
+.hq-login-modal .modal-dialog {
+  width: calc(100% - 30px);
+  max-width: 470px;
+}
+.hq-login-modal .modal-content {
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.96);
+  border-radius: 24px;
+  background: #fffafc url('../img/hamqadam-luxury/watercolor-frame.png') center / cover no-repeat;
+  box-shadow: 0 28px 80px rgba(72,4,24,.26);
+}
+.hq-login-modal .modal-header {
+  padding: 30px 34px 18px;
+  align-items: flex-start;
+  border: 0;
+  background: rgba(255,248,250,.70);
+}
+.hq-login-modal .modal-title {
+  color: var(--hq-wine);
+  font-family: 'Cormorant Garamond',Georgia,serif;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+}
+.hq-login-modal .modal-header p {
+  margin-top: 8px;
+  color: var(--hq-muted);
+  font-size: 13px;
+}
+.hq-login-modal .close {
+  width: 34px;
+  height: 34px;
+  margin: -5px -8px 0 10px;
+  padding: 0;
+  border-radius: 50%;
+  background: #f7dce5;
+  color: var(--hq-wine);
+  opacity: 1;
+}
+.hq-login-modal .modal-body {
+  padding: 12px 34px 34px;
+}
+.hq-login-modal .form-label {
+  color: #552033;
+  font-weight: 600;
+}
+.hq-login-modal .form-control {
+  min-height: 50px;
+  border: 1px solid #d7a6b7;
+  border-radius: 8px;
+  background: rgba(255,255,255,.94);
+}
+.hq-login-modal .form-control:focus {
+  border-color: #d75f87;
+  box-shadow: 0 0 0 3px rgba(215,95,135,.13);
+}
+.hq-login-modal .btn-primary {
+  min-height: 50px;
+  border-radius: 999px !important;
+}
+.hq-modal-register {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(112,20,49,.12);
+}
+.hq-modal-register a {
+  color: #b53260;
+  font-weight: 600;
+}
+
+@media (max-width:575.98px) {
+  .hq-member-card { min-height: 445px; }
+  .hq-member-media { height: 330px; min-height: 330px; }
+  .hq-login-modal .modal-header { padding: 26px 22px 14px; }
+  .hq-login-modal .modal-body { padding: 10px 22px 26px; }
+}
+/* The application names the standalone login route user.login. */
+.hq-route-user-login .aiz-main-wrapper {
+  background: #fffdfa url('../img/hamqadam-luxury/watercolor-frame.png') center / cover fixed no-repeat !important;
+}
+.hq-route-user-login .aiz-main-wrapper > .py-4 {
+  min-height: calc(100vh - 180px);
+  padding-top: 85px !important;
+  padding-bottom: 100px !important;
+}
+.hq-route-user-login .card {
+  overflow: visible;
+  border: 1px solid rgba(255,255,255,.94);
+  border-radius: 22px;
+  background: rgba(255,250,251,.91);
+  box-shadow: 0 24px 60px rgba(103,5,31,.13);
+  backdrop-filter: blur(12px);
+}
+.hq-route-user-login .card-body { padding: 42px; }
+.hq-route-user-login .h3 {
+  color: var(--hq-wine) !important;
+  font-family: 'Cormorant Garamond',Georgia,serif;
+  font-size: 43px;
+}
+.hq-route-user-login label { color: #552033; font-weight: 600; }
+.hq-route-user-login .form-control {
+  min-height: 50px;
+  border: 1px solid #d7a6b7 !important;
+  border-radius: 8px;
+  background: rgba(255,255,255,.96);
+}
+.hq-route-user-login .form-control:focus {
+  border-color: #d75f87 !important;
+  box-shadow: 0 0 0 3px rgba(215,95,135,.13);
+}
+.hq-route-user-login .btn-primary {
+  min-height: 50px;
+  border-radius: 999px !important;
+}
+
+/* Light luxury footer matching the watercolor public pages. */
+.hq-site-footer {
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid rgba(120,24,55,.12);
+  background: #fff8fa url('../img/hamqadam-luxury/watercolor-frame.png') center / cover no-repeat !important;
+  color: #54182d !important;
+  box-shadow: 0 -14px 36px rgba(96,14,41,.06);
+}
+.hq-site-footer::before {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,250,251,.62);
+  content: '';
+}
+.hq-site-footer > .container {
+  position: relative;
+  z-index: 1;
+}
+.hq-site-footer .opacity-60 {
+  color: #6d4a57;
+  opacity: .86 !important;
+}
+.hq-site-footer h4,
+.hq-site-footer .text-primary,
+.hq-site-footer a {
+  color: #761b3b !important;
+}
+.hq-site-footer a:hover {
+  color: #cf527c !important;
+}
+.hq-site-footer .border-primary,
+.hq-site-footer .border-top {
+  border-color: rgba(118,27,59,.16) !important;
+}
+.hq-site-footer .social a {
+  background: #f6dce5;
+  color: #8e2449 !important;
+  box-shadow: 0 7px 18px rgba(102,17,45,.10);
+}
+.hq-site-footer .logo img {
+  filter: none;
+}
+
+@media (max-width:575.98px) {
+  .hq-route-user-login .card-body { padding: 28px 20px; }
+}
+/* Manual review popup */
+#manual-review-modal .hq-manual-review-content {
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.96) !important;
+  border-radius: 24px !important;
+  background: #fff8fa url('../img/hamqadam-luxury/watercolor-frame.png') center / cover no-repeat !important;
+  box-shadow: 0 28px 80px rgba(72,4,24,.25) !important;
+}
+#manual-review-modal .manual-review-head {
+  padding: 30px 26px 24px !important;
+  background: rgba(255,239,244,.88) !important;
+  color: var(--hq-wine) !important;
+}
+#manual-review-modal .manual-review-clock {
+  width: 64px !important;
+  height: 64px !important;
+  flex: 0 0 64px;
+  border: 1px solid rgba(216,95,135,.25);
+  background: #f8dce5 !important;
+  color: #b43160 !important;
+}
+#manual-review-modal .manual-review-head h5 {
+  color: var(--hq-wine) !important;
+  font-family: 'Cormorant Garamond',Georgia,serif;
+  font-size: 28px;
+}
+#manual-review-modal .manual-review-head .small {
+  color: #745560;
+  opacity: 1 !important;
+}
+#manual-review-modal .modal-body {
+  background: rgba(255,255,255,.56);
+}
+#manual-review-modal .manual-review-time {
+  color: #be3f69 !important;
+  font-family: 'Cormorant Garamond',Georgia,serif;
+  font-size: 36px !important;
+}
+#manual-review-modal .manual-review-continue,
+#manual-review-modal .manual-review-contact {
+  min-height: 48px;
+  border-radius: 999px !important;
+}
+#manual-review-modal .manual-review-continue {
+  border: 0 !important;
+  background: linear-gradient(100deg,#ee91ae,#c94c78) !important;
+}
+#manual-review-modal .manual-review-contact {
+  border-color: #d88aa4 !important;
+  background: #f9e3ea !important;
+  color: #9b2a54 !important;
+}
+
+/* Messenger controls */
+.hq-route-all-messages .aiz-main-wrapper > section,
+.hq-route-chat .aiz-main-wrapper > section {
+  background: #fffdfa url('../img/hamqadam-luxury/watercolor-frame.png') center top / cover fixed no-repeat !important;
+}
+.hq-route-all-messages .aiz-chat,
+.hq-route-chat .aiz-chat {
+  overflow: hidden;
+  border: 1px solid rgba(126,25,57,.14);
+  border-radius: 20px;
+  background: rgba(255,255,255,.86);
+  box-shadow: 0 18px 45px rgba(94,17,42,.10);
+}
+.hq-route-all-messages .chat-user-list-header,
+.hq-route-chat .chat-user-list-header,
+.hq-route-all-messages .chat-header,
+.hq-route-chat .chat-header,
+.hq-route-all-messages .chat-footer,
+.hq-route-chat .chat-footer {
+  background: rgba(255,249,251,.94) !important;
+}
+.hq-route-all-messages .chat-footer .input-group,
+.hq-route-chat .chat-footer .input-group {
+  overflow: hidden;
+  border: 1px solid #d7a6b7;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(103,5,31,.06);
+}
+.hq-route-all-messages .chat-footer .input-group:focus-within,
+.hq-route-chat .chat-footer .input-group:focus-within {
+  border-color: #d75f87;
+  box-shadow: 0 0 0 3px rgba(215,95,135,.12);
+}
+.hq-route-all-messages .chat-footer .input-group .form-control,
+.hq-route-chat .chat-footer .input-group .form-control {
+  height: 48px;
+  min-height: 48px;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.hq-route-all-messages .chat-footer .input-group-append,
+.hq-route-chat .chat-footer .input-group-append {
+  display: flex;
+  align-items: center;
+  padding-right: 5px;
+}
+.hq-route-all-messages .chat-footer .input-group-append .btn,
+.hq-route-chat .chat-footer .input-group-append .btn {
+  width: 36px;
+  height: 36px;
+  margin: 0 2px;
+  border: 0;
+  border-radius: 50%;
+  color: #a32d58;
+  background: transparent;
+}
+.hq-route-all-messages .chat-footer .input-group-append .btn:hover,
+.hq-route-chat .chat-footer .input-group-append .btn:hover {
+  background: #f8dce5;
+  color: #781334;
+}
+.hq-route-all-messages .chat-footer .input-group-append .btn-primary,
+.hq-route-chat .chat-footer .input-group-append .btn-primary {
+  color: #fff !important;
+  background: linear-gradient(100deg,#ee91ae,#c94c78) !important;
+}
+.hq-route-all-messages #emoji-panel,
+.hq-route-chat #emoji-panel,
+.hq-route-all-messages #disappear-menu,
+.hq-route-chat #disappear-menu,
+.hq-route-all-messages #voice-record-bar,
+.hq-route-chat #voice-record-bar {
+  border: 1px solid #e1b6c4 !important;
+  border-radius: 14px !important;
+  background: rgba(255,250,251,.98) !important;
+  box-shadow: 0 16px 36px rgba(91,15,39,.12);
+}
+.hq-route-all-messages #emoji-panel,
+.hq-route-chat #emoji-panel {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+.hq-route-all-messages #emoji-panel .emoji-pick,
+.hq-route-chat #emoji-panel .emoji-pick {
+  min-width: 0;
+  padding: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: #fff1f5;
+}
+.hq-route-all-messages #emoji-panel .emoji-pick:hover,
+.hq-route-chat #emoji-panel .emoji-pick:hover {
+  background: #f5c9d7;
+}
+.hq-route-all-messages .chat-disappear-toggle.text-primary,
+.hq-route-chat .chat-disappear-toggle.text-primary {
+  background: #f8dce5 !important;
+}
+.hq-route-all-messages .chat-user-item.selected-chat,
+.hq-route-chat .chat-user-item.selected-chat {
+  border-left: 3px solid #d75f87;
+  background: #fff0f4 !important;
+}
+@media (max-width:575.98px) {
+  .hq-route-all-messages #emoji-panel,
+  .hq-route-chat #emoji-panel { grid-template-columns: repeat(7, 1fr); }
+}
+/* Every member-panel route inherits the same luxury surface. */
+.hq-member-panel-page {
+  min-height: calc(100vh - 160px);
+  background: #fffdfa url('../img/hamqadam-luxury/watercolor-frame.png') center top / cover fixed no-repeat !important;
+}
+.hq-member-panel-page > .container {
+  position: relative;
+  z-index: 1;
+}
+/* Member shell and messenger spacing refinements. */
+.hq-member-panel-page .aiz-user-sidenav-wrap {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+.hq-member-panel-page .aiz-user-sidenav {
+  overflow: hidden;
+  border: 1px solid rgba(126, 25, 57, .16) !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, .94) !important;
+}
+.hq-member-panel-page .aiz-user-panel {
+  min-width: 0;
+}
+.hq-route-all-messages .chat-list-wrap,
+.hq-route-chat .chat-list-wrap {
+  position: relative;
+  padding-bottom: 118px !important;
+}
+.hq-route-all-messages .chat-list,
+.hq-route-chat .chat-list {
+  padding-bottom: 24px !important;
+}
+.hq-route-all-messages .chat-footer,
+.hq-route-chat .chat-footer {
+  position: relative;
+  z-index: 4;
+}
+.hq-route-all-messages .chat-footer .input-group,
+.hq-route-chat .chat-footer .input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px !important;
+  overflow: hidden;
+}
+.hq-route-all-messages .chat-footer .chat-emoji-inline,
+.hq-route-chat .chat-footer .chat-emoji-inline {
+  flex: 0 0 38px;
+  color: #b53669;
+}
+.hq-route-all-messages .chat-footer .input-group > .form-control,
+.hq-route-chat .chat-footer .input-group > .form-control {
+  min-width: 0;
+}
+.hq-route-all-messages .chat-disappear-status,
+.hq-route-chat .chat-disappear-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  margin-left: 2px;
+  border-radius: 999px;
+  background: #f5c6d8;
+  color: #8e234b;
+  font-size: 9px;
+  font-weight: 700;
+}
+/* Premium inline voice messages. */
+.hq-route-all-messages .hv-voice,
+.hq-route-chat .hv-voice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 235px;
+  max-width: 310px;
+  padding: 9px 11px;
+  border: 1px solid rgba(190, 61, 111, .20);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(255,255,255,.95), rgba(255,235,242,.92));
+  box-shadow: 0 8px 20px rgba(126, 25, 57, .10);
+}
+.hq-route-all-messages .hv-voice .hv-play,
+.hq-route-chat .hv-voice .hv-play {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, #e85a8a, #b72f65);
+  box-shadow: 0 5px 12px rgba(183, 47, 101, .25);
+  cursor: pointer;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.hq-route-all-messages .hv-voice .hv-play:hover,
+.hq-route-chat .hv-voice .hv-play:hover {
+  transform: scale(1.06);
+  box-shadow: 0 8px 16px rgba(183, 47, 101, .34);
+}
+.hq-route-all-messages .hv-voice .hv-wave,
+.hq-route-chat .hv-voice .hv-wave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 92px;
+  height: 28px;
+  cursor: pointer;
+}
+.hq-route-all-messages .hv-voice .hv-wave span,
+.hq-route-chat .hv-voice .hv-wave span {
+  width: 3px;
+  min-height: 6px;
+  border-radius: 5px;
+  background: #e8a9bf;
+  transition: background .15s ease, height .15s ease;
+}
+.hq-route-all-messages .hv-voice .hv-wave span.played,
+.hq-route-chat .hv-voice .hv-wave span.played {
+  background: #c2396e;
+}
+.hq-route-all-messages .hv-voice .hv-time,
+.hq-route-chat .hv-voice .hv-time {
+  min-width: 36px;
+  color: #7e1939;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Keep presence directly under the recipient name in the chat header. */
+.hq-route-all-messages .chat-header > .d-flex > .mr-2.text-right,
+.hq-route-chat .chat-header > .d-flex > .mr-2.text-right {
+  display: none !important;
+}
+.hq-route-all-messages .chat-header .chat-partner-presence-inline,
+.hq-route-chat .chat-header .chat-partner-presence-inline {
+  line-height: 1.2;
+  min-height: 15px;
+}
+/* Voice notes use only their own premium player container, without a chat bubble. */
+.hq-route-all-messages .voice-message-shell,
+.hq-route-chat .voice-message-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.hq-route-all-messages .voice-note-caption,
+.hq-route-chat .voice-note-caption {
+  color: #8e234b;
+  font-size: 11px;
+  line-height: 1.2;
+  padding-left: 6px;
+}
+/* Tighten the message list-to-composer gap. */
+.hq-route-all-messages .chat-list-wrap,
+.hq-route-chat .chat-list-wrap { padding-bottom: 32px !important; }
+.hq-route-all-messages .chat-list,
+.hq-route-chat .chat-list { padding-bottom: 10px !important; }
+/* Keep the disappearing-message action inside the three-dot menu. */
+.hq-route-all-messages .dropdown-menu .chat-disappear-toggle,
+.hq-route-chat .dropdown-menu .chat-disappear-toggle {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
+  text-align: left;
+}
+.hq-route-all-messages .dropdown-menu .chat-disappear-toggle > i,
+.hq-route-chat .dropdown-menu .chat-disappear-toggle > i {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+.hq-route-all-messages .dropdown-menu .chat-disappear-toggle .chat-disappear-status,
+.hq-route-chat .dropdown-menu .chat-disappear-toggle .chat-disappear-status {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.hq-route-all-messages .chat-header .dropdown-menu,
+.hq-route-chat .chat-header .dropdown-menu {
+  min-width: 190px;
+  max-width: min(245px, calc(100vw - 32px));
+}

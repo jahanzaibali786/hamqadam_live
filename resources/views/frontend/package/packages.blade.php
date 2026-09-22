@@ -1,13 +1,15 @@
 @extends('frontend.layouts.app')
 @section('content')
-@php($registrationPackage = \App\Support\RegistrationReward::registrationPackage())
-<section class="pt-6 pb-4 bg-white text-center">
+@php
+    $registrationPackage = \App\Support\RegistrationReward::registrationPackage();
+@endphp
+<section class="hq-page-heading hq-watercolor-bg pt-6 pb-4 text-center">
     <div class="container">
         <h1 class="mb-0 fw-600 text-dark">{{ translate('Select Your Package') }}</h1>
     </div>
 </section>
 
-<section class="py-5 bg-white">
+<section class="hq-package-page hq-watercolor-bg py-5">
     <div class="container">
         <div class="alert alert-primary mb-4 text-left">
             <div class="fw-700 mb-1">{{ translate('Hamqadam Packages') }}</div>
@@ -47,7 +49,7 @@
                     $isRecommended = $recommendedPackage && $recommendedPackage->id == $package->id;
                 @endphp
                 <div class="carousel-box">
-                    <div class="overflow-hidden shadow-none border-right position-relative">
+                    <div class="hq-package-card overflow-hidden shadow-none position-relative">
                         @if($isCurrentPackage)
                             <span class="badge badge-inline badge-success absolute-top-left m-2">{{ translate('Current') }}</span>
                         @elseif($isRecommended)

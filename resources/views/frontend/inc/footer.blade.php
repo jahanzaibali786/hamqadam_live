@@ -1,4 +1,4 @@
-<footer class="aiz-footer fs-13 mt-auto text-white fw-400 pt-5">
+<footer class="aiz-footer hq-site-footer fs-13 mt-auto fw-400 pt-5">
     <div class="container">
 
         <div class="row mb-4">

@@ -1,4 +1,4 @@
-<div class="@if(get_setting('header_stikcy') == 'on') position-fixed @else position-absolute @endif w-100 top-0 z-1020">
+<div class="hq-site-header @if(get_setting('header_stikcy') == 'on') position-fixed @else position-absolute @endif w-100 top-0 z-1020">
     <div class="top-navbar bg-white border-bottom z-1035 py-2 d-none d-lg-block">
         <div class="container">
             <div class="row align-items-center">

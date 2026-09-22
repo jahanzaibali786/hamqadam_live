@@ -1,18 +1,18 @@
 @extends('frontend.layouts.app')
 @section('content')
-<section class="pt-6 pb-4 bg-white text-center">
+<section class="hq-page-heading hq-watercolor-bg pt-6 pb-4 text-center">
     <div class="container">
         <h1 class="fw-600 text-dark">{{ translate('Happy Stories')}}</h1>
     </div>
 </section>
-<section class="pt-5 pb-4 bg-white">
+<section class="hq-story-page hq-watercolor-bg pt-5 pb-4">
     <div class="container">
         <div class="card-columns column-gap-10 card-columns-xl-3 card-columns-md-2 card-columns-1">
             @foreach ($happy_stories as $key => $happy_story)
                 @php
                     $photo = explode(',',$happy_story->photos);
                 @endphp
-    			<div class="card mb-3 shadow-none">
+                <div class="card hq-story-card mb-3 shadow-none">
     				<a href="{{ route('story_details', $happy_story->id) }}" class="text-reset d-block mb-4">
     					<img src="{{ uploaded_asset($photo[0]) }}" class="img-fluid">
     				</a>

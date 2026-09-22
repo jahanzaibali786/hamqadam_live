@@ -3,7 +3,7 @@
 
 <!-- Homepage Slider Section -->
 @if (get_setting('show_homepage_slider') == 'on' && get_setting('home_slider_images') != null)
-<section class="position-relative overflow-hidden min-vh-100 d-flex home-slider-area">
+<section class="hq-home-hero position-relative overflow-hidden min-vh-100 d-flex home-slider-area">
     @php
     $slider_images = json_decode(get_setting('home_slider_images'), true);
     $slider_images_small = json_decode(get_setting('home_slider_images_small'), true);
@@ -28,8 +28,22 @@
     <div class="container position-relative d-flex flex-column">
         <div class="row pt-11 pb-8 my-auto align-items-center">
             <div class="col-xl-5 col-lg-6">
-                <div class="text-dark home-slider-text">
-                    {!! get_setting('home_slider_text') !!}
+                <div class="text-dark home-slider-text hq-hero-copy">
+                    <h1>{{ translate('Find Your Perfect Partner') }}<br><span>{{ translate('With Trust & Care.') }}</span></h1>
+                    <p>{{ translate('Join thousands of happy couples on HamQadam, where meaningful relationships begin. Verified profiles, secure connections, and genuine matches tailored for you.') }}</p>
+                    <div class="hq-hero-actions">
+                        @guest
+                            <button type="button" class="btn btn-primary hq-hero-btn" onclick="document.getElementById('show-register-form')?.click()">{{ translate('Get Started') }}</button>
+                        @else
+                            <a href="{{ route('member.listing') }}" class="btn btn-primary hq-hero-btn">{{ translate('Find Matches') }}</a>
+                        @endguest
+                        <a href="#how-it-works" class="btn hq-hero-btn hq-hero-btn-outline">{{ translate('Learn More') }}</a>
+                    </div>
+                    <div class="hq-hero-stats">
+                        <div><i class="las la-shield-alt"></i><strong>{{ translate('Verified Members') }}</strong><small>{{ translate('Safe & Trusted') }}</small></div>
+                        <div><i class="las la-heart"></i><strong>{{ translate('Success Stories') }}</strong><small>{{ translate('Real Couples Joined') }}</small></div>
+                        <div><i class="las la-lock"></i><strong>{{ translate('Secure & Private') }}</strong><small>{{ translate('Your Privacy First') }}</small></div>
+                    </div>
                 </div>
             </div>
 
@@ -106,48 +120,7 @@
                                         class="btn btn-block btn-primary round-btn d-none"  id="createAccountBtn">{{ translate('Create Account') }}</button>
                                 </div>
 
-                                @if (get_setting('google_login_activation') == 1 ||
-                                get_setting('facebook_login_activation') == 1 ||
-                                get_setting('twitter_login_activation') == 1 ||
-                                get_setting('apple_login_activation') == 1)
-                                <div class="mt-4">
-                                    <div class="separator mb-3">
-                                        <span class="bg-white px-3">{{ translate('Or Join With') }}</span>
-                                    </div>
-                                    <ul class="list-inline social colored text-center">
-                                        @if (get_setting('facebook_login_activation') == 1)
-                                        <li class="list-inline-item">
-                                            <a href="{{ route('social.login', ['provider' => 'facebook']) }}"
-                                                class="facebook"
-                                                title="{{ translate('Facebook') }}"><i
-                                                    class="lab la-facebook-f"></i></a>
-                                        </li>
-                                        @endif
-                                        @if (get_setting('google_login_activation') == 1)
-                                        <li class="list-inline-item">
-                                            <a href="{{ route('social.login', ['provider' => 'google']) }}"
-                                                class="google" title="{{ translate('Google') }}"><i
-                                                    class="lab la-google"></i></a>
-                                        </li>
-                                        @endif
-                                        @if (get_setting('twitter_login_activation') == 1)
-                                        <li class="list-inline-item">
-                                            <a href="{{ route('social.login', ['provider' => 'twitter']) }}"
-                                                class="twitter" title="{{ translate('Twitter') }}"><i
-                                                    class="lab la-twitter"></i></a>
-                                        </li>
-                                        @endif
-                                        @if (get_setting('apple_login_activation') == 1)
-                                        <li class="list-inline-item">
-                                            <a href="{{ route('social.login', ['provider' => 'apple']) }}"
-                                                class="apple" title="{{ translate('Apple') }}"><i
-                                                    class="lab la-apple"></i></a>
-                                        </li>
-                                        @endif
-                                    </ul>
-                                </div>
-                                @endif
-                            </form>
+                                </form>
                         </div>
                     </div>
                 </div>
@@ -221,7 +194,7 @@
 
 <!-- premium member Section -->
 @if (get_setting('show_premium_member_section') == 'on')
-<section class="pt-7 bg-white">
+<section class="hq-section hq-premium-members pt-7 bg-white">
     <div class="container">
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
@@ -247,7 +220,7 @@
 
 <!-- Banner section 1 -->
 @if (get_setting('show_home_banner1_section') == 'on' && get_setting('home_banner1_images') != null)
-<section class="pt-7 bg-white">
+<section class="hq-section hq-luxury-offers pt-7 bg-white">
     <div class="container">
         <div class="row gutters-10">
             @php
@@ -272,7 +245,7 @@
 
 <!-- How It Works Section -->
 @if (get_setting('show_how_it_works_section') == 'on' && get_setting('how_it_works_steps_titles') != null)
-<section class="py-7 bg-white">
+<section class="hq-section hq-how-it-works py-7 bg-white" id="how-it-works">
     <div class="container">
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
@@ -314,8 +287,7 @@
 
 <!-- Trusted by Millions Section -->
 @if (get_setting('show_trusted_by_millions_section') == 'on')
-<section class="bg-center bg-cover min-vh-100 py-7 text-white d-flex align-items-center bg-fixed"
-    style="background-image: url('{{ uploaded_asset(get_setting('trusted_by_millions_background_image')) }}')">
+<section class="hq-section hq-trusted py-7 d-flex align-items-center">
     <div class="container">
         <div class="row">
             <div class="col-xl-8 mx-auto">
@@ -350,7 +322,7 @@
 
 <!-- New Member Section -->
 @if (get_setting('show_new_member_section') == 'on')
-<section class="py-7 bg-white">
+<section class="hq-section hq-new-members py-7 bg-white">
     <div class="container">
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
@@ -374,7 +346,7 @@
 @endif
 <!-- happy Story Section -->
 @if (get_setting('show_happy_story_section') == 'on')
-<section class="py-7 bg-dark text-white">
+<section class="hq-section hq-happy-stories py-7">
     <div class="container">
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
@@ -422,7 +394,7 @@
 @endif
 
 @if (get_setting('show_homapege_package_section') == 'on')
-<section class="py-7 bg-white">
+<section class="hq-section hq-packages py-7 bg-white">
     <div class="container">
         <div class="row">
             <div class="col-xl-8 col-xxl-6 mx-auto">
@@ -509,8 +481,7 @@
 </section>
 @endif
 @if (get_setting('show_homepage_review_section') == 'on' && get_setting('homepage_reviews') != null)
-<section class="py-7 bg-cover bg-center text-white"
-    style="background-image: url('{{ uploaded_asset(get_setting('homepage_review_section_background_image')) }}');">
+<section class="hq-section hq-reviews py-7">
     <div class="container">
         <div class="row">
             <div class="col-lg-10 col-xl-9 col-xxl-6 mx-auto">
@@ -541,7 +512,7 @@
 @endif
 
 @if (get_setting('show_blog_section') == 'on')
-<section class="py-7 bg-white text-white">
+<section class="hq-section hq-blog py-7 bg-white">
     <div class="container">
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
@@ -626,16 +597,17 @@
     const formContainer = document.getElementById('register-form-container');
     const closeBtn = document.getElementById('close-register-form');
 
-    // Show sidebar
-    showBtn.addEventListener('click', function () {
-        formContainer.style.display = 'block'; 
-        void formContainer.offsetWidth; 
-        formContainer.classList.add('active'); 
-        showBtn.style.display = 'none';
-    });
+    // The registration panel is not rendered for signed-in members.
+    if (showBtn && formContainer && closeBtn) {
+        showBtn.addEventListener('click', function () {
+            formContainer.style.display = 'block';
+            void formContainer.offsetWidth;
+            formContainer.classList.add('active');
+            showBtn.style.display = 'none';
+        });
 
-    // Close sidebar
-    closeBtn.addEventListener('click', closeSidebar);
+        closeBtn.addEventListener('click', closeSidebar);
+    }
 
     function closeSidebar() {
         formContainer.classList.remove('active'); 

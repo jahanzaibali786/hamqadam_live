@@ -51,7 +51,7 @@ class RoleController extends Controller
         abort_unless($this->isSuperAdmin(), 403);
 
         $role = Role::create(['name' => $request->name]);
-        $role->syncPermissions($this->permissionNames($request->permissions ?? []));
+        $role->syncPermissions($this->permissionNames($request->permissions ?? [], $role));
         flash(translate('New Role has been added successfully'))->success();
         return redirect()->route('roles.index');
     }
@@ -68,7 +68,7 @@ class RoleController extends Controller
 
         $role = Role::findOrFail(decrypt($id));
         $this->assertRoleIsVisible($role);
-        $permissions = $this->visiblePermissions();
+        $permissions = $this->permissionsForRole($role);
 
         return view('admin.staff.roles.edit', compact('role', 'permissions'));
     }
@@ -82,7 +82,7 @@ class RoleController extends Controller
         $this->assertRoleIsVisible($role);
         $role->name = $this->isSuperAdmin() ? $request->name : 'Sub Admin';
         $role->save();
-        $role->syncPermissions($this->permissionNames($request->permissions ?? []));
+        $role->syncPermissions($this->permissionNames($request->permissions ?? [], $role));
 
         flash(translate('Role has been updated successfully'))->success();
         return back();
@@ -125,7 +125,7 @@ class RoleController extends Controller
             ->update(['parent' => 'Members']);
     }
 
-    private function permissionNames(array $permissions): array
+    private function permissionNames(array $permissions, ?Role $role = null): array
     {
         $names = collect($permissions)
             ->map(function ($permission) {
@@ -139,10 +139,10 @@ class RoleController extends Controller
             ->values()
             ->all();
 
-        if (! $this->isSuperAdmin()) {
+        if (! $this->isSuperAdmin() || ($role && $this->isSubAdminRole($role))) {
             $names = array_values(array_intersect(
                 $names,
-                auth()->user()->getAllPermissions()->pluck('name')->all()
+                $this->adminRolePermissions()->pluck('name')->all()
             ));
         }
 
@@ -175,13 +175,53 @@ class RoleController extends Controller
     {
         return $this->isSuperAdmin()
             ? Permission::query()->get()
-            : auth()->user()->getAllPermissions();
+            : $this->adminRolePermissions();
+    }
+
+    private function permissionsForRole(Role $role): Collection
+    {
+        // Admin is the master list. Sub Admin sees the same list, with its
+        // own assigned permissions represented by the checkbox state.
+        if ($this->isAdminRole($role) || $this->isSubAdminRole($role)) {
+            return $this->adminRolePermissions();
+        }
+
+        return $this->visiblePermissions();
+    }
+
+    /**
+     * Admin is the permission ceiling for every Sub Admin role.
+     * Disabled permissions remain visible in the Sub Admin editor, but
+     * requests can never activate permissions outside this collection.
+     */
+    private function adminRolePermissions(): Collection
+    {
+        $adminRole = Role::query()
+            ->whereIn('name', ['Admin', 'admin'])
+            ->where('guard_name', 'web')
+            ->first();
+
+        return $adminRole?->permissions ?? collect();
+    }
+
+    private function isAdminRole(Role $role): bool
+    {
+        return in_array(strtolower($role->name), ['admin'], true);
+    }
+
+    private function isSubAdminRole(Role $role): bool
+    {
+        return in_array(strtolower($role->name), ['sub admin', 'subadmin'], true);
     }
 
     private function assertRoleIsVisible(Role $role): void
     {
-        if (! $this->isSuperAdmin() && ! in_array(strtolower($role->name), ['sub admin', 'subadmin'], true)) {
+        if (! $this->isSuperAdmin() && ! $this->isSubAdminRole($role)) {
             abort(403, 'You may only manage the Sub Admin role.');
         }
     }
 }
+
+
+
+

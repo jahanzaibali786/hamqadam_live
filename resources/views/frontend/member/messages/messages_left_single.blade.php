@@ -1,7 +1,11 @@
 @foreach ($chats as $chat)
     @php
-        $voiceMeta = $chat->metadata;
-        $isVoice = ($chat->message_type ?? 'text') === 'voice' || (is_array($voiceMeta) && ($voiceMeta['voice'] ?? false));
+            $voiceMeta = $chat->metadata;
+    $messageType = $chat->message_type instanceof BackedEnum
+        ? $chat->message_type->value
+        : (string) ($chat->message_type ?? 'text');
+    $isVoice = in_array(strtolower($messageType), ['voice', 'audio', 'webm'], true)
+        || (is_array($voiceMeta) && ($voiceMeta['voice'] ?? false));
     @endphp
     @if ($isVoice)
         <div class="chat-coversation">
@@ -14,7 +18,7 @@
                     @endif
                 </span>
                 <div class="media-body">
-                    <div class="text p-2">
+                    <div class="voice-message-shell">
                         @php
                             // attachment is a comma-separated id list for
                             // API-sent notes but a JSON array for web ones.
@@ -29,7 +33,7 @@
                         @if ($voiceUpload != null)
                             @include('frontend.member.messages._voice_player', ['voiceUrl' => uploaded_asset($voiceUpload->id), 'voiceMeta' => $voiceMeta, 'voicePlayerId' => 'hv-voice-' . $chat->id])
                         @endif
-                        <span class="fs-11 text-muted ml-2">
+                        <span class="voice-note-caption">
                             🎙 {{ translate('Voice note') }}@if(is_array($voiceMeta) && !empty($voiceMeta['duration'])) · {{ (int) $voiceMeta['duration'] }}s @endif
                         </span>
                     </div>
@@ -54,7 +58,7 @@
             </div>
         </div>
     @endif
-    @if ($chat->attachment != null)
+    @if ($chat->attachment != null && !$isVoice)
         <div class="chat-coversation">
             <div class="media">
                 <span class="avatar avatar-xs flex-shrink-0">
@@ -66,7 +70,13 @@
                 </span>
                 <div class="media-body">
                     <div class="file-preview box sm">
-                        @foreach (json_decode($chat->attachment) as $key => $attachment_id)
+                        @php
+                            $attachmentPayload = json_decode((string) $chat->attachment, true);
+                            if (!is_array($attachmentPayload)) {
+                                $attachmentPayload = filled($chat->attachment) ? [$chat->attachment] : [];
+                            }
+                        @endphp
+                        @foreach ($attachmentPayload as $key => $attachment_id)
                             @php
                                 $attachment = \App\Models\Upload::find($attachment_id);
                             @endphp
