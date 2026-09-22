@@ -62,7 +62,15 @@ class PublicDiscoverController extends ApiController
                 'id' => $u->id,
                 'code' => $u->code,
                 'name' => trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')),
-                'photo' => $u->photo ? uploaded_asset($u->photo) : null,
+                // Same photo gate the signed-in surfaces use: a guest never
+                // sees a picture the member kept behind the privacy setting or
+                // that a moderator has not approved yet — avatar placeholder
+                // instead (MaleResource parity via show_profile_picture()).
+                'photo' => show_profile_picture($u)
+                    ? uploaded_asset($u->photo)
+                    : static_asset($u->member?->gender == 1
+                        ? 'assets/img/avatar-place.png'
+                        : 'assets/img/female-avatar-place.png'),
                 'age' => $u->member?->birthday ? \Carbon\Carbon::parse($u->member->birthday)->age : null,
                 'gender' => $u->member?->gender,
                 'city' => $city,

@@ -352,6 +352,16 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::post('/moderation-cases/{case}/resolve', [SafetyController::class, 'resolve'])->name('moderation_cases.resolve');
 });
 
+/*
+| API catch-all: unknown /api/v1/* paths must answer JSON 404, never fall
+| through to the website. Without this, a missing route inherits the web
+| catch-all (`/{slug}` → PageController) and the SPA serves its homepage
+| HTML after a redirect — the app then parses `<html>` instead of JSON.
+*/
+Route::fallback(function () {
+    return \App\Support\Api\ApiResponse::error('API route not found.', 404, 'not_found');
+});
+
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('ai')->name('api.v1.ai.')->group(function () {
     Route::post('/bio', [AiController::class, 'bio'])->middleware('throttle:20,1')->name('bio');
     Route::post('/conversation-starters', [AiController::class, 'conversationStarters'])->middleware('throttle:20,1')->name('conversation_starters');
