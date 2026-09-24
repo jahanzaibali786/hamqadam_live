@@ -33,6 +33,10 @@ class ChatThreadResource extends JsonResource
                 ->count(),
             'last_message' => $lastMessage instanceof Chat ? new ChatMessageResource($lastMessage) : null,
             'last_message_at' => optional($this->last_message_at ?? $this->updated_at)->toISOString(),
+            // Archive and mute are per side: each member sees their own flags,
+            // so one person hiding/silencing a chat never affects the other.
+            'archived' => $this->{$this->archivedColumnForUserId((int) $viewer->id)} !== null,
+            'muted' => $this->{$this->mutedColumnForUserId((int) $viewer->id)} !== null,
             // Remembered disappearing-message TTL (seconds; 0 = off) so both
             // clients can show the timer chip and default the next message.
             'disappear_after' => (int) ($this->disappear_after ?? 0),

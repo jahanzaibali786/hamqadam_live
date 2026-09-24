@@ -6,9 +6,11 @@ use App\Enums\ChatMessageType;
 use App\Events\ChatMessageDelivered;
 use App\Events\ChatMessageRead;
 use App\Events\ChatMessageSent;
+use App\Events\ChatReactionUpdated;
 use App\Events\ChatTypingIndicator as ChatTypingIndicatorEvent;
 use App\Exceptions\ApiException;
 use App\Models\Chat;
+use App\Models\ChatReaction;
 use App\Models\ChatThread;
 use App\Models\ChatTypingIndicator;
 use App\Models\ReportedUser;
@@ -17,15 +19,34 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Resources\Api\V1\Chat\ChatMessageResource;
 use App\Services\FcmV1Service;
 class ChatApiService
 {
-    public function threads(User $user, int $perPage = 20): LengthAwarePaginator
+    /**
+     * The member's conversation list. Archive is per side, so the viewer's own
+     * archive column decides where a thread shows up: `$archived = false` is
+     * the normal inbox, `true` is the Archived tab.
+     */
+    public function threads(User $user, int $perPage = 20, bool $archived = false): LengthAwarePaginator
     {
         $threads = ChatThread::with(['sender', 'receiver'])
-            ->where(function ($query) use ($user) {
-                $query->where('sender_user_id', $user->id)
-                    ->orWhere('receiver_user_id', $user->id);
+            ->where(function ($query) use ($user, $archived) {
+                $query->where(function ($side) use ($user, $archived) {
+                    $side->where('sender_user_id', $user->id)
+                        ->where(function ($state) use ($archived) {
+                            $archived
+                                ? $state->whereNotNull('sender_archived_at')
+                                : $state->whereNull('sender_archived_at');
+                        });
+                })->orWhere(function ($side) use ($user, $archived) {
+                    $side->where('receiver_user_id', $user->id)
+                        ->where(function ($state) use ($archived) {
+                            $archived
+                                ? $state->whereNotNull('receiver_archived_at')
+                                : $state->whereNull('receiver_archived_at');
+                        });
+                });
             })
             ->orderByDesc('last_message_at')
             ->orderByDesc('updated_at')
@@ -43,7 +64,7 @@ class ChatApiService
         $thread = $this->threadForUser($user, $threadId);
         $this->markRead($user, $thread);
         $this->pruneExpired($thread);
-        return Chat::with(['sender', 'replyTo.sender'])
+        return Chat::with(['sender', 'replyTo.sender', 'reactions.user'])
             ->where('chat_thread_id', $thread->id)
             ->whereNull($this->deleteColumnFor($thread, $user))
             // Disappearing messages: anything past its deadline is hidden
@@ -130,17 +151,24 @@ class ChatApiService
                 ? (int) $thread->receiver_user_id
                 : (int) $thread->sender_user_id;
             $this->broadcastSafely(new ChatMessageSent($message, $user, (int) $thread->id, $recipientId));
-            // Send FCM push so the recipient gets notified even if app is backgrounded/killed
-            $this->sendChatFcmPush($thread, $recipientId, $user, $message);
-            // Create notification record in DB + tray push
-            $recipient = \App\Models\User::find($recipientId);
-            if ($recipient) {
-                \App\Services\NotificationHelper::chatMessage(
-                    $recipient,
-                    $user,
-                    (int) $thread->id,
-                    (string) ($data['message'] ?? ''),
-                );
+
+            // Muting a conversation only silences it — the message still lands
+            // in the thread and the chat bubble still updates — so both the
+            // push and the notification-tray row are skipped while the
+            // recipient's own mute stamp is set.
+            if (! $this->isMutedFor($thread, $recipientId)) {
+                // Send FCM push so the recipient gets notified even if app is backgrounded/killed
+                $this->sendChatFcmPush($thread, $recipientId, $user, $message);
+                // Create notification record in DB + tray push
+                $recipient = User::find($recipientId);
+                if ($recipient) {
+                    \App\Services\NotificationHelper::chatMessage(
+                        $recipient,
+                        $user,
+                        (int) $thread->id,
+                        (string) ($data['message'] ?? ''),
+                    );
+                }
             }
             return $message;
         });
@@ -224,6 +252,117 @@ class ChatApiService
 
         return $thread->fresh(['sender', 'receiver']);
     }
+    /**
+     * Moves the thread in or out of THIS member's archived tab. The other side
+     * is untouched — their column stays where it was.
+     */
+    public function archive(User $user, int $threadId, bool $archived): ChatThread
+    {
+        $thread = $this->threadForUser($user, $threadId);
+        $thread->forceFill([
+            $thread->archivedColumnForUserId((int) $user->id) => $archived ? now() : null,
+        ])->save();
+
+        return $thread->fresh(['sender', 'receiver']);
+    }
+
+    /**
+     * Mutes (or unmutes) the thread for THIS member: the conversation keeps
+     * receiving messages, but no push/notification tray entry is produced
+     * while their mute stamp is set.
+     */
+    public function mute(User $user, int $threadId, bool $muted): ChatThread
+    {
+        $thread = $this->threadForUser($user, $threadId);
+        $thread->forceFill([
+            $thread->mutedColumnForUserId((int) $user->id) => $muted ? now() : null,
+        ])->save();
+
+        return $thread->fresh(['sender', 'receiver']);
+    }
+
+    /**
+     * Adds, swaps or clears the caller's emoji reaction on one message.
+     * Tapping the same emoji twice removes it (WhatsApp-style toggle), which is
+     * why a `null`/same-emoji request deletes the row instead of writing it.
+     */
+    public function react(User $user, int $messageId, ?string $emoji): ?Chat
+    {
+        $message = Chat::with('chatThread')->find($messageId);
+        if (! $message || ! $message->chatThread || ! $this->isParticipant($message->chatThread, $user)) {
+            throw new ApiException('Message not found.', 404, ApiErrorCode::NotFound->value);
+        }
+
+        $emoji = $emoji !== null ? trim($emoji) : null;
+        if ($emoji !== null && mb_strlen($emoji) > 8) {
+            throw new ApiException('That reaction is not supported.', 422, ApiErrorCode::ValidationFailed->value);
+        }
+
+        $existing = ChatReaction::where('chat_id', $message->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        // Same emoji again (or an explicit null) = clear the reaction.
+        $cleared = $emoji === null || ($existing && $existing->emoji === $emoji);
+
+        if ($cleared) {
+            if ($existing) {
+                $existing->delete();
+            }
+        } else {
+            ChatReaction::updateOrCreate(
+                ['chat_id' => $message->id, 'user_id' => $user->id],
+                ['emoji' => $emoji]
+            );
+        }
+
+        $this->broadcastSafely(new ChatReactionUpdated(
+            (int) $message->chat_thread_id,
+            (int) $message->id,
+            (int) $user->id,
+            $cleared ? null : $emoji
+        ));
+
+        return $message->fresh(['sender', 'replyTo.sender', 'reactions.user']);
+    }
+
+    /**
+     * Full JSON backup of one conversation, for the app's "Export chat".
+     * Returns the peer + every message this member can still see, oldest first,
+     * with attachments and reactions already flattened by the resources.
+     */
+    public function export(User $user, int $threadId): array
+    {
+        $thread = $this->threadForUser($user, $threadId);
+        $this->pruneExpired($thread);
+
+        $messages = Chat::with(['sender', 'reactions.user'])
+            ->where('chat_thread_id', $thread->id)
+            ->whereNull($this->deleteColumnFor($thread, $user))
+            ->where(function ($query) {
+                $query->whereNull('expires_at')->orWhere('expires_at', '>', now());
+            })
+            ->oldest()
+            ->get();
+
+        $otherUser = (int) $thread->sender_user_id === (int) $user->id ? $thread->receiver : $thread->sender;
+
+        return [
+            'thread_id' => (int) $thread->id,
+            'thread_code' => $thread->thread_code,
+            'exported_at' => now()->toISOString(),
+            'with' => $otherUser ? [
+                'id' => (int) $otherUser->id,
+                'name' => trim(($otherUser->first_name ?? '').' '.($otherUser->last_name ?? '')),
+            ] : null,
+            'message_count' => $messages->count(),
+            'messages' => $messages
+                ->map(fn (Chat $message) => (new ChatMessageResource($message))->resolve())
+                ->values()
+                ->all(),
+        ];
+    }
+
     public function block(User $user, int $threadId): ChatThread
     {
         $thread = $this->threadForUser($user, $threadId);
@@ -277,6 +416,15 @@ class ChatApiService
     {
         return in_array((int) $user->id, [(int) $thread->sender_user_id, (int) $thread->receiver_user_id], true);
     }
+    /**
+     * True when $userId has muted this thread — the conversation keeps working
+     * for them, it just stops producing push/tray notifications.
+     */
+    private function isMutedFor(ChatThread $thread, int $userId): bool
+    {
+        return $thread->{$thread->mutedColumnForUserId($userId)} !== null;
+    }
+
     private function ensureNotBlocked(ChatThread $thread): void
     {
         if ($thread->blocked_by_user) {
@@ -286,7 +434,7 @@ class ChatApiService
 
     private function visibleLastMessage(ChatThread $thread, User $user): ?Chat
     {
-        return Chat::with(['sender', 'replyTo.sender'])
+        return Chat::with(['sender', 'replyTo.sender', 'reactions.user'])
             ->where('chat_thread_id', $thread->id)
             ->whereNull($this->deleteColumnFor($thread, $user))
             ->where(function ($query) {

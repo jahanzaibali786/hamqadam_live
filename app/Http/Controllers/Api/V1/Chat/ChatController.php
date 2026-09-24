@@ -23,7 +23,11 @@ class ChatController extends ApiController
     public function threads(ChatListRequest $request): JsonResponse
     {
         return ChatThreadResource::collection(
-            $this->chat->threads($request->user(), (int) ($request->validated('per_page') ?? 20))
+            $this->chat->threads(
+                $request->user(),
+                (int) ($request->validated('per_page') ?? 20),
+                (bool) ($request->validated('archived') ?? false),
+            )
         )->additional(['success' => true])->response();
     }
 
@@ -90,6 +94,60 @@ class ChatController extends ApiController
         $this->chat->deleteMessageForMe($request->user(), $message);
 
         return $this->success(message: 'Message deleted for you.');
+    }
+
+    /**
+     * POST /chat/threads/{thread}/archive — body `{archived: true|false}`.
+     * Only moves the thread for the caller; the peer's list is untouched.
+     */
+    public function archive(Request $request, int $thread): JsonResponse
+    {
+        $validated = $request->validate(['archived' => ['sometimes', 'boolean']]);
+        $archived = (bool) ($validated['archived'] ?? true);
+
+        return $this->success(
+            new ChatThreadResource($this->chat->archive($request->user(), $thread, $archived)),
+            $archived ? 'Chat archived.' : 'Chat moved back to inbox.'
+        );
+    }
+
+    /**
+     * POST /chat/threads/{thread}/mute — body `{muted: true|false}`.
+     * Silences push/tray notifications for the caller only; messages still
+     * arrive and the thread keeps updating.
+     */
+    public function mute(Request $request, int $thread): JsonResponse
+    {
+        $validated = $request->validate(['muted' => ['sometimes', 'boolean']]);
+        $muted = (bool) ($validated['muted'] ?? true);
+
+        return $this->success(
+            new ChatThreadResource($this->chat->mute($request->user(), $thread, $muted)),
+            $muted ? 'Notifications muted for this chat.' : 'Notifications turned back on.'
+        );
+    }
+
+    /**
+     * POST /chat/messages/{message}/reaction — body `{emoji: "❤️"}`.
+     * Sending the same emoji again (or a null emoji) clears the reaction.
+     */
+    public function react(Request $request, int $message): JsonResponse
+    {
+        $validated = $request->validate(['emoji' => ['nullable', 'string', 'max:8']]);
+
+        return $this->success(
+            new ChatMessageResource($this->chat->react($request->user(), $message, $validated['emoji'] ?? null)),
+            'Reaction updated.'
+        );
+    }
+
+    /**
+     * GET /chat/threads/{thread}/export — full JSON backup of the conversation
+     * behind the app's "Export chat" action.
+     */
+    public function export(Request $request, int $thread): JsonResponse
+    {
+        return $this->success($this->chat->export($request->user(), $thread), 'Chat exported.');
     }
 
     public function clear(Request $request, int $thread): JsonResponse

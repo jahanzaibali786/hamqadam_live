@@ -19,6 +19,8 @@ class ChatThread extends Model
         'last_message_at' => 'datetime',
         'sender_muted_at' => 'datetime',
         'receiver_muted_at' => 'datetime',
+        'sender_archived_at' => 'datetime',
+        'receiver_archived_at' => 'datetime',
         'disappear_after' => 'integer',
     ];
 
@@ -45,6 +47,18 @@ class ChatThread extends Model
     public function blocked_by(): BelongsTo
     {
         return $this->belongsTo(User::class, 'blocked_by_user');
+    }
+
+    /** Column holding THIS side's archive timestamp. */
+    public function archivedColumnForUserId(int $userId): string
+    {
+        return (int) $this->sender_user_id === $userId ? 'sender_archived_at' : 'receiver_archived_at';
+    }
+
+    /** Column holding THIS side's mute timestamp. */
+    public function mutedColumnForUserId(int $userId): string
+    {
+        return (int) $this->sender_user_id === $userId ? 'sender_muted_at' : 'receiver_muted_at';
     }
 
     public function typingIndicators(): HasMany

@@ -12,6 +12,9 @@ class ChatListRequest extends ApiFormRequest
     {
         return [
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            // `archived=1` returns the member's archived tab instead of the
+            // inbox; omitted/false keeps the normal, unarchived list.
+            'archived' => ['sometimes', 'boolean'],
         ];
     }
 }
