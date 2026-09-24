@@ -106,6 +106,33 @@ class SearchController extends ApiController
             ->response();
     }
 
+    /**
+     * DELETE /search/history
+     *
+     * Wipes the member's search history. Search History is a convenience, not a
+     * record — the member has to be able to clear it, and until now the app
+     * could only show it and grow it.
+     */
+    public function clearHistory(Request $request): JsonResponse
+    {
+        $deleted = $this->savedSearches->clearHistory($request->user());
+
+        return $this->success(
+            data: ['deleted' => $deleted],
+            message: $deleted === 0
+                ? 'Your search history is already empty.'
+                : 'Search history cleared.'
+        );
+    }
+
+    /** DELETE /search/history/{id} — removes one entry. */
+    public function deleteHistory(Request $request, int $id): JsonResponse
+    {
+        $this->savedSearches->deleteHistory($request->user(), $id);
+
+        return $this->success(message: 'Search removed from history.');
+    }
+
     public function hideFrom(Request $request): JsonResponse
     {
         $data = $request->validate(['user_id' => ['required', 'integer', 'exists:users,id']]);

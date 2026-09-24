@@ -36,6 +36,18 @@ class SavedSearchService
         return SearchHistory::where('user_id', $user->id)->latest()->paginate(20);
     }
 
+    /** Wipes the member's search history; returns how many rows went. */
+    public function clearHistory(User $user): int
+    {
+        return SearchHistory::where('user_id', $user->id)->delete();
+    }
+
+    /** Removes one history entry, scoped to its owner. */
+    public function deleteHistory(User $user, int $id): void
+    {
+        SearchHistory::where('user_id', $user->id)->whereKey($id)->delete();
+    }
+
     public function hideFrom(User $user, int $hiddenFromUserId): HiddenProfileUser
     {
         return HiddenProfileUser::firstOrCreate([

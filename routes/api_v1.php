@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\Ai\AiController;
 use App\Http\Controllers\Api\V1\Admin\AdminOverviewController;
 use App\Http\Controllers\Api\V1\Chat\CallController;
+use App\Http\Controllers\Api\V1\Matching\SwipeController;
 use App\Http\Controllers\Api\V1\Chat\ChatController;
 use App\Http\Controllers\Api\V1\Content\ContentController;
 use App\Http\Controllers\Api\V1\Family\FamilyController;
@@ -129,15 +130,37 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::get('/recommended', [MatchController::class, 'recommended'])->name('recommended');
     Route::get('/daily', [MatchController::class, 'daily'])->name('daily');
     Route::get('/all', [MatchController::class, 'allMatches'])->name('all');
+
+    /*
+     * Named routes MUST come before `/{profile}`.
+     *
+     * `/{profile}` carries no numeric constraint, so it happily matches
+     * `interest-based` or `swipe-deck` and would hand those requests to
+     * MatchController@show — which is exactly the kind of silently-wrong
+     * answer that looks like "the feature was never built".
+     */
+    // Interest-Based Recommendations: ranked by shared hobbies/interests/values,
+    // with the shared words attached so a card can explain itself.
+    Route::get('/interest-based', [MatchController::class, 'interestBased'])->name('interest_based');
+
+    // Swipe Matching: the deck, one decision, take-back, counters.
+    Route::get('/swipe-deck', [SwipeController::class, 'deck'])->name('swipe_deck');
+    Route::get('/swipe-summary', [SwipeController::class, 'summary'])->name('swipe_summary');
+    Route::post('/swipe', [SwipeController::class, 'swipe'])->middleware('throttle:120,1')->name('swipe');
+    Route::delete('/swipe/last', [SwipeController::class, 'undo'])->name('swipe_undo');
+
     Route::get('/{profile}', [MatchController::class, 'show'])->name('show');
     Route::post('/recalculate', [MatchController::class, 'recalculate'])->middleware('throttle:5,1')->name('recalculate');
     Route::post('/recalculate-async', [MatchController::class, 'recalculateAsync'])->middleware('throttle:10,1')->name('recalculate_async');
+
     Route::post('/feedback', [MatchController::class, 'feedback'])->middleware('throttle:60,1')->name('feedback');
 });
 
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('search')->name('api.v1.search.')->group(function () {
     Route::get('/profiles', [SearchController::class, 'profiles'])->name('profiles');
     Route::get('/history', [SearchController::class, 'history'])->name('history');
+    Route::delete('/history', [SearchController::class, 'clearHistory'])->name('history.clear');
+    Route::delete('/history/{id}', [SearchController::class, 'deleteHistory'])->whereNumber('id')->name('history.delete');
     Route::get('/saved', [SearchController::class, 'saved'])->name('saved');
     Route::post('/saved', [SearchController::class, 'storeSaved'])->name('saved.store');
     Route::delete('/saved/{id}', [SearchController::class, 'deleteSaved'])->name('saved.delete');
