@@ -180,6 +180,10 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::post('/threads/{thread}/typing', [ChatController::class, 'typing'])->middleware('throttle:120,1')->name('typing');
     Route::post('/threads/{thread}/delivered', [ChatController::class, 'delivered'])->middleware('throttle:60,1')->name('delivered');
     Route::post('/threads/{thread}/disappear', [ChatController::class, 'setDisappear'])->middleware('throttle:30,1')->name('disappear');
+    Route::post('/threads/{thread}/archive', [ChatController::class, 'archive'])->name('archive');
+    Route::post('/threads/{thread}/mute', [ChatController::class, 'mute'])->name('mute');
+    Route::get('/threads/{thread}/export', [ChatController::class, 'export'])->middleware('throttle:10,1')->name('export');
+    Route::post('/messages/{message}/reaction', [ChatController::class, 'react'])->middleware('throttle:120,1')->name('messages.reaction');
     Route::post('/threads/{thread}/block', [ChatController::class, 'block'])->name('block');
     Route::post('/threads/{thread}/unblock', [ChatController::class, 'unblock'])->name('unblock');
     Route::post('/threads/{thread}/clear', [ChatController::class, 'clear'])->name('clear');

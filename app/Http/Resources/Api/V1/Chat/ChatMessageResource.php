@@ -22,6 +22,9 @@ class ChatMessageResource extends JsonResource
             'message_type' => $type,
             'attachments' => $this->attachments(),
             'reply_to' => $this->whenLoaded('replyTo', fn () => $this->replyTo ? new self($this->replyTo) : null),
+            // Emoji reactions grouped by emoji, so a bubble can render
+            // "❤️ 2" plus whether the current member is one of the two.
+            'reactions' => $this->reactionSummary(),
             'delivered_at' => optional($this->delivered_at)->toISOString(),
             'read_at' => optional($this->read_at)->toISOString(),
             'seen' => (bool) $this->seen,
@@ -61,6 +64,37 @@ class ChatMessageResource extends JsonResource
         }
 
         return $meta;
+    }
+
+    /**
+     * Collapses the loaded reaction rows into one entry per emoji.
+     * Empty array (not null) when nothing is loaded, so clients never branch.
+     */
+    private function reactionSummary(): array
+    {
+        if (! $this->relationLoaded('reactions')) {
+            return [];
+        }
+
+        $viewerId = (int) (request()->user()?->id ?? 0);
+        $grouped = [];
+
+        foreach ($this->reactions as $reaction) {
+            $emoji = (string) $reaction->emoji;
+            $grouped[$emoji] ??= ['emoji' => $emoji, 'count' => 0, 'mine' => false, 'users' => []];
+            $grouped[$emoji]['count']++;
+            if ((int) $reaction->user_id === $viewerId) {
+                $grouped[$emoji]['mine'] = true;
+            }
+            $grouped[$emoji]['users'][] = [
+                'id' => (int) $reaction->user_id,
+                'name' => $reaction->user
+                    ? trim(($reaction->user->first_name ?? '').' '.($reaction->user->last_name ?? ''))
+                    : null,
+            ];
+        }
+
+        return array_values($grouped);
     }
 
     private function attachments(): array
