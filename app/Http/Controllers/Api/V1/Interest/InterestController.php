@@ -31,10 +31,30 @@ class InterestController extends ApiController
     {
     }
 
+    /**
+     * The relations the card needs for BOTH sides: the resource resolves the
+     * counterpart (sender on "received", recipient on "sent") and renders
+     * name, age, city, education, profession, income and the viewer-relative
+     * match score. Loading them once per page keeps the list at a handful of
+     * queries instead of five per row.
+     */
+    private const CARD_RELATIONS = [
+        'sender.member',
+        'user.member',
+        'sender.education.educationLevel',
+        'sender.career.profession',
+        'sender.addresses.city',
+        'sender.profile_match_for_viewer',
+        'user.education.educationLevel',
+        'user.career.profession',
+        'user.addresses.city',
+        'user.profile_match_for_viewer',
+    ];
+
     /** GET /interests/sent */
     public function sent(Request $request): JsonResponse
     {
-        $interests = ExpressInterest::with(['user.member'])
+        $interests = ExpressInterest::with(self::CARD_RELATIONS)
             ->where('interested_by', $request->user()->id)
             ->when($request->filled('status'), fn ($q) => $q->where('status', $this->statusValue($request->string('status')->toString())))
             ->latest('id')
@@ -50,7 +70,7 @@ class InterestController extends ApiController
     /** GET /interests/received */
     public function received(Request $request): JsonResponse
     {
-        $interests = ExpressInterest::with(['sender.member'])
+        $interests = ExpressInterest::with(self::CARD_RELATIONS)
             ->where('user_id', $request->user()->id)
             ->when($request->filled('status'), fn ($q) => $q->where('status', $this->statusValue($request->string('status')->toString())))
             ->latest('id')
