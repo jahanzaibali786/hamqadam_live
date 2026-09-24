@@ -6,17 +6,54 @@ namespace App\Http\Controllers\Api\V1\Matching;
 
 use App\Http\Controllers\Api\V1\ApiController;
 use App\Http\Requests\Api\V1\Matching\StoreMatchFeedbackRequest;
+use App\Http\Resources\Api\V1\Matching\InterestMatchResource;
 use App\Http\Resources\Api\V1\Matching\MatchResource;
 use App\Models\ProfileMatch;
 use App\Jobs\RecalculateCompatibilityMatches;
+use App\Services\Api\V1\Matching\InterestMatchService;
 use App\Services\Api\V1\Matching\MatchRecommendationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MatchController extends ApiController
 {
-    public function __construct(private readonly MatchRecommendationService $matches)
+    public function __construct(
+        private readonly MatchRecommendationService $matches,
+        private readonly InterestMatchService $interests,
+    ) {
+    }
+
+    /**
+     * GET /matches/interest-based
+     *
+     * Recommendations ranked by shared interests — hobbies, interests, life
+     * values, love language, family values and languages — with the shared
+     * words themselves attached so the card can say WHY. Separate from
+     * `/matches/recommended` (which ranks on the compatibility score), because
+     * the two answer different questions and a member may want either.
+     */
+    public function interestBased(Request $request): JsonResponse
     {
+        $filters = $request->validate([
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'photo_only' => ['sometimes', 'boolean'],
+            'verified_only' => ['sometimes', 'boolean'],
+            'exclude_viewed' => ['sometimes', 'boolean'],
+        ]);
+
+        $result = $this->interests->recommend($request->user(), $filters);
+
+        return $this->success([
+            'matches' => InterestMatchResource::collection($result['candidates'])->resolve($request),
+            'meta' => [
+                'total' => $result['total'],
+                // 'no_profile_interests' tells the app to prompt the member to
+                // fill their own interests in first, instead of showing an
+                // empty list with no explanation.
+                'reason' => $result['reason'] ?? null,
+            ],
+            'your_interests' => $result['viewer_terms'] ?? [],
+        ]);
     }
 
     public function index(Request $request): JsonResponse
