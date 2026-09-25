@@ -24,7 +24,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Google Play account-deletion policy: permanently purge accounts
+        // whose 30-day post-deletion window has elapsed.
+        $schedule->command('accounts:purge-deleted')->dailyAt('03:10');
     }
 
     /**
