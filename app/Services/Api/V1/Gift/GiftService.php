@@ -88,8 +88,18 @@ class GiftService
                 );
             }
 
+            // The receiver keeps 70% of the gift's coin value in their wallet.
+            $receiverShare = (int) floor($gift->coins * 0.7);
+
             $member->remaining_interest = $balance - $gift->coins;
             $member->save();
+
+            $receiverMember = $receiver->member()->lockForUpdate()->first();
+
+            if ($receiverMember && $receiverShare > 0) {
+                $receiverMember->remaining_interest = (int) $receiverMember->remaining_interest + $receiverShare;
+                $receiverMember->save();
+            }
 
             $transaction = GiftTransaction::create([
                 'sender_id' => $sender->id,
@@ -110,6 +120,20 @@ class GiftService
                 $transaction->id,
                 'Sent ' . $gift->name . ' to user #' . $receiver->id . '.'
             );
+
+            // Credit the receiver's share in the same ledger so the wallet
+            // history shows where the coins came from.
+            if ($receiverMember && $receiverShare > 0) {
+                PackageUsage::record(
+                    $receiver->id,
+                    'gift_received',
+                    'Gift Received: ' . $gift->name,
+                    $receiverShare,
+                    GiftTransaction::class,
+                    $transaction->id,
+                    'Received 70% (' . $receiverShare . ' of ' . $gift->coins . ') coins from a ' . $gift->name . ' sent by user #' . $sender->id . '.'
+                );
+            }
 
             return [$transaction->load('gift'), $gift, $balance - $gift->coins];
         });
