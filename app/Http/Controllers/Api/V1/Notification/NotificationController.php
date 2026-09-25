@@ -37,8 +37,15 @@ class NotificationController extends ApiController
 
     public function markRead(Request $request, string $notification): JsonResponse
     {
+        $row = $this->notifications->markRead($request->user(), $notification);
+
+        // The row rides on `data` and the authoritative badge on `data.unread_count`,
+        // so the app can sync its unread pill from this single response.
         return $this->success(
-            new NotificationResource($this->notifications->markRead($request->user(), $notification)),
+            array_merge(
+                new NotificationResource($row)->resolve($request),
+                ['unread_count' => $this->notifications->unreadCount($request->user())]
+            ),
             'Notification marked as read.'
         );
     }
