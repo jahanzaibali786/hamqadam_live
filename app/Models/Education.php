@@ -10,6 +10,17 @@ use App\Models\Institution;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * A member's education row.
+ *
+ * SCHEMA NOTE (the 500 fix): the `education` table has NO `degree` /
+ * `institution` columns — the free-text history lives in `degree_legacy` /
+ * `institution_legacy`, and the canonical value is `degree_id` /
+ * `institution_id`. The accessors below resolve the display name from those,
+ * and the mutators write free-text input to the legacy columns so
+ * `Education::updateOrCreate(['degree' => ..., 'institution' => ...])` from
+ * the profile-update flow cannot trip "Unknown column" anymore.
+ */
 class Education extends Model
 {
     use SoftDeletes;
@@ -18,8 +29,12 @@ class Education extends Model
         'user_id',
         'degree',
         'institution',
+        'degree_legacy',
+        'institution_legacy',
         'start',
         'end',
+        'present',
+        'is_highest_degree',
         'education_level_id',
         'degree_id',
         'field_of_study_id',
@@ -28,7 +43,7 @@ class Education extends Model
         'education_status',
         'expected_graduation_year',
     ];
-    
+
     public function user()
     {
         return $this->belongsTo(User::class)->withTrashed();
@@ -62,14 +77,16 @@ class Education extends Model
             return (string) $relation->name;
         }
 
-        if (is_string($value) && trim($value) !== '') {
-            $decoded = json_decode($value, true);
+        // Free-text history first (where old writes landed), then the row.
+        $legacy = $this->attributes['degree_legacy'] ?? null;
+        if (is_string($legacy) && trim($legacy) !== '') {
+            $decoded = json_decode($legacy, true);
 
             if (is_array($decoded) && isset($decoded['name']) && trim((string) $decoded['name']) !== '') {
                 return (string) $decoded['name'];
             }
 
-            return $value;
+            return $legacy;
         }
 
         if (!empty($this->degree_id)) {
@@ -83,6 +100,12 @@ class Education extends Model
         return '';
     }
 
+    /** Free-text degree input lands in degree_legacy (the real column). */
+    public function setDegreeAttribute($value): void
+    {
+        $this->attributes['degree_legacy'] = is_string($value) ? trim($value) : $value;
+    }
+
     public function getInstitutionAttribute($value): string
     {
         $relation = $this->getRelationValue('institution');
@@ -91,14 +114,15 @@ class Education extends Model
             return (string) $relation->name;
         }
 
-        if (is_string($value) && trim($value) !== '') {
-            $decoded = json_decode($value, true);
+        $legacy = $this->attributes['institution_legacy'] ?? null;
+        if (is_string($legacy) && trim($legacy) !== '') {
+            $decoded = json_decode($legacy, true);
 
             if (is_array($decoded) && isset($decoded['name']) && trim((string) $decoded['name']) !== '') {
                 return (string) $decoded['name'];
             }
 
-            return $value;
+            return $legacy;
         }
 
         if (!empty($this->institution_id)) {
@@ -106,5 +130,11 @@ class Education extends Model
         }
 
         return '';
+    }
+
+    /** Free-text institution input lands in institution_legacy (the real column). */
+    public function setInstitutionAttribute($value): void
+    {
+        $this->attributes['institution_legacy'] = is_string($value) ? trim($value) : $value;
     }
 }
