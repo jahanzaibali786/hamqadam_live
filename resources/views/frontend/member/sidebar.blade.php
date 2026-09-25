@@ -43,6 +43,18 @@
                     </a>
                 </li>
                 <li class="aiz-side-nav-item">
+                    <a href="{{ route('guardian_mode.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['guardian_mode.index', 'guardian_mode.permissions.edit', 'guardian_mode.activity', 'guardian_mode.introductions']) }}">
+                        <i class="las la-users aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Guardian Mode') }}</span>
+                    </a>
+                </li>
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('guardian_panel.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['guardian_panel.index', 'guardian_panel.matches']) }}">
+                        <i class="las la-user-shield aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Guardian Panel') }}</span>
+                    </a>
+                </li>
+                <li class="aiz-side-nav-item">
                     <a href="{{ route('gallery-image.index') }}" class="aiz-side-nav-link">
                         <i class="las la-image aiz-side-nav-icon"></i>
                         <span class="aiz-side-nav-text">{{ translate('Gallery') }}</span>

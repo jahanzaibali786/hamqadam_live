@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\V1\Matching\SwipeController;
 use App\Http\Controllers\Api\V1\Chat\ChatController;
 use App\Http\Controllers\Api\V1\Content\ContentController;
 use App\Http\Controllers\Api\V1\Family\FamilyController;
+use App\Http\Controllers\Api\V1\Gift\GiftController;
+use App\Http\Controllers\Api\V1\Gift\GiftAdminController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\HelpChat\HelpChatController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
@@ -334,6 +336,51 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::get('/conversations/{conversation}/messages', [FamilyController::class, 'messages'])->name('conversations.messages');
     Route::post('/conversations/{conversation}/messages', [FamilyController::class, 'sendMessage'])->name('conversations.messages.store');
     Route::get('/digest/preview', [FamilyController::class, 'digestPreview'])->name('digest.preview');
+
+    // ── Guardian Mode (spec §5–§25) ─────────────────────────────────────────
+    Route::get('/guardian-mode/status', [FamilyController::class, 'guardianModeStatus'])->name('guardian_mode.status');
+    Route::post('/guardian-mode', [FamilyController::class, 'toggleGuardianMode'])->name('guardian_mode.toggle');
+    Route::get('/guardian-invitations', [FamilyController::class, 'guardianInvitations'])->name('guardian_invitations.index');
+    Route::post('/guardian-invitations', [FamilyController::class, 'storeGuardianInvitation'])->middleware('throttle:10,1')->name('guardian_invitations.store');
+    Route::post('/guardian-invitations/accept', [FamilyController::class, 'acceptGuardianInvitation'])->name('guardian_invitations.accept');
+    Route::post('/guardians/{guardian}/pause', [FamilyController::class, 'pauseGuardian'])->whereNumber('guardian')->name('guardians.pause');
+    Route::post('/guardians/{guardian}/resume', [FamilyController::class, 'resumeGuardian'])->whereNumber('guardian')->name('guardians.resume');
+    Route::patch('/guardians/{guardian}/permissions', [FamilyController::class, 'updateGuardianPermissions'])->whereNumber('guardian')->name('guardians.permissions');
+    Route::get('/{profile}/activity', [FamilyController::class, 'guardianActivity'])->whereNumber('profile')->name('guardians.activity');
+
+    // Family introductions (§15)
+    Route::get('/introductions', [FamilyController::class, 'introductions'])->name('introductions.index');
+    Route::post('/introductions', [FamilyController::class, 'storeIntroduction'])->name('introductions.store');
+    Route::post('/introductions/{introduction}/respond', [FamilyController::class, 'respondIntroduction'])->whereNumber('introduction')->name('introductions.respond');
+    Route::post('/introductions/{introduction}/cancel', [FamilyController::class, 'cancelIntroduction'])->whereNumber('introduction')->name('introductions.cancel');
+});
+
+// Gift module — the coin deduction happens server-side from the existing
+// package balance (members.remaining_interest). Prices never come from the client.
+Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('gifts')->name('api.v1.gifts.')->group(function (): void {
+    Route::get('/', [GiftController::class, 'index'])->name('index');
+    Route::get('/received', [GiftController::class, 'received'])->name('received');
+    Route::get('/sent', [GiftController::class, 'sent'])->name('sent');
+    Route::post('/send', [GiftController::class, 'send'])->middleware('throttle:20,1')->name('send');
+    Route::get('/transactions/{transaction}', [GiftController::class, 'transaction'])->whereNumber('transaction')->name('transactions.show');
+    Route::get('/{gift}', [GiftController::class, 'show'])->whereNumber('gift')->name('show');
+});
+
+// Admin gift management (view/edit prices/enable-disable/stats).
+Route::middleware(['auth:sanctum'])->prefix('admin/gifts')->name('api.v1.admin.gifts.')->group(function (): void {
+    Route::get('/', [GiftAdminController::class, 'index'])->name('index');
+    Route::get('/stats', [GiftAdminController::class, 'stats'])->name('stats');
+    Route::post('/', [GiftAdminController::class, 'store'])->name('store');
+    Route::patch('/{gift}', [GiftAdminController::class, 'update'])->whereNumber('gift')->name('update');
+    Route::delete('/{gift}', [GiftAdminController::class, 'destroy'])->whereNumber('gift')->name('destroy');
+});
+
+// Guardian-side review endpoints (the guardian is the authenticated caller).
+Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('guardian')->name('api.v1.guardian.')->group(function () {
+    Route::get('/matches', [FamilyController::class, 'guardianMatches'])->name('matches');
+    Route::post('/matches/shortlist', [FamilyController::class, 'guardianShortlist'])->name('matches.shortlist');
+    Route::post('/matches/feedback', [FamilyController::class, 'guardianFeedback'])->name('matches.feedback');
+    Route::post('/matches/note', [FamilyController::class, 'guardianNote'])->name('matches.note');
 });
 
 /*
