@@ -309,6 +309,16 @@ class AuthService
         }
 
         if ((int) $user->deactivated === 1) {
+            // A deletion request wipes PII immediately; the login shell stays
+            // revivable for 30 days, then accounts:purge-deleted removes it.
+            if ($user->deletion_requested_at !== null) {
+                throw new ApiException(
+                    'This account was deleted. You can revive the empty account within 30 days; after that it is removed permanently.',
+                    403,
+                    'account_deleted'
+                );
+            }
+
             throw new ApiException('This account is deactivated.', 403, 'account_deactivated');
         }
 

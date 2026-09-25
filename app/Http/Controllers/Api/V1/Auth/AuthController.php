@@ -24,6 +24,7 @@ use App\Http\Resources\Api\V1\Auth\AuthTokenResource;
 use App\Http\Resources\Api\V1\Auth\DeviceSessionResource;
 use App\Http\Resources\Api\V1\Auth\UserResource;
 use App\Models\UserDeviceSession;
+use App\Services\Api\V1\Auth\AccountDeletionService;
 use App\Services\Api\V1\Auth\AuthService;
 use App\Services\Api\V1\Auth\AuthTokenService;
 use Illuminate\Http\JsonResponse;
@@ -34,6 +35,7 @@ class AuthController extends ApiController
 {
     public function __construct(
         private readonly AuthService $authService,
+        private readonly AccountDeletionService $accountDeletionService,
         private readonly AuthTokenService $tokenService,
     ) {
     }
@@ -281,11 +283,13 @@ class AuthController extends ApiController
 
     public function deleteAccount(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $user->forceFill(['deactivated' => 1])->save();
-        $this->tokenService->revokeAll($user);
+        // Google Play–compliant deletion: the account hides immediately,
+        // every session is revoked and the member's personal data is
+        // destroyed right away. A soft-deleted tombstone survives only for
+        // the 30-day grace window (accounts:purge-deleted clears it).
+        $this->accountDeletionService->request($request->user());
 
-        return $this->success(message: 'Account deactivated successfully.');
+        return $this->success(message: 'Your account has been deleted and your personal data has been removed. If you log in again within 30 days the account shell can be restored, but deleted data cannot be recovered.');
     }
 }
 

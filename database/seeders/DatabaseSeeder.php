@@ -15,5 +15,6 @@ class DatabaseSeeder extends Seeder
         $this->call(InstitutionsSystemSeeder::class);
         $this->call(DemoMatrimonialSeeder::class);
         $this->call(GiftSeeder::class);
+        $this->call(PrivacyPolicySeeder::class);
     }
 }
