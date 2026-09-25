@@ -75,6 +75,10 @@ Route::controller(DemoController::class)->group(function () {
 
 // Auth::routes();
 
+// Google Play Console requirement: a public web page describing account
+// deletion and the data that is removed.
+Route::view('/delete-account', 'frontend.delete_account')->name('delete-account');
+
 Route::controller(HomeController::class)->group(function () {
     //Home Page
     Route::get('/', 'index')->name('home');
