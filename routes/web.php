@@ -413,6 +413,36 @@ Route::controller(StripeController::class)->group(function () {
 });
 //Stripe END
 
+// Landing page a hosted card checkout (Stripe Checkout) returns the browser
+// to after the charge. The app itself confirms the payment by polling
+// GET /api/v1/payments/checkout/{id}/status, so this page only has to tell the
+// member it is safe to close the tab — and keep the rose look of the app.
+Route::get('/payment/complete', function () {
+    $cancelled = request()->boolean('cancelled');
+    $title = $cancelled ? 'Payment cancelled' : 'Payment received';
+    $line = $cancelled
+        ? 'No amount was taken. You can try again from the HamQadam app.'
+        : 'Thank you — your payment is being confirmed. You can close this page and go back to the HamQadam app.';
+    $glyph = $cancelled ? '&#10006;' : '&#10004;';
+    $cta = $cancelled ? 'Back to app' : 'Continue in the app';
+
+    $html = '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        .'<meta name="viewport" content="width=device-width, initial-scale=1">'
+        .'<title>'.$title.' — HamQadam</title></head>'
+        .'<body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;'
+        .'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#FDF4F4;color:#3E2732">'
+        .'<div style="padding:36px 24px;max-width:420px">'
+        .'<div style="width:76px;height:76px;margin:0 auto;border-radius:50%;background:linear-gradient(135deg,#E9A8B5,#CE8492);'
+        .'color:#fff;font-size:34px;line-height:76px">'.$glyph.'</div>'
+        .'<h1 style="font-size:24px;margin:22px 0 10px;font-weight:800">'.$title.'</h1>'
+        .'<p style="margin:0 0 26px;line-height:1.65;color:#5A4550">'.$line.'</p>'
+        .'<a href="'.url('/').'" style="display:inline-block;padding:13px 26px;border-radius:999px;text-decoration:none;font-weight:700;'
+        .'color:#fff;background:linear-gradient(135deg,#E9A8B5,#DC8E9C)">'.$cta.'</a>'
+        .'</div></body></html>';
+
+    return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+})->name('payment.complete');
+
 //Paytm
 Route::get('/paytm/index', [PaytmController::class, 'index']);
 Route::post('/paytm/callback', [PaytmController::class, 'callback'])->name('paytm.callback');

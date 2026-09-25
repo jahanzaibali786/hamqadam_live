@@ -122,11 +122,10 @@ class PaymentService
                 ]),
             ])->save();
 
-            return [
+            $result = [
                 'payment' => $payment->fresh(),
                 'gateway' => $gateway->value,
                 'gateway_id' => $gateway->id(),
-                'checkout' => $this->checkoutInstructions($gateway, $payment),
                 'security' => [
                     'checkout_token' => $checkoutToken,
                     'checkout_token_expires_at' => $checkoutTokenExpiresAt->toISOString(),
@@ -134,6 +133,9 @@ class PaymentService
                     'payment_id' => $payment->id,
                 ],
             ];
+            $result['checkout'] = $this->checkoutPayload($result['payment'], $gateway);
+
+            return $result;
         }
 
         $package = $this->activePackage((int) $data['package_id']);
@@ -147,7 +149,7 @@ class PaymentService
         $checkoutTokenHash = hash_hmac('sha256', $checkoutToken, config('app.key'));
         $checkoutTokenExpiresAt = now()->addMinutes(15);
 
-        return DB::transaction(function () use ($user, $package, $coupon, $discount, $payableAmount, $gateway, $reference, $data, $checkoutToken, $checkoutTokenHash, $checkoutTokenExpiresAt) {
+        $result = DB::transaction(function () use ($user, $package, $coupon, $discount, $payableAmount, $gateway, $reference, $data, $checkoutToken, $checkoutTokenHash, $checkoutTokenExpiresAt) {
             $payment = PackagePayment::create([
                 'payment_code' => now()->format('ymd-His') . '-' . random_int(1000, 9999),
                 'invoice_number' => 'INV-' . now()->format('YmdHis') . '-' . random_int(1000, 9999),
@@ -182,7 +184,6 @@ class PaymentService
                 'payment' => $payment->fresh(['package', 'coupon']),
                 'gateway' => $gateway->value,
                 'gateway_id' => $gateway->id(),
-                'checkout' => $this->checkoutInstructions($gateway, $payment),
                 'security' => [
                     'checkout_token' => $checkoutToken,
                     'checkout_token_expires_at' => $checkoutTokenExpiresAt->toISOString(),
@@ -191,6 +192,155 @@ class PaymentService
                 ],
             ];
         });
+
+        // Outside the transaction: creating the Stripe session is a network
+        // call and must never hold the DB transaction open.
+        $result['checkout'] = $this->checkoutPayload($result['payment'], $gateway);
+
+        return $result;
+    }
+
+    /**
+     * The client-facing checkout node.
+     *
+     * Wallet gateways only hand back human instructions — they are confirmed
+     * manually. Stripe has to hand back a hosted Checkout Session URL, otherwise
+     * the app has no way to actually take the card payment: this is what the
+     * Flutter side opens in its in-app browser.
+     */
+    private function checkoutPayload(PackagePayment $payment, PaymentGateway $gateway): array
+    {
+        $checkout = $this->checkoutInstructions($gateway, $payment);
+
+        if ($gateway !== PaymentGateway::Stripe) {
+            return $checkout;
+        }
+
+        // Already settled (e.g. a coupon covered the full amount): nothing to
+        // charge, so there is no session to open.
+        if ($payment->payment_status === 'Paid') {
+            $checkout['url'] = null;
+
+            return $checkout;
+        }
+
+        try {
+            $session = $this->stripeCheckoutSession($payment);
+
+            $metadata = (array) ($payment->metadata ?? []);
+            $metadata['stripe_session_id'] = $session->id;
+            $payment->forceFill(['metadata' => $metadata])->save();
+
+            $checkout['url'] = $session->url;
+            $checkout['session_id'] = $session->id;
+            $checkout['expires_at'] = isset($session->expires_at)
+                ? \Carbon\Carbon::createFromTimestamp((int) $session->expires_at)->toISOString()
+                : null;
+        } catch (\Throwable $e) {
+            report($e);
+            $checkout['url'] = null;
+            $checkout['unavailable'] = 'Card checkout could not be started. Please try again in a moment.';
+        }
+
+        return $checkout;
+    }
+
+    /**
+     * Hosted Stripe Checkout for a single payment row. The session id is what
+     * [refreshStripePayment] later uses to confirm the charge without waiting
+     * for the webhook.
+     */
+    private function stripeCheckoutSession(PackagePayment $payment): \Stripe\Checkout\Session
+    {
+        \Stripe\Stripe::setApiKey((string) $this->setting('STRIPE_SECRET'));
+
+        $meta = (array) ($payment->metadata ?? []);
+        $currency = strtolower((string) ($payment->currency ?: 'PKR'));
+        $amount = max(1, (int) round(((float) ($payment->payable_amount ?: $payment->amount)) * 100));
+        $product = $payment->package_id ? ($payment->package?->name ?? 'Membership plan') : 'Custom coins';
+
+        // Built with url() rather than route() on purpose: a stale route cache
+        // must never stop a card payment from starting.
+        $returnUrl = filled($meta['success_url'] ?? null)
+            ? (string) $meta['success_url']
+            : url('/payment/complete');
+        $cancelUrl = filled($meta['cancel_url'] ?? null)
+            ? (string) $meta['cancel_url']
+            : url('/payment/complete') . '?cancelled=1';
+
+        return \Stripe\Checkout\Session::create([
+            'payment_method_types' => ['card'],
+            'line_items' => [
+                [
+                    'price_data' => [
+                        'currency' => $currency,
+                        'product_data' => ['name' => $product],
+                        'unit_amount' => $amount,
+                    ],
+                    'quantity' => 1,
+                ],
+            ],
+            'mode' => 'payment',
+            'client_reference_id' => $payment->gateway_reference,
+            'customer_email' => $payment->user?->email,
+            'metadata' => [
+                'payment_id' => $payment->id,
+                'payment_code' => $payment->payment_code,
+                'gateway_reference' => $payment->gateway_reference,
+                'user_id' => $payment->user_id,
+            ],
+            'success_url' => $returnUrl,
+            'cancel_url' => $cancelUrl,
+        ]);
+    }
+
+    /**
+     * Real-time Stripe reconciliation. The webhook may lag (or not be wired up
+     * at all on a new domain), so the status endpoint asks Stripe directly and
+     * marks the payment paid the moment the session is — which is what makes
+     * the app's card flow feel instant.
+     */
+    private function refreshStripePayment(PackagePayment $payment): PackagePayment
+    {
+        if ($payment->payment_status === 'Paid' || $payment->payment_method !== PaymentGateway::Stripe->value) {
+            return $payment;
+        }
+
+        $meta = (array) ($payment->metadata ?? []);
+        $sessionId = $meta['stripe_session_id'] ?? null;
+        if (blank($sessionId)) {
+            return $payment;
+        }
+
+        try {
+            \Stripe\Stripe::setApiKey((string) $this->setting('STRIPE_SECRET'));
+            $session = \Stripe\Checkout\Session::retrieve((string) $sessionId);
+        } catch (\Throwable $e) {
+            // Network hiccup or bad key: the webhook is still a fallback, so
+            // just report and answer with the status we already have.
+            report($e);
+
+            return $payment;
+        }
+
+        if (($session->payment_status ?? null) !== 'paid') {
+            return $payment;
+        }
+
+        $expected = max(1, (int) round(((float) ($payment->payable_amount ?: $payment->amount)) * 100));
+        if ((int) ($session->amount_total ?? -1) !== $expected
+            || strtolower((string) ($session->currency ?? '')) !== strtolower((string) $payment->currency)) {
+            // Charged amount/currency do not match what we asked for: never
+            // activate a package on a payment we cannot account for.
+            return $payment;
+        }
+
+        return DB::transaction(fn (): PackagePayment => $this->markPaid($payment, [
+            'source' => 'stripe_checkout_session',
+            'event_id' => 'stripe_session_' . $session->id,
+            'session_id' => $session->id,
+            'status' => 'paid',
+        ])->fresh(['package', 'coupon']));
     }
 
 
@@ -214,6 +364,11 @@ class PaymentService
                 throw new ApiException('Checkout token mismatch.', 422, ApiErrorCode::ValidationFailed->value);
             }
         }
+
+        // Ask Stripe before answering, so an app polling this endpoint sees
+        // `Paid` the moment the card is charged instead of waiting for the
+        // webhook to arrive.
+        $payment = $this->refreshStripePayment($payment);
 
         return [
             'payment' => $payment,
