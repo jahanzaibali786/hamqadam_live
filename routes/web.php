@@ -178,6 +178,26 @@ Route::post('/registration/traditions/get-by-school-of-thought', [App\Http\Contr
 
 Route::group(['middleware' => ['member', 'verified', 'manual.review']], function () {
     Route::get('/member/ai-dashboard', [V1PlatformConsoleController::class, 'member'])->name('member.v1_dashboard');
+
+    // ── Guardian Mode / Family Module (website) ───────────────────────────
+    Route::controller(\App\Http\Controllers\GuardianModeWebController::class)->group(function (): void {
+        Route::get('/guardian-mode', 'index')->name('guardian_mode.index');
+        Route::post('/guardian-mode/toggle', 'toggle')->name('guardian_mode.toggle');
+        Route::post('/guardian-mode/invitations', 'storeInvitation')->middleware('throttle:10,1')->name('guardian_mode.invitations.store');
+        Route::post('/guardian-mode/invitations/{invitation}/revoke', 'revokeInvitation')->whereNumber('invitation')->name('guardian_mode.invitations.revoke');
+        Route::post('/guardian-mode/guardians/{link}/{action}', 'lifecycle')->whereNumber('link')->whereIn('action', ['pause', 'resume', 'revoke'])->name('guardian_mode.lifecycle');
+        Route::get('/guardian-mode/guardians/{link}/permissions', 'editPermissions')->whereNumber('link')->name('guardian_mode.permissions.edit');
+        Route::post('/guardian-mode/guardians/{link}/permissions', 'updatePermissions')->whereNumber('link')->name('guardian_mode.permissions.update');
+        Route::get('/guardian-mode/activity', 'activity')->name('guardian_mode.activity');
+        Route::get('/guardian-mode/introductions', 'introductions')->name('guardian_mode.introductions');
+        Route::post('/guardian-mode/introductions', 'storeIntroduction')->name('guardian_mode.introductions.store');
+        Route::post('/guardian-mode/introductions/{introduction}/respond', 'respondIntroduction')->whereNumber('introduction')->name('guardian_mode.introductions.respond');
+
+        // Guardian's own panel
+        Route::get('/guardian-panel', 'guardianPanel')->name('guardian_panel.index');
+        Route::get('/guardian-panel/matches', 'guardianMatches')->name('guardian_panel.matches');
+        Route::post('/guardian-panel/feedback', 'guardianFeedbackAction')->name('guardian_panel.feedback');
+    });
 });
 
 

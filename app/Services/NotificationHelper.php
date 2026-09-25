@@ -250,6 +250,33 @@ class NotificationHelper
         );
     }
 
+    // ── Guardian Mode ───────────────────────────────────────────────────────
+
+    /**
+     * Generic guardian-mode notification (invitation sent/accepted, permission
+     * changed, match actions, family introduction events, …). Never leaks
+     * sensitive content: callers pass a short, already-safe message.
+     */
+    public static function guardianEvent(
+        User $recipient,
+        string $type,
+        string $title,
+        string $message,
+        int $notifyBy,
+        int $infoId,
+        string $route = '/family',
+    ): void {
+        self::createAndPush(
+            recipient: $recipient,
+            type: $type,
+            title: $title,
+            message: mb_substr($message, 0, 200),
+            notifyBy: $notifyBy,
+            infoId: $infoId,
+            route: $route,
+        );
+    }
+
     // ── Core: Create DB record + send FCM push ─────────────────────────────
 
     /**
