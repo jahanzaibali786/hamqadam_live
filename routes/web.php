@@ -78,6 +78,7 @@ Route::controller(DemoController::class)->group(function () {
 // Google Play Console requirement: a public web page describing account
 // deletion and the data that is removed.
 Route::view('/delete-account', 'frontend.delete_account')->name('delete-account');
+Route::view('/csae-standards', 'frontend.csae_standards')->name('csae-standards');
 
 Route::controller(HomeController::class)->group(function () {
     //Home Page
