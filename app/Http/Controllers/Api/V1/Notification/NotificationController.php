@@ -43,7 +43,7 @@ class NotificationController extends ApiController
         // so the app can sync its unread pill from this single response.
         return $this->success(
             array_merge(
-                new NotificationResource($row)->resolve($request),
+                (new NotificationResource($row))->resolve($request),
                 ['unread_count' => $this->notifications->unreadCount($request->user())]
             ),
             'Notification marked as read.'

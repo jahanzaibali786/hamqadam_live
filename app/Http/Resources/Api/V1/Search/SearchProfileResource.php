@@ -21,6 +21,15 @@ class SearchProfileResource extends JsonResource
             'approved' => (bool) $this->approved,
             'age' => $this->member?->birthday ? Carbon::parse($this->member->birthday)->age : null,
             'gender' => $this->member?->gender,
+            /*
+             * The member's self-written bio (About me). Registration collects
+             * it as `introduction`; the profile detail page renders it as the
+             * "About me" card. Trimmed; empty stays null so the client can
+             * hide the card entirely.
+             */
+            'about_me' => filled(trim((string) $this->member?->introduction))
+                ? trim((string) $this->member->introduction)
+                : null,
             'marital_status_id' => $this->member?->marital_status_id,
             'height' => $this->physical_attributes?->height,
             'religion_id' => $this->spiritual_backgrounds?->religion_id,

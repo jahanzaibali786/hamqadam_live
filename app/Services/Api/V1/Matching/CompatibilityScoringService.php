@@ -80,6 +80,7 @@ class CompatibilityScoringService
         $weights = $this->weights();
         $breakdown = [];
         $reasons = [];
+        $criteria = [];
         $totalWeight = max(1, array_sum($weights));
 
         foreach ($weights as $key => $weight) {
@@ -88,6 +89,25 @@ class CompatibilityScoringService
                 'weight' => $weight,
                 'matched' => $matched,
                 'score' => $matched ? $weight : 0,
+            ];
+
+            // Same criterion object shape the AI sidecar produces, so the app
+            // renders one "Why?" checklist whichever path scored the pair.
+            // MET criteria get the human label ("Same religion preference");
+            // UNMET ones get its honest counterpart ("Different relocation
+            // preference") — the evaluator's own diagnostic stays in the
+            // `reasons` summary block.
+            $criteria[] = [
+                'criterion'          => $key,
+                'score'              => $matched ? 100 : 0,
+                'weight'             => $weight,
+                'weighted_score'     => $matched ? $weight : 0,
+                'status'             => $matched ? 'match' : 'no_match',
+                'reason'             => $matched
+                    ? ($this->humanLabel($key) ?? $reason)
+                    : ($this->humanUnmetLabel($key) ?? $reason),
+                'is_hard_constraint' => false,
+                'applicable'         => true,
             ];
 
             if ($reason !== null) {
@@ -100,7 +120,7 @@ class CompatibilityScoringService
 
         $result = [
             'percentage' => min(100, max(0, $percentage)),
-            'breakdown' => $breakdown,
+            'breakdown' => $breakdown + ['criterion_matches' => $criteria],
             'reasons' => $reasons,
             'explanation' => $this->buildExplanation($reasons, $percentage),
             'calculated_at' => now()->toISOString(),
@@ -171,6 +191,68 @@ class CompatibilityScoringService
         }
 
         return [(string) $expected === (string) $actual, (string) $expected === (string) $actual ? $reason : null];
+    }
+
+    /**
+     * Human one-liners for the app's "Why?" checklist. The model's own path
+     * writes full sentences ("Religion matches: Islam"); the rule-based path
+     * used to hand back bare labels ("Religion preference matches."). These
+     * read the way the member thinks about a match — "Similar marriage
+     * timeline", not "marriage_timeline: match".
+     */
+    private const HUMAN_LABELS = [
+        'religion'        => 'Same religion preference',
+        'lifestyle'       => 'Compatible lifestyle',
+        'education'       => 'Similar education goals',
+        'profession'      => 'Profession preference lines up',
+        'income'          => 'Income range matches expectations',
+        'age'             => 'Age falls in the preferred range',
+        'prayer'          => 'Similar religious practice',
+        'language'        => 'Shared language',
+        'location'        => 'Same city / location preference',
+        'behavior'        => 'No negative behaviour signals',
+        'personality'     => 'Compatible personality traits',
+        'emotional'       => 'Emotional compatibility present',
+        'communication'   => 'Compatible communication style',
+        'long_term'       => 'Similar long-term and marriage goals',
+        'mutual_interest' => 'Shared interests and hobbies',
+        'cold_start'      => 'Strong overall profile coverage',
+    ];
+
+    /** Maps a criterion key to its human "Why?" line. */
+    private function humanLabel(string $key): ?string
+    {
+        return self::HUMAN_LABELS[$key] ?? null;
+    }
+
+    /**
+     * The unmet side of the same line — what the app shows with the amber
+     * warning for a criterion that did not line up. Reads like the
+     * reference's "Different relocation preference", never like a flag name.
+     */
+    private const HUMAN_UNMET_LABELS = [
+        'religion'        => 'Different religion preference',
+        'lifestyle'       => 'Different lifestyle preference',
+        'education'       => 'Education goals do not line up yet',
+        'profession'      => 'Different profession preference',
+        'income'          => 'Income range does not match preference',
+        'age'             => 'Age is outside the preferred range',
+        'prayer'          => 'Different religious practice',
+        'language'        => 'No shared language on record',
+        'location'        => 'Different relocation preference',
+        'behavior'        => 'Behaviour signals need review',
+        'personality'     => 'Fewer shared personality traits',
+        'emotional'       => 'Emotional compatibility is unclear',
+        'communication'   => 'Different communication style',
+        'long_term'       => 'Different long-term goals',
+        'mutual_interest' => 'Fewer shared interests',
+        'cold_start'      => 'Not enough profile data to compare',
+    ];
+
+    /** Maps a criterion key to its human "did not line up" line. */
+    private function humanUnmetLabel(string $key): ?string
+    {
+        return self::HUMAN_UNMET_LABELS[$key] ?? null;
     }
 
     private function matchesText(?string $expected, ?string $actual, string $reason): array

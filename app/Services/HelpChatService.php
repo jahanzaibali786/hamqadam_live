@@ -24,6 +24,13 @@ use Illuminate\Support\Facades\Log;
  */
 class HelpChatService
 {
+    /**
+     * How long the member has to answer after the admin replies before the
+     * ticket locks itself. The lock is stamped lazily — the next time the
+     * thread is read (or a send is attempted) the expiry is noticed.
+     */
+    public const MEMBER_RESPONSE_WINDOW_MINUTES = 5;
+
     // ── Member side (the app) ───────────────────────────────────────────────
 
     /**
@@ -31,15 +38,73 @@ class HelpChatService
      */
     public function threadFor(User $user): HelpChatThread
     {
-        $thread = HelpChatThread::with('user')->firstOrCreate(
-            ['user_id' => $user->id],
-            ['status' => HelpChatThread::STATUS_OPEN],
-        );
+        $thread = HelpChatThread::with('user')
+            ->where('user_id', $user->id)
+            ->orderByDesc('id')
+            ->first();
+
+        if (! $thread) {
+            $thread = HelpChatThread::create([
+                'user_id' => $user->id,
+                'status' => HelpChatThread::STATUS_OPEN,
+            ]);
+        }
+
+        // The lock check runs on read: a thread whose response window expired
+        // while nobody was looking is closed here, so the app sees the lock
+        // the moment it next opens the conversation.
+        $this->enforceMemberResponseWindow($thread);
 
         // Opening the conversation is reading it: anything waiting is seen.
         $this->markReadForMember($thread);
 
         return $thread->fresh(['user']);
+    }
+
+    /**
+     * The ticket lock: if the last message is the admin's and the member has
+     * not answered within the response window, close the thread and stamp
+     * `locked_at`. The app then shows "Start New chat"; the member's next
+     * message opens a fresh conversation.
+     */
+    public function enforceMemberResponseWindow(HelpChatThread $thread): void
+    {
+        if ($thread->isClosed() || $thread->locked_at) {
+            return; // already locked / closed — nothing to decide
+        }
+
+        $adminRepliedAt = $thread->admin_replied_at
+            ? \Carbon\Carbon::parse($thread->admin_replied_at)
+            : null;
+
+        if (! $adminRepliedAt) {
+            return; // the team has not spoken yet — no clock running
+        }
+
+        $memberRepliedAt = $thread->member_replied_at
+            ? \Carbon\Carbon::parse($thread->member_replied_at)
+            : null;
+
+        // A member reply after the admin's resets the clock.
+        if ($memberRepliedAt && $memberRepliedAt->gte($adminRepliedAt)) {
+            return;
+        }
+
+        if ($adminRepliedAt->copy()->addMinutes(self::MEMBER_RESPONSE_WINDOW_MINUTES)->isPast()) {
+            $thread->forceFill([
+                'locked_at' => now(),
+                'status' => HelpChatThread::STATUS_CLOSED,
+            ])->save();
+        }
+    }
+
+    /**
+    * True when the thread is locked for the member: the window expired with
+    * no reply. The app renders "Start New chat" instead of the composer.
+    */
+    public function isLocked(HelpChatThread $thread): bool
+    {
+        return $thread->locked_at !== null;
     }
 
     /**
@@ -65,6 +130,20 @@ class HelpChatService
         $this->assertThreadOpen($thread);
 
         return $this->storeMessage($thread, $user, $message, $files, false);
+    }
+
+    /**
+     * "Start New chat": after a lock, the member's next message must land on
+     * a fresh thread — the old conversation stays locked for the record. The
+     * caller (the controller) falls back to this whenever [sendFromUser]
+     * reports the thread closed.
+     */
+    public function startNewThread(User $user): HelpChatThread
+    {
+        return HelpChatThread::create([
+            'user_id' => $user->id,
+            'status' => HelpChatThread::STATUS_OPEN,
+        ]);
     }
 
     /**
@@ -233,12 +312,17 @@ class HelpChatService
             ]);
 
             // Bump the recipient's unread counter and the thread's activity.
+            // Each side's reply also resets the ticket-lock clock for its own
+            // side of the conversation.
             $thread->forceFill([
                 'last_message_id' => $message->id,
                 'last_message_at' => $message->created_at,
                 'admin_unread_count' => $fromAdmin ? $thread->admin_unread_count : $thread->admin_unread_count + 1,
                 'user_unread_count' => $fromAdmin ? $thread->user_unread_count + 1 : $thread->user_unread_count,
                 'status' => $fromAdmin && $thread->isClosed() ? HelpChatThread::STATUS_OPEN : $thread->status,
+                'admin_replied_at' => $fromAdmin ? $message->created_at : $thread->admin_replied_at,
+                'member_replied_at' => $fromAdmin ? $thread->member_replied_at : $message->created_at,
+                'locked_at' => $fromAdmin ? null : $thread->locked_at,
             ])->save();
 
             // Realtime to both channels; never let a broken socket fail the POST.
