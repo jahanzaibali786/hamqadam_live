@@ -237,6 +237,7 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::get('/thread', [HelpChatController::class, 'thread'])->name('thread');
     Route::get('/messages', [HelpChatController::class, 'messages'])->name('messages');
     Route::post('/messages', [HelpChatController::class, 'send'])->middleware('throttle:30,1')->name('send');
+    Route::post('/new', [HelpChatController::class, 'startNew'])->middleware('throttle:30,1')->name('new');
 });
 
 /*
@@ -393,6 +394,11 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
 Route::prefix('public')->name('api.v1.public.')->group(function () {
     Route::get('/discover', [\App\Http\Controllers\Api\V1\PublicDiscoverController::class, 'index'])
         ->middleware('throttle:30,1')->name('discover');
+
+    // Guest Help Center form (name / email / description) — the pre-login
+    // visitor's way to reach the team. Throttled harder: it is anonymous.
+    Route::post('/help', [\App\Http\Controllers\Api\V1\PublicHelpController::class, 'submit'])
+        ->middleware('throttle:10,1')->name('help');
 });
 
 Route::prefix('content')->name('api.v1.content.')->group(function () {

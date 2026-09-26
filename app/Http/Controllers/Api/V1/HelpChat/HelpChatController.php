@@ -10,6 +10,7 @@ use App\Http\Resources\Api\V1\HelpChat\HelpChatThreadResource;
 use App\Services\HelpChatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Member side of the Help Center, under `/api/v1/help-chat`.
@@ -59,5 +60,49 @@ class HelpChatController extends ApiController
         );
 
         return $this->success(new HelpChatMessageResource($message), 'Message sent successfully.', 201);
+    }
+
+    /**
+     * POST /help-chat/new — "Start New chat" after a locked ticket.
+     *
+     * Creates a fresh open thread for the member and (optionally, when a
+     * message rides along) posts the first message to it. The previous
+     * conversation stays locked for the record; the admin panel sees both.
+     */
+    public function startNew(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'message' => ['nullable', 'string', 'max:5000'],
+            'attachments' => ['nullable', 'array', 'max:5'],
+            'attachments.*' => ['file', 'max:10240'],
+        ]);
+
+        $thread = $this->help->startNewThread($request->user());
+
+        $hasText = trim((string) ($validated['message'] ?? '')) !== '';
+        $hasFiles = count((array) $request->file('attachments', [])) > 0;
+
+        if ($hasText || $hasFiles) {
+            $message = $this->help->sendFromUser(
+                $request->user(),
+                (string) ($validated['message'] ?? ''),
+                $request->file('attachments', [])
+            );
+
+            return $this->success(
+                [
+                    'thread' => new HelpChatThreadResource($thread->fresh(['user'])),
+                    'message' => new HelpChatMessageResource($message),
+                ],
+                'New conversation started.',
+                201,
+            );
+        }
+
+        return $this->success(
+            ['thread' => new HelpChatThreadResource($thread->fresh(['user']))],
+            'New conversation started.',
+            201,
+        );
     }
 }
