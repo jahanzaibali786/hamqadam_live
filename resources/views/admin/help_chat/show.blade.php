@@ -43,7 +43,7 @@
                         <span class="badge badge-inline {{ $thread->status === \App\Models\HelpChatThread::STATUS_OPEN ? 'badge-warning' : 'badge-success' }}">
                             {{ $thread->status === \App\Models\HelpChatThread::STATUS_OPEN ? translate('Open') : translate('Closed') }}
                         </span>
-                        {{ translate('Member') }}: {{ $thread->user->email }} ({{ $thread->user->code }})
+                        {{ translate('Member') }}: {{ $thread->user->email ?? translate('Deleted User') }} ({{ $thread->user->code ?? '—' }})
                     </h5>
                 </div>
 

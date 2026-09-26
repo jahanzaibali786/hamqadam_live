@@ -55,7 +55,7 @@
                                     <td>{{ $loop->index + 1 + ($threads->currentPage() - 1) * $threads->perPage() }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <img src="{{ uploaded_asset($thread->user->photo) }}"
+                                            <img src="{{ uploaded_asset($thread->user?->photo) }}"
                                                 class="img-fluid rounded-circle mr-2" width="32" height="32"
                                                 onerror="this.src='{{ static_asset('assets/img/placeholders/user.jpg') }}'">
                                             <div>
@@ -69,7 +69,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{{ $thread->user->code }}</td>
+                                    <td>{{ $thread->user->code ?? '—' }}</td>
                                     <td class="text-truncate" style="max-width: 260px;">
                                         @if ($thread->lastMessage)
                                             {{ \Illuminate\Support\Str::limit($thread->lastMessage->message ?: translate('📎 Attachment'), 60) }}

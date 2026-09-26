@@ -24,7 +24,7 @@ class HelpChatThread extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function messages()
@@ -45,8 +45,8 @@ class HelpChatThread extends Model
     /**
      * The member who owns the conversation.
      */
-    public function owner(): User
+    public function owner(): ?User
     {
-        return $this->user()->firstOrFail();
+        return $this->user()->first();
     }
 }
