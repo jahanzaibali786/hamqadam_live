@@ -112,6 +112,18 @@ class ProfileController extends ApiController
             'user_id' => $candidate->id,
             'name' => trim(($candidate->first_name ?? '').' '.($candidate->last_name ?? '')),
             'photo' => $candidate->photo ? uploaded_asset($candidate->photo) : null,
+            // Overall verdict for the sheet's "✓ Verified Profile" header —
+            // true only when the identity check itself passed.
+            'identity_verified' => ($candidate->member?->verification_status === 'verified')
+                || ($candidate->member?->ai_verification_status === 'approved'),
+            // QA-required "Last verified: [Date]" line. The newest of the
+            // moderator approval and the AI approval stamps; null hides the row.
+            'last_verified_at' => optional(
+                collect([
+                    $candidate->member?->verification_badge_earned_at,
+                    $candidate->member?->ai_verified_at,
+                ])->filter()->max()
+            )?->toISOString(),
             'checks' => TrustChecklist::compute($candidate->member, $candidate, $latestAttempt, $verificationRequest),
         ]);
     }

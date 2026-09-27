@@ -13,10 +13,12 @@ use App\Http\Requests\Api\V1\Auth\EmailLoginRequest;
 use App\Http\Requests\Api\V1\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Api\V1\Auth\GoogleLoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
+use App\Http\Requests\Api\V1\Auth\RequestEmailOtpRequest;
 use App\Http\Requests\Api\V1\Auth\RequestEmailVerificationRequest;
 use App\Http\Requests\Api\V1\Auth\RequestMobileOtpRequest;
 use App\Http\Requests\Api\V1\Auth\RequestRegistrationOtpRequest;
 use App\Http\Requests\Api\V1\Auth\ResetPasswordRequest;
+use App\Http\Requests\Api\V1\Auth\VerifyEmailOtpRequest;
 use App\Http\Requests\Api\V1\Auth\VerifyEmailRequest;
 use App\Http\Requests\Api\V1\Auth\VerifyMobileOtpRequest;
 use App\Http\Requests\Api\V1\Auth\VerifyRegistrationOtpRequest;
@@ -113,6 +115,42 @@ class AuthController extends ApiController
     {
         $token = $this->authService->verifyMobileLoginOtp(
             phone: $request->string('phone')->toString(),
+            code: $request->string('code')->toString(),
+            deviceData: DeviceData::fromRequest($request)
+        );
+
+        return $this->success(new AuthTokenResource($token), 'Logged in successfully.');
+    }
+
+    /**
+     * POST /auth/otp/email — QA requirement: email OTP login/account recovery
+     * on the BACKEND, replacing the mobile-OTP dependency. Same pipeline as the
+     * mobile path (OtpService issue/verify against purpose=Login), just over
+     * the email channel; the OTP mail uses the password-reset/registration
+     * template already wired into EmailUtility.
+     */
+    public function requestEmailOtp(RequestEmailOtpRequest $request): JsonResponse
+    {
+        $otp = $this->authService->requestEmailLoginOtp($request->string('email')->toString());
+
+        $meta = [];
+        if (! app()->environment('production')) {
+            $meta['debug_otp'] = $otp['code'];
+        }
+
+        return $this->success(
+            data: [
+                'expires_at' => $otp['otp']->expires_at->toISOString(),
+            ],
+            message: 'Verification code sent to your email.',
+            meta: $meta
+        );
+    }
+
+    public function verifyEmailOtp(VerifyEmailOtpRequest $request): JsonResponse
+    {
+        $token = $this->authService->verifyEmailLoginOtp(
+            email: $request->string('email')->toString(),
             code: $request->string('code')->toString(),
             deviceData: DeviceData::fromRequest($request)
         );

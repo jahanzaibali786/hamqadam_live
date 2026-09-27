@@ -47,14 +47,48 @@ return new class extends Migration
         }
 
         // 1. Bring express_interests.id in line with every other primary key.
-        //    Safe to do in place here: nothing references it yet (the keys this
-        //    migration adds are the first), so there are no constraints to drop
-        //    and recreate around the change.
+        //    Later proposal-tracking tables (proposal_events, proposal_notes,
+        //    …) already hold foreign keys into express_interests, and MySQL
+        //    refuses to change a column type under an existing constraint
+        //    (errno 1833). Drop those keys first, widen the column, then
+        //    recreate them — each drop/recreate is a no-op on a database where
+        //    the referencing column already matches.
         if ($this->isSignedBigInt('express_interests', 'id')) {
+            $referencing = DB::select(
+                'SELECT TABLE_NAME AS table_name, CONSTRAINT_NAME AS constraint_name
+                   FROM information_schema.KEY_COLUMN_USAGE
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND REFERENCED_TABLE_NAME = ?
+                    AND REFERENCED_COLUMN_NAME = ?',
+                ['express_interests', 'id']
+            );
+
+            foreach ($referencing as $fk) {
+                DB::statement(
+                    "ALTER TABLE `{$fk->table_name}` DROP FOREIGN KEY `{$fk->constraint_name}`"
+                );
+            }
+
             DB::statement(
                 'ALTER TABLE `express_interests` '
                 . 'MODIFY `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT'
             );
+
+            foreach ($referencing as $fk) {
+                // The referencing columns were signed bigints too (they had to
+                // match the old column); bring them along so the key re-attaches.
+                if ($this->isSignedBigInt($fk->table_name, 'express_interest_id')) {
+                    DB::statement(
+                        "ALTER TABLE `{$fk->table_name}` MODIFY `express_interest_id` BIGINT UNSIGNED NOT NULL"
+                    );
+                }
+
+                DB::statement(
+                    "ALTER TABLE `{$fk->table_name}` ADD CONSTRAINT `{$fk->constraint_name}` "
+                    . 'FOREIGN KEY (`express_interest_id`) REFERENCES `express_interests` (`id`) '
+                    . 'ON DELETE CASCADE'
+                );
+            }
         }
 
         // 2. Add the four keys, skipping any that already exist so this runs

@@ -259,9 +259,10 @@ class ProposalService
             throw new ApiException('This member is already in your shortlist.', 409, ApiErrorCode::Conflict->value);
         }
 
-        if (! $this->hasAcceptedInterestBetween($actor->id, $userId)) {
-            throw new ApiException('Please wait for an accepted interest before shortlisting this member.', 409, ApiErrorCode::Conflict->value);
-        }
+        // QA requirement: shortlisting is INDEPENDENT of Interest/Proposal/Match
+        // status — a member may shortlist anyone they can see, at any time. It
+        // must not unlock chat or bypass privacy: chat still follows the
+        // existing acceptance rules, so this gate stays out of the way.
 
         $coinCost = (int) feature_coin_cost('shortlist', 5);
         $balance = (int) ($actor->member?->remaining_interest ?? 0);

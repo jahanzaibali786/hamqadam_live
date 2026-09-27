@@ -52,13 +52,58 @@ class ProfileSearchService
 
         $results = $query->paginate((int) ($filters['per_page'] ?? 20));
 
-        SearchHistory::create([
-            'user_id' => $viewer->id,
-            'filters' => $filters,
-            'result_count' => $results->total(),
-        ]);
+        // Record the search so members can revisit it later. Default Discover
+        // feed loads (no term, no filters — just per_page/sort/pagination)
+        // are skipped so the history doesn't flood with identical
+        // "all profiles" rows that carry no meaning.
+        if ($this->hasRememberableCriteria($filters)) {
+            SearchHistory::create([
+                'user_id' => $viewer->id,
+                'filters' => $filters,
+                'result_count' => $results->total(),
+            ]);
+        }
 
         return $results;
+    }
+
+    /**
+     * Whether the filters carry anything worth remembering in history: a
+     * free-text term or at least one user-chosen filter. Pagination and
+     * sorting plumbing (per_page, page, sort, partner_preference) do not
+     * count — without this guard every plain Discover load floods the
+     * history with meaningless "all profiles" rows.
+     */
+    private function hasRememberableCriteria(array $filters): bool
+    {
+        $rememberableKeys = [
+            'search',
+            'min_age',
+            'max_age',
+            'city_id',
+            'state_id',
+            'country_id',
+            'religion_id',
+            'caste_id',
+            'community_id',
+            'marital_status',
+            'gender',
+            'height_min',
+            'height_max',
+            'education',
+            'profession',
+            'verified_only',
+            'with_photo',
+            'online_now',
+        ];
+
+        foreach ($rememberableKeys as $key) {
+            if (isset($filters[$key]) && $filters[$key] !== '' && $filters[$key] !== null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function excludeIgnored($query, User $viewer): void
