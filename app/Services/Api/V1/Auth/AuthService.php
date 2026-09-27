@@ -149,6 +149,49 @@ class AuthService
         return $token;
     }
 
+    /**
+     * QA requirement: EMAIL OTP login/account recovery on the backend. Issues a
+     * Login-purpose OTP over the email channel — the same OtpService pipeline
+     * the mobile path uses, so rate limiting, attempt counting and expiry all
+     * behave identically.
+     */
+    public function requestEmailLoginOtp(string $email): array
+    {
+        $user = $this->users->findForEmailLogin($email);
+
+        if (!$user) {
+            throw new ApiException('No member account exists for this email.', 404, 'user_not_found');
+        }
+
+        return $this->otpService->issue($email, OtpPurpose::Login, OtpChannel::Email, $user);
+    }
+
+    public function verifyEmailLoginOtp(string $email, string $code, DeviceData $deviceData): IssuedTokenData
+    {
+        $this->loginSecurity->assertApiAllowed($email, request(), 'api_otp');
+
+        try {
+            $otp = $this->otpService->verify($email, $code, OtpPurpose::Login, OtpChannel::Email);
+        } catch (ApiException $exception) {
+            if (in_array($exception->errorCode(), ['invalid_otp', 'otp_attempts_exceeded'], true)) {
+                $this->loginSecurity->recordFailure(null, $email, request(), 'api_otp', $exception->errorCode() ?? 'invalid_otp');
+            }
+            throw $exception;
+        }
+
+        $user = $otp->user ?: $this->users->findForEmailLogin($email);
+
+        if (!$user) {
+            throw new ApiException('No member account exists for this email.', 404, 'user_not_found');
+        }
+
+        $this->assertCanLogin($user);
+        $token = $this->transaction(fn() => $this->tokenService->issue($user, $deviceData));
+        $this->loginSecurity->recordSuccess($user, $email, request(), 'api_otp');
+
+        return $token;
+    }
+
     public function requestEmailVerification(User $user, ?string $email = null): array
     {
         $targetEmail = $email ?: $user->email;

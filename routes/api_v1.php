@@ -65,6 +65,10 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function () {
     Route::post('/login/google', [AuthController::class, 'googleLogin'])->middleware('throttle:10,1')->name('login.google');
     Route::post('/otp/mobile', [AuthController::class, 'requestMobileOtp'])->middleware('throttle:5,1')->name('otp.mobile');
     Route::post('/login/mobile', [AuthController::class, 'verifyMobileOtp'])->middleware('throttle:10,1')->name('login.mobile');
+    // QA: email OTP login / account recovery — the backend path that replaces
+    // the previous mobile-OTP dependency.
+    Route::post('/otp/email', [AuthController::class, 'requestEmailOtp'])->middleware('throttle:5,1')->name('otp.email');
+    Route::post('/login/email-otp', [AuthController::class, 'verifyEmailOtp'])->middleware('throttle:10,1')->name('login.email_otp');
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1')->name('forgot_password');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1')->name('reset_password');
 
