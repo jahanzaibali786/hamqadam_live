@@ -55,7 +55,7 @@ class SearchController extends ApiController
         }
 
         $needScore = collect($page->items())
-            ->filter(fn ($user) => $user->profile_match_for_viewer?->match_percentage === null)
+            ->filter(fn ($user) => $this->storedScoreIsUsable($user) === false)
             ->values();
 
         if ($needScore->isEmpty()) {
@@ -76,6 +76,25 @@ class SearchController extends ApiController
                 $user->setAttribute('ai_match_percentage', (int) $match['match_score']);
             }
         }
+    }
+
+    /**
+     * A stored profile_matches row only out-ranks the live model when it can
+     * actually explain itself. Legacy scoring runs left bare percentages —
+     * 0% and low teens with no reasons and no breakdown — and those numbers
+     * shadowed the AI model's real score on every Discover card. A stored row
+     * that carries reasoning is a genuine cached verdict and still wins.
+     */
+    private function storedScoreIsUsable($user): bool
+    {
+        $stored = $user->profile_match_for_viewer;
+
+        if ($stored === null || $stored->match_percentage === null) {
+            return false;
+        }
+
+        return ! empty($stored->compatibility_explanation)
+            || ! empty($stored->score_breakdown);
     }
 
     public function saved(Request $request): JsonResponse
