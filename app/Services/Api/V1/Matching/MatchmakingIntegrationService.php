@@ -284,7 +284,19 @@ class MatchmakingIntegrationService
         // Attach partner_preferences when present — the sidecar needs them for
         // direction-2 (their_preferences_match) scoring. Without it the result is
         // one-sided (direction 1 only) and confidence is capped.
+        //
+        // Members who never filled the partner-preferences form used to break
+        // scoring entirely: the sidecar 422s the whole request without them,
+        // so every Discover card and every compatibility preview collapsed to
+        // 0% — not because the pair is incompatible, but because the viewer's
+        // form is empty. Deriving quiet defaults from the viewer's own profile
+        // (their age ±5, own religion, own country) keeps the model scoring
+        // until the member sets real preferences, which always win via
+        // toModelPreferences().
         $prefs = $this->toModelPreferences($user);
+        if (! $prefs) {
+            $prefs = $this->defaultPreferencesFromProfile($user);
+        }
         if ($prefs) {
             $profile['partner_preferences'] = $prefs;
         }
@@ -327,6 +339,38 @@ class MatchmakingIntegrationService
         }
 
         return array_values(array_unique($list));
+    }
+
+    /**
+     * Fallback preferences for members who skipped the partner-preferences
+     * step. The sidecar hard-requires the field, so sending nothing makes the
+     * model reject every request and every card shows 0%. Sane, neutral
+     * defaults from the member's own profile — never a match verdict, just
+     * enough direction for the model to score with.
+     */
+    private function defaultPreferencesFromProfile(User $user): array
+    {
+        $result = [];
+
+        $age = $this->ageFromBirthday($user->member?->birthday);
+        if ($age !== null && $age > 0) {
+            $result['age_range'] = [
+                'min' => max(18, $age - 5),
+                'max' => min(80, $age + 5),
+            ];
+        }
+
+        $ownReligion = $user->spiritual_backgrounds?->religion?->name;
+        if ($ownReligion) {
+            $result['religion'] = [$ownReligion];
+        }
+
+        $ownCountry = $user->addresses?->first()?->country_id;
+        if ($ownCountry) {
+            $result['country'] = [(string) $ownCountry];
+        }
+
+        return $result;
     }
 
     private function toModelPreferences(User $user): array

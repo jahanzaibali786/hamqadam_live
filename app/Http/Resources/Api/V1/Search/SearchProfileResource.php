@@ -67,12 +67,36 @@ class SearchProfileResource extends JsonResource
                     ? Carbon::parse($this->member->ai_verified_at)->toISOString()
                     : null,
             ],
-            // A stored score wins; `ai_match_percentage` is what the controller
-            // filled in from the model for rows that have never been scored.
-            'compatibility_percentage' => $this->profile_match_for_viewer?->match_percentage
+            // A stored score wins only when it can explain itself — legacy
+            // scoring runs left bare 0%/low numbers with no reasoning, and
+            // letting them through shadowed the live AI model's real score.
+            // `ai_match_percentage` is what the controller filled in from the
+            // model for rows without a usable stored verdict.
+            'compatibility_percentage' => $this->storedInformativePercentage()
                 ?? $this->resource->getAttribute('ai_match_percentage'),
             'last_active_at' => $this->last_login_at ? Carbon::parse($this->last_login_at)->toISOString() : null,
             'created_at' => $this->created_at ? Carbon::parse($this->created_at)->toISOString() : null,
         ];
+    }
+
+    /**
+     * The stored percentage only when the row is informative (has reasoning),
+     * mirroring ProfileController::compatibility()'s "stored is a cache, not a
+     * verdict" rule. Legacy bare-number rows return null so the live AI score
+     * shows through.
+     */
+    private function storedInformativePercentage(): ?int
+    {
+        $stored = $this->profile_match_for_viewer;
+
+        if ($stored === null || $stored->match_percentage === null) {
+            return null;
+        }
+
+        if (filled($stored->compatibility_explanation) || filled($stored->score_breakdown)) {
+            return (int) $stored->match_percentage;
+        }
+
+        return null;
     }
 }
