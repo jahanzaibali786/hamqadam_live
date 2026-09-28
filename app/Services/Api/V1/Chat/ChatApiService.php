@@ -104,10 +104,17 @@ class ChatApiService
         return $value;
     }
 
+    /** Coins charged from the SENDER per message. */
+    public const SEND_COST = 2;
+
+    /** Coins charged from the RECIPIENT when they SEE (read) a message. */
+    public const READ_COST = 2;
+
     public function send(User $user, int $threadId, array $data, array $files = []): Chat
     {
         $thread = $this->threadForUser($user, $threadId);
         $this->ensureNotBlocked($thread);
+        $this->chargeSender($user);
         // Sending into a conversation you deleted un-deletes it on YOUR side
         // only — the thread reappears in your list (the other side was never
         // hidden).
@@ -237,7 +244,74 @@ class ChatApiService
             'seen' => 1,
             'read_at' => now(),
         ]);
+        // Product rule: seeing incoming messages costs the READER 2 coins —
+        // once per read batch, not per message, so opening a thread with 10
+        // unread messages costs exactly 2, not 20.
+        $this->chargeReader($user, $thread);
         $this->broadcastSafely(new ChatMessageRead((int) $thread->id, $messageIds, (int) $user->id, now()->toISOString()));
+    }
+
+    /**
+     * Charges the sender 2 coins per message. Insufficient balance raises a
+     * 402 the app maps to its coin-paywall.
+     */
+    private function chargeSender(User $user): void
+    {
+        $member = \App\Models\Member::where('user_id', $user->id)->lockForUpdate()->first();
+        $balance = (int) ($member?->remaining_interest ?? 0);
+
+        if ($balance < self::SEND_COST) {
+            throw new ApiException(
+                'You need '.self::SEND_COST.' coins to send a message. Please top up your coins.',
+                402,
+                'insufficient_coins'
+            );
+        }
+
+        $member->remaining_interest = $balance - self::SEND_COST;
+        $member->save();
+
+        \App\Models\PackageUsage::record(
+            (int) $user->id,
+            'chat_message_sent',
+            'Chat Message Sent',
+            self::SEND_COST,
+            Chat::class,
+            null,
+            'Used '.self::SEND_COST.' coin(s) to send a chat message.'
+        );
+    }
+
+    /**
+     * Charges the reader 2 coins when they see messages. If their balance is
+     * empty the read STILL goes through (the sender's ticks must not freeze);
+     * the debt shows up client-side as blurred messages + the paywall.
+     */
+    private function chargeReader(User $user, ChatThread $thread): void
+    {
+        $member = \App\Models\Member::where('user_id', $user->id)->lockForUpdate()->first();
+        if ($member === null) {
+            return;
+        }
+
+        $balance = (int) $member->remaining_interest;
+        $charged = min(self::READ_COST, max(0, $balance));
+        if ($charged <= 0) {
+            return;
+        }
+
+        $member->remaining_interest = $balance - $charged;
+        $member->save();
+
+        \App\Models\PackageUsage::record(
+            (int) $user->id,
+            'chat_message_read',
+            'Chat Message Read',
+            $charged,
+            ChatThread::class,
+            (int) $thread->id,
+            'Used '.$charged.' coin(s) to read chat messages.'
+        );
     }
     public function deleteMessageForMe(User $user, int $messageId): void
     {

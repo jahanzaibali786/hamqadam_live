@@ -483,9 +483,12 @@ class PaymentService
 
     public function gateways(): array
     {
+        // Product decision: card payments ONLY for now — EasyPaisa / JazzCash
+        // stay in the enum (legacy webhooks still resolve) but are not offered
+        // to the app. Add cases back here when the wallets go live.
         return array_map(
             fn (PaymentGateway $gateway) => $this->gatewayDefinition($gateway),
-            PaymentGateway::cases()
+            [PaymentGateway::Stripe]
         );
     }
 
