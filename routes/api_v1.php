@@ -311,6 +311,11 @@ Route::prefix('payments')->name('api.v1.payments.')->group(function () {
     });
 });
 
+Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('rewards')->name('api.v1.rewards.')->group(function () {
+    Route::get('/welcome', [\App\Http\Controllers\Api\V1\Rewards\RewardsController::class, 'welcome'])->name('welcome');
+    Route::post('/welcome/claim', [\App\Http\Controllers\Api\V1\Rewards\RewardsController::class, 'claimWelcome'])->middleware('throttle:10,1')->name('welcome.claim');
+});
+
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('notifications')->name('api.v1.notifications.')->group(function () {
     Route::get('/', [NotificationController::class, 'index'])->name('index');
     Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread_count');

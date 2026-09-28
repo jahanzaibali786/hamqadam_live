@@ -26,6 +26,12 @@ class ChatThreadResource extends JsonResource
             'blocked_by_me' => $blockedByMe,
             'blocked_by_other' => $blockedByOther,
             'can_send_message' => ! $blockedByOther && ! $blockedByMe,
+            // Coin paywall: the viewer's live balance and the per-message
+            // prices, so the app can blur/send-to-paywall without a second
+            // round-trip. 0 balance ⇒ blurred previews + paywall on tap.
+            'viewer_coin_balance' => (int) ($viewer->member?->remaining_interest ?? 0),
+            'send_cost' => \App\Services\Api\V1\Chat\ChatApiService::SEND_COST,
+            'read_cost' => \App\Services\Api\V1\Chat\ChatApiService::READ_COST,
             'message_request_status' => $this->message_request_status ?? 'accepted',
             'unread_count' => Chat::where('chat_thread_id', $this->id)
                 ->where('sender_user_id', '!=', $viewer->id)
