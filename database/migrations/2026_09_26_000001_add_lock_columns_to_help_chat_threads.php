@@ -35,7 +35,16 @@ return new class extends Migration
         }
 
         // "Start New chat" needs a second thread row for the same member.
+        // The user_id UNIQUE index doubles as the FK's supporting index, so
+        // MySQL refuses to drop it while the constraint stands (errno 1553):
+        // drop the FK first, then the unique, then re-add the FK — it will
+        // lean on the plain index created afterwards.
         if ($this->indexExists('help_chat_threads', 'help_chat_threads_user_id_unique')) {
+            if ($this->foreignKeyExists('help_chat_threads', 'help_chat_threads_user_id_foreign')) {
+                Schema::table('help_chat_threads', function (Blueprint $table): void {
+                    $table->dropForeign('help_chat_threads_user_id_foreign');
+                });
+            }
             Schema::table('help_chat_threads', function (Blueprint $table): void {
                 $table->dropUnique('help_chat_threads_user_id_unique');
             });
@@ -43,6 +52,11 @@ return new class extends Migration
         if (! $this->indexExists('help_chat_threads', 'help_chat_threads_user_id_index')) {
             Schema::table('help_chat_threads', function (Blueprint $table): void {
                 $table->index('user_id', 'help_chat_threads_user_id_index');
+            });
+        }
+        if (! $this->foreignKeyExists('help_chat_threads', 'help_chat_threads_user_id_foreign')) {
+            Schema::table('help_chat_threads', function (Blueprint $table): void {
+                $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
             });
         }
     }
@@ -74,5 +88,16 @@ return new class extends Migration
     {
         return Schema::getConnection()
             ->select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$index]) !== [];
+    }
+
+    private function foreignKeyExists(string $table, string $constraint): bool
+    {
+        return Schema::getConnection()
+            ->select(
+                'SELECT 1 FROM information_schema.TABLE_CONSTRAINTS '
+                .'WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = ? '
+                .'AND CONSTRAINT_NAME = ? AND CONSTRAINT_TYPE = \'FOREIGN KEY\'',
+                [$table, $constraint],
+            ) !== [];
     }
 };

@@ -61,6 +61,12 @@ class ChatThread extends Model
         return (int) $this->sender_user_id === $userId ? 'sender_muted_at' : 'receiver_muted_at';
     }
 
+    /** Column holding THIS side's delete stamp (long-press → delete conversation). */
+    public function deletedColumnForUserId(int $userId): string
+    {
+        return (int) $this->sender_user_id === $userId ? 'sender_deleted_at' : 'receiver_deleted_at';
+    }
+
     public function typingIndicators(): HasMany
     {
         return $this->hasMany(ChatTypingIndicator::class, 'chat_thread_id');
