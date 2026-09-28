@@ -32,7 +32,7 @@ class PublicDiscoverController extends ApiController
         $search = trim((string) $request->query('search', ''));
 
         $query = User::query()
-            ->with(['member', 'addresses.city', 'spiritual_backgrounds', 'profile_privacy_setting'])
+            ->with(['member', 'addresses.city', 'spiritual_backgrounds', 'profile_privacy_setting', 'physical_attributes', 'education', 'career'])
             ->where('user_type', 'member')
             ->where('blocked', 0)
             ->where('deactivated', 0)
@@ -72,6 +72,20 @@ class PublicDiscoverController extends ApiController
                 'gender' => $u->member?->gender,
                 'city' => $city,
                 'profession' => $u->member?->job_title,
+                /*
+                 * The guest preview card now mirrors the signed-in Discover
+                 * card's fact rows, so it needs the same raw pieces: height,
+                 * faith + sect, education level/degree. Guests see only what
+                 * the marketing card already showed publicly — nothing extra
+                 * leaks; these are locator facts, not contact details.
+                 */
+                'height' => $u->physical_attributes?->height,
+                'religion_id' => $u->spiritual_backgrounds?->religion_id,
+                'sect_main_id' => $u->spiritual_backgrounds?->sect_main_id,
+                'school_of_thought_id' => $u->spiritual_backgrounds?->school_of_thought_id,
+                'education_level_id' => $u->education->first()?->education_level_id,
+                'degree_id' => $u->education->first()?->degree_id,
+                'family_values' => $u->member?->family_values,
                 'introduction' => $u->member?->introduction
                     ? \Illuminate\Support\Str::limit(strip_tags((string) $u->member->introduction), 140)
                     : null,

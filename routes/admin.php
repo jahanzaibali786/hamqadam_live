@@ -168,6 +168,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('package-payments', PackagePaymentController::class);
     Route::controller(PackagePaymentController::class)->group(function () {
         Route::get('/manual-payment-accept/{id}', 'manual_payment_accept')->name('manual_payment_accept');
+        Route::get('/manual-payment-reject/{id}', 'reject_payment')->name('manual_payment_reject');
         Route::get('/package-payment-invoice/{id}', 'package_payment_invoice_admin')->name('package_payment.invoice_admin');
     });
 

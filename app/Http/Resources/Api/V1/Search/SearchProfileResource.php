@@ -34,9 +34,41 @@ class SearchProfileResource extends JsonResource
             'height' => $this->physical_attributes?->height,
             'religion_id' => $this->spiritual_backgrounds?->religion_id,
             'caste_id' => $this->spiritual_backgrounds?->caste_id,
+            /*
+             * Sect / school of thought for the card's "Muslim · Sunni" chips.
+             * The card design shows both the faith and the denomination, and
+             * they live on the same spiritual-background row as religion.
+             */
+            'sect_main_id' => $this->spiritual_backgrounds?->sect_main_id,
+            'school_of_thought_id' => $this->spiritual_backgrounds?->school_of_thought_id,
             'city_id' => $this->addresses->first()?->city_id,
             'state_id' => $this->addresses->first()?->state_id,
             'country_id' => $this->addresses->first()?->country_id,
+            /*
+             * Education + career for the card's "Master's / Designer" facts.
+             * Both are hasMany collections — the FIRST row is the member's
+             * primary record (the app writes exactly one per member).
+             */
+            'education_level_id' => $this->education->first()?->education_level_id,
+            'degree_id' => $this->education->first()?->degree_id,
+            'profession_id' => $this->career->first()?->profession_id,
+            /*
+             * The card's "Family Oriented" line: the member's own family-values
+             * pick. Falls back to the registration's work-intent answers so the
+             * row never renders empty for a member who answered those.
+             */
+            'family_values' => $this->member?->family_values
+                ?? ($this->member?->expects_spouse_to_work === 'yes' ? 'Family Oriented' : null),
+            /*
+             * Photo-count badge on the card image: how many EXTRA photos the
+             * member's gallery holds (front photo excluded), so a member with
+             * only the profile photo shows no badge.
+             */
+            'additional_photo_count' => is_array($this->member?->private_gallery)
+                ? count($this->member->private_gallery)
+                : (filled((string) $this->member?->private_gallery)
+                    ? count((array) json_decode((string) $this->member->private_gallery, true) ?: [])
+                    : 0),
             /*
              * Trust badge for somebody ELSE's profile.
              *

@@ -35,7 +35,7 @@ class InterestService
              * (say) 3 the website charged 3 and the API charged 1 for the same
              * action.
              */
-            $coinCost = feature_coin_cost('express_interest', 1);
+            $coinCost = feature_coin_cost('express_interest', 3);
 
             if ($interested_by_member->remaining_interest >= $coinCost) {
                   /*

@@ -472,6 +472,57 @@ class PackagePaymentController extends Controller
     }
 
     /**
+     * Admin rejects a pending/unpaid payment request (manual proof upload or
+     * abandoned Stripe checkout). The payment is marked Rejected so it stops
+     * looking like an open request; nothing is activated and no coins move.
+     * The member is notified so they know the request was declined.
+     */
+    public function reject_payment($id)
+    {
+        $package_payment = PackagePayment::findOrFail($id);
+
+        if ($package_payment->payment_status === 'Paid') {
+            flash(translate('A paid payment cannot be rejected.'))->error();
+            return back();
+        }
+
+        $package_payment->forceFill([
+            'payment_status' => 'Rejected',
+            'gateway_status' => 'rejected_by_admin',
+        ])->save();
+
+        $user = User::find($package_payment->user_id);
+        if ($user) {
+            try {
+                $notify_type = 'payment_rejected';
+                $id = unique_notify_id();
+                $message = translate('Your payment request ') . $package_payment->payment_code
+                    . translate(' was rejected. Please contact support or try again.');
+
+                \App\Services\FcmV1Service::sendToUser(
+                    (int) $user->id,
+                    ['title' => translate('Payment Rejected'), 'body' => $message],
+                    ['type' => $notify_type, 'notify_by' => '0', 'info_id' => (string) $package_payment->id],
+                );
+
+                Notification::send($user, new DbStoreNotification(
+                    $notify_type,
+                    $id,
+                    0,
+                    $package_payment->id,
+                    $message,
+                    route('package_purchase_history')
+                ));
+            } catch (\Exception $e) {
+                // notification failure must not block the rejection
+            }
+        }
+
+        flash(translate('Payment request rejected.'))->success();
+        return back();
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
