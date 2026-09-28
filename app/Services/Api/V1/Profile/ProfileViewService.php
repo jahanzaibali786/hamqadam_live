@@ -148,6 +148,11 @@ class ProfileViewService
                 ]);
 
                 $member->remaining_profile_viewer_view = max(0, (int) $member->remaining_profile_viewer_view - 1);
+
+                // QA item 12: the MAIN coin balance must fall by the same
+                // amount the Coin History records — the package counter and
+                // the wallet move together, every time.
+                $member->remaining_interest = max(0, (int) $member->remaining_interest - 1);
                 $member->save();
 
                 PackageUsage::record(
