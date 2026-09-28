@@ -130,7 +130,7 @@ class InterestController extends ApiController
             );
         }
 
-        $cost = (int) feature_coin_cost('express_interest', 1);
+        $cost = (int) feature_coin_cost('express_interest', 3);
         $balance = (int) ($sender->member?->remaining_interest ?? 0);
 
         if ($balance < $cost) {
@@ -247,7 +247,7 @@ class InterestController extends ApiController
 
     private function balance(User $user): array
     {
-        $cost = (int) feature_coin_cost('express_interest', 1);
+        $cost = (int) feature_coin_cost('express_interest', 3);
         $remaining = (int) ($user->member?->remaining_interest ?? 0);
 
         return [

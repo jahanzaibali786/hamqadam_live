@@ -29,8 +29,15 @@
   </table>
 </div>
 <div class="modal-footer">
-    @if($package_payment->payment_status != 'Paid')
-      <a href="{{ route('manual_payment_accept', $package_payment->id) }}" class="btn btn-sm btn-success">{{translate('Accept')}}</a>
+    @if($package_payment->payment_status != 'Paid' && $package_payment->payment_status != 'Rejected')
+      <a href="{{ route('manual_payment_accept', $package_payment->id) }}"
+         onclick="return confirm('{{ translate('Approve this payment and activate the package?') }}')"
+         class="btn btn-sm btn-success">{{translate('Approve & Activate')}}</a>
+      <a href="{{ route('manual_payment_reject', $package_payment->id) }}"
+         onclick="return confirm('{{ translate('Reject this payment request?') }}')"
+         class="btn btn-sm btn-danger">{{translate('Reject')}}</a>
+    @elseif($package_payment->payment_status == 'Rejected')
+      <span class="badge badge-inline badge-danger">{{ translate('Rejected') }}</span>
     @endif
     <button type="button" class="btn btn-sm btn-light" data-dismiss="modal">{{translate('Close')}}</button>
 </div>

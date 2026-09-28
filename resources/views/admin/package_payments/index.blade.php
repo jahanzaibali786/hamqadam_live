@@ -59,6 +59,8 @@
                             <td>
                                 @if ($package_payment->payment_status == 'Paid')
                                     <span class="badge badge-inline badge-success text-center">{{ translate('Paid')}}</span>
+                                @elseif ($package_payment->payment_status == 'Rejected')
+                                    <span class="badge badge-inline badge-dark text-center">{{ translate('Rejected')}}</span>
                                 @else
                                     <span class="badge badge-inline badge-danger text-center">{{ translate('Unpaid')}}</span>
                                 @endif
@@ -69,6 +71,18 @@
                                 @if($package_payment->payment_method == "manual_payment" && auth()->user()->can('manage_package_manual_payemnts'))
                                     <a href="javascript:void(0);" onclick="package_payment_details('{{ route('package-payments.show', $package_payment->id )}}')" class="btn btn-soft-info btn-icon btn-circle btn-sm" title="{{ translate('View Details') }}">
                                         <i class="las la-eye"></i>
+                                    </a>
+                                @endif
+                                @if($package_payment->payment_status != 'Paid' && $package_payment->payment_status != 'Rejected' && auth()->user()->can('manage_package_manual_payemnts'))
+                                    <a href="{{ route('manual_payment_accept', $package_payment->id) }}"
+                                       onclick="return confirm('{{ translate('Approve this payment and activate the package?') }}')"
+                                       class="btn btn-soft-success btn-icon btn-circle btn-sm" title="{{ translate('Approve & Activate') }}">
+                                        <i class="las la-check"></i>
+                                    </a>
+                                    <a href="{{ route('manual_payment_reject', $package_payment->id) }}"
+                                       onclick="return confirm('{{ translate('Reject this payment request?') }}')"
+                                       class="btn btn-soft-danger btn-icon btn-circle btn-sm" title="{{ translate('Reject') }}">
+                                        <i class="las la-times"></i>
                                     </a>
                                 @endif
                                 @can('view_package_payment_invoice')

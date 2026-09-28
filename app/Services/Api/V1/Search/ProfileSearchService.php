@@ -26,6 +26,10 @@ class ProfileSearchService
                 'physical_attributes',
                 'spiritual_backgrounds',
                 'lifestyles',
+                // The listing card now shows education/career facts too —
+                // eager-loaded here so a page of 20 stays ~6 queries.
+                'education',
+                'career',
                 'profile_match_for_viewer' => fn ($query) => $query->where('user_id', $viewer->id),
             ])
             ->where('user_type', 'member')

@@ -256,6 +256,14 @@ class CallService
             'ended_by_user_id' => $user->id,
             'duration_seconds' => $this->durationSeconds($call),
         ])->save();
+
+        // Calls are metered: each CONNECTED minute costs the CALLER coins
+        // (admin-configurable, default 5/minute). Only the first end wins —
+        // the receiver's end/missed report re-enters here but the row already
+        // carries an ended_at, so no double charge. Rejected/cancelled calls
+        // have zero duration, so no charge even on the first pass.
+        $this->chargeCallCoins($call->fresh(['caller', 'receiver', 'conversation']));
+
         $payload = $this->payload($call->fresh(['caller', 'receiver', 'conversation']), $user, $status === CallStatus::Missed->value ? translate('Missed call.') : translate('Call ended.'));
         $event = $status === CallStatus::Missed->value ? new CallMissed($payload) : new CallEnded($payload);
         $this->broadcastSafely($event);
@@ -354,6 +362,76 @@ class CallService
         ]);
         return true;
 
+    }
+
+    /**
+     * Coins for a finished call: cost-per-minute × ceil(duration), charged to
+     * the CALLER, recorded in Coin & Feature Usage. Idempotent — the charge is
+     * stamped in the call's metadata, so whichever side reports the end first
+     * pays exactly once. A caller with no/low balance is not punished after
+     * the fact; the deficit is logged so support can see it.
+     */
+    private function chargeCallCoins(Call $call): void
+    {
+        if ($call->ended_at === null) {
+            return;
+        }
+
+        $metadata = is_array($call->metadata) ? $call->metadata : [];
+        if (array_key_exists('coins_charged', $metadata)) {
+            return; // already charged
+        }
+
+        $duration = max(0, (int) $call->duration_seconds);
+        if ($duration <= 0) {
+            $this->stampCoinsCharged($call, 0, 0);
+            return;
+        }
+
+        $minutes = (int) ceil($duration / 60);
+        $costPerMinute = (int) feature_coin_cost('call_minute', 5);
+        $totalCost = $minutes * $costPerMinute;
+
+        $caller = $call->caller;
+        if (! $caller || ! $caller->member) {
+            return;
+        }
+
+        DB::transaction(function () use ($call, $caller, $minutes, $totalCost, $duration): void {
+            $member = \App\Models\Member::where('user_id', $caller->id)->lockForUpdate()->first();
+            if (! $member) {
+                return;
+            }
+
+            $balance = (int) $member->remaining_interest;
+            $charged = min($totalCost, max(0, $balance));
+
+            if ($charged > 0) {
+                $member->remaining_interest = $balance - $charged;
+                $member->save();
+
+                \App\Models\PackageUsage::record(
+                    (int) $caller->id,
+                    'call',
+                    ucfirst($call->call_type instanceof CallType ? $call->call_type->value : (string) $call->call_type).' Call',
+                    $charged,
+                    Call::class,
+                    (int) $call->id,
+                    'Used '.$charged.' coin(s) for a '.$minutes.' minute(s) call ('.$duration.'s).'
+                );
+            }
+
+            $this->stampCoinsCharged($call, $charged, $minutes);
+        });
+    }
+
+    private function stampCoinsCharged(Call $call, int $charged, int $minutes): void
+    {
+        $metadata = is_array($call->metadata) ? $call->metadata : [];
+        $metadata['coins_charged'] = $charged;
+        $metadata['billed_minutes'] = $minutes;
+        $metadata['coins_per_minute'] = (int) feature_coin_cost('call_minute', 5);
+        $call->forceFill(['metadata' => $metadata])->save();
     }
 
     private function createCall(User $caller, User $receiver, ChatThread $thread, CallType $type, CallStatus $status): Call

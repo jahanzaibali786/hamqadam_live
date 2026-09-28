@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\Gift\GiftController;
 use App\Http\Controllers\Api\V1\Gift\GiftAdminController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\HelpChat\HelpChatController;
+use App\Http\Controllers\Api\V1\Auth\AccountCheckController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
 use App\Http\Controllers\Api\V1\Auth\MobileRegistrationController;
 use App\Http\Controllers\Api\V1\Interest\InterestController;
@@ -72,6 +73,10 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function () {
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1')->name('forgot_password');
     Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1')->name('reset_password');
 
+    // Guest-callable registration checks: email / phone / CNIC availability.
+    // Throttled hard because it is an account-enumeration surface.
+    Route::post('/check', [AccountCheckController::class, 'check'])->middleware('throttle:20,1')->name('check');
+
     Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->group(function () {
         Route::get('/me', [AuthController::class, 'me'])->name('me');
         Route::post('/email/verification-code', [AuthController::class, 'requestEmailVerification'])->middleware('throttle:5,1')->name('email.verification_code');
@@ -84,6 +89,7 @@ Route::prefix('auth')->name('api.v1.auth.')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         Route::post('/logout-all', [AuthController::class, 'logoutAll'])->name('logout_all');
         Route::delete('/account', [AuthController::class, 'deleteAccount'])->name('account.delete');
+        Route::post('/change-password', [AccountCheckController::class, 'changePassword'])->middleware('throttle:5,1')->name('change_password');
 
         // Step-wise registration
         Route::prefix('register')->name('register.')->group(function () {

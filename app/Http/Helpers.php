@@ -405,7 +405,10 @@ if (!function_exists('feature_coin_cost')) {
     {
         $settingKey = match ($feature) {
             'express_interest' => 'feature_coin_cost_express_interest',
+            'proposal' => 'feature_coin_cost_proposal',
+            'favourite' => 'feature_coin_cost_favourite',
             'shortlist' => 'feature_coin_cost_shortlist',
+            'call_minute' => 'feature_coin_cost_call_minute',
             'contact_view' => 'feature_coin_cost_contact_view',
             'profile_image_view' => 'feature_coin_cost_profile_image_view',
             'gallery_image_view' => 'feature_coin_cost_gallery_image_view',

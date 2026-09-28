@@ -75,8 +75,21 @@ class ProposalService
             throw new ApiException('Please upgrade your package to send more proposals.', 402, 'package_limit_exceeded');
         }
 
-        $proposal = DB::transaction(function () use ($sender, $recipientId, $note) {
-            $sender->member()->lockForUpdate()->first()->decrement('remaining_interest');
+        // Proposals cost the same as interests: 3 coins (admin-configurable).
+        $coinCost = (int) feature_coin_cost('proposal', 3);
+        $balanceCheck = (int) ($sender->member->remaining_interest ?? 0);
+        if ($balanceCheck < $coinCost) {
+            throw new ApiException(
+                'You need '.$coinCost.' coin(s) to send a proposal and you currently have '.$balanceCheck.'.',
+                402,
+                'insufficient_coins'
+            );
+        }
+
+        $proposal = DB::transaction(function () use ($sender, $recipientId, $note, $coinCost) {
+            $member = $sender->member()->lockForUpdate()->first();
+            $member->remaining_interest = max(0, (int) $member->remaining_interest - $coinCost);
+            $member->save();
             $expiryDays = max(1, (int) (get_setting('proposal_expiry_days') ?: 14));
             $compatibility = ProfileMatch::where('user_id', $sender->id)
                 ->where('match_id', $recipientId)
@@ -90,6 +103,17 @@ class ProposalService
                 'expires_at' => now()->addDays($expiryDays),
                 'compatibility_snapshot' => $compatibility,
             ]);
+
+            // Every coin movement must show up in Coin & Feature Usage.
+            PackageUsage::record(
+                $sender->id,
+                'proposal',
+                'Proposal Sent',
+                $coinCost,
+                ExpressInterest::class,
+                $proposal->id,
+                'Used '.$coinCost.' coin(s) to send a proposal.'
+            );
 
             $this->recordEvent($proposal, $sender, 'proposal_sent', $note);
 
@@ -202,10 +226,54 @@ class ProposalService
     {
         $this->ensureTargetUser($actor, $userId);
 
-        return Shortlist::firstOrCreate([
-            'user_id' => $userId,
-            'shortlisted_by' => $actor->id,
-        ]);
+        $existing = Shortlist::where('user_id', $userId)->where('shortlisted_by', $actor->id)->first();
+        if ($existing) {
+            return $existing; // already a favourite: no second charge
+        }
+
+        // Favouriting costs 1 coin (admin-configurable) and is logged in Coin
+        // & Feature Usage like every other coin movement.
+        $coinCost = (int) feature_coin_cost('favourite', 1);
+        $balance = (int) ($actor->member?->remaining_interest ?? 0);
+        if ($balance < $coinCost) {
+            throw new ApiException(
+                'You need '.$coinCost.' coin(s) to favourite this member and you currently have '.$balance.'.',
+                402,
+                'insufficient_coins'
+            );
+        }
+
+        return DB::transaction(function () use ($actor, $userId, $coinCost) {
+            $member = $actor->member()->lockForUpdate()->first();
+            $currentBalance = (int) ($member?->remaining_interest ?? 0);
+            if ($currentBalance < $coinCost) {
+                throw new ApiException(
+                    'You need '.$coinCost.' coin(s) to favourite this member and you currently have '.$currentBalance.'.',
+                    402,
+                    'insufficient_coins'
+                );
+            }
+
+            $shortlist = Shortlist::create([
+                'user_id' => $userId,
+                'shortlisted_by' => $actor->id,
+            ]);
+
+            $member->remaining_interest = $currentBalance - $coinCost;
+            $member->save();
+
+            PackageUsage::record(
+                $actor->id,
+                'favourite',
+                'Favourite',
+                $coinCost,
+                Shortlist::class,
+                $shortlist->id,
+                'Used '.$coinCost.' coin(s) to favourite a member.'
+            );
+
+            return $shortlist;
+        });
     }
 
     public function favourites(User $actor, int $perPage = 20): LengthAwarePaginator
@@ -264,7 +332,7 @@ class ProposalService
         // must not unlock chat or bypass privacy: chat still follows the
         // existing acceptance rules, so this gate stays out of the way.
 
-        $coinCost = (int) feature_coin_cost('shortlist', 5);
+        $coinCost = (int) feature_coin_cost('shortlist', 1);
         $balance = (int) ($actor->member?->remaining_interest ?? 0);
 
         if ($balance < $coinCost) {
