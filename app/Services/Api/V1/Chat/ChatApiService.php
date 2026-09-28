@@ -34,6 +34,7 @@ class ChatApiService
             ->where(function ($query) use ($user, $archived) {
                 $query->where(function ($side) use ($user, $archived) {
                     $side->where('sender_user_id', $user->id)
+                        ->whereNull('sender_deleted_at')
                         ->where(function ($state) use ($archived) {
                             $archived
                                 ? $state->whereNotNull('sender_archived_at')
@@ -41,6 +42,7 @@ class ChatApiService
                         });
                 })->orWhere(function ($side) use ($user, $archived) {
                     $side->where('receiver_user_id', $user->id)
+                        ->whereNull('receiver_deleted_at')
                         ->where(function ($state) use ($archived) {
                             $archived
                                 ? $state->whereNotNull('receiver_archived_at')
@@ -106,6 +108,13 @@ class ChatApiService
     {
         $thread = $this->threadForUser($user, $threadId);
         $this->ensureNotBlocked($thread);
+        // Sending into a conversation you deleted un-deletes it on YOUR side
+        // only — the thread reappears in your list (the other side was never
+        // hidden).
+        $deletedColumn = $thread->deletedColumnForUserId((int) $user->id);
+        if ($thread->getAttribute($deletedColumn) !== null) {
+            $thread->forceFill([$deletedColumn => null])->save();
+        }
         if (! empty($data['reply_to_chat_id'])) {
             $this->ensureReplyBelongsToThread((int) $data['reply_to_chat_id'], $thread);
         }
@@ -252,6 +261,21 @@ class ChatApiService
 
         return $thread->fresh(['sender', 'receiver']);
     }
+    /**
+     * Deletes the conversation for THIS member only: stamps their per-side
+     * deleted column so the thread drops out of their list. The other side's
+     * list, and the message history itself, are untouched. If the other side
+     * sends the next message, [send] clears the stamp and the thread returns
+     * like any new chat.
+     */
+    public function deleteThread(User $user, int $threadId): void
+    {
+        $thread = $this->threadForUser($user, $threadId);
+        $thread->forceFill([
+            $thread->deletedColumnForUserId((int) $user->id) => now(),
+        ])->save();
+    }
+
     /**
      * Moves the thread in or out of THIS member's archived tab. The other side
      * is untouched — their column stays where it was.

@@ -112,6 +112,18 @@ class ChatController extends ApiController
     }
 
     /**
+     * POST /chat/threads/{thread}/delete — hides the conversation from the
+     * CALLER's list only (per-side deleted stamp). History is untouched for
+     * the other side, and the next message they send un-hides the thread.
+     */
+    public function deleteThread(Request $request, int $thread): JsonResponse
+    {
+        $this->chat->deleteThread($request->user(), $thread);
+
+        return $this->success(message: 'Conversation deleted.');
+    }
+
+    /**
      * POST /chat/threads/{thread}/mute — body `{muted: true|false}`.
      * Silences push/tray notifications for the caller only; messages still
      * arrive and the thread keeps updating.
