@@ -38,7 +38,7 @@ class ProfileSearchService
             ->where('deactivated', 0)
             ->whereHas('member', fn ($query) => $query->where('hide_profile', 0))
             ->whereDoesntHave('profile_privacy_setting', fn ($privacy) => $privacy->where('invisible_mode', true))
-            ->whereNotIn('id', HiddenProfileUser::where('hidden_from_user_id', $viewer->id)->pluck('user_id'));
+            ->whereNotIn('users.id', HiddenProfileUser::where('hidden_from_user_id', $viewer->id)->pluck('user_id'));
 
         $this->excludeIgnored($query, $viewer);
         $this->applyDefaultGenderScope($query, $viewer);
@@ -117,7 +117,7 @@ class ProfileSearchService
             ->unique()
             ->values();
 
-        $query->whereNotIn('id', $ignoredIds);
+        $query->whereNotIn('users.id', $ignoredIds);
     }
 
     private function applyFilters($query, User $viewer, array $filters): void
@@ -283,7 +283,7 @@ class ProfileSearchService
         }
 
         if (! empty($filters['exclude_viewed'])) {
-            $query->whereNotIn('id', ProfileViewer::where('viewed_by', $viewer->id)->pluck('user_id'));
+            $query->whereNotIn('users.id', ProfileViewer::where('viewed_by', $viewer->id)->pluck('user_id'));
         }
 
         if (! empty($filters['mutual_match'])) {
