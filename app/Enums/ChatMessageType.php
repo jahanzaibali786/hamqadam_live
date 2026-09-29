@@ -10,4 +10,6 @@ enum ChatMessageType: string
     case Image = 'image';
     case Voice = 'voice';
     case Mixed = 'mixed';
+    /** Animated GIF sent by URL (Tenor) — no upload row, url in metadata. */
+    case Gif = 'gif';
 }
