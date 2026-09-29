@@ -126,6 +126,15 @@ class ChatApiService
             $this->ensureReplyBelongsToThread((int) $data['reply_to_chat_id'], $thread);
         }
         $attachments = array_map(fn (UploadedFile $file) => upload_api_file($file), $files);
+        /*
+         * GIF messages (type=gif): the animated image is sent by URL (Tenor
+         * CDN), not uploaded — so it lives in metadata.gif_url. The URL is
+         * validated against the Tenor/media hosts here rather than trusting
+         * the client, otherwise the chat could be used to hotlink anything.
+         */
+        if (($data['message_type'] ?? null) === 'gif') {
+            $data['metadata'] = $this->withValidatedGifUrl($data['metadata'] ?? null);
+        }
         return DB::transaction(function () use ($thread, $user, $data, $attachments) {
             // Disappearing TTL: seconds until the message vanishes. Resolution
             // order: explicit per-message value → the thread's remembered
@@ -554,6 +563,46 @@ class ChatApiService
     private function detectType(array $attachments): string
     {
         return $attachments === [] ? ChatMessageType::Text->value : ChatMessageType::Mixed->value;
+    }
+
+    /**
+     * GIF hosts allowed to be hotlinked from chat. Tenor serves media from
+     * several CDN subdomains — matching on host suffix keeps them all legal
+     * while blocking arbitrary URLs.
+     */
+    private const GIF_URL_HOSTS = ['media.tenor.com', 'c.tenor.com'];
+
+    /**
+     * Pulls metadata.gif_url out of the request, checks it against the allowed
+     * GIF hosts, and throws when the client tries to hotlink something else.
+     * Returns the metadata array with a sanitized URL (scheme forced https).
+     */
+    private function withValidatedGifUrl(mixed $metadata): array
+    {
+        if (is_string($metadata) && $metadata !== '') {
+            $decoded = json_decode($metadata, true);
+            $metadata = is_array($decoded) ? $decoded : [];
+        }
+        $metadata = is_array($metadata) ? $metadata : [];
+
+        $url = trim((string) ($metadata['gif_url'] ?? ''));
+        $host = parse_url($url, PHP_URL_HOST);
+        $allowed = false;
+        foreach (self::GIF_URL_HOSTS as $suffix) {
+            if (is_string($host) && (str_ends_with($host, $suffix))) {
+                $allowed = true;
+                break;
+            }
+        }
+        if (! $allowed) {
+            abort(422, 'Invalid GIF source.');
+        }
+
+        $query = parse_url($url, PHP_URL_QUERY);
+        $metadata['gif_url'] = 'https://' . $host . (parse_url($url, PHP_URL_PATH) ?? '')
+            . ($query !== null && $query !== false ? '?' . $query : '');
+
+        return $metadata;
     }
 
     /**
