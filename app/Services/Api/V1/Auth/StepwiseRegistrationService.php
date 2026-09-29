@@ -9,6 +9,8 @@ use App\Dto\Auth\IssuedTokenData;
 use App\Models\Address;
 use App\Models\AnnualSalaryRange;
 use App\Models\Career;
+use App\Models\Caste;
+use App\Models\City;
 use App\Models\Education;
 use App\Models\Family;
 use App\Models\GalleryImage;
@@ -20,6 +22,7 @@ use App\Enums\VerificationDocumentType;
 use App\Models\ProfileVerificationDocument;
 use App\Models\ProfileVerificationRequest;
 use App\Models\SpiritualBackground;
+use App\Models\SubCaste;
 use App\Models\User;
 use App\Models\Upload;
 use App\Services\Api\V1\Profile\ProfileCompletionService;
@@ -119,6 +122,7 @@ class StepwiseRegistrationService
 
     public function saveStep(User $user, int $step, array $data, Request $request): array
     {
+        $this->resolveCustomEntries($user, $step, $data);
         $this->validate($step, $data);
 
         DB::transaction(function () use ($user, $step, $data, $request): void {
@@ -162,6 +166,7 @@ class StepwiseRegistrationService
             ]);
 
             for ($step = 1; $step <= self::TOTAL_STEPS; $step++) {
+                $this->resolveCustomEntries($user, $step, $data);
                 $this->validate($step, $data);
                 $this->applyStep($user, $step, $data, $request);
                 $this->markCompleted($member->fresh(), $step);
@@ -192,6 +197,96 @@ class StepwiseRegistrationService
                 ? Carbon::parse($user->member->registration_completed_at)->toISOString()
                 : null,
         ];
+    }
+
+    /**
+     * Custom lookup entries (task: caste/city dropdown custom entry).
+     *
+     * When the app cannot find a caste, sub-caste or city in the server list it
+     * sends the typed wording instead — `caste_name`, `sub_caste_name` and
+     * `city_name` — so the member is never stuck at a list that does not have
+     * their community or town. Each is matched case-insensitively against the
+     * relevant table (finding-or-creating the row) and its id is written back
+     * into `$data`, so validation and persistence below see a normal lookup id.
+     */
+    private function resolveCustomEntries(User $user, int $step, array &$data): void
+    {
+        if ($step === 4 && empty($data['city_id']) && filled($data['city_name'] ?? null)) {
+            $data['city_id'] = $this->findOrCreateCity(
+                trim((string) $data['city_name']),
+                (int) ($data['state_id'] ?? 0)
+            );
+        }
+
+        if ($step === 6) {
+            if (empty($data['caste_id']) && filled($data['caste_name'] ?? null)) {
+                $data['caste_id'] = $this->findOrCreateCaste(
+                    trim((string) $data['caste_name']),
+                    // castes.religion_id is NOT NULL — stamp the member's own
+                    // religion (step 3 always runs before step 6) so the new
+                    // row sits with the rest of their community's castes.
+                    (int) (SpiritualBackground::where('user_id', $user->id)->value('religion_id') ?? 0)
+                );
+            }
+            if (filled($data['sub_caste_name'] ?? null) && ! empty($data['caste_id'])) {
+                $data['sub_caste_id'] = $this->findOrCreateSubCaste(
+                    trim((string) $data['sub_caste_name']),
+                    (int) $data['caste_id']
+                );
+            }
+        }
+    }
+
+    private function findOrCreateCaste(string $name, int $religionId): int
+    {
+        $existing = Caste::withTrashed()->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])->first();
+        if ($existing) {
+            return (int) $existing->id;
+        }
+        // The lookup models keep mass-assignment protection, so insert directly.
+        $now = now();
+        return (int) DB::table('castes')->insertGetId([
+            'name' => $name,
+            'religion_id' => $religionId,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+    }
+
+    private function findOrCreateSubCaste(string $name, int $casteId): int
+    {
+        $existing = SubCaste::withTrashed()
+            ->where('caste_id', $casteId)
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+            ->first();
+        if ($existing) {
+            return (int) $existing->id;
+        }
+        $now = now();
+        return (int) DB::table('sub_castes')->insertGetId([
+            'name' => $name,
+            'caste_id' => $casteId,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+    }
+
+    private function findOrCreateCity(string $name, int $stateId): int
+    {
+        $existing = City::withTrashed()
+            ->where('state_id', $stateId)
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower($name)])
+            ->first();
+        if ($existing) {
+            return (int) $existing->id;
+        }
+        $now = now();
+        return (int) DB::table('cities')->insertGetId([
+            'name' => $name,
+            'state_id' => $stateId,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
     }
 
     private function applyStep(User $user, int $step, array $data, ?Request $request = null): void
@@ -578,9 +673,13 @@ class StepwiseRegistrationService
             ],
             2 => ['full_name' => ['required', 'string', 'max:255'], 'date_of_birth' => ['required', 'date', 'before:today']],
             3 => ['religion_id' => ['required', 'integer', 'exists:religions,id'], 'mother_tongue' => ['required', 'integer', 'exists:member_languages,id'], 'sect_main_id' => ['nullable', 'integer', 'exists:sect_main,id'], 'school_of_thought_id' => ['nullable', 'integer', 'exists:school_of_thought,id'], 'tradition_id' => ['nullable', 'integer', 'exists:traditions,id']],
-            4 => ['country_id' => ['required', 'integer', 'exists:countries,id'], 'state_id' => ['required', 'integer', 'exists:states,id'], 'city_id' => ['required', 'integer', 'exists:cities,id'], 'area' => ['required', 'string', 'max:255']],
+            // city_id may arrive resolved from a custom `city_name` entry —
+            // require the strict exists id only when no free-text name was sent.
+            4 => ['country_id' => ['required', 'integer', 'exists:countries,id'], 'state_id' => ['required', 'integer', 'exists:states,id'], 'city_id' => [empty($data['city_name'] ?? null) ? 'required' : 'nullable', 'integer', 'exists:cities,id'], 'area' => ['required', 'string', 'max:255']],
             5 => ['country_code' => ['required', 'string', 'max:10'], 'phone' => ['required', 'string', 'max:15'], 'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore(request()->user()?->id)]],
-            6 => ['caste_id' => ['required', 'integer', 'exists:castes,id'], 'sub_caste_id' => ['nullable', 'integer', 'exists:sub_castes,id']],
+            // Same custom-entry contract as step 4: a `caste_name` (or
+            // `sub_caste_name`) replaces the strict exists check on the id.
+            6 => ['caste_id' => [empty($data['caste_name'] ?? null) ? 'required' : 'nullable', 'integer', 'exists:castes,id'], 'sub_caste_id' => ['nullable', 'integer', 'exists:sub_castes,id']],
             7 => ['marital_status_id' => ['required', 'integer', 'exists:marital_statuses,id']],
             8 => ['education_level_id' => ['nullable', 'integer', 'exists:education_levels,id'], 'degree_id' => ['nullable', 'integer', 'exists:degrees,id'], 'field_of_study_id' => ['nullable', 'integer', 'exists:fields_of_study,id'], 'institution_id' => ['nullable', 'integer', 'exists:institutions,id'], 'graduation_year' => ['nullable', 'integer', 'min:1950', 'max:2100'], 'education_status' => ['nullable', Rule::in(['completed', 'in_progress', 'dropped'])], 'expected_graduation_year' => ['nullable', 'integer', 'min:1950', 'max:2100']],
             9 => ['height' => ['required', 'numeric', 'between:0,9.99'], 'diet' => ['required', Rule::in(['Vegetarian', 'Non-Vegetarian'])]],
