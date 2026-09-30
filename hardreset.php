@@ -62,6 +62,26 @@ echo "== Hamqadam hard reset ==\n";
 echo 'time: ' . date('c') . "\n";
 echo 'php: ' . PHP_VERSION . "\n\n";
 
+// Check writable runtime directories before purging any caches.
+foreach ([
+    'bootstrap/cache',
+    'storage/framework/cache/data',
+    'storage/framework/sessions',
+    'storage/framework/views',
+] as $relativeDirectory) {
+    $directory = $root . '/' . $relativeDirectory;
+    if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
+        http_response_code(500);
+        echo "Cannot create {$relativeDirectory}. Fix ownership/permissions for the PHP worker.\n";
+        exit;
+    }
+    if (!is_writable($directory)) {
+        http_response_code(500);
+        echo "Directory {$relativeDirectory} is not writable by the PHP worker.\n";
+        exit;
+    }
+}
+
 // 1. Purge compiled bootstrap caches ----------------------------------------
 $bootstrapCache = $root . '/bootstrap/cache';
 if (!is_dir($bootstrapCache)) {
@@ -92,9 +112,8 @@ foreach ([
     foreach ($it as $item) {
         if ($item->isFile()) {
             $purged += @unlink($item->getPathname()) ? 1 : 0;
-        } elseif ($item->isDir()) {
-            @rmdir($item->getPathname());
         }
+        // Preserve directories: live cache writers may already have checked them.
     }
 }
 echo "framework views/cache purged: {$purged} file(s)\n";

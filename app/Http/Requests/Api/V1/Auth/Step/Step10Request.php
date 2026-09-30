@@ -43,7 +43,7 @@ class Step10Request extends ApiFormRequest
             'partner_family_value_id' => ['nullable', 'integer'],
             'partner_general' => ['nullable', 'string', 'max:2000'],
             'deal_breakers' => ['nullable', 'array'],
-            'deal_breakers.*' => ['string', 'max:255'],
+            'deal_breakers.*' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

@@ -145,7 +145,7 @@ class RegistrationOnboarding
             'partner_income_min' => ['nullable', 'numeric', 'min:0'],
             'partner_income_max' => ['nullable', 'numeric', 'min:0', 'gte:partner_income_min'],
             'deal_breakers' => ['nullable', 'array'],
-            'deal_breakers.*' => ['string', 'max:255'],
+            'deal_breakers.*' => ['nullable', 'string', 'max:255'],
             'area' => ['nullable', 'string', 'max:255'],
             'live_with_family' => ['nullable', 'in:yes,no'],
             'family_country_id' => ['nullable', 'integer'],
