@@ -570,7 +570,20 @@ class ChatApiService
      * several CDN subdomains — matching on host suffix keeps them all legal
      * while blocking arbitrary URLs.
      */
-    private const GIF_URL_HOSTS = ['media.tenor.com', 'c.tenor.com'];
+    private const GIF_URL_HOSTS = [
+        // Giphy CDN (picker source) — covers media0..mediaN.giphy.com.
+        'media0.giphy.com',
+        'media1.giphy.com',
+        'media2.giphy.com',
+        'media3.giphy.com',
+        'media4.giphy.com',
+        'media5.giphy.com',
+        'media.giphy.com',
+        'i.giphy.com',
+        // Legacy Tenor hosts (old messages keep rendering).
+        'media.tenor.com',
+        'c.tenor.com',
+    ];
 
     /**
      * Pulls metadata.gif_url out of the request, checks it against the allowed
