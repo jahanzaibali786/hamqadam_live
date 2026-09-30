@@ -906,7 +906,14 @@ class MemberController extends Controller
 
         $member->auto_profile_match         = $package->auto_profile_match;
         $member->auto_horoscope_profile_match         = $package->auto_horoscope_profile_match;
-        $member->package_validity           = date('Y-m-d', strtotime($member->package_validity . ' +' . $package->validity . 'days'));
+        // BUGFIX: a Basic/Free member upgrading for the FIRST time has a NULL
+        // package_validity — the old "NULL + days" stayed NULL, so the
+        // upgrade silently never gained a validity. From today, or from the
+        // existing date when it is still in the future.
+        $baseDate = ($member->package_validity != null && $member->package_validity >= date('Y-m-d'))
+            ? $member->package_validity
+            : date('Y-m-d');
+        $member->package_validity           = date('Y-m-d', strtotime($baseDate . ' +' . $package->validity . 'days'));
         $membership                         = $package->id == 1 ? 1 : 2;
 
         if ($member->save()) {

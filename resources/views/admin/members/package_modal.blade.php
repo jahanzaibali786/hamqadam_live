@@ -4,7 +4,7 @@
     </button>
 </div>
 <div class="modal-body">
-    <table class="table table-bordered">
+    <table class="table table-bordered table-sm mb-0">
         <tbody>
             <tr>
                 <th>{{translate('Package Name')}}</th>
