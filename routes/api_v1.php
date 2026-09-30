@@ -115,7 +115,11 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::patch('/privacy', [ProfileController::class, 'updatePrivacy'])->name('privacy.update');
     Route::patch('/visibility', [ProfileController::class, 'updateVisibility'])->name('visibility.update');
     Route::post('/deactivate', [ProfileController::class, 'deactivate'])->name('deactivate');
-    Route::get('/dropdown-reference-data', [DropdownReferenceController::class, 'index'])->name('dropdown_reference_data');
+    // PERF: the payload is ~2.6 MB and the query work behind it took 14s on
+    // prod. Stamp it so clients keep their copy for a day (immutable ids).
+    Route::get('/dropdown-reference-data', [DropdownReferenceController::class, 'index'])
+        ->name('dropdown_reference_data')
+        ->middleware('cache.headers:private;max_age=86400,etag');
 });
 
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('profiles')->name('api.v1.profiles.')->group(function () {

@@ -41,6 +41,20 @@ class DropdownReferenceController extends ApiController
 {
     public function index(): JsonResponse
     {
+        // PERF: the payload is ~2.6 MB and the seven model loads behind it took
+        // ~14s on prod (the 48k-row City table dominates). The data only moves
+        // when an admin edits a lookup, so memoise the RESOLVED JSON-serialisable
+        // arrays (not the Resource objects, which bloat the cache store past the
+        // memory limit) for 10 minutes — repeat requests answer in milliseconds.
+        $payload = cache()->remember('dropdown_reference_payload_v2', 600, function () {
+            return json_decode(json_encode($this->buildPayload()), true);
+        });
+
+        return $this->success($payload);
+    }
+
+    private function buildPayload(): array
+    {
         $data = [
             'countries' => CountryResource::collection(Country::where('status', 1)->get()),
             'states' => StateResource::collection(State::all()),
@@ -124,6 +138,6 @@ class DropdownReferenceController extends ApiController
             ],
         ];
 
-        return $this->success($data);
+        return $data;
     }
 }
