@@ -421,6 +421,25 @@ class ProposalService
         IgnoredUser::where('user_id', $userId)->where('ignored_by', $actor->id)->delete();
     }
 
+    /**
+     * The member's ignored-profiles list (Discover "Ignore Profile"), paged
+     * and eager-loaded exactly like shortlists() so the same
+     * SearchProfileResource shape renders on the client.
+     */
+    public function ignoredList(User $actor, int $perPage = 20): LengthAwarePaginator
+    {
+        return IgnoredUser::with([
+            'user.member',
+            'user.physical_attributes',
+            'user.spiritual_backgrounds',
+            'user.addresses',
+            'user.profile_match_for_viewer' => fn ($query) => $query->where('user_id', $actor->id),
+        ])
+            ->where('ignored_by', $actor->id)
+            ->latest()
+            ->paginate($perPage);
+    }
+
     private function transition(
         ExpressInterest $proposal,
         User $actor,
