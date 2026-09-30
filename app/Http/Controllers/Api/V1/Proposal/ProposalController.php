@@ -162,6 +162,15 @@ class ProposalController extends ApiController
         return $this->success(message: 'Profile ignored successfully.');
     }
 
+    public function ignoredList(ProposalActionRequest $request): JsonResponse
+    {
+        $items = $this->proposals->ignoredList($request->user(), min((int) $request->integer('per_page', 20), 50));
+
+        return SearchProfileResource::collection($items->through(fn ($ignored) => $ignored->user))
+            ->additional(['success' => true])
+            ->response();
+    }
+
     public function removeIgnore(ProposalActionRequest $request, int $user): JsonResponse
     {
         $this->proposals->removeIgnore($request->user(), $user);

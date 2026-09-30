@@ -191,6 +191,7 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::post('/shortlists', [ProposalController::class, 'shortlist'])->middleware('throttle:20,1')->name('shortlists.store');
     Route::get('/shortlists/{user}/check', [ProposalController::class, 'checkShortlist'])->name('shortlists.check');
     Route::delete('/shortlists/{user}', [ProposalController::class, 'removeShortlist'])->name('shortlists.delete');
+    Route::get('/ignored', [ProposalController::class, 'ignoredList'])->name('ignored.index');
     Route::post('/ignored', [ProposalController::class, 'ignore'])->name('ignored.store');
     Route::delete('/ignored/{user}', [ProposalController::class, 'removeIgnore'])->name('ignored.delete');
     Route::post('/{proposal}/accept', [ProposalController::class, 'accept'])->name('accept');
