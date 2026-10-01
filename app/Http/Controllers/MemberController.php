@@ -884,6 +884,53 @@ class MemberController extends Controller
         return view('admin.members.package_modal', compact('member'));
     }
 
+    /**
+     * Admin credits/deducts "custom coins" for a member. Coins are the
+     * `members.remaining_interest` balance — the SAME balance the app shows as
+     * `coin_balance` (Wallet → My Coins, express interest, gifts, chat paywall).
+     *
+     * The members-list "Wallet Balance" action only touches `users.balance`
+     * (spendable money), which the app never displays, so it could never make
+     * coins appear in the app. This is the missing admin → app path.
+     */
+    public function member_coin_balance_update(Request $request)
+    {
+        $request->validate([
+            'user_id'     => 'required|integer',
+            'coin_amount' => 'required|integer|min:1',
+            'coin_option' => 'required|in:added_by_admin,deducted_by_admin',
+        ]);
+
+        $user = User::where('id', $request->user_id)->first();
+        if (! $user) {
+            flash(translate('Member not found.'))->error();
+            return back();
+        }
+
+        $member = Member::where('user_id', $user->id)->first();
+        if (! $member) {
+            flash(translate('This member has no profile record yet, so coins cannot be credited.'))->error();
+            return back();
+        }
+
+        $amount = (int) $request->coin_amount;
+        $before = (int) $member->remaining_interest;
+        $after  = $request->coin_option === 'added_by_admin'
+            ? $before + $amount
+            : max(0, $before - $amount);
+
+        $member->remaining_interest = $after;
+
+        if ($member->save()) {
+            $label = $request->coin_option === 'added_by_admin' ? translate('added to') : translate('deducted from');
+            flash(translate('Custom coins') . ' ' . $amount . ' ' . $label . ' ' . $user->first_name . '. ' . translate('New coin balance') . ': ' . $after)->success();
+        } else {
+            flash(translate('Something Went Wrong!'))->error();
+        }
+
+        return back();
+    }
+
     public function get_package(Request $request)
     {
         $member_id = $request->id;
@@ -893,16 +940,26 @@ class MemberController extends Controller
 
     public function package_do_update(Request $request, $id)
     {
+        // Every free/basic member must be upgradeable. The modal sends the
+        // Member id; fall back to the user id so a stale/mismatched id can
+        // never silently abort the upgrade.
+        $request->validate(['package_id' => 'required|integer|exists:packages,id']);
 
-        $member                                 = Member::where('id', $id)->first();
-        $package                                = Package::where('id', $request->package_id)->first();
+        $member  = Member::where('id', $id)->first() ?? Member::where('user_id', $id)->first();
+        $package = Package::where('id', $request->package_id)->first();
+
+        if (! $member || ! $package) {
+            flash(translate('Member package could not be updated: the member or the package was not found.'))->error();
+            return back();
+        }
+
         $member->current_package_id             = $package->id;
-        $member->remaining_interest             = $member->remaining_interest + $package->express_interest;
-        $member->remaining_photo_gallery        = $member->remaining_photo_gallery + $package->photo_gallery;
-        $member->remaining_contact_view         = $member->remaining_contact_view + $package->contact;
-        $member->remaining_profile_viewer_view  = $member->remaining_profile_viewer_view + $package->profile_viewers_view;
-        $member->remaining_profile_image_view   = $member->remaining_profile_image_view + $package->profile_image_view;
-        $member->remaining_gallery_image_view   = $member->remaining_gallery_image_view + $package->gallery_image_view;
+        $member->remaining_interest             = (int) $member->remaining_interest + (int) $package->express_interest;
+        $member->remaining_photo_gallery        = (int) $member->remaining_photo_gallery + (int) $package->photo_gallery;
+        $member->remaining_contact_view         = (int) $member->remaining_contact_view + (int) $package->contact;
+        $member->remaining_profile_viewer_view  = (int) $member->remaining_profile_viewer_view + (int) $package->profile_viewers_view;
+        $member->remaining_profile_image_view   = (int) $member->remaining_profile_image_view + (int) $package->profile_image_view;
+        $member->remaining_gallery_image_view   = (int) $member->remaining_gallery_image_view + (int) $package->gallery_image_view;
 
         $member->auto_profile_match         = $package->auto_profile_match;
         $member->auto_horoscope_profile_match         = $package->auto_horoscope_profile_match;
@@ -913,11 +970,15 @@ class MemberController extends Controller
         $baseDate = ($member->package_validity != null && $member->package_validity >= date('Y-m-d'))
             ? $member->package_validity
             : date('Y-m-d');
-        $member->package_validity           = date('Y-m-d', strtotime($baseDate . ' +' . $package->validity . 'days'));
+        $member->package_validity           = date('Y-m-d', strtotime($baseDate . ' +' . (int) $package->validity . 'days'));
         $membership                         = $package->id == 1 ? 1 : 2;
 
         if ($member->save()) {
             $user                = User::where('id', $member->user_id)->first();
+            if (! $user) {
+                flash(translate('Sorry! Something went wrong.'))->error();
+                return back();
+            }
             $user->membership    = $membership;
             if ($user->save()) {
                 flash(translate('Member package has been updated successfully'))->success();

@@ -138,6 +138,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::post('/members/get_package', 'get_package')->name('members.get_package');
         Route::post('/members/package_do_update/{id}', 'package_do_update')->name('members.package_do_update');
         Route::post('/members/wallet-balance-update', 'member_wallet_balance_update')->name('member.wallet_balance_update');
+        // Custom coins: credits the member's coin balance that the app shows
+        // (members.remaining_interest) — separate from users.balance.
+        Route::post('/members/coin-balance-update', 'member_coin_balance_update')->name('member.coin_balance_update');
 
         Route::get('/member-list/{status}', 'filterbyStatus')->name('filterbyStatus');
     });
