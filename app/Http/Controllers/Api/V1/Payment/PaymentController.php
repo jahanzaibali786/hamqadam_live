@@ -148,16 +148,23 @@ class PaymentController extends ApiController
         ));
     }
 
-    public function stripeWebhook(PaymentWebhookRequest $request): JsonResponse
+    public function stripeWebhook(Request $request): JsonResponse
     {
+        // Signature-verified inside the service: the raw body and the
+        // `Stripe-Signature` header are what Stripe actually signs, so the
+        // typed request validation must not run first.
+        $payment = $this->payments->processStripeWebhook($request);
+
         return $this->success(
-            new PaymentResource($this->payments->processWebhook(PaymentGateway::Stripe, $request->validated())),
-            'Stripe webhook processed.'
+            $payment ? new PaymentResource($payment) : null,
+            $payment ? 'Stripe webhook processed.' : 'Stripe event ignored.'
         );
     }
 
     public function easypaisaWebhook(PaymentWebhookRequest $request): JsonResponse
     {
+        $this->assertWalletWebhookEnabled('easypaisa');
+
         return $this->success(
             new PaymentResource($this->payments->processWebhook(PaymentGateway::EasyPaisa, $request->validated())),
             'EasyPaisa webhook processed.'
@@ -166,9 +173,23 @@ class PaymentController extends ApiController
 
     public function jazzcashWebhook(PaymentWebhookRequest $request): JsonResponse
     {
+        $this->assertWalletWebhookEnabled('jazzcash');
+
         return $this->success(
             new PaymentResource($this->payments->processWebhook(PaymentGateway::JazzCash, $request->validated())),
             'JazzCash webhook processed.'
         );
+    }
+
+    /**
+     * Wallet webhooks are unsigned: refuse them outright unless the wallet is
+     * actually switched on, so a disabled gateway can never be used to flip a
+     * payment to Paid. They never fire in the app's card-only flow today.
+     */
+    private function assertWalletWebhookEnabled(string $gateway): void
+    {
+        if (get_setting($gateway . '_payment_activation') != 1) {
+            abort(403, ucfirst($gateway) . ' payments are disabled.');
+        }
     }
 }
