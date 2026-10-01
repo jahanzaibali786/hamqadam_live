@@ -151,6 +151,7 @@
                                                     <a class="dropdown-item" onclick="package_info({{$member->id}})" href="javascript:void(0);" >{{translate('Package')}}</a>
                                                 @endcan
                                                     <a class="dropdown-item" onclick="wallet_balance_update({{$member->id}},{{$member->balance}})" href="javascript:void(0);" >{{translate('Wallet Balance')}}</a>
+                                                    <a class="dropdown-item" onclick="coin_balance_update({{$member->id}},{{ optional($member->member)->remaining_interest ?? 0 }})" href="javascript:void(0);" >{{translate('Custom Coins')}}</a>
                                                 @can ('login_as_member')
                                                     <a href="{{ route('members.login', encrypt($member->id)) }}" class="dropdown-item">{{translate('Log in as this Member')}}</a>
                                                 @endcan
@@ -226,6 +227,57 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-dismiss="modal">{{translate('Close')}}</button>
                     <button type="submit" class="btn btn-primary">{{translate('Unblock')}}</button>
+                </div>
+            </form>
+      	</div>
+    	</div>
+    </div>
+
+    <div class="modal fade member_coin_balance_modal" id="modal-basic">
+    	<div class="modal-dialog">
+    		<div class="modal-content">
+            <form class="form-horizontal member-block" action="{{ route('member.coin_balance_update') }}" method="POST">
+                @csrf
+                <input type="hidden" name="user_id" id="user_id_coin_balance" value="">
+                <div class="modal-header">
+                    <h5 class="modal-title h6">{{translate('Custom Coins')}}</h5>
+                    <button type="button" class="close" data-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="row">
+                      <div class="col-md-4">
+                          <label>{{ translate('Current Coins')}}</label>
+                      </div>
+                      <div class="col-md-8">
+                          <input type="number" class="form-control mb-3" id="member_coin_balance" value="" readonly>
+                      </div>
+                  </div>
+                  <div class="row">
+                      <div class="col-md-4">
+                          <label>{{ translate('Update Type')}} <span class="text-danger">*</span></label>
+                      </div>
+                      <div class="col-md-8">
+                          <div class="mb-3">
+                              <select class="form-control selectpicker" data-minimum-results-for-search="Infinity" name="coin_option" data-live-search="true">
+                                <option value="added_by_admin">{{ translate('Add')}}</option>
+                                <option value="deducted_by_admin">{{ translate('Deduct')}}</option>
+                              </select>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="row">
+                      <div class="col-md-4">
+                          <label>{{ translate('Coins')}} <span class="text-danger">*</span></label>
+                      </div>
+                      <div class="col-md-8">
+                          <input type="number" lang="en" class="form-control mb-3" name="coin_amount" min="1" placeholder="{{ translate('Coins')}}" required>
+                      </div>
+                  </div>
+                  <p class="text-muted mb-0 fs-12">{{ translate('Coins are immediately visible in the member\'s app (Wallet → My Coins, express interest, gifts and chat).') }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">{{translate('Close')}}</button>
+                    <button type="submit" class="btn btn-primary">{{translate('Submit')}}</button>
                 </div>
             </form>
       	</div>
@@ -332,6 +384,12 @@
         $('.member_wallet_balance_modal').modal('show');
         $('#user_id_wallet_balance').val(id);
         $('#member_wallet_balance').val(balance);
+    }
+
+    function coin_balance_update(id, coins){
+        $('.member_coin_balance_modal').modal('show');
+        $('#user_id_coin_balance').val(id);
+        $('#member_coin_balance').val(coins);
     }
 
 </script>
