@@ -16,6 +16,7 @@ use App\Models\PaymentWebhookEvent;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\Api\V1\Payment\CustomCoinService;
 use Illuminate\Support\Str;
@@ -420,6 +421,67 @@ class PaymentService
 
             return $payment->fresh(['package', 'coupon']);
         });
+    }
+
+    /**
+     * Verify a real Stripe webhook and translate it into an internal event.
+     *
+     * The public endpoint used to trust any JSON body that carried a
+     * `payment_code` and `status: paid`, so any logged-in member could POST
+     * their own checkout's reference and activate a package for free. Stripe
+     * signs every delivery with `Stripe-Signature`, so the signature is now
+     * verified against the endpoint secret before anything is switched on.
+     *
+     * Activation does not depend on this route: the app polls
+     * [checkoutStatus], which confirms the charge directly against Stripe with
+     * the secret key. Set `STRIPE_WEBHOOK_SECRET` (admin setting or .env) to
+     * enable this fallback.
+     */
+    public function processStripeWebhook(Request $request): ?PackagePayment
+    {
+        $secret = $this->setting('STRIPE_WEBHOOK_SECRET');
+        if (blank($secret)) {
+            throw new ApiException('Stripe webhook is not configured.', 503, ApiErrorCode::ValidationFailed->value);
+        }
+
+        $payload = (string) $request->getContent();
+        $signature = (string) $request->header('Stripe-Signature', '');
+        if ($payload === '' || $signature === '') {
+            throw new ApiException('Missing Stripe signature.', 400, ApiErrorCode::ValidationFailed->value);
+        }
+
+        try {
+            $event = \Stripe\Webhook::constructEvent($payload, $signature, (string) $secret);
+        } catch (\Throwable $e) {
+            report($e);
+
+            throw new ApiException('Invalid Stripe webhook signature.', 400, ApiErrorCode::ValidationFailed->value);
+        }
+
+        $type = (string) ($event->type ?? '');
+        if (! in_array($type, [
+            'checkout.session.completed',
+            'checkout.session.async_payment_succeeded',
+            'checkout.session.async_payment_failed',
+            'checkout.session.expired',
+        ], true)) {
+            // Something we do not act on: acknowledge it instead of guessing.
+            return null;
+        }
+
+        $session = $event->data->object ?? null;
+        $metadata = $session ? (array) ($session->metadata ?? []) : [];
+        $gatewayReference = $metadata['gateway_reference'] ?? ($session->client_reference_id ?? null);
+        $paid = $type !== 'checkout.session.expired' && (($session->payment_status ?? null) === 'paid');
+
+        return $this->processWebhook(PaymentGateway::Stripe, [
+            'event_id' => (string) ($event->id ?? $gatewayReference ?? uniqid('stripe_', true)),
+            'event_type' => $type,
+            'payment_code' => $metadata['payment_code'] ?? null,
+            'gateway_reference' => $gatewayReference,
+            'status' => $paid ? 'paid' : 'failed',
+            'payload' => json_decode($payload, true) ?: [],
+        ]);
     }
 
     private function markPaid(PackagePayment $payment, array $details): PackagePayment
