@@ -1,6 +1,12 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Never serve dotfiles or dot-directories. The repo root doubles as the
+    # document root here, so without this an .env, an .sqlite file or a
+    # tool's scratch directory is downloadable verbatim. .well-known stays
+    # reachable because Let's Encrypt validation lives there.
+    RewriteRule "(^|/)\.(?!well-known)" - [F,L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

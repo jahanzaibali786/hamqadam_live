@@ -37,3 +37,10 @@ matrimonial_laravel.zip
 .env_live
 .env_live.bak.*
 .env.*.bak.*
+
+# local agent / tooling state (never deploy - was being served publicly)
+.freebuff/
+.devin/
+
+# scratch bundles built for manual copy-paste (never deploy)
+_call_bundle/

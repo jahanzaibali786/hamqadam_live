@@ -57,6 +57,10 @@ jobs:
             --exclude-glob "node_modules/**" \
             --exclude-glob ".env" \
             --exclude-glob ".env.*" \
+            --exclude-glob ".env_*" \
+            --exclude-glob ".freebuff/**" \
+            --exclude-glob ".devin/**" \
+            --exclude-glob "_call_bundle/**" \
             --exclude-glob "storage/logs/**" \
             --exclude-glob "storage/framework/cache/**" \
             --exclude-glob "storage/framework/sessions/**" \
