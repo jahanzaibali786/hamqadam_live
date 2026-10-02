@@ -70,6 +70,12 @@ echo 'time: ' . date('c') . "\n";
 echo 'php: ' . PHP_VERSION . "\n\n";
 
 // Check writable runtime directories before purging any caches.
+//
+// An unwritable directory is reported, not fatal: the app now falls back to
+// stores that do not need the filesystem (see AppServiceProvider), so the site
+// keeps serving while the host is still misconfigured. Bailing out here would
+// only hide the rest of this report — including the migration list.
+$unwritable = [];
 foreach ([
     'bootstrap/cache',
     'storage/framework/cache/data',
@@ -78,15 +84,21 @@ foreach ([
 ] as $relativeDirectory) {
     $directory = $root . '/' . $relativeDirectory;
     if (!is_dir($directory) && !@mkdir($directory, 0775, true) && !is_dir($directory)) {
-        http_response_code(500);
-        echo "Cannot create {$relativeDirectory}. Fix ownership/permissions for the PHP worker.\n";
-        exit;
+        $unwritable[] = $relativeDirectory;
+        continue;
     }
     if (!is_writable($directory)) {
-        http_response_code(500);
-        echo "Directory {$relativeDirectory} is not writable by the PHP worker.\n";
-        exit;
+        $unwritable[] = $relativeDirectory;
     }
+}
+
+if ($unwritable) {
+    echo "\n!! NOT WRITABLE by the PHP worker:\n";
+    foreach ($unwritable as $dir) {
+        echo "!!   {$dir}\n";
+    }
+    echo "!! Fix on the host:\n";
+    echo "!!   chown -R <php-user>:<php-user> storage bootstrap/cache && chmod -R 775 storage bootstrap/cache\n";
 }
 
 // 1. Purge compiled bootstrap caches ----------------------------------------
@@ -96,12 +108,32 @@ if (!is_dir($bootstrapCache)) {
     echo "created missing bootstrap/cache\n";
 }
 $purged = 0;
-foreach (glob($bootstrapCache . '/*.php') ?: [] as $file) {
-    if (@unlink($file)) {
-        $purged++;
+$skipped = [];
+if (!is_dir($bootstrapCache) || !is_writable($bootstrapCache)) {
+    // Deleting what we cannot rewrite would strand the site: PackageManifest
+    // and ProviderRepository both rebuild into this directory during bootstrap
+    // and throw when they cannot, so every later request 500s with no way back.
+    echo "bootstrap/cache is not writable — skipping the purge so the package\n";
+    echo "manifest survives. Fix the host permissions, then deploy again.\n";
+} else {
+    foreach (glob($bootstrapCache . '/*.php') ?: [] as $file) {
+        $name = basename($file);
+        // packages.php + services.php are the package manifest and the
+        // compiled provider list. They only need rebuilding after a composer
+        // change, and removing them is what turns a permissions problem into a
+        // permanent outage — so they are left alone.
+        if (in_array($name, ['packages.php', 'services.php'], true)) {
+            $skipped[] = $name;
+            continue;
+        }
+        if (@unlink($file)) {
+            $purged++;
+        }
     }
 }
-echo "bootstrap/cache purged: {$purged} file(s)\n";
+echo 'bootstrap/cache purged: ' . $purged . ' file(s)';
+echo $skipped ? ' (kept: ' . implode(', ', $skipped) . ')' : '';
+echo "\n";
 
 // 2. Purge framework views + data cache --------------------------------------
 $purged = 0;
