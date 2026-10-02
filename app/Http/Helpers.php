@@ -148,11 +148,36 @@ if (!function_exists('formatBytes')) {
 
 // Get settings value
 if (!function_exists('get_setting')) {
+    /**
+     * Read a row from the `settings` table.
+     *
+     * Settings are read on almost every request (AppServiceProvider::boot()
+     * reads the Pusher config through here), so this used to be a single
+     * point of failure: when the cache store could not be written the whole
+     * site answered 500, on every route, including ones that never touch
+     * settings.
+     *
+     * A cache miss is an optimisation, not a correctness requirement, so a
+     * failing cache now degrades to reading the table directly instead of
+     * throwing.
+     */
     function get_setting($key, $default = null)
     {
-        $settings = Cache::remember('settings', 86400, function () {
-            return Setting::all();
-        });
+        try {
+            $settings = Cache::remember('settings', 86400, function () {
+                return Setting::all();
+            });
+        } catch (\Throwable $e) {
+            // Reporting the failure logs to storage/logs, which is usually
+            // unwritable on the very hosts that break the cache — so this
+            // must not be allowed to throw either.
+            try {
+                report($e);
+            } catch (\Throwable) {
+            }
+
+            $settings = Setting::all();
+        }
 
         $setting = $settings->where('type', $key)->first();
 

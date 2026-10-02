@@ -13,7 +13,14 @@
  *   2. Clears storage/framework/views + cache compiled files
  *   3. Resets PHP opcache when available
  *   4. Warms the service container fresh
- *   5. HTTP health checks
+ *   5. Reports storage/ writability + pending migrations
+ *   6. HTTP health checks
+ *
+ * Migrations are NOT run by default, because an FTP mirror that only uploads
+ * code leaves the database behind and every new column is then a 500. Pass
+ * ?migrate=1 (or set AUTO_MIGRATE=1 in .env) to run `migrate --force` as part
+ * of the reset. The pending count is always printed so the deploy log shows
+ * it either way.
  *
  * Setup (one time):
  *   1. Put this file at the DOCROOT ROOT next to index.php (hamqadam.com/hardreset.php)
@@ -99,6 +106,31 @@ foreach ([
 }
 echo "framework views/cache purged: {$purged} file(s)\n";
 
+// 2b. Make sure the writable directories exist ------------------------------
+// A missing directory and a wrongly-owned one look identical from the app's
+// side: file_put_contents() fails with "Permission denied" either way.
+echo "\n== storage ==\n";
+foreach ([
+    'bootstrap/cache',
+    'storage/framework/cache/data',
+    'storage/framework/sessions',
+    'storage/framework/views',
+    'storage/logs',
+    'storage/app/public',
+] as $relative) {
+    $dir = $root . '/' . $relative;
+    if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+        echo str_pad($relative, 30) . ": COULD NOT CREATE\n";
+        continue;
+    }
+    echo str_pad($relative, 30) . ': ' . (is_writable($dir) ? 'writable' : 'NOT WRITABLE') . "\n";
+}
+if (!is_writable($root . '/storage/framework/cache/data')) {
+    echo "\n!! storage/ is not writable by PHP.\n";
+    echo "!! Every route that caches will 500 with 'file_put_contents(...): Permission denied'.\n";
+    echo "!! Fix on the host:  chown -R <php-user>:<php-user> storage bootstrap/cache && chmod -R 775 storage bootstrap/cache\n";
+}
+
 // 3. opcache reset -----------------------------------------------------------
 if (function_exists('opcache_reset')) {
     echo 'opcache: ' . (opcache_reset() ? 'reset' : 'reset FAILED') . "\n";
@@ -122,7 +154,48 @@ try {
     exit;
 }
 
-// 5. Health checks ------------------------------------------------------------
+// 5. Migrations --------------------------------------------------------------
+// The FTP deploy uploads code but never touches the database, so code that
+// needs a new column/table is live before the schema is. Report the count
+// every time; only apply when asked.
+echo "\n== migrations ==\n";
+$shouldMigrate = ($_GET['migrate'] ?? '') === '1'
+    || hardreset_env('AUTO_MIGRATE') === '1';
+
+try {
+    require $root . '/vendor/autoload.php';
+    $app = require $root . '/bootstrap/app.php';
+    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+    $kernel->bootstrap();
+
+    $migrator = $app->make(Illuminate\Database\Migrations\Migrator::class);
+    $pending = array_keys($migrator->getMigrationFiles(
+        $app->databasePath('migrations')
+    ));
+    $ran = $migrator->getRepository()->getRan();
+
+    $pending = array_values(array_diff($pending, $ran));
+
+    echo 'pending: ' . count($pending) . "\n";
+    foreach (array_slice($pending, 0, 40) as $migration) {
+        echo "  - {$migration}\n";
+    }
+    if (count($pending) > 40) {
+        echo '  ... and ' . (count($pending) - 40) . " more\n";
+    }
+
+    if ($shouldMigrate && $pending) {
+        echo "\nrunning migrate --force ...\n";
+        $kernel->call('migrate', ['--force' => true, '--no-interaction' => true]);
+        echo trim($kernel->output()) . "\n";
+    } elseif ($pending) {
+        echo "(not applied — re-call with ?migrate=1)\n";
+    }
+} catch (Throwable $e) {
+    echo 'MIGRATION CHECK FAILED: ' . get_class($e) . ': ' . $e->getMessage() . "\n";
+}
+
+// 6. Health checks ------------------------------------------------------------
 echo "\n== health checks (HTTP) ==\n";
 $checks = [
     'web home'  => 'https://hamqadam.com/',
