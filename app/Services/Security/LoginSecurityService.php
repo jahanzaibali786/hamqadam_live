@@ -72,7 +72,7 @@ class LoginSecurityService
         }
 
         $unlockAt = $lastFailure->copy()->addMinutes(self::LOCKOUT_MINUTES);
-        return $unlockAt->isFuture() ? max(1, now()->diffInSeconds($unlockAt)) : 0;
+        return $unlockAt->isFuture() ? max(1, (int) ceil(now()->diffInSeconds($unlockAt))) : 0;
     }
 
     public function recordFailure(?User $user, string $identifier, ?Request $request, string $channel, string $reason): void
