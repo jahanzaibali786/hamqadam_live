@@ -202,7 +202,7 @@ Route::group(['middleware' => ['member', 'verified', 'manual.review']], function
         Route::post('/guardian-mode/toggle', 'toggle')->name('guardian_mode.toggle');
         Route::post('/guardian-mode/invitations', 'storeInvitation')->middleware('throttle:10,1')->name('guardian_mode.invitations.store');
         Route::post('/guardian-mode/invitations/{invitation}/revoke', 'revokeInvitation')->whereNumber('invitation')->name('guardian_mode.invitations.revoke');
-        Route::post('/guardian-mode/guardians/{link}/{action}', 'lifecycle')->whereNumber('link')->whereIn('action', ['pause', 'resume', 'revoke'])->name('guardian_mode.lifecycle');
+        Route::post('/guardian-mode/guardians/{link}/{action}', 'lifecycle')->whereNumber('link')->whereIn('action', ['pause', 'resume', 'revoke', 'grant', 'restore'])->name('guardian_mode.lifecycle');
         Route::get('/guardian-mode/guardians/{link}/permissions', 'editPermissions')->whereNumber('link')->name('guardian_mode.permissions.edit');
         Route::post('/guardian-mode/guardians/{link}/permissions', 'updatePermissions')->whereNumber('link')->name('guardian_mode.permissions.update');
         Route::get('/guardian-mode/activity', 'activity')->name('guardian_mode.activity');

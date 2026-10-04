@@ -344,14 +344,17 @@ class GuardianModeService
 
         GuardianActivityLog::record($link->id, $link->guardian_user_id, $profile->id, 'guardian_granted', FamilyGuardianLink::class, $link->id);
 
-        NotificationHelper::guardianEvent(
-            User::find($link->guardian_user_id),
-            'guardian_granted',
-            'Guardian Access Granted',
-            'Your guardian access was granted again by the member.',
-            $profile->id,
-            $link->id,
-        );
+        $guardianUser = User::find($link->guardian_user_id);
+        if ($guardianUser) {
+            NotificationHelper::guardianEvent(
+                $guardianUser,
+                'guardian_granted',
+                'Guardian Access Granted',
+                'Your guardian access was granted again by the member.',
+                $profile->id,
+                $link->id,
+            );
+        }
 
         return $link;
     }
