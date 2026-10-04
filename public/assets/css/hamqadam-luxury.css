@@ -1895,6 +1895,12 @@
   border-color:#dca9bc;
   box-shadow:0 13px 29px rgba(98,31,56,.13);
 }
+.hq-design-plan-card.is-current {
+  transform:translateY(-7px);
+  border: 2px solid #28a745;
+  background: linear-gradient(180deg, #ffffff 0%, #f6fcf8 100%);
+  box-shadow: 0 14px 32px rgba(40, 167, 69, 0.22);
+}
 .hq-plan-ribbon {
   position:absolute;
   top:-13px;
@@ -1912,6 +1918,10 @@
   text-align:center;
   text-transform:uppercase;
   box-shadow:0 5px 12px rgba(91,28,51,.18);
+}
+.hq-plan-ribbon.is-current-ribbon {
+  background: #28a745;
+  box-shadow: 0 5px 14px rgba(40, 167, 69, 0.35);
 }
 .hq-plan-topline {
   display:flex;
@@ -1935,6 +1945,11 @@
   color:#9d4163;
   font-size:7px;
   font-weight:700;
+}
+.hq-plan-topline > b.is-current-badge {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }
 .hq-design-plan-card h3 {
   min-height:42px;

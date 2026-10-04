@@ -2,6 +2,23 @@
 @section('content')
 @php
     $registrationPackage = \App\Support\RegistrationReward::registrationPackage();
+    $effectiveUser = Auth::user();
+    $effectiveMember = $effectiveUser?->member;
+
+    if ($effectiveUser) {
+        $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $effectiveUser->id)
+            ->where('status', 'approved')
+            ->whereNull('revoked_at')
+            ->whereNull('paused_at')
+            ->first();
+        if ($guardianLink && ($effectiveMember == null || empty($effectiveMember->birthday))) {
+            $effectiveMember = \App\Models\User::find($guardianLink->profile_user_id)?->member ?? $effectiveMember;
+        }
+    }
+
+    $currentMemberPackageId = (int) ($effectiveMember?->current_package_id ?? 0);
+    $packageValidity = $effectiveMember?->package_validity;
+    $isPackageExpired = !empty($packageValidity) && \Carbon\Carbon::parse($packageValidity)->endOfDay()->lt(now());
 @endphp
 <section class="hq-reference-page-hero hq-package-reference-hero text-center">
     <div class="container">
@@ -30,33 +47,20 @@
         <div class="hq-plan-grid">
             @foreach ($packages as $key => $package)
                 @php
-                    $latestPaidPayment = null;
-                    $packageExpiryDate = null;
-                    $isPackageActive = false;
                     $isCurrentPackage = false;
+                    $packageExpiryText = null;
 
-                    if (Auth::check()) {
-                        $latestPaidPayment = Auth::user()->payckage_payments()
-                            ->where('package_id', $package->id)
-                            ->where('payment_status', 'Paid')
-                            ->latest('id')
-                            ->first();
-
-                        if ($latestPaidPayment) {
-                            $packageExpiryDate = $latestPaidPayment->subscription_ends_at
-                                ? \Carbon\Carbon::parse($latestPaidPayment->subscription_ends_at)
-                                : \Carbon\Carbon::parse($latestPaidPayment->created_at)->addDays((int) $package->validity);
-                            $isPackageActive = $packageExpiryDate->copy()->endOfDay()->gte(now());
+                    if ($effectiveMember && $currentMemberPackageId === (int) $package->id && !$isPackageExpired) {
+                        $isCurrentPackage = true;
+                        if (!empty($packageValidity)) {
+                            $packageExpiryText = \Carbon\Carbon::parse($packageValidity)->format('d M Y');
                         }
-
-                        $isCurrentPackage = $isPackageActive
-                            && ((int) (Auth::user()->member?->current_package_id ?? 0) === (int) $package->id);
                     }
 
                     $recommendedPackage = Auth::check()
-                        ? \App\Support\RegistrationReward::nextRecommendedPackage(Auth::user()->member?->package)
+                        ? \App\Support\RegistrationReward::nextRecommendedPackage($effectiveMember?->package)
                         : null;
-                    $isRecommended = ($recommendedPackage && $recommendedPackage->id == $package->id) || $loop->iteration === 3;
+                    $isRecommended = !$isCurrentPackage && (($recommendedPackage && $recommendedPackage->id == $package->id) || $loop->iteration === 3);
                     $featureFlags = (array) ($package->feature_flags ?? []);
                     $tierLabels = [
                         translate('Discovery Tier'),
@@ -67,15 +71,17 @@
                     $tierLabel = $tierLabels[$loop->index] ?? translate('Matrimonial Plan');
                 @endphp
 
-                <article class="hq-design-plan-card {{ $isRecommended ? 'is-recommended' : '' }} {{ $isCurrentPackage ? 'is-current' : '' }}">
-                    @if ($isRecommended)
+                <article class="hq-design-plan-card {{ $isCurrentPackage ? 'is-current' : ($isRecommended ? 'is-recommended' : '') }}">
+                    @if ($isCurrentPackage)
+                        <div class="hq-plan-ribbon is-current-ribbon"><i class="las la-check-circle"></i> {{ translate('Currently Active Plan') }}</div>
+                    @elseif ($isRecommended)
                         <div class="hq-plan-ribbon"><i class="las la-star"></i> {{ translate('Most Auspicious & Popular') }}</div>
                     @endif
 
                     <div class="hq-plan-topline">
                         <span>{{ $tierLabel }}</span>
                         @if($isCurrentPackage)
-                            <b>{{ translate('Current') }}</b>
+                            <b class="is-current-badge"><i class="las la-check-circle"></i> {{ translate('Activated') }}</b>
                         @elseif($isRecommended)
                             <b>{{ translate('Popular') }}</b>
                         @elseif($loop->first)
@@ -127,17 +133,20 @@
 
                     <div class="hq-plan-action">
                         @if(Auth::check() && $isCurrentPackage)
-                            <button type="button" class="btn btn-soft-success btn-block" disabled>{{ translate('Current Plan') }}</button>
-                        @elseif ($package->id != 1 && Auth::check() && $isPackageActive)
-                            <button type="button" class="btn btn-soft-success btn-block" disabled>{{ translate('Activated') }}</button>
-                        @elseif ($package->id != 1 && Auth::check())
-                            <a href="{{ route('package_payment_methods', encrypt($package->id)) }}" class="btn btn-primary btn-block">{{ translate('Purchase') }} {{ $package->name }}</a>
-                        @elseif ($package->id != 1)
+                            <button type="button" class="btn btn-success btn-block" disabled style="background-color: #28a745; border-color: #28a745; color: #fff; font-weight: 700; opacity: 1; cursor: default;">
+                                <i class="las la-check-circle mr-1"></i> {{ translate('Currently Activated') }}
+                                @if($packageExpiryText)
+                                    <span class="d-block font-weight-normal" style="font-size: 11px; opacity: 0.9;">{{ translate('Valid until') }}: {{ $packageExpiryText }}</span>
+                                @endif
+                            </button>
+                        @elseif ($package->id != 1 && Auth::check() && (float)$package->price > 0)
+                            <a href="{{ route('package_payment_methods', encrypt($package->id)) }}" class="btn btn-primary btn-block">{{ translate('Upgrade to') }} {{ $package->name }}</a>
+                        @elseif ($package->id != 1 && (float)$package->price > 0)
                             <button type="button" onclick="loginModal()" class="btn btn-primary btn-block">{{ translate('Purchase') }} {{ $package->name }}</button>
                         @elseif(Auth::check())
-                            <button type="button" class="btn btn-soft-primary btn-block" disabled>{{ translate('Current Plan / Get Started') }}</button>
+                            <button type="button" class="btn btn-soft-primary btn-block" disabled>{{ translate('Base Plan') }}</button>
                         @else
-                            <a href="{{ route('register') }}" class="btn btn-soft-primary btn-block">{{ translate('Current Plan / Get Started') }}</a>
+                            <a href="{{ route('register') }}" class="btn btn-soft-primary btn-block">{{ translate('Get Started') }}</a>
                         @endif
                     </div>
                 </article>
