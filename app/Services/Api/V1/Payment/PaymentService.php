@@ -722,11 +722,11 @@ class PaymentService
             throw new ApiException('Coupon is invalid.', 422, ApiErrorCode::ValidationFailed->value);
         }
 
-        if ($coupon->starts_at && $coupon->starts_at->isFuture()) {
+        if ($coupon->isNotStartedYet()) {
             throw new ApiException('Coupon is not active yet.', 422, ApiErrorCode::ValidationFailed->value);
         }
 
-        if ($coupon->expires_at && $coupon->expires_at->isPast()) {
+        if ($coupon->hasExpired()) {
             throw new ApiException('Coupon has expired.', 422, ApiErrorCode::ValidationFailed->value);
         }
 

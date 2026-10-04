@@ -263,10 +263,10 @@ class PackagePaymentController extends Controller
             if (! $coupon || ! $coupon->active) {
                 throw new \RuntimeException(translate('Promo code is invalid.'));
             }
-            if ($coupon->starts_at?->isFuture()) {
+            if ($coupon->isNotStartedYet()) {
                 throw new \RuntimeException(translate('Promo code is not active yet.'));
             }
-            if ($coupon->expires_at?->isPast()) {
+            if ($coupon->hasExpired()) {
                 throw new \RuntimeException(translate('Promo code has expired.'));
             }
             if ($coupon->usage_limit !== null && $coupon->used_count >= $coupon->usage_limit) {
