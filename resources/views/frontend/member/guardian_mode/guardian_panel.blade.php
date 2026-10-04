@@ -33,6 +33,20 @@
             </div>
 
             <div class="card shadow-sm mt-4">
+                <div class="card-header"><h2 class="fs-16 mb-0">{{ translate('Accept Invitation Code') }}</h2></div>
+                <div class="card-body">
+                    <p class="fs-12 text-muted mb-2">{{ translate('If a family member sent you an invitation code via email or SMS, enter it below to connect:') }}</p>
+                    <form action="{{ route('guardian_mode.web_accept_form') }}" method="POST">
+                        @csrf
+                        <div class="input-group">
+                            <input type="text" name="token" class="form-control form-control-sm" placeholder="{{ translate('Enter invitation token/code') }}" required>
+                            <button class="btn btn-sm btn-primary" type="submit">{{ translate('Accept') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-4">
                 <div class="card-header"><h2 class="fs-16 mb-0">{{ translate('Summary') }}</h2></div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between"><span>{{ translate('Pending approvals') }}</span><strong>{{ $pendingApprovals }}</strong></div>

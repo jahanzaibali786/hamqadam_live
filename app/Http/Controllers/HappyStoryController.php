@@ -58,6 +58,10 @@ class HappyStoryController extends Controller
      */
     public function create()
     {
+        if (Auth::user()->user_type == 'admin' || Auth::user()->user_type == 'staff') {
+            $users = \App\Models\User::where('user_type', 'member')->where('approved', 1)->latest()->get();
+            return view('admin.happy_stories.create', compact('users'));
+        }
         return view('frontend.member.happy_story.index');
     }
 
@@ -69,29 +73,34 @@ class HappyStoryController extends Controller
      */
     public function store(Request $request)
     {
-      $rules      = $this->rules;
-      $messages   = $this->messages;
-      $validator  = Validator::make($request->all(), $rules, $messages);
-      if ($validator->fails()) {
-          flash(translate('Sorry! Something went wrong'))->error();
-          return Redirect::back()->withErrors($validator);
-      }
+        $rules      = $this->rules;
+        $messages   = $this->messages;
+        $validator  = Validator::make($request->all(), $rules, $messages);
+        if ($validator->fails()) {
+            flash(translate('Sorry! Something went wrong'))->error();
+            return Redirect::back()->withErrors($validator)->withInput();
+        }
 
-      $story                  = new HappyStory;
-      $story->user_id         = Auth::user()->id;
-      $story->title           = $request->title;
-      $story->details         = $request->details;
-      $story->partner_name    = $request->partner_name;
-      $story->photos          = $request->photos;
-      $story->video_provider  = $request->video_provider;
-      $story->video_link      = $request->video_link;
-      if($story->save()){
-          flash(translate('Story uploaded successfully'))->success();
-          return redirect()->route('happy_story.member');
-      } else {
-          flash(translate('Sorry! Something went wrong.'))->error();
-          return back();
-      }
+        $story                  = new HappyStory;
+        $story->user_id         = $request->filled('user_id') ? $request->user_id : Auth::user()->id;
+        $story->title           = $request->title;
+        $story->details         = $request->details;
+        $story->partner_name    = $request->partner_name;
+        $story->photos          = $request->photos;
+        $story->video_provider  = $request->video_provider;
+        $story->video_link      = $request->video_link;
+        $story->approved        = $request->has('approved') ? (int) $request->approved : ((Auth::user()->user_type == 'admin' || Auth::user()->user_type == 'staff') ? 1 : 0);
+
+        if($story->save()){
+            flash(translate('Happy Story saved successfully'))->success();
+            if (Auth::user()->user_type == 'admin' || Auth::user()->user_type == 'staff') {
+                return redirect()->route('happy-story.index');
+            }
+            return redirect()->route('happy_story.member');
+        } else {
+            flash(translate('Sorry! Something went wrong.'))->error();
+            return back()->withInput();
+        }
     }
 
     /**
@@ -168,6 +177,13 @@ class HappyStoryController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $happy_story = HappyStory::findOrFail(decrypt($id));
+        if (HappyStory::destroy($happy_story->id)) {
+            flash(translate('Happy Story has been deleted successfully'))->success();
+            return redirect()->route('happy-story.index');
+        } else {
+            flash(translate('Something went wrong'))->error();
+            return back();
+        }
     }
 }

@@ -129,6 +129,18 @@ class GuardianModeService
             );
         }
 
+        $targetEmail = filter_var($contact, FILTER_VALIDATE_EMAIL) ? $contact : ($guardian?->email ?? null);
+        if ($targetEmail) {
+            \App\Utility\EmailUtility::guardian_invitation_email(
+                $profile,
+                $targetEmail,
+                $data['relationship'] ?? 'Guardian',
+                $invitation->token,
+                $data['guardian_role'] ?? 'Guardian',
+                (bool) ($data['is_wali'] ?? false)
+            );
+        }
+
         return $invitation;
     }
 

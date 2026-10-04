@@ -6,12 +6,18 @@
         <div class="col text-center text-md-left">
             <h5 class="mb-md-0 h6">{{ translate('Happy Stories') }}</h5>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <form class="" id="sort_happy_story" action="" method="GET">
                 <div class="input-group input-group-sm">
                     <input type="text" class="form-control" id="search" name="search"@isset($sort_search) value="{{ $sort_search }}" @endisset placeholder="{{ translate('Type name & Enter') }}">
                 </div>
             </form>
+        </div>
+        <div class="col-md-3 text-md-right">
+            <a href="{{ route('happy-story.create') }}" class="btn btn-primary btn-sm">
+                <i class="las la-plus"></i>
+                <span>{{ translate('Add New Happy Story') }}</span>
+            </a>
         </div>
     </div>
     <div class="card-body">
@@ -30,7 +36,7 @@
                 @foreach($happy_stories as $key => $happy_story)
                     <tr>
                         <td>{{ ($key+1) + ($happy_stories->currentPage() - 1)*$happy_stories->perPage() }}</td>
-                        <td>{{ $happy_story->user->first_name.' '.$happy_story->user->last_name }}</td>
+                        <td>{{ $happy_story->user ? $happy_story->user->first_name.' '.$happy_story->user->last_name : translate('Admin Post') }}</td>
                         <td>{{ $happy_story->partner_name }}</td>
                         <td>{{ $happy_story->created_at}}</td>
                         <td>
@@ -51,6 +57,9 @@
                                     <i class="las la-eye"></i>
                                 </a>
                             @endcan
+                            <a href="javascript:void(0);" onclick="confirm_modal('{{ route('happy-story.destroy', encrypt($happy_story->id)) }}');" class="btn btn-soft-danger btn-icon btn-circle btn-sm confirm-delete" title="{{ translate('Delete') }}">
+                                <i class="las la-trash"></i>
+                            </a>
                         </td>
                     </tr>
                 @endforeach
@@ -62,6 +71,7 @@
     </div>
 </div>
 
+@include('modals.delete_modal')
 @endsection
 
 

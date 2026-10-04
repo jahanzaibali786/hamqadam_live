@@ -336,4 +336,44 @@ class GuardianModeWebController extends Controller
             'permissionCatalog' => GuardianPermission::catalog(),
         ]);
     }
+
+    /** GET /guardian-mode/accept/{token} — accept an invitation via direct link. */
+    public function acceptInvitationByToken(Request $request, string $token)
+    {
+        if (! Auth::check()) {
+            session(['pending_guardian_token' => $token]);
+            flash(translate('Please log in or register to accept the guardian invitation.'))->info();
+
+            return redirect()->route('user.login');
+        }
+
+        try {
+            $this->guardianMode->acceptInvitation(Auth::user(), $token);
+            flash(translate('Guardian invitation accepted successfully! Welcome to your Guardian Panel.'))->success();
+
+            return redirect()->route('guardian_panel.index');
+        } catch (\Throwable $e) {
+            flash($e->getMessage())->error();
+
+            return redirect()->route('guardian_panel.index');
+        }
+    }
+
+    /** POST /guardian-mode/accept — accept an invitation code via web form. */
+    public function acceptInvitationForm(Request $request)
+    {
+        $request->validate([
+            'token' => ['required', 'string'],
+        ]);
+
+        try {
+            $this->guardianMode->acceptInvitation(Auth::user(), trim($request->input('token')));
+            flash(translate('Guardian invitation accepted successfully!'))->success();
+        } catch (\Throwable $e) {
+            flash($e->getMessage())->error();
+        }
+
+        return redirect()->route('guardian_panel.index');
+    }
 }
+

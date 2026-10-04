@@ -191,6 +191,8 @@ Route::post('/registration/sect-main/get-by-religion', [App\Http\Controllers\Sec
 Route::post('/registration/school-of-thought/get-by-sect', [App\Http\Controllers\SchoolOfThoughtController::class, 'get_school_of_thought_by_sect'])->name('registration.school_of_thought.get_by_sect');
 Route::post('/registration/traditions/get-by-school-of-thought', [App\Http\Controllers\TraditionController::class, 'get_traditions_by_school_of_thought'])->name('registration.traditions.get_by_school_of_thought');
 
+Route::get('/guardian-mode/accept/{token}', [\App\Http\Controllers\GuardianModeWebController::class, 'acceptInvitationByToken'])->name('guardian_mode.web_accept_token');
+
 Route::group(['middleware' => ['member', 'verified', 'manual.review']], function () {
     Route::get('/member/ai-dashboard', [V1PlatformConsoleController::class, 'member'])->name('member.v1_dashboard');
 
@@ -207,6 +209,7 @@ Route::group(['middleware' => ['member', 'verified', 'manual.review']], function
         Route::get('/guardian-mode/introductions', 'introductions')->name('guardian_mode.introductions');
         Route::post('/guardian-mode/introductions', 'storeIntroduction')->name('guardian_mode.introductions.store');
         Route::post('/guardian-mode/introductions/{introduction}/respond', 'respondIntroduction')->whereNumber('introduction')->name('guardian_mode.introductions.respond');
+        Route::post('/guardian-mode/accept', 'acceptInvitationForm')->name('guardian_mode.web_accept_form');
 
         // Guardian's own panel
         Route::get('/guardian-panel', 'guardianPanel')->name('guardian_panel.index');
@@ -503,7 +506,12 @@ require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/otp.php';
 require __DIR__.'/referral.php';
-require __DIR__.'/support_tickets.php';
+// Support routes are deployed separately on some older FTP mirrors. Do not
+// take down the entire application when that optional file is temporarily absent.
+$supportRoutesFile = __DIR__.'/support_tickets.php';
+if (is_file($supportRoutesFile)) {
+    require $supportRoutesFile;
+}
 
 
 
@@ -522,4 +530,3 @@ Route::get('/api-docs', function () {
 
 //Custom page
 Route::get('/{slug}', [PageController::class, 'show_custom_page'])->name('custom-pages.show_custom_page');
-
