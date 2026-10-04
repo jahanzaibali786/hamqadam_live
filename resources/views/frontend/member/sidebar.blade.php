@@ -3,9 +3,15 @@
         ->where('guardian_user_id', Auth::id())
         ->where('status', 'approved')
         ->whereNull('revoked_at')
+        ->whereNull('paused_at')
         ->get();
-    $isDedicatedGuardian = $guardianLinks->isNotEmpty() && (Auth::user()->member == null || empty(Auth::user()->member->birthday));
+    $isDedicatedGuardian = \App\Models\FamilyGuardianLink::where('guardian_user_id', Auth::id())
+        ->where('status', 'approved')
+        ->whereNull('revoked_at')
+        ->exists() && (Auth::user()->member == null || empty(Auth::user()->member->birthday));
     $firstManagedLink = $guardianLinks->first();
+    $isPausedGuardian = $isDedicatedGuardian && $guardianLinks->isEmpty();
+    $pausedLink = $isPausedGuardian ? \App\Models\FamilyGuardianLink::with(['profile.member'])->where('guardian_user_id', Auth::id())->where('status', 'approved')->whereNull('revoked_at')->whereNotNull('paused_at')->first() : null;
 
     $guardianPermissions = [];
     if ($firstManagedLink) {
@@ -41,18 +47,31 @@
             </span>
             <h4 class="h5 fw-600 mb-1">{{ Auth::user()->first_name . ' ' . Auth::user()->last_name }}</h4>
             @if ($isDedicatedGuardian)
-                <span class="badge badge-inline badge-primary">{{ translate('Wali / Guardian') }}</span>
-                @if ($firstManagedLink && $firstManagedLink->profile)
-                    <div class="bg-soft-primary p-2 rounded text-left mt-3">
-                        <span class="fs-10 text-muted text-uppercase fw-700 d-block">{{ translate('Assisting Member') }}</span>
-                        <strong class="fs-13 d-block text-primary text-truncate">{{ $firstManagedLink->profile->first_name }} {{ $firstManagedLink->profile->last_name }}</strong>
-                        <div class="fs-11 text-muted mt-1">
-                            <i class="las la-user-tag"></i> {{ $firstManagedLink->relationship }} · {{ translate($firstManagedLink->guardian_role ?? 'Guardian') }}
+                @if ($isPausedGuardian)
+                    <span class="badge badge-inline badge-warning">{{ translate('Access Paused') }}</span>
+                    @if ($pausedLink && $pausedLink->profile)
+                        <div class="bg-soft-warning p-2 rounded text-left mt-3">
+                            <span class="fs-10 text-muted text-uppercase fw-700 d-block">{{ translate('Assisting Member') }}</span>
+                            <strong class="fs-13 d-block text-dark text-truncate">{{ $pausedLink->profile->first_name }} {{ $pausedLink->profile->last_name }}</strong>
+                            <div class="fs-11 text-muted mt-1">
+                                <i class="las la-pause-circle text-warning"></i> {{ translate('Access paused by member') }}
+                            </div>
                         </div>
-                        <div class="fs-11 text-muted mt-1">
-                            <i class="las la-coins text-warning"></i> {{ $firstManagedLink->profile->member?->package?->name ?? translate('Free') }} · <strong>{{ $firstManagedLink->profile->member?->remaining_interest ?? 0 }} {{ translate('Coins') }}</strong>
+                    @endif
+                @else
+                    <span class="badge badge-inline badge-primary">{{ translate('Wali / Guardian') }}</span>
+                    @if ($firstManagedLink && $firstManagedLink->profile)
+                        <div class="bg-soft-primary p-2 rounded text-left mt-3">
+                            <span class="fs-10 text-muted text-uppercase fw-700 d-block">{{ translate('Assisting Member') }}</span>
+                            <strong class="fs-13 d-block text-primary text-truncate">{{ $firstManagedLink->profile->first_name }} {{ $firstManagedLink->profile->last_name }}</strong>
+                            <div class="fs-11 text-muted mt-1">
+                                <i class="las la-user-tag"></i> {{ $firstManagedLink->relationship }} · {{ translate($firstManagedLink->guardian_role ?? 'Guardian') }}
+                            </div>
+                            <div class="fs-11 text-muted mt-1">
+                                <i class="las la-coins text-warning"></i> {{ $firstManagedLink->profile->member?->package?->name ?? translate('Free') }} · <strong>{{ $firstManagedLink->profile->member?->remaining_interest ?? 0 }} {{ translate('Coins') }}</strong>
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 @endif
             @else
                 <div class="mt-2">

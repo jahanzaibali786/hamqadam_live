@@ -46,6 +46,13 @@
                                         @csrf
                                         <button class="btn btn-sm btn-outline-danger">{{ translate('Revoke') }}</button>
                                     </form>
+                                @elseif ($link->status === 'revoked' || $link->revoked_at)
+                                    <form method="POST" action="{{ route('guardian_mode.lifecycle', [$link->id, 'grant']) }}" onsubmit="return confirm('{{ translate('Grant guardian access again to this family member?') }}')">
+                                        @csrf
+                                        <button class="btn btn-sm btn-outline-success">
+                                            <i class="las la-check-circle"></i> {{ translate('Grant') }}
+                                        </button>
+                                    </form>
                                 @endif
                             </div>
                         </div>

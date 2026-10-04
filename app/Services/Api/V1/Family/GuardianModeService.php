@@ -322,6 +322,40 @@ class GuardianModeService
         );
     }
 
+    /**
+     * Re-grant access to a previously revoked guardian link.
+     */
+    public function grant(User $profile, int $linkId): FamilyGuardianLink
+    {
+        $link = FamilyGuardianLink::where('profile_user_id', $profile->id)->findOrFail($linkId);
+
+        $link->forceFill([
+            'status' => 'approved',
+            'approved_at' => now(),
+            'revoked_at' => null,
+            'paused_at' => null,
+        ])->save();
+
+        if (empty($link->permissions)) {
+            $this->auth->syncPermissions($link, GuardianPermission::preset('view_only'), $profile->id);
+        } else {
+            $this->auth->syncPermissions($link, (array) $link->permissions, $profile->id);
+        }
+
+        GuardianActivityLog::record($link->id, $link->guardian_user_id, $profile->id, 'guardian_granted', FamilyGuardianLink::class, $link->id);
+
+        NotificationHelper::guardianEvent(
+            User::find($link->guardian_user_id),
+            'guardian_granted',
+            'Guardian Access Granted',
+            'Your guardian access was granted again by the member.',
+            $profile->id,
+            $link->id,
+        );
+
+        return $link;
+    }
+
     // ── Guardian match-review actions ───────────────────────────────────────
 
     public function shortlistMatch(User $guardian, int $profileUserId, int $targetUserId): GuardianFeedback

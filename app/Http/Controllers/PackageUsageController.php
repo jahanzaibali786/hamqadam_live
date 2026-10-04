@@ -13,6 +13,7 @@ class PackageUsageController extends Controller
         $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $userId)
             ->where('status', 'approved')
             ->whereNull('revoked_at')
+            ->whereNull('paused_at')
             ->first();
         if ($guardianLink && (auth()->user()->member == null || empty(auth()->user()->member->birthday))) {
             $userId = (int) $guardianLink->profile_user_id;

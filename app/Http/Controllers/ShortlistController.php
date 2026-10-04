@@ -20,6 +20,7 @@ class ShortlistController extends Controller
         $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $userId)
             ->where('status', 'approved')
             ->whereNull('revoked_at')
+            ->whereNull('paused_at')
             ->first();
         if ($guardianLink && (Auth::user()->member == null || empty(Auth::user()->member->birthday))) {
             return (int) $guardianLink->profile_user_id;

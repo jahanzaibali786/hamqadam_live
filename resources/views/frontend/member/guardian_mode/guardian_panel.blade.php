@@ -94,10 +94,33 @@
                             </div>
                         </div>
                     @empty
-                        <div class="text-center py-4">
-                            <i class="las la-user-shield la-3x text-muted mb-2"></i>
-                            <p class="text-muted mb-0">{{ translate('No approved guardian links yet. When a member invites you, your assisted profile will appear here.') }}</p>
-                        </div>
+                        @if(isset($paused) && $paused->isNotEmpty())
+                            <div class="py-2">
+                                <div class="alert alert-soft-warning border-0 p-3 rounded text-start mb-0">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="las la-pause-circle text-warning fs-24 me-2"></i>
+                                        <h3 class="fs-15 fw-700 text-dark mb-0">{{ translate('Guardian Access Temporarily Paused') }}</h3>
+                                    </div>
+                                    <p class="fs-13 text-muted mb-3">
+                                        {{ translate('Your family member has temporarily paused guardian access. Match reviews and delegated actions are suspended until they resume your access.') }}
+                                    </p>
+                                    @foreach($paused as $pLink)
+                                        <div class="bg-white p-2 rounded border d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <strong>{{ $pLink->profile?->first_name }} {{ $pLink->profile?->last_name }}</strong>
+                                                <span class="badge badge-inline badge-warning ms-1">{{ translate('Paused by Member') }}</span>
+                                            </div>
+                                            <span class="fs-12 text-muted">{{ $pLink->relationship }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @else
+                            <div class="text-center py-4">
+                                <i class="las la-user-shield la-3x text-muted mb-2"></i>
+                                <p class="text-muted mb-0">{{ translate('No approved guardian links yet. When a member invites you, your assisted profile will appear here.') }}</p>
+                            </div>
+                        @endif
                     @endforelse
                 </div>
             </div>

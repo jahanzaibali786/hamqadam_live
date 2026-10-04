@@ -113,10 +113,16 @@ class GuardianModeWebController extends Controller
         return back();
     }
 
-    /** POST /guardian-mode/guardians/{link}/pause|resume|revoke — lifecycle. */
+    /** POST /guardian-mode/guardians/{link}/pause|resume|revoke|grant — lifecycle. */
     public function lifecycle(Request $request, int $link, string $action)
     {
-        $map = ['pause' => 'pause', 'resume' => 'resume', 'revoke' => 'revoke'];
+        $map = [
+            'pause' => 'pause',
+            'resume' => 'resume',
+            'revoke' => 'revoke',
+            'grant' => 'grant',
+            'restore' => 'grant',
+        ];
 
         if (! isset($map[$action])) {
             abort(404);
@@ -130,7 +136,15 @@ class GuardianModeWebController extends Controller
             return back();
         }
 
-        flash(translate('Guardian ' . $action . ' successful.'))->success();
+        $msgAction = match ($action) {
+            'grant', 'restore' => translate('Guardian access granted again.'),
+            'pause' => translate('Guardian access paused.'),
+            'resume' => translate('Guardian access resumed.'),
+            'revoke' => translate('Guardian access revoked.'),
+            default => translate('Guardian updated.'),
+        };
+
+        flash($msgAction)->success();
 
         return back();
     }
@@ -245,17 +259,20 @@ class GuardianModeWebController extends Controller
     {
         $user = Auth::user();
 
-        $managed = FamilyGuardianLink::with(['profile.member', 'profile'])
+        $allLinks = FamilyGuardianLink::with(['profile.member', 'profile'])
             ->where('guardian_user_id', $user->id)
             ->where('status', 'approved')
             ->whereNull('revoked_at')
-            ->get()
-            ->filter(fn (FamilyGuardianLink $link) => $link->paused_at === null);
+            ->get();
+
+        $managed = $allLinks->filter(fn (FamilyGuardianLink $link) => $link->paused_at === null);
+        $paused = $allLinks->filter(fn (FamilyGuardianLink $link) => $link->paused_at !== null);
 
         $activeIds = $managed->pluck('profile_user_id');
 
         return view('frontend.member.guardian_mode.guardian_panel', [
             'managed' => $managed,
+            'paused' => $paused,
             'pendingApprovals' => \App\Models\FamilyApprovalRequest::where('guardian_user_id', $user->id)
                 ->whereIn('profile_user_id', $activeIds)
                 ->where('status', 'pending')
@@ -316,7 +333,11 @@ class GuardianModeWebController extends Controller
             ->whereNull('revoked_at')
             ->firstOrFail();
 
-        abort_if($link->paused_at !== null, 403, 'Guardian access is paused.');
+        if ($link->paused_at !== null) {
+            flash(translate('Guardian access for this member is currently paused.'))->warning();
+
+            return redirect()->route('guardian_panel.index');
+        }
 
         $matches = \App\Models\ProfileMatch::with('matchedUser.member')
             ->where('user_id', $profileUserId)
