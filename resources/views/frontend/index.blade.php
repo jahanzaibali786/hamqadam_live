@@ -19,9 +19,9 @@
                         <a href="#how-it-works" class="btn hq-hero-btn hq-hero-btn-outline">{{ translate('Learn More') }}</a>
                     </div>
                     <div class="hq-hero-stats">
-                        <div><i class="las la-certificate"></i><strong>{{ translate('Verified Members') }}</strong><small>{{ translate('Safe & Trusted') }}</small></div>
-                        <div><i class="las la-heart"></i><strong>{{ translate('Success Stories') }}</strong><small>{{ translate('Real Couples Joined') }}</small></div>
-                        <div><i class="las la-lock"></i><strong>{{ translate('Secure & Private') }}</strong><small>{{ translate('Your Privacy First') }}</small></div>
+                        <div><i class="las la-certificate"></i><strong>{{ translate('Verified Members') }}</strong></div>
+                        <div><i class="las la-heart"></i><strong>{{ translate('Success Stories') }}</strong></div>
+                        <div><i class="las la-lock"></i><strong>{{ translate('Secure & Private') }}</strong></div>
                     </div>
                 </div>
             </div>

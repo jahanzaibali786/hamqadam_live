@@ -46,9 +46,10 @@
             }
         }
 
-        function notify(message) {
+        function notify(message, type) {
+            var alertType = type || 'danger';
             if (window.AIZ && AIZ.plugins && AIZ.plugins.notify) {
-                AIZ.plugins.notify('danger', message);
+                AIZ.plugins.notify(alertType, message);
                 return;
             }
             alert(message);
@@ -665,6 +666,20 @@
                 field.classList.remove('is-invalid');
             }
 
+            if (current === 5) {
+                var emailInput = form.querySelector('[name="email"]');
+                if (emailInput && emailInput.value && emailInput.value.trim()) {
+                    var emailVal = emailInput.value.trim();
+                    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(emailVal)) {
+                        emailInput.classList.add('is-invalid');
+                        emailInput.focus();
+                        notify('Please enter a valid email address.');
+                        return false;
+                    }
+                }
+            }
+
             if (current === 17) {
                 var minAge = Number(form.querySelector('[name="partner_age_min"]').value || 0);
                 var maxAge = Number(form.querySelector('[name="partner_age_max"]').value || 0);
@@ -737,6 +752,17 @@
             }
 
             if (current === 18) {
+                var emailVerifyInput = document.getElementById('signinSrEmailVerify');
+                if (emailVerifyInput && emailVerifyInput.value && emailVerifyInput.value.trim()) {
+                    var emailVerifyVal = emailVerifyInput.value.trim();
+                    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(emailVerifyVal)) {
+                        emailVerifyInput.classList.add('is-invalid');
+                        emailVerifyInput.focus();
+                        notify('Please enter a valid email address.');
+                        return false;
+                    }
+                }
                 var password = form.querySelector('[name="password"]');
                 var confirm = form.querySelector('[name="password_confirmation"]');
                 if (password && confirm && password.value !== confirm.value) {
@@ -774,9 +800,11 @@
             var emailInput = document.getElementById('signinSrEmail');
             var emailVerifyInput = document.getElementById('signinSrEmailVerify');
             if (!emailInput || !emailVerifyInput) return;
-            // Push changes from step 11's email back to step 5's email
             emailVerifyInput.addEventListener('input', function () {
                 emailInput.value = emailVerifyInput.value;
+            });
+            emailInput.addEventListener('input', function () {
+                emailVerifyInput.value = emailInput.value;
             });
         }
 
