@@ -10,7 +10,6 @@ use App\Models\FamilyGuardianLink;
 use App\Models\FamilyIntroduction;
 use App\Models\GuardianActivityLog;
 use App\Models\GuardianInvitation;
-use App\Models\GuardianPermission as GuardianPermissionModel;
 use App\Services\Api\V1\Family\GuardianAuthService;
 use App\Services\Api\V1\Family\GuardianModeService;
 use Illuminate\Http\Request;
@@ -324,10 +323,6 @@ class GuardianModeWebController extends Controller
             ->orderByDesc('match_percentage')
             ->limit(20)
             ->get();
-
-        $feedback = GuardianPermissionModel::query()->exists()
-            ? collect()
-            : collect();
 
         return view('frontend.member.guardian_mode.guardian_matches', [
             'link' => $link,
