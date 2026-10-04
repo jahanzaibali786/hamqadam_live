@@ -84,29 +84,38 @@ class ExpressInterestController extends Controller
     public function store(Request $request)
     {
         $interested_by_user = Auth::user();
-        $interested_by_member = $interested_by_user->member;
+        $quotaUser = $interested_by_user;
+        $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $interested_by_user->id)
+            ->where('status', 'approved')
+            ->whereNull('revoked_at')
+            ->first();
+        if ($guardianLink) {
+            $quotaUser = \App\Models\User::find($guardianLink->profile_user_id) ?? $interested_by_user;
+        }
+
+        $interested_by_member = $quotaUser->member;
         $coinCost = feature_coin_cost('express_interest', 1);
 
-        if ($interested_by_member->remaining_interest >= $coinCost) {
+        if ($interested_by_member && $interested_by_member->remaining_interest >= $coinCost) {
             // Store express interest data
             $express_interest                 = new ExpressInterest;
             // Check interest does not shown on self
-            if ($request->id != $interested_by_user->id) {
+            if ($request->id != $interested_by_user->id && $request->id != $quotaUser->id) {
                 $express_interest->user_id        = $request->id;
-                $express_interest->interested_by  = $interested_by_user->id;
+                $express_interest->interested_by  = $quotaUser->id;
                 if ($express_interest->save()) {
                     // Deduct interested by user's remaining express interest value
                     $interested_by_member->remaining_interest -= $coinCost;
                     $interested_by_member->save();
 
                     PackageUsage::record(
-                        $interested_by_user->id,
+                        $quotaUser->id,
                         'interest',
                         'Express Interest',
                         $coinCost,
                         ExpressInterest::class,
                         $express_interest->id,
-                        'Used ' . $coinCost . ' coin(s) to send express interest.'
+                        'Used ' . $coinCost . ' coin(s) to send express interest' . ($guardianLink ? ' (via Guardian ' . $interested_by_user->first_name . ')' : '') . '.'
                     );
 
                     $notify_user = User::where('id', $request->id)->first();

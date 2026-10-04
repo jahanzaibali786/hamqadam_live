@@ -47,15 +47,24 @@ class ViewContactController extends Controller
             ], 423);
         }
 
-        $view_contact_by_member = $view_contact_by_user->member;
+        $quotaUser = $view_contact_by_user;
+        $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $view_contact_by_user->id)
+            ->where('status', 'approved')
+            ->whereNull('revoked_at')
+            ->first();
+        if ($guardianLink) {
+            $quotaUser = \App\Models\User::find($guardianLink->profile_user_id) ?? $view_contact_by_user;
+        }
+
+        $view_contact_by_member = $quotaUser->member;
         $coinCost = feature_coin_cost('contact_view', 1);
 
-        if($view_contact_by_member->remaining_contact_view >= $coinCost){
+        if($view_contact_by_member && $view_contact_by_member->remaining_contact_view >= $coinCost){
 
             // Store view contact data
             $view_contact             = new ViewContact;
             $view_contact->user_id    = $request->id;
-            $view_contact->viewed_by  = $view_contact_by_user->id;
+            $view_contact->viewed_by  = $quotaUser->id;
             if($view_contact->save()){
 
                 // Deduct View Contact by user's remaining contact views
@@ -63,13 +72,13 @@ class ViewContactController extends Controller
                 $view_contact_by_member->save();
 
                 PackageUsage::record(
-                    $view_contact_by_user->id,
+                    $quotaUser->id,
                     'contact_view',
                     'Contact View',
                     $coinCost,
                     ViewContact::class,
                     $view_contact->id,
-                    'Used ' . $coinCost . ' coin(s) to view contact information.'
+                    'Used ' . $coinCost . ' coin(s) to view contact information' . ($guardianLink ? ' (via Guardian ' . $view_contact_by_user->first_name . ')' : '') . '.'
                 );
 
                 return true;

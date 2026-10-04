@@ -479,27 +479,36 @@ class HomeController extends Controller
 
         $user = User::findOrFail($id);
 
+        $quotaUserId = $authUser->id;
+        $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $authUser->id)
+            ->where('status', 'approved')
+            ->whereNull('revoked_at')
+            ->first();
+        if ($guardianLink) {
+            $quotaUserId = $guardianLink->profile_user_id;
+        }
+
         // Profile view data store
-        if($user->id != $authUser->id){
-            $profileViewed = ProfileViewer::where('user_id', $user->id)->where('viewed_by', $authUser->id)->first();
+        if($user->id != $authUser->id && $user->id != $quotaUserId){
+            $profileViewed = ProfileViewer::where('user_id', $user->id)->where('viewed_by', $quotaUserId)->first();
             if($profileViewed == null){
-                $viewerMember = Member::where('user_id', $authUser->id)->first();
-                if(package_validity($authUser->id) && $viewerMember->remaining_profile_viewer_view > 0){
+                $viewerMember = Member::where('user_id', $quotaUserId)->first();
+                if($viewerMember && package_validity($quotaUserId) && $viewerMember->remaining_profile_viewer_view > 0){
                     $profileViewed = ProfileViewer::create([
                         'user_id' => $user->id,
-                        'viewed_by' => $authUser->id
+                        'viewed_by' => $quotaUserId
                     ]);
-                                        $viewerMember->remaining_profile_viewer_view = max(0, $viewerMember->remaining_profile_viewer_view - 1);
+                    $viewerMember->remaining_profile_viewer_view = max(0, $viewerMember->remaining_profile_viewer_view - 1);
                     $viewerMember->save();
 
                     PackageUsage::record(
-                        $authUser->id,
+                        $quotaUserId,
                         'profile_viewer_view',
                         'Profile Viewer View',
                         1,
                         ProfileViewer::class,
                         $profileViewed?->id ?? null,
-                        'Used 1 coin to view a profile.'
+                        'Used 1 coin to view a profile' . ($guardianLink ? ' (via Guardian ' . $authUser->first_name . ')' : '') . '.'
                     );
 
                     // Profile viewed Notification for member
@@ -508,8 +517,8 @@ class HomeController extends Controller
                         $id = unique_notify_id();
                         $notify_by = $authUser->id;
                         $info_id = $user->id;
-                        $message = $authUser->first_name . ' ' . $authUser->last_name . ' ' . translate(' has viewed your profile.');
-                        $route = route('member_profile', $authUser->id);
+                        $message = ($guardianLink ? $authUser->first_name . ' (Guardian)' : $authUser->first_name . ' ' . $authUser->last_name) . ' ' . translate(' has viewed your profile.');
+                        $route = route('member_profile', $quotaUserId);
         
                         // fcm 
                         if (get_setting('firebase_push_notification') == 1) {

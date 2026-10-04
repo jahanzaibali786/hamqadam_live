@@ -88,6 +88,19 @@ class GuardianModeService
                 $member = new \App\Models\Member();
                 $member->user_id = $guardian->id;
                 $member->gender = in_array(strtolower($data['relationship'] ?? ''), ['mother', 'sister', 'aunt']) ? 2 : 1;
+                $freePackage = \App\Models\Package::find(1) ?? \App\Models\Package::orderBy('price', 'asc')->first();
+                if ($freePackage) {
+                    $member->current_package_id = $freePackage->id;
+                    $member->remaining_interest = $freePackage->express_interest;
+                    $member->remaining_photo_gallery = $freePackage->photo_gallery;
+                    $member->remaining_contact_view = $freePackage->contact;
+                    $member->remaining_profile_viewer_view = $freePackage->profile_viewers_view;
+                    $member->remaining_profile_image_view = $freePackage->profile_image_view;
+                    $member->remaining_gallery_image_view = $freePackage->gallery_image_view;
+                    $member->auto_profile_match = $freePackage->auto_profile_match;
+                    $member->auto_horoscope_profile_match = $freePackage->auto_horoscope_profile_match;
+                    $member->package_validity = date('Y-m-d', strtotime($freePackage->validity . ' days'));
+                }
                 $member->save();
             }
         }
