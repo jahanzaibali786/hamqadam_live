@@ -947,6 +947,36 @@
                     showStep(current);
                 });
         }
+        function updateHqRegisterSteps(stepNumber) {
+            var stepSpans = document.querySelectorAll('.hq-register-steps span');
+            if (!stepSpans.length) return;
+
+            // 4 major registration phases:
+            // 01 Basic: steps 1-5
+            // 02 Personal: steps 6-9
+            // 03 Career: steps 10-16
+            // 04 Verify: steps 17-18
+            var activeIndex = 0;
+            if (stepNumber <= 5) {
+                activeIndex = 0;
+            } else if (stepNumber <= 9) {
+                activeIndex = 1;
+            } else if (stepNumber <= 16) {
+                activeIndex = 2;
+            } else {
+                activeIndex = 3;
+            }
+
+            stepSpans.forEach(function (span, index) {
+                span.classList.remove('active', 'is-complete');
+                if (index === activeIndex) {
+                    span.classList.add('active');
+                } else if (index < activeIndex) {
+                    span.classList.add('is-complete');
+                }
+            });
+        }
+
         function showStep(stepNumber) {
             current = Math.max(1, Math.min(total, stepNumber));
             steps.forEach(function (step) {
@@ -962,6 +992,7 @@
             if (terms) terms.classList.toggle('d-none', current !== total);
 
             renderStepper();
+            updateHqRegisterSteps(current);
             refreshSelects();
             toggleConditionalFields();
             if (current === 18) syncEmailFields();
