@@ -206,6 +206,15 @@ class HomeController extends Controller
                 return redirect()->route('user.blocked');
             }
 
+            // Guardians are directed straight to the Guardian Panel
+            $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $user->id)
+                ->where('status', 'approved')
+                ->whereNull('revoked_at')
+                ->first();
+            if ($guardianLink && ($user->member == null || empty($user->member->birthday))) {
+                return redirect()->route('guardian_panel.index');
+            }
+
             $similar_profiles = ProfileMatch::orderBy('match_percentage', 'desc')
                 ->where('user_id', $user->id)
                 ->where('match_percentage', '>=', 50)
