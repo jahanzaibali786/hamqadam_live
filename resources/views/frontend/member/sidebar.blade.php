@@ -6,6 +6,21 @@
         ->get();
     $isDedicatedGuardian = $guardianLinks->isNotEmpty() && (Auth::user()->member == null || empty(Auth::user()->member->birthday));
     $firstManagedLink = $guardianLinks->first();
+
+    $guardianPermissions = [];
+    if ($firstManagedLink) {
+        $guardianPermissions = \Illuminate\Support\Facades\DB::table('guardian_permissions')
+            ->where('guardian_link_id', $firstManagedLink->id)
+            ->where('is_allowed', 1)
+            ->pluck('permission_key')
+            ->toArray();
+        if (empty($guardianPermissions) && !empty($firstManagedLink->permissions)) {
+            $guardianPermissions = (array) $firstManagedLink->permissions;
+        }
+        if (empty($guardianPermissions)) {
+            $guardianPermissions = array_map(fn($c) => $c->value, \App\Enums\GuardianPermission::DEFAULTS);
+        }
+    }
 @endphp
 
 <div class="aiz-user-sidenav-wrap pt-4 sticky-top c-scrollbar-light position-relative z-1 shadow-none">
@@ -51,14 +66,16 @@
             <ul class="aiz-side-nav-list" data-toggle="aiz-side-menu">
 
                 @if ($isDedicatedGuardian)
-                    {{-- Dedicated Guardian Menu --}}
+                    {{-- Dedicated Guardian Menu aligned with granted permissions --}}
                     <li class="aiz-side-nav-item">
                         <a href="{{ route('guardian_panel.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['guardian_panel.index']) }}">
                             <i class="las la-user-shield aiz-side-nav-icon"></i>
                             <span class="aiz-side-nav-text">{{ translate('Guardian Dashboard') }}</span>
                         </a>
                     </li>
-                    @if ($firstManagedLink)
+
+                    {{-- Review Matches: view_recommended_matches or view_basic_profile --}}
+                    @if ($firstManagedLink && (in_array('view_recommended_matches', $guardianPermissions) || in_array('view_basic_profile', $guardianPermissions)))
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('guardian_panel.matches', ['profile_user_id' => $firstManagedLink->profile_user_id]) }}" class="aiz-side-nav-link {{ areActiveRoutes(['guardian_panel.matches']) }}">
                                 <i class="las la-user-friends aiz-side-nav-icon"></i>
@@ -66,18 +83,86 @@
                             </a>
                         </li>
                     @endif
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('guardian_mode.introductions') }}" class="aiz-side-nav-link {{ areActiveRoutes(['guardian_mode.introductions']) }}">
-                            <i class="las la-handshake aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Family Introductions') }}</span>
-                        </a>
-                    </li>
+
+                    {{-- Shortlist: shortlist_match --}}
+                    @if (in_array('shortlist_match', $guardianPermissions))
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('my_shortlists') }}" class="aiz-side-nav-link {{ areActiveRoutes(['my_shortlists']) }}">
+                                <i class="las la-list aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Shortlist') }}</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- Interests & Proposals: send_interest or review_proposal --}}
+                    @if (in_array('send_interest', $guardianPermissions) || in_array('review_proposal', $guardianPermissions))
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('my_interests.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['my_interests.index', 'interest_requests']) }}">
+                                <i class="la la-heart-o aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Interests & Proposals') }}</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- Family Introductions: approve_family_intro or review_proposal --}}
+                    @if (in_array('approve_family_intro', $guardianPermissions) || in_array('review_proposal', $guardianPermissions))
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('guardian_mode.introductions') }}" class="aiz-side-nav-link {{ areActiveRoutes(['guardian_mode.introductions']) }}">
+                                <i class="las la-handshake aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Family Introductions') }}</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- Gallery & Photos: view_photo or view_private_photos --}}
+                    @if (in_array('view_photo', $guardianPermissions) || in_array('view_private_photos', $guardianPermissions))
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('gallery-image.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['gallery-image.index']) }}">
+                                <i class="las la-image aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Gallery & Photos') }}</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- Chat & Messaging: view_private_chat --}}
+                    @if (in_array('view_private_chat', $guardianPermissions))
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('all.messages') }}" class="aiz-side-nav-link {{ areActiveRoutes(['all.messages']) }}">
+                                <i class="las la-envelope aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Messaging') }}</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- Package & Coins Usage: view_payments --}}
+                    @if (in_array('view_payments', $guardianPermissions))
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('package_usage_history') }}" class="aiz-side-nav-link {{ areActiveRoutes(['package_usage_history', 'package_purchase_history']) }}">
+                                <i class="las la-coins aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Package & Usage History') }}</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- Manage Other Guardians: manage_other_guardians --}}
+                    @if (in_array('manage_other_guardians', $guardianPermissions))
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('guardian_mode.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['guardian_mode.index', 'guardian_mode.permissions.edit']) }}">
+                                <i class="las la-users aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Manage Guardians') }}</span>
+                            </a>
+                        </li>
+                    @endif
+
+                    {{-- Activity Audit Log --}}
                     <li class="aiz-side-nav-item">
                         <a href="{{ route('guardian_mode.activity') }}" class="aiz-side-nav-link {{ areActiveRoutes(['guardian_mode.activity']) }}">
                             <i class="las la-history aiz-side-nav-icon"></i>
                             <span class="aiz-side-nav-text">{{ translate('Activity Audit Log') }}</span>
                         </a>
                     </li>
+
+                    {{-- Change Password --}}
                     <li class="aiz-side-nav-item">
                         <a href="{{ route('member.change_password') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.change_password']) }}">
                             <i class="las la-key aiz-side-nav-icon"></i>

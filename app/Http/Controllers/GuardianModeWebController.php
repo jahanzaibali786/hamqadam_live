@@ -161,11 +161,11 @@ class GuardianModeWebController extends Controller
     /** POST /guardian-mode/guardians/{link}/permissions — save granular keys. */
     public function updatePermissions(Request $request, int $link)
     {
-        $request->validate(['permissions' => ['required', 'array']]);
+        $request->validate(['permissions' => ['nullable', 'array']]);
 
         $guardianLink = FamilyGuardianLink::where('profile_user_id', Auth::id())->findOrFail($link);
 
-        $this->guardianAuth->syncPermissions($guardianLink, $request->input('permissions'), (int) Auth::id());
+        $this->guardianAuth->syncPermissions($guardianLink, (array) $request->input('permissions', []), (int) Auth::id());
 
         GuardianActivityLog::record($guardianLink->id, $guardianLink->guardian_user_id, (int) Auth::id(), 'guardian_permissions_changed', FamilyGuardianLink::class, $guardianLink->id);
 

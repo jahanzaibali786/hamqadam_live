@@ -419,8 +419,17 @@ class PackagePaymentController extends Controller
 
     public function package_purchase_history(Request $request)
     {
+        $userId = (int) Auth::id();
+        $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $userId)
+            ->where('status', 'approved')
+            ->whereNull('revoked_at')
+            ->first();
+        if ($guardianLink && (Auth::user()->member == null || empty(Auth::user()->member->birthday))) {
+            $userId = (int) $guardianLink->profile_user_id;
+        }
+
         $package_payments = PackagePayment::latest()
-            ->where('user_id', Auth::user()->id)
+            ->where('user_id', $userId)
             ->paginate(10);
         return view('frontend.member.package_payment_history', compact('package_payments'));
     }

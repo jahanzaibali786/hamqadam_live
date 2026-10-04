@@ -9,11 +9,22 @@ class PackageUsageController extends Controller
 {
     public function index()
     {
-        $usages = PackageUsage::where('user_id', auth()->id())
+        $userId = (int) auth()->id();
+        $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $userId)
+            ->where('status', 'approved')
+            ->whereNull('revoked_at')
+            ->first();
+        if ($guardianLink && (auth()->user()->member == null || empty(auth()->user()->member->birthday))) {
+            $userId = (int) $guardianLink->profile_user_id;
+        }
+
+        $user = \App\Models\User::find($userId) ?? auth()->user();
+
+        $usages = PackageUsage::where('user_id', $userId)
             ->latest()
             ->get();
 
-        $packagePayments = PackagePayment::where('user_id', auth()->id())
+        $packagePayments = PackagePayment::where('user_id', $userId)
             ->with('package')
             ->get();
 
@@ -22,8 +33,8 @@ class PackageUsageController extends Controller
         });
 
         $totalUsedCoins = (int) $usages->sum('amount');
-        $remainingCoins = (int) (auth()->user()->member?->remaining_interest ?? 0);
-        $remainingProfileViews = (int) (auth()->user()->member?->remaining_profile_viewer_view ?? 0);
+        $remainingCoins = (int) ($user->member?->remaining_interest ?? 0);
+        $remainingProfileViews = (int) ($user->member?->remaining_profile_viewer_view ?? 0);
         $profileViewsUsed = (int) $usages->where('feature', 'profile_viewer_view')->sum('amount');
 
         return view('frontend.member.package_usage_history', compact(

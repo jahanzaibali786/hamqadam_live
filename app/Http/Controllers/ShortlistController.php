@@ -14,6 +14,19 @@ use Notification;
 
 class ShortlistController extends Controller
 {
+    protected function getEffectiveUserId(): int
+    {
+        $userId = (int) Auth::id();
+        $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $userId)
+            ->where('status', 'approved')
+            ->whereNull('revoked_at')
+            ->first();
+        if ($guardianLink && (Auth::user()->member == null || empty(Auth::user()->member->birthday))) {
+            return (int) $guardianLink->profile_user_id;
+        }
+        return $userId;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -21,16 +34,17 @@ class ShortlistController extends Controller
      */
     public function index()
     {
-        $shortlists = Shortlist::where('shortlisted_by', Auth::user()->id)
-            ->WhereNotIn("user_id", function ($query) {
+        $effectiveUserId = $this->getEffectiveUserId();
+        $shortlists = Shortlist::where('shortlisted_by', $effectiveUserId)
+            ->WhereNotIn("user_id", function ($query) use ($effectiveUserId) {
                 $query->select('user_id')
                     ->from('ignored_users')
-                    ->where('ignored_by', Auth::user()->id)->orWhere('user_id', Auth::user()->id);
+                    ->where('ignored_by', $effectiveUserId)->orWhere('user_id', $effectiveUserId);
             })
-            ->WhereNotIn("user_id", function ($query) {
+            ->WhereNotIn("user_id", function ($query) use ($effectiveUserId) {
                 $query->select('ignored_by')
                     ->from('ignored_users')
-                    ->where('ignored_by', Auth::user()->id)->orWhere('user_id', Auth::user()->id);
+                    ->where('ignored_by', $effectiveUserId)->orWhere('user_id', $effectiveUserId);
             })
             ->latest()->paginate(10);
         return view('frontend.member.my_shortlists', compact('shortlists'));
@@ -116,8 +130,9 @@ class ShortlistController extends Controller
     }
     public function remove(Request $request)
     {
-        $shortlist = Shortlist::where('user_id', $request->id)->where('shortlisted_by', Auth::user()->id)->first()->id;
-        if (Shortlist::destroy($shortlist)) {
+        $effectiveUserId = $this->getEffectiveUserId();
+        $shortlist = Shortlist::where('user_id', $request->id)->where('shortlisted_by', $effectiveUserId)->first();
+        if ($shortlist && Shortlist::destroy($shortlist->id)) {
             return 1;
         } else {
             return 0;

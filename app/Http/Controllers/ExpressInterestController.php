@@ -19,6 +19,19 @@ use Notification;
 
 class ExpressInterestController extends Controller
 {
+    protected function getEffectiveUserId(): int
+    {
+        $userId = (int) Auth::id();
+        $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $userId)
+            ->where('status', 'approved')
+            ->whereNull('revoked_at')
+            ->first();
+        if ($guardianLink && (Auth::user()->member == null || empty(Auth::user()->member->birthday))) {
+            return (int) $guardianLink->profile_user_id;
+        }
+        return $userId;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -26,9 +39,10 @@ class ExpressInterestController extends Controller
      */
     public function index()
     {
+        $effectiveUserId = $this->getEffectiveUserId();
         $interests = DB::table('express_interests')
             ->orderBy('id', 'desc')
-            ->where('interested_by', Auth::user()->id)
+            ->where('interested_by', $effectiveUserId)
             ->join('users', 'express_interests.user_id', '=', 'users.id')
             ->select('express_interests.id')
             ->distinct()
@@ -39,6 +53,7 @@ class ExpressInterestController extends Controller
 
     public function interest_requests()
     {
+        $effectiveUserId = $this->getEffectiveUserId();
         $status = request('status');
         $statusMap = [
             'pending' => 0,
@@ -50,7 +65,7 @@ class ExpressInterestController extends Controller
         ];
 
         $interests = ExpressInterest::with('sender.member')
-            ->where('user_id', Auth::user()->id)
+            ->where('user_id', $effectiveUserId)
             ->when(isset($statusMap[$status]), fn ($query) => $query->where('status', $statusMap[$status]))
             ->latest()
             ->paginate(10)
