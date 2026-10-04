@@ -1,4 +1,4 @@
-name: Deploy Laravel via FTP
+name: Fast Laravel Deploy via SSH
 
 on:
   push:
@@ -21,59 +21,62 @@ jobs:
         uses: actions/checkout@v5
 
       ###########################################################
-      # Install LFTP
+      # Deploy only changed files over SSH.
+      # Required secrets: SSH_PRIVATE_KEY and SSH_USER.
+      # Optional secrets: SSH_HOST, SSH_PORT, SSH_DEPLOY_PATH.
       ###########################################################
-      - name: Install LFTP
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y lftp
-      ###########################################################
-      # Deploy Project
-      ###########################################################
-      - name: Deploy via FTP
-        env:
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Deploy via SSH and rsync
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST || 'hamqadam.com' }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          DEPLOY_PATH: ${{ secrets.SSH_DEPLOY_PATH || '/home/hamqadam.com/public_html' }}
         run: |
-          lftp -u "admin_git","$FTP_PASSWORD" ftp://hamqadam.com:21 <<EOF
-          set ftp:passive-mode on
-          set ftp:list-options -a
-          set ssl:verify-certificate no
-          set net:max-retries 5
-          set net:timeout 60
-          set net:reconnect-interval-base 5
-          cd /public_html
-          mirror --reverse \
-            --verbose \
-            --parallel=2 \
-            --continue \
-            --only-newer \
-            --no-perms \
-            --exclude-glob ".git/**" \
-            --exclude-glob ".github/**" \
-            --exclude-glob ".gitignore" \
-            --exclude-glob "README.md" \
-            --exclude-glob "vendor/**" \
-            --exclude-glob "node_modules/**" \
-            --exclude-glob ".env" \
-            --exclude-glob ".env.*" \
-            --exclude-glob ".env_*" \
-            --exclude-glob ".freebuff/**" \
-            --exclude-glob ".devin/**" \
-            --exclude-glob "_call_bundle/**" \
-            --exclude-glob "storage/logs/**" \
-            --exclude-glob "storage/framework/cache/**" \
-            --exclude-glob "storage/framework/sessions/**" \
-            --exclude-glob "storage/framework/testing/**" \
-            --exclude-glob "storage/framework/views/**" \
-            --exclude-glob "storage/app/**" \
-            --exclude-glob "bootstrap/cache/*.php" \
-            --exclude-glob "tests/**" \
-            --exclude-glob "*.zip" \
-            --exclude-glob "*.sql" \
-            ./ .
-          bye
-          EOF
+          set -euo pipefail
+
+          if [ -z "$SSH_USER" ]; then
+            echo "SSH_USER secret is required"
+            exit 1
+          fi
+
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "mkdir -p '$DEPLOY_PATH'"
+
+          rsync -az --partial --omit-dir-times --no-perms --no-owner --no-group \
+            -e "ssh -p $SSH_PORT" \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='.gitignore' \
+            --exclude='README.md' \
+            --exclude='vendor/' \
+            --exclude='node_modules/' \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='.env_*' \
+            --exclude='.freebuff/' \
+            --exclude='.devin/' \
+            --exclude='_call_bundle/' \
+            --exclude='storage/logs/' \
+            --exclude='storage/framework/cache/' \
+            --exclude='storage/framework/sessions/' \
+            --exclude='storage/framework/testing/' \
+            --exclude='storage/framework/views/' \
+            --exclude='storage/app/' \
+            --exclude='bootstrap/cache/*.php' \
+            --exclude='public/uploads/' \
+            --exclude='tests/' \
+            --exclude='*.zip' \
+            --exclude='*.sql' \
+            ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
+
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "cd '$DEPLOY_PATH' && php artisan optimize:clear"
       ###########################################################
       # Done
       ###########################################################
