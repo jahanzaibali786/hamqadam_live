@@ -13,6 +13,8 @@ class NotificationDeliveryLog extends Model
         'notification_id',
         'user_id',
         'channel',
+        'event_key',
+        'event_id',
         'status',
         'error_message',
         'payload',

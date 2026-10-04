@@ -12,6 +12,9 @@ class NotificationListRequest extends ApiFormRequest
     {
         return [
             'unread_only' => ['sometimes', 'boolean'],
+            'read' => ['sometimes', 'boolean'],
+            'event_key' => ['sometimes', 'string', 'max:100'],
+            'category' => ['sometimes', 'string', 'max:40'],
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:50'],
         ];
     }

@@ -13,6 +13,7 @@ use App\Exceptions\ApiException;
 use App\Models\ProfileVerificationDocument;
 use App\Models\ProfileVerificationRequest;
 use App\Models\User;
+use App\Services\NotificationHelper;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -60,6 +61,10 @@ class VerificationService
             }
 
             $user->member?->forceFill(['verification_status' => 'submitted'])?->save();
+            NotificationHelper::event($user, 'verification_submitted', [
+                'event_id' => 'verification:' . $request->id . ':submitted',
+                'info_id' => $request->id,
+            ]);
 
             /*
              * This is where AI verification earns its keep. Registration only
@@ -127,6 +132,10 @@ class VerificationService
             $request->user->member?->forceFill(['verification_status' => 'verified', 'ai_verification_status' => 'approved', 'verification_badge' => true, 'verification_badge_earned_at' => now(), 'manual_review_started_at' => null, 'manual_review_expires_at' => null])?->save();
 
             $this->notifyDecisionByEmail($request->user, true, null);
+            NotificationHelper::event($request->user, 'verification_approved', [
+                'event_id' => 'verification:' . $request->id . ':approved',
+                'info_id' => $request->id,
+            ]);
 
             return $request->fresh(['user', 'documents', 'reviewer']);
         });
@@ -150,6 +159,10 @@ class VerificationService
             $request->user->member?->forceFill(['verification_status' => 'rejected', 'verification_badge' => false, 'verification_badge_earned_at' => null, 'manual_review_started_at' => null, 'manual_review_expires_at' => null])?->save();
 
             $this->notifyDecisionByEmail($request->user, false, $reason);
+            NotificationHelper::event($request->user, 'verification_rejected', [
+                'event_id' => 'verification:' . $request->id . ':rejected',
+                'info_id' => $request->id,
+            ]);
 
             return $request->fresh(['user', 'documents', 'reviewer']);
         });
@@ -233,4 +246,3 @@ class VerificationService
         }
     }
 }
-

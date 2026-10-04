@@ -18,12 +18,25 @@ class NotificationService
     public function list(User $user, array $filters): LengthAwarePaginator
     {
         $query = Notification::query()
+            ->with('deliveries')
             ->where('notifiable_id', $user->id)
             ->where('notifiable_type', User::class)
             ->latest();
 
         if (! empty($filters['unread_only'])) {
             $query->whereNull('read_at');
+        }
+
+        if (array_key_exists('read', $filters)) {
+            $filters['read'] ? $query->whereNotNull('read_at') : $query->whereNull('read_at');
+        }
+
+        if (! empty($filters['event_key'])) {
+            $query->where('type', $filters['event_key']);
+        }
+
+        if (! empty($filters['category'])) {
+            $query->where('category', $filters['category']);
         }
 
         return $query->paginate((int) ($filters['per_page'] ?? 20));

@@ -8,6 +8,7 @@ use App\Models\Notification;
 use App\Models\User;
 use Auth;
 use Str;
+use Illuminate\Support\Facades\Route;
 
 class NotificationController extends Controller
 {
@@ -40,18 +41,22 @@ class NotificationController extends Controller
             $notification->save();
         }
 
-        if($notification_data->type == 'member_registration' && !Str::contains($notification_data->route,'http'))
+        $destination = $notification_data->deep_link ?? $notification_data->route ?? '/dashboard';
+
+        if($notification_data->type == 'member_registration' && !Str::contains($destination,'http'))
         {
             $membership = User::where('id',$notification_data->notify_by)->first()->membership;
-            return redirect()->route($notification_data->route, $membership);
+            return redirect()->route($destination, $membership);
         }
         else {
-            if(Str::contains($notification_data->route,'http')){
-                return redirect($notification_data->route);
+            if(Str::startsWith($destination, ['http://', 'https://', '/'])){
+                return redirect($destination);
             }
-            else{
-                return redirect()->route($notification_data->route);
+            if (Route::has($destination)) {
+                return redirect()->route($destination);
             }
+
+            return redirect('/dashboard');
         }
 
     }

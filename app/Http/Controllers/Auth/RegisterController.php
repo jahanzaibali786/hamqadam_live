@@ -25,6 +25,7 @@ use Illuminate\Validation\ValidationException;
 use App\Notifications\DbStoreNotification;
 use Kutia\Larafirebase\Facades\Larafirebase;
 use App\Http\Controllers\OTPVerificationController;
+use App\Services\NotificationHelper;
 
 class RegisterController extends Controller
 {
@@ -172,6 +173,14 @@ class RegisterController extends Controller
 
         RegistrationOnboarding::persist($user, $data);
         RegistrationReward::applyBasicPackage($user);
+        NotificationHelper::event($user, 'account_created', [
+            'event_id' => 'account:' . $user->id . ':created',
+            'info_id' => $user->id,
+        ]);
+        NotificationHelper::event($user, 'profile_created', [
+            'event_id' => 'profile:' . $user->id . ':created',
+            'info_id' => $user->id,
+        ]);
 
 
         // Account opening Email to member
