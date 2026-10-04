@@ -45,10 +45,10 @@ jobs:
           fi
 
           mkdir -p ~/.ssh
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "mkdir -p '$DEPLOY_PATH'"
 
-          rsync -az --partial --omit-dir-times --no-perms --no-owner --no-group \
+          rsync -az --whole-file --partial --omit-dir-times --no-perms --no-owner --no-group \
             -e "ssh -p $SSH_PORT" \
             --exclude='.git/' \
             --exclude='.github/' \
