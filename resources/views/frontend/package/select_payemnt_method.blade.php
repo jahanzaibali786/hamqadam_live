@@ -99,7 +99,35 @@
                         @csrf
                         <input type="hidden" name="package_id" value="{{ $package->id }}">
                         <input type="hidden" name="amount" value="{{ $package_price }}">
+                        <input type="hidden" name="payable_amount" id="payable_amount" value="{{ $package_price }}">
                         <input type="hidden" id="payment_type" value="">
+
+                        <div class="card shadow-none mb-3">
+                            <div class="card-body">
+                                <label class="fw-600">{{ translate('Have a promo code?') }}</label>
+                                <div class="input-group">
+                                    <input type="text" name="coupon_code" id="coupon_code" class="form-control"
+                                        maxlength="100" autocomplete="off"
+                                        placeholder="{{ translate('Enter promo code') }}">
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-primary" id="apply_coupon">
+                                            {{ translate('Apply') }}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="coupon_feedback" class="small mt-2" role="status"></div>
+                                <div id="coupon_summary" class="d-none mt-3 p-2 rounded bg-soft-success">
+                                    <div class="d-flex justify-content-between">
+                                        <span>{{ translate('Discount') }}</span>
+                                        <strong id="coupon_discount"></strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between fw-600">
+                                        <span>{{ translate('Payable amount') }}</span>
+                                        <strong id="coupon_payable"></strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <div class="card shadow-none">
                             <div class="card-header p-3">
@@ -439,6 +467,41 @@
 
 @section('script')
     <script type="text/javascript">
+        $('#apply_coupon').on('click', function () {
+            var button = $(this);
+            var code = $.trim($('#coupon_code').val());
+            var feedback = $('#coupon_feedback');
+
+            if (!code) {
+                feedback.removeClass('text-success').addClass('text-danger').text('{{ translate('Enter a promo code first.') }}');
+                $('#coupon_summary').addClass('d-none');
+                return;
+            }
+
+            button.prop('disabled', true).text('{{ translate('Checking...') }}');
+            feedback.removeClass('text-danger text-success').text('');
+            $.post('{{ route('package.payment.coupon') }}', {
+                _token: '{{ csrf_token() }}',
+                package_id: '{{ $package->id }}',
+                coupon_code: code
+            }).done(function (data) {
+                $('#payable_amount').val(data.payable_amount);
+                $('input[name="amount"]').val(data.payable_amount);
+                $('#coupon_discount').text(data.formatted_discount);
+                $('#coupon_payable').text(data.formatted_payable);
+                $('#coupon_summary').removeClass('d-none');
+                feedback.removeClass('text-danger').addClass('text-success').text('{{ translate('Promo code applied successfully.') }}');
+            }).fail(function (xhr) {
+                var message = xhr.responseJSON && xhr.responseJSON.message
+                    ? xhr.responseJSON.message
+                    : '{{ translate('Unable to apply this promo code.') }}';
+                $('#coupon_summary').addClass('d-none');
+                feedback.removeClass('text-success').addClass('text-danger').text(message);
+            }).always(function () {
+                button.prop('disabled', false).text('{{ translate('Apply') }}');
+            });
+        });
+
         // $(document).ready(function() {
         $(".online_payment").click(function() {
             $('.manual_payment_description').addClass('d-none');

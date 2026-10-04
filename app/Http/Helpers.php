@@ -294,8 +294,9 @@ if (!function_exists('get_setting')) {
 if (!function_exists('get_email_template')) {
     function get_email_template($identifier, $colmn_name = null)
     {
-        $value = EmailTemplate::where('identifier', $identifier)->first()->$colmn_name;
-        return $value;
+        $template = EmailTemplate::where('identifier', $identifier)->first();
+
+        return $template ? $template->{$colmn_name} : null;
     }
 }
 

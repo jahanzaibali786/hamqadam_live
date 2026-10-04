@@ -6,6 +6,7 @@ use App\Models\ManualPaymentMethod;
 use App\Models\Member;
 use App\Models\Package;
 use App\Models\PackagePayment;
+use App\Models\PaymentCoupon;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Notifications\DbStoreNotification;
@@ -59,11 +60,26 @@ class PackagePaymentController extends Controller
      */
     public function store(Request $request)
     {
-        // dd($request->all());
-
         $user = Auth::user();
-        $data['amount']         = $request->amount;
-        $data['package_id']     = $request->package_id;
+        $request->validate([
+            'package_id' => ['required', 'integer', 'exists:packages,id'],
+            'payment_option' => ['required', 'string'],
+            'coupon_code' => ['nullable', 'string', 'max:100'],
+        ]);
+
+        try {
+            $pricing = $this->checkoutPricing(Package::findOrFail($request->package_id), $request->coupon_code);
+        } catch (\Throwable $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        $data['amount']         = $pricing['payable_amount'];
+        $data['package_amount'] = $pricing['package_amount'];
+        $data['coupon_id']      = $pricing['coupon']?->id;
+        $data['coupon_code']    = $pricing['coupon']?->code;
+        $data['discount_amount'] = $pricing['discount_amount'];
+        $data['payable_amount'] = $pricing['payable_amount'];
+        $data['package_id']     = (int) $request->package_id;
         $data['payment_method'] = $request->payment_option;
         $data['user_id'] = Auth::user()->id;
 
@@ -99,11 +115,11 @@ class PackagePaymentController extends Controller
             $aamarpay = new AamarpayController();
             return $aamarpay->pay($request);
         } elseif ($request->payment_option == 'wallet') {
-            if ($user->balance < $request->amount) {
+            if ($user->balance < $data['amount']) {
                 flash(translate('You do not have enough balance.'))->error();
                 return back();
             } else {
-                $user->balance = $user->balance - $request->amount;
+                $user->balance = $user->balance - $data['amount'];
                 $user->save();
                 return $this->package_payment_done($request->session()->get('payment_data'), null);
             }
@@ -121,7 +137,10 @@ class PackagePaymentController extends Controller
             $package_payment->package_id = $request->package_id;
             $package_payment->payment_method = $request->payment_option;
             $package_payment->payment_status = 'Due';
-            $package_payment->amount = $request->amount;
+            $package_payment->amount = $data['package_amount'];
+            $package_payment->discount_amount = $data['discount_amount'];
+            $package_payment->payable_amount = $data['payable_amount'];
+            $package_payment->coupon_id = $data['coupon_id'];
             $package_payment->payment_details = json_encode([
                 'mobile_number' => $request->pakistan_mobile_number,
                 'transaction_id' => $request->pakistan_transaction_id,
@@ -147,7 +166,10 @@ class PackagePaymentController extends Controller
             $package_payment->package_id = $request->package_id;
             $package_payment->payment_method = 'manual_payment';
             $package_payment->payment_status = 'Due';
-            $package_payment->amount = $request->amount;
+            $package_payment->amount = $data['package_amount'];
+            $package_payment->discount_amount = $data['discount_amount'];
+            $package_payment->payable_amount = $data['payable_amount'];
+            $package_payment->coupon_id = $data['coupon_id'];
             $package_payment->payment_details = '';
             $package_payment->offline_payment = 1;
             $package_payment->custom_payment_name = ManualPaymentMethod::find($request->manual_payment_id)->heading;
@@ -195,6 +217,79 @@ class PackagePaymentController extends Controller
         }
     }
 
+    public function validateCoupon(Request $request)
+    {
+        $request->validate([
+            'package_id' => ['required', 'integer', 'exists:packages,id'],
+            'coupon_code' => ['required', 'string', 'max:100'],
+        ]);
+
+        try {
+            $pricing = $this->checkoutPricing(
+                Package::findOrFail($request->package_id),
+                $request->coupon_code,
+            );
+
+            return response()->json([
+                'success' => true,
+                'code' => $pricing['coupon']->code,
+                'discount_amount' => $pricing['discount_amount'],
+                'package_amount' => $pricing['package_amount'],
+                'payable_amount' => $pricing['payable_amount'],
+                'formatted_discount' => single_price($pricing['discount_amount']),
+                'formatted_payable' => single_price($pricing['payable_amount']),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
+    private function checkoutPricing(Package $package, ?string $code): array
+    {
+        $packageAmount = (float) $package->price;
+
+        if (addon_activation('referral_system') && Auth::user()->referred_by != null && Auth::user()->referral_comission == 0) {
+            $referralType = get_setting('referral_user_package_purchase_discount_type');
+            $referralDiscount = $referralType == 'percent'
+                ? $packageAmount * ((float) get_setting('referral_user_package_purchase_discount') / 100)
+                : (float) get_setting('referral_user_package_purchase_discount');
+            $packageAmount = max(0, $packageAmount - min($packageAmount, $referralDiscount));
+        }
+
+        $coupon = null;
+        $discount = 0.0;
+        if (filled($code)) {
+            $coupon = PaymentCoupon::where('code', strtoupper(trim($code)))->first();
+            if (! $coupon || ! $coupon->active) {
+                throw new \RuntimeException(translate('Promo code is invalid.'));
+            }
+            if ($coupon->starts_at?->isFuture()) {
+                throw new \RuntimeException(translate('Promo code is not active yet.'));
+            }
+            if ($coupon->expires_at?->isPast()) {
+                throw new \RuntimeException(translate('Promo code has expired.'));
+            }
+            if ($coupon->usage_limit !== null && $coupon->used_count >= $coupon->usage_limit) {
+                throw new \RuntimeException(translate('Promo code usage limit has been reached.'));
+            }
+            if ($packageAmount < (float) $coupon->minimum_amount) {
+                throw new \RuntimeException(translate('The package amount does not meet the promo code minimum.'));
+            }
+
+            $discount = $coupon->discount_type === 'fixed'
+                ? (float) $coupon->discount_value
+                : $packageAmount * ((float) $coupon->discount_value / 100);
+            $discount = round(min($packageAmount, $discount), 2);
+        }
+
+        return [
+            'coupon' => $coupon,
+            'package_amount' => round($packageAmount, 2),
+            'discount_amount' => $discount,
+            'payable_amount' => round(max(0, $packageAmount - $discount), 2),
+        ];
+    }
+
     private function notifyAdminsAboutPendingPackagePayment(User $user, PackagePayment $package_payment): void
     {
         try {
@@ -231,10 +326,17 @@ class PackagePaymentController extends Controller
         $package_payment->package_id = $payment_data['package_id'];
         $package_payment->payment_method = $payment_data['payment_method'];
         $package_payment->payment_status = 'Paid';
-        $package_payment->amount = $payment_data['amount'];
+        $package_payment->amount = $payment_data['package_amount'] ?? $payment_data['amount'];
+        $package_payment->discount_amount = $payment_data['discount_amount'] ?? 0;
+        $package_payment->payable_amount = $payment_data['payable_amount'] ?? $payment_data['amount'];
+        $package_payment->coupon_id = $payment_data['coupon_id'] ?? null;
         $package_payment->payment_details = $payment_details;
         $package_payment->offline_payment = 2;
         $package_payment->save();
+
+        if ($package_payment->coupon_id) {
+            PaymentCoupon::whereKey($package_payment->coupon_id)->increment('used_count');
+        }
 
         $member = Member::where('user_id', $user->id)->first();
         $package = Package::where('id', $payment_data['package_id'])->first();
@@ -394,6 +496,10 @@ class PackagePaymentController extends Controller
         if ($member->save()) {
             $package_payment->payment_status = 'Paid';
             $package_payment->save();
+
+            if ($package_payment->coupon_id) {
+                PaymentCoupon::whereKey($package_payment->coupon_id)->increment('used_count');
+            }
 
             if ($user->member->current_package_id == 1){
                 $user->membership = 1;

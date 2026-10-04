@@ -947,34 +947,51 @@
                     showStep(current);
                 });
         }
+        var stepShortTitles = {
+            1: 'Account',
+            2: 'Basic',
+            3: 'Religion',
+            4: 'Location',
+            5: 'Contact',
+            6: 'Caste',
+            7: 'Marital',
+            8: 'Education',
+            9: 'Physical',
+            10: 'Career',
+            11: 'Photos',
+            12: 'About',
+            13: 'Identity',
+            14: 'Interests',
+            15: 'Family',
+            16: 'Details',
+            17: 'Partner',
+            18: 'Verify'
+        };
+
         function updateHqRegisterSteps(stepNumber) {
-            var stepSpans = document.querySelectorAll('.hq-register-steps span');
-            if (!stepSpans.length) return;
+            var container = document.querySelector('.hq-register-steps');
+            if (!container) return;
 
-            // 4 major registration phases:
-            // 01 Basic: steps 1-5
-            // 02 Personal: steps 6-9
-            // 03 Career: steps 10-16
-            // 04 Verify: steps 17-18
-            var activeIndex = 0;
-            if (stepNumber <= 5) {
-                activeIndex = 0;
-            } else if (stepNumber <= 9) {
-                activeIndex = 1;
-            } else if (stepNumber <= 16) {
-                activeIndex = 2;
-            } else {
-                activeIndex = 3;
-            }
+            var batchSize = 4;
+            var batchIndex = Math.floor((stepNumber - 1) / batchSize);
+            var startStep = batchIndex * batchSize + 1;
 
-            stepSpans.forEach(function (span, index) {
-                span.classList.remove('active', 'is-complete');
-                if (index === activeIndex) {
-                    span.classList.add('active');
-                } else if (index < activeIndex) {
-                    span.classList.add('is-complete');
+            var html = '';
+            for (var s = startStep; s <= startStep + batchSize - 1; s++) {
+                if (s > total) break;
+                var stepEl = steps[s - 1];
+                var rawTitle = stepEl ? (stepEl.dataset.stepTitle || '') : '';
+                var title = stepShortTitles[s] || (rawTitle ? rawTitle.split(' ')[0] : 'Step ' + s);
+                var numStr = (s < 10 ? '0' : '') + s;
+                var cls = '';
+                if (s === stepNumber) {
+                    cls = 'active';
+                } else if (s < stepNumber) {
+                    cls = 'is-complete';
                 }
-            });
+                html += '<span class="' + cls + '" title="' + rawTitle + '">' + numStr + ' ' + title + '</span>';
+            }
+            container.innerHTML = html;
         }
 
         function showStep(stepNumber) {

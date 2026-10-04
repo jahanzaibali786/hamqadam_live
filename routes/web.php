@@ -247,6 +247,7 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
         Route::get('/package-payment-methods/{id}', [PackageController::class, 'package_payemnt_methods'])->name('package_payment_methods');
         Route::controller(PackagePaymentController::class)->group(function () {
             Route::post('/package-payment', 'store')->name('package.payment');
+            Route::post('/package-payment/validate-coupon', 'validateCoupon')->name('package.payment.coupon');
             Route::get('/package-purchase-history', 'package_purchase_history')->name('package_purchase_history');
             Route::get('/free-package-purchase/{id}', 'free_package_purchase')->name('free_package_purchase');
 

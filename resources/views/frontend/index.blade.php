@@ -146,7 +146,7 @@
                     <h2>{{ translate('Create Your Account') }}</h2>
                     <p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('Free plan') }} {{ translate('instantly upon verification.') }}</p>
                     <div class="hq-register-steps" aria-hidden="true">
-                        <span class="active">01 {{ translate('Basic') }}</span><span>02 {{ translate('Personal') }}</span><span>03 {{ translate('Career') }}</span><span>04 {{ translate('Verify') }}</span>
+                        <span class="active">01 {{ translate('Account') }}</span><span>02 {{ translate('Basic') }}</span><span>03 {{ translate('Religion') }}</span><span>04 {{ translate('Location') }}</span>
                     </div>
                 </div>
                 <div id="register-form-container" class="hq-register-form-card">

@@ -284,10 +284,12 @@
     @endforeach
 
     <datalist id="profession_options"><option value="Software Engineer"><option value="Doctor"><option value="Teacher"><option value="Banker"><option value="Business Owner"><option value="Government Officer"><option value="Armed Forces"><option value="Self-Employed"></datalist>
+    {{-- Auto fill test data button commented out as requested
     <div class="d-flex flex-wrap align-items-center justify-content-between mt-3 mb-2">
         <button type="button" class="btn btn-sm btn-outline-secondary mb-2" data-registration-autofill>{{ translate('Auto Fill Test Data') }}</button>
         <span class="text-muted fs-12 mb-2">{{ translate('Developer helper: fills the form with sample data and jumps to the final step.') }}</span>
     </div>
+    --}}
     <div class="registration-flow-actions d-flex justify-content-between align-items-center border-top pt-4 mt-4 mb-4 pb-2"><button type="button" class="btn registration-gradient-btn" data-registration-prev>{{ translate('Previous') }}</button><button type="button" class="btn registration-gradient-btn ml-auto" data-registration-next>{{ translate('Next') }}</button></div>
 </div>
 

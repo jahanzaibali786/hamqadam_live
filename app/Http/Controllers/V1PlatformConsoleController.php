@@ -182,9 +182,65 @@ class V1PlatformConsoleController extends Controller
         return back();
     }
 
+    private function compatibilitySummary(ProfileMatch $match): array
+    {
+        $candidate = $match->matchedUser;
+        if (! $candidate) {
+            return ['facts' => [], 'matched_criteria' => []];
+        }
+
+        $member = $candidate->member;
+        $address = $candidate->addresses->first();
+        $age = null;
+
+        if ($member?->birthday) {
+            try {
+                $age = \Carbon\Carbon::parse($member->birthday)->age;
+            } catch (\Throwable) {
+                $age = null;
+            }
+        }
+
+        $facts = collect([
+            [translate('Age'), $age ? $age . ' ' . translate('years') : null],
+            [translate('City'), $address?->city?->name ?: $member?->work_location_city],
+            [translate('Education'), $member?->educationLevel?->name ?: $member?->degree?->name],
+            [translate('Profession'), $member?->profession?->name],
+            [translate('Sect'), $member?->sectMain?->name ?: $member?->schoolOfThought?->name],
+        ])->filter(fn (array $fact) => filled($fact[1]))->values()->all();
+
+        $criterionLabels = [
+            'religion' => translate('Religion'), 'sect' => translate('Sect'),
+            'lifestyle' => translate('Lifestyle'), 'education' => translate('Education'),
+            'profession' => translate('Profession'), 'income' => translate('Income'),
+            'age' => translate('Age'), 'prayer' => translate('Prayer'),
+            'language' => translate('Language'), 'location' => translate('Location'),
+            'behavior' => translate('Behavior'), 'personality' => translate('Personality'),
+            'emotional' => translate('Emotional fit'), 'communication' => translate('Communication'),
+            'long_term' => translate('Long-term goals'), 'mutual_interest' => translate('Mutual interest'),
+        ];
+        $criteria = data_get($match->score_breakdown, 'criterion_matches', []);
+        $matchedCriteria = collect(is_array($criteria) ? $criteria : [])
+            ->filter(fn ($criterion) => is_array($criterion) && ($criterion['status'] ?? null) === 'match')
+            ->map(function (array $criterion) use ($criterionLabels): array {
+                $key = strtolower((string) ($criterion['criterion'] ?? ''));
+                return [
+                    'label' => $criterionLabels[$key] ?? ucwords(str_replace(['_', '-'], ' ', $key)),
+                    'reason' => $criterion['reason'] ?? null,
+                ];
+            })
+            ->filter(fn (array $criterion) => filled($criterion['label']))
+            ->unique('label')->values()->all();
+
+        return ['facts' => $facts, 'matched_criteria' => $matchedCriteria];
+    }
+
     public function member(Request $request): View
     {
-        $user = $request->user()->loadMissing('member.package');
+        $user = $request->user()->loadMissing([
+            'member.package',
+            'addresses.city',
+        ]);
         $profileCompletion = app(ProfileCompletionService::class)->calculate($user);
         $latestVerification = ProfileVerificationRequest::where('user_id', $user->id)->latest()->first();
         $verificationStatus = $this->resolveMemberVerificationStatus($user, $latestVerification);
@@ -195,15 +251,28 @@ class V1PlatformConsoleController extends Controller
             ])->save();
         }
 
+        $topMatches = ProfileMatch::with([
+            'matchedUser.member.profession',
+            'matchedUser.member.educationLevel',
+            'matchedUser.member.degree',
+            'matchedUser.member.sectMain',
+            'matchedUser.member.schoolOfThought',
+            'matchedUser.addresses.city',
+        ])
+            ->where('user_id', $user->id)
+            ->orderByDesc('match_percentage')
+            ->limit(5)
+            ->get()
+            ->each(fn (ProfileMatch $match) => $match->setAttribute(
+                'compatibility_summary',
+                $this->compatibilitySummary($match)
+            ));
+
         return view('frontend.member.v1_dashboard', [
             'profileCompletion' => $profileCompletion,
             'verification' => $latestVerification,
             'verificationStatus' => $verificationStatus,
-            'topMatches' => ProfileMatch::with('matchedUser.member')
-                ->where('user_id', $user->id)
-                ->orderByDesc('match_percentage')
-                ->limit(5)
-                ->get(),
+            'topMatches' => $topMatches,
             'proposalStats' => [
                 'sent_pending' => ExpressInterest::where('interested_by', $user->id)
                     ->where('status', ProposalStatus::Pending->value)

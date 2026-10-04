@@ -139,6 +139,25 @@
                                 <div class="fs-12 opacity-70 mt-1">
                                     {{ $match->compatibility_explanation ?: translate('Compatibility explanation will appear after recalculation.') }}
                                 </div>
+                                @if (!empty($match->compatibility_summary['facts']))
+                                    <div class="d-flex flex-wrap mt-2">
+                                        @foreach ($match->compatibility_summary['facts'] as $fact)
+                                            <span class="badge badge-soft-secondary mr-1 mb-1">
+                                                <i class="las la-check-circle mr-1"></i>{{ $fact[0] }}: {{ $fact[1] }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                                @if (!empty($match->compatibility_summary['matched_criteria']))
+                                    <div class="fs-12 fw-600 mt-2 mb-1">{{ translate('Matched preferences') }}</div>
+                                    <div class="d-flex flex-wrap">
+                                        @foreach ($match->compatibility_summary['matched_criteria'] as $criterion)
+                                            <span class="badge badge-soft-success mr-1 mb-1" title="{{ $criterion['reason'] ?? '' }}">
+                                                <i class="las la-heart mr-1"></i>{{ $criterion['label'] }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                             <div class="ml-3 h5 mb-0">{{ (int) $match->match_percentage }}%</div>
                         </div>
