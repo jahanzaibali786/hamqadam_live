@@ -188,6 +188,13 @@ class LoginController extends Controller
             if (session('link') != null) {
                 return redirect(session('link'));
             } else {
+                if (session('pending_guardian_token') != null) {
+                    $token = session()->pull('pending_guardian_token');
+                    return redirect()->route('guardian_mode.web_accept_token', $token);
+                }
+                if (\App\Models\FamilyGuardianLink::where('guardian_user_id', auth()->id())->where('status', 'approved')->whereNull('revoked_at')->exists()) {
+                    return redirect()->route('guardian_panel.index');
+                }
                 return redirect()->route('dashboard');
             }
         }

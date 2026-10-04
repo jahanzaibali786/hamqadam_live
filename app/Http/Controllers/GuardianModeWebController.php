@@ -76,7 +76,10 @@ class GuardianModeWebController extends Controller
     public function storeInvitation(Request $request)
     {
         $request->validate([
+            'first_name' => ['nullable', 'string', 'max:120'],
+            'last_name' => ['nullable', 'string', 'max:120'],
             'contact' => ['required', 'string', 'max:120'],
+            'password' => ['nullable', 'string', 'min:6'],
             'relationship' => ['required', 'string', 'max:60'],
             'guardian_role' => ['nullable', 'string', 'max:40', 'in:primary,supporting,custom'],
             'permission_preset' => ['required', 'string', 'in:view_only,review,participate,custom'],
@@ -92,7 +95,7 @@ class GuardianModeWebController extends Controller
             return back()->withInput();
         }
 
-        flash(translate('Guardian invitation created. Share this acceptance code with your guardian: ') . $invitation->token)->success();
+        flash(translate('Guardian added and invitation/credentials sent to their email successfully!'))->success();
 
         return back();
     }

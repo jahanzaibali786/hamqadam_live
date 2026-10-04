@@ -94,7 +94,16 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
                 $table->foreignId('matched_user_id')->constrained('users')->cascadeOnDelete();
-                $table->foreignId('profile_match_id')->nullable()->constrained('profile_matches')->nullOnDelete();
+                // profile_matches.id is a signed BIGINT in existing installations.
+                // Match that definition instead of using foreignId(), which creates
+                // an unsigned BIGINT and causes MySQL errno 150.
+                $table->bigInteger('profile_match_id')->nullable();
+                if (Schema::hasTable('profile_matches')) {
+                    $table->foreign('profile_match_id', 'match_successes_profile_match_id_foreign')
+                        ->references('id')
+                        ->on('profile_matches')
+                        ->nullOnDelete();
+                }
                 $table->string('status', 40)->default('got_match');
                 $table->text('note')->nullable();
                 $table->timestamp('confirmed_at')->useCurrent();

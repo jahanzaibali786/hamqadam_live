@@ -87,14 +87,33 @@
                 <div class="card-body">
                     <form method="POST" action="{{ route('guardian_mode.invitations.store') }}">
                         @csrf
-                        <div class="mb-3">
-                            <label class="form-label">{{ translate('Guardian Phone or Email') }}</label>
-                            <input type="text" name="contact" class="form-control" required>
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                <label class="form-label">{{ translate('Guardian First Name') }}</label>
+                                <input type="text" name="first_name" class="form-control" placeholder="{{ translate('e.g. Tariq') }}" required>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <label class="form-label">{{ translate('Guardian Last Name') }}</label>
+                                <input type="text" name="last_name" class="form-control" placeholder="{{ translate('e.g. Mahmood') }}">
+                            </div>
                         </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ translate('Guardian Email (or Phone)') }}</label>
+                            <input type="text" name="contact" class="form-control" placeholder="{{ translate('guardian@example.com') }}" required>
+                            <div class="form-text">{{ translate('Login instructions and credentials will be emailed directly to this address.') }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ translate('Set Login Password for Guardian') }}</label>
+                            <input type="text" name="password" class="form-control" placeholder="{{ translate('e.g. Guardian@123') }}" minlength="6">
+                            <div class="form-text">{{ translate('Set a password so your guardian can log in directly without registering.') }}</div>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">{{ translate('Relationship') }}</label>
                             <select name="relationship" class="form-select" required>
-                                @foreach (['Mother', 'Father', 'Brother', 'Sister', 'Uncle', 'Aunt', 'Wali', 'Other Guardian'] as $rel)
+                                @foreach (['Father', 'Mother', 'Brother', 'Sister', 'Uncle', 'Aunt', 'Wali', 'Other Guardian'] as $rel)
                                     <option value="{{ $rel }}">{{ translate($rel) }}</option>
                                 @endforeach
                             </select>
@@ -115,13 +134,13 @@
                                 <option value="participate">{{ translate('Participate — + recommend, family-stage actions') }}</option>
                                 <option value="custom">{{ translate('Custom — choose every permission') }}</option>
                             </select>
-                            <div class="form-text">{{ translate('You can fine-tune every permission after the guardian accepts.') }}</div>
+                            <div class="form-text">{{ translate('You can fine-tune every permission after adding the guardian.') }}</div>
                         </div>
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" name="is_wali" value="1" id="waliCheck">
                             <label class="form-check-label" for="waliCheck">{{ translate('This guardian is my Wali') }}</label>
                         </div>
-                        <button class="btn btn-primary w-100">{{ translate('Send Invitation') }}</button>
+                        <button class="btn btn-primary w-100">{{ translate('Add & Invite Guardian') }}</button>
                     </form>
                 </div>
             </div>

@@ -50,14 +50,46 @@ class GuardianModeService
      */
     public function invite(User $profile, array $data): GuardianInvitation
     {
+        $plainPassword = null;
+        $isNewAccount = false;
+
         // Two invite paths: by member id (the app flow) or by contact string
         // (phone/email — the website flow, resolved to an account when found).
         if (! empty($data['guardian_user_id'])) {
             $guardian = User::findOrFail((int) $data['guardian_user_id']);
             $contact = (string) ($guardian->email ?? $guardian->phone ?? ('member-' . $guardian->id));
         } else {
-            $contact = (string) $data['contact'];
+            $contact = trim((string) $data['contact']);
             $guardian = User::where('email', $contact)->orWhere('phone', $contact)->first();
+
+            if (! $guardian) {
+                // Auto-create guardian account so the guardian can directly log in with credentials
+                $isNewAccount = true;
+                $plainPassword = !empty($data['password']) ? (string) $data['password'] : \Illuminate\Support\Str::random(8);
+                $firstName = trim((string) ($data['first_name'] ?? ($data['name'] ?? 'Guardian')));
+                $lastName = trim((string) ($data['last_name'] ?? ''));
+
+                $guardian = new User();
+                $guardian->user_type = 'member';
+                $guardian->code = unique_code();
+                $guardian->first_name = $firstName ?: 'Guardian';
+                $guardian->last_name = $lastName;
+                if (filter_var($contact, FILTER_VALIDATE_EMAIL)) {
+                    $guardian->email = $contact;
+                } else {
+                    $guardian->phone = $contact;
+                }
+                $guardian->password = \Illuminate\Support\Facades\Hash::make($plainPassword);
+                $guardian->email_verified_at = now();
+                $guardian->approved = 1;
+                $guardian->membership = 1;
+                $guardian->save();
+
+                $member = new \App\Models\Member();
+                $member->user_id = $guardian->id;
+                $member->gender = in_array(strtolower($data['relationship'] ?? ''), ['mother', 'sister', 'aunt']) ? 2 : 1;
+                $member->save();
+            }
         }
 
         if ($guardian && (int) $guardian->id === (int) $profile->id) {
@@ -84,6 +116,8 @@ class GuardianModeService
         }
 
         $permissions = $this->resolvePermissions($data);
+        $linkStatus = $isNewAccount ? 'approved' : 'pending';
+        $approvedAt = $isNewAccount ? now() : null;
 
         $invitation = GuardianInvitation::create([
             'profile_user_id' => $profile->id,
@@ -94,31 +128,36 @@ class GuardianModeService
             'is_wali' => (bool) ($data['is_wali'] ?? false),
             'permissions' => $permissions,
             'token' => bin2hex(random_bytes(24)), // 48 hex chars, non-guessable
-            'status' => 'pending',
+            'status' => $isNewAccount ? 'accepted' : 'pending',
+            'accepted_at' => $approvedAt,
             'expires_at' => now()->addDays(self::INVITE_TTL_DAYS),
         ]);
 
-        FamilyGuardianLink::updateOrCreate([
+        $link = FamilyGuardianLink::updateOrCreate([
             'profile_user_id' => $profile->id,
-            'guardian_user_id' => $guardian?->id ?? $profile->id, // placeholder pair avoids a zero guardian id
+            'guardian_user_id' => $guardian?->id ?? $profile->id,
         ], [
             'relationship' => $data['relationship'] ?? null,
             'guardian_role' => $data['guardian_role'] ?? $data['relationship'] ?? null,
             'is_wali' => (bool) ($data['is_wali'] ?? false),
             'permissions' => $permissions,
-            'status' => 'pending',
+            'status' => $linkStatus,
             'invited_at' => now(),
-            'approved_at' => null,
+            'approved_at' => $approvedAt,
             'paused_at' => null,
             'revoked_at' => null,
         ]);
+
+        if ($isNewAccount) {
+            $this->auth->syncPermissions($link, $permissions, $profile->id);
+        }
 
         GuardianActivityLog::record(null, $guardian?->id, $profile->id, 'guardian_invited', GuardianInvitation::class, $invitation->id, [
             'contact' => $contact,
             'relationship' => $data['relationship'] ?? null,
         ]);
 
-        if ($guardian) {
+        if ($guardian && ! $isNewAccount) {
             NotificationHelper::guardianEvent(
                 $guardian,
                 'guardian_invitation',
@@ -137,7 +176,8 @@ class GuardianModeService
                 $data['relationship'] ?? 'Guardian',
                 $invitation->token,
                 $data['guardian_role'] ?? 'Guardian',
-                (bool) ($data['is_wali'] ?? false)
+                (bool) ($data['is_wali'] ?? false),
+                $plainPassword
             );
         }
 

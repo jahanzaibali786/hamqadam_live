@@ -249,23 +249,34 @@ class EmailUtility
     }
 
 
-    // Guardian invitation email with token and panel access instructions
-    public static function guardian_invitation_email($inviter, string $email, string $relationship, string $token, string $guardianRole = '', bool $isWali = false): bool
+    // Guardian invitation email with token, credentials, and panel access instructions
+    public static function guardian_invitation_email($inviter, string $email, string $relationship, string $token, string $guardianRole = '', bool $isWali = false, ?string $plainPassword = null): bool
     {
         $siteName = get_setting('website_name') ?: config('app.name', 'Hamqadam');
         $fromName = env('MAIL_FROM_NAME', $siteName);
         $roleLabel = $isWali ? 'Wali (Guardian)' : ($guardianRole ?: $relationship);
         $inviterName = trim(($inviter->first_name ?? '') . ' ' . ($inviter->last_name ?? '')) ?: 'A member';
         $acceptUrl = url('/guardian-mode/accept/' . $token);
+        $loginUrl = url('/login');
 
         $subject = get_email_template('guardian_invitation_email', 'subject');
         if (empty($subject)) {
-            $subject = '[[inviter_name]] invited you as a [[role]] on [[site_name]]';
+            $subject = '[[inviter_name]] invited you as their [[role]] on [[site_name]]';
         }
         $subject = str_replace(['[[inviter_name]]', '[[role]]', '[[site_name]]'], [$inviterName, $roleLabel, $siteName], $subject);
 
         $email_body = get_email_template('guardian_invitation_email', 'body');
         if (empty($email_body)) {
+            $credentialsHtml = '';
+            if (!empty($plainPassword)) {
+                $credentialsHtml = '<div style="background: #f8fafc; border: 2px dashed #94a3b8; border-radius: 8px; padding: 18px 20px; margin: 22px 0;">'
+                    . '<h4 style="margin: 0 0 10px 0; color: #1b365d; font-size: 15px;">' . __('Your Direct Login Credentials:') . '</h4>'
+                    . '<p style="margin: 4px 0; font-size: 14px; color: #334155;"><strong>' . __('Email / Username:') . '</strong> ' . e($email) . '</p>'
+                    . '<p style="margin: 4px 0; font-size: 14px; color: #334155;"><strong>' . __('Password:') . '</strong> <span style="font-family: monospace; font-size: 15px; font-weight: 700; background: #e2e8f0; color: #0f172a; padding: 2px 8px; border-radius: 4px;">' . e($plainPassword) . '</span></p>'
+                    . '<p style="margin: 8px 0 0 0; font-size: 12px; color: #64748b;"><em>(' . __('Password set for you by :name', ['name' => $inviterName]) . ')</em></p>'
+                    . '</div>';
+            }
+
             $email_body = '<div style="font-family: -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">'
                 . '<div style="background: linear-gradient(135deg, #1b365d, #0b1e36); color: #ffffff; padding: 28px 24px; text-align: center;">'
                 . '<h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px; color: #ffffff;">' . e($siteName) . '</h1>'
@@ -278,18 +289,14 @@ class EmailUtility
                 . '<h4 style="margin: 0 0 8px 0; color: #1b365d; font-size: 15px;">' . __('About Guardian & Wali Access:') . '</h4>'
                 . '<p style="margin: 0; font-size: 13.5px; color: #475569;">' . __('Guardian Mode allows family members to actively assist and guide their loved ones in finding a compatible life partner. You can review recommended profiles, shortlist promising matches, leave feedback, and participate in family introductions with complete privacy.') . '</p>'
                 . '</div>'
+                . $credentialsHtml
                 . '<h4 style="margin: 24px 0 10px 0; color: #0f172a; font-size: 15px;">' . __('How to Access Your Guardian Panel:') . '</h4>'
                 . '<ol style="padding-left: 20px; margin: 0 0 24px 0; font-size: 14px; color: #475569; line-height: 1.8;">'
-                . '<li>' . __('Click the button below to automatically accept your invitation.') . '</li>'
-                . '<li>' . __('Log in with your existing account or create a free account with your email:') . ' <strong>' . e($email) . '</strong></li>'
-                . '<li>' . __('Once logged in, your Guardian Panel will open at') . ' <code>' . url('/guardian-panel') . '</code> ' . __('where you can review matches.') . '</li>'
+                . '<li>' . __('Log in using your email') . ' (<strong>' . e($email) . '</strong>)' . (!empty($plainPassword) ? ' ' . __('and the password given above.') : '.') . '</li>'
+                . '<li>' . __('Once logged in, open the Guardian Panel at') . ' <a href="' . url('/guardian-panel') . '" style="color: #1b365d; font-weight: 600;">' . url('/guardian-panel') . '</a> ' . __('to review matches.') . '</li>'
                 . '</ol>'
                 . '<div style="text-align: center; margin: 30px 0;">'
-                . '<a href="' . $acceptUrl . '" style="display: inline-block; background: #1b365d; color: #ffffff !important; text-decoration: none; padding: 14px 34px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(27,54,93,0.3);">' . __('Accept Invitation & Open Guardian Panel') . '</a>'
-                . '</div>'
-                . '<div style="background: #f1f5f9; border-radius: 8px; padding: 14px; text-align: center; margin-bottom: 20px;">'
-                . '<span style="font-size: 12.5px; color: #64748b; display: block; margin-bottom: 4px;">' . __('Or enter this invitation code on the Guardian Panel:') . '</span>'
-                . '<strong style="font-size: 15px; color: #0f172a; letter-spacing: 1px; font-family: monospace;">' . e($token) . '</strong>'
+                . '<a href="' . (!empty($plainPassword) ? $loginUrl : $acceptUrl) . '" style="display: inline-block; background: #1b365d; color: #ffffff !important; text-decoration: none; padding: 14px 34px; border-radius: 8px; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(27,54,93,0.3);">' . (!empty($plainPassword) ? __('Log In to Guardian Panel') : __('Accept Invitation & Open Guardian Panel')) . '</a>'
                 . '</div>'
                 . '<p style="font-size: 12px; color: #94a3b8; text-align: center; word-break: break-all; margin: 0;">' . __('Direct link:') . ' <a href="' . $acceptUrl . '" style="color: #1b365d;">' . $acceptUrl . '</a></p>'
                 . '<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 26px 0;">'
@@ -298,8 +305,8 @@ class EmailUtility
                 . '</div>';
         } else {
             $email_body = str_replace(
-                ['[[inviter_name]]', '[[role]]', '[[token]]', '[[accept_url]]', '[[site_name]]', '[[from]]'],
-                [$inviterName, $roleLabel, $token, $acceptUrl, $siteName, $fromName],
+                ['[[inviter_name]]', '[[role]]', '[[token]]', '[[accept_url]]', '[[login_url]]', '[[email]]', '[[password]]', '[[site_name]]', '[[from]]'],
+                [$inviterName, $roleLabel, $token, $acceptUrl, $loginUrl, $email, $plainPassword ?? '', $siteName, $fromName],
                 $email_body
             );
         }
