@@ -1,6 +1,19 @@
 @extends('frontend.layouts.app')
 @section('content')
-    <section class="py-4 py-lg-5 bg-white">
+    <section class="hq-reference-page-hero hq-discovery-reference-hero">
+        <div class="container">
+            <div class="hq-reference-breadcrumb">{{ translate('Home') }} <span>/</span> {{ translate('Active Members Discovery') }}</div>
+            <span class="hq-reference-eyebrow"><i class="las la-certificate"></i> {{ translate('Curated Sanctuary of Verified Hearts') }}</span>
+            <h1>{{ translate('Active Members Discovery') }}</h1>
+            <p>{{ translate('Explore respectful prospective matches with verified identities, family-minded discovery, and private communication.') }}</p>
+            <div class="hq-discovery-meta">
+                <span><i class="las la-circle"></i> {{ translate('Active Profiles') }}</span>
+                <span><i class="las la-shield-alt"></i> {{ translate('Verified Community') }}</span>
+                <span><i class="las la-comments"></i> {{ translate('Protected Communication') }}</span>
+            </div>
+        </div>
+    </section>
+    <section class="hq-reference-discovery-page py-4 py-lg-5">
         <div class="container">
             <div class="row">
                 <div class="col-12">
@@ -18,287 +31,174 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="mb-5">
+                            <div class="mb-5 hq-discovery-grid">
                                 @foreach ($users as $key => $user)
-                                    @php $compatibility = $user->profile_match_for_viewer; @endphp
-                                    <div class="row no-gutters border border-gray-300 rounded hov-shadow-md mb-4 has-transition position-relative"
-                                        id="block_id_{{ $user->id }}">
-                                        <div class="col-md-auto">
-                                            <div class="text-center text-md-left pt-3 pt-md-0 member-listing-md-img">
-                                                @php
-                                                    $avatar_image = $user->member->gender == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png';
-                                                    $profile_picture_show = show_profile_picture($user);
-                                                @endphp
-                                                <img @if ($profile_picture_show) src="{{ uploaded_asset($user->photo) }}"
+                                    @php
+                                        $compatibility = $user->profile_match_for_viewer;
+                                        $member = $user->member;
+                                        $avatar_image = ($member?->gender == 1) ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png';
+                                        $profile_picture_show = show_profile_picture($user);
+                                        $isVerified = app(\App\Services\BadgeService::class)->isVerified($member);
+                                        $isOnline = Cache::has('user-is-online-' . $user->id);
+                                        $age = !empty($member?->birthday) ? \Carbon\Carbon::parse($member->birthday)->age : null;
+                                        $height = $user->physical_attributes?->height;
+                                        $presentAddress = $user->addresses->where('type', 'present')->first();
+                                        $locationParts = array_values(array_filter([
+                                            $presentAddress?->city?->name ?? null,
+                                            $presentAddress?->state?->name ?? null,
+                                            $presentAddress?->country?->name ?? null,
+                                        ]));
+                                        $locationText = implode(', ', array_slice($locationParts, 0, 2));
+                                        $career = $user->career->last();
+                                        $education = $user->education->where('is_highest_degree', 1)->first() ?? $user->education->last();
+                                        $religionName = $user->spiritual_backgrounds?->religion?->name;
+                                        $casteName = $user->spiritual_backgrounds?->caste?->name;
+                                        $maritalStatus = $member?->marital_status?->name;
+                                        $languageName = null;
+                                        if (!empty($member?->mothere_tongue)) {
+                                            $languageName = \App\Models\MemberLanguage::where('id', $member->mothere_tongue)->value('name');
+                                        }
+
+                                        $remaining_full_profile_views = (int) get_remaining_package_value(Auth::user()->id, 'remaining_profile_viewer_view');
+                                        $can_view_full_profile = package_validity(Auth::user()->id) && $remaining_full_profile_views > 0;
+                                        $already_viewed_full_profile = \App\Models\ProfileViewer::where('user_id', $user->id)->where('viewed_by', Auth::user()->id)->exists();
+                                        $profileNeedsUpgrade = get_setting('full_profile_show_according_to_membership') == 1
+                                            && !$already_viewed_full_profile
+                                            && !$can_view_full_profile;
+
+                                        $interest_class = 'text-primary';
+                                        $do_expressed_interest = \App\Models\ExpressInterest::where('user_id', $user->id)
+                                            ->where('interested_by', Auth::user()->id)
+                                            ->first();
+                                        $received_expressed_interest = \App\Models\ExpressInterest::where('user_id', Auth::user()->id)
+                                            ->where('interested_by', $user->id)
+                                            ->first();
+                                        if (!empty($do_expressed_interest)) {
+                                            $interest_onclick = 0;
+                                            $interest_text = $do_expressed_interest->status->value == 0 ? translate('Interest Sent') : translate('Interest Accepted');
+                                        } elseif (!empty($received_expressed_interest)) {
+                                            $interest_onclick = 'do_response';
+                                            $interest_text = $received_expressed_interest->status->value == 0 ? translate('Respond to Interest') : translate('Interest Accepted');
+                                        } else {
+                                            $interest_onclick = 1;
+                                            $interest_text = translate('Send Interest');
+                                        }
+
+                                        $shortlist = \App\Models\Shortlist::where('user_id', $user->id)
+                                            ->where('shortlisted_by', Auth::user()->id)
+                                            ->first();
+                                        $can_shortlist = (!empty($do_expressed_interest) && $do_expressed_interest->status->value == 1)
+                                            || (!empty($received_expressed_interest) && $received_expressed_interest->status->value == 1);
+                                        if (empty($shortlist) && $can_shortlist) {
+                                            $shortlist_onclick = 1;
+                                            $shortlist_text = translate('Shortlist');
+                                            $shortlist_prompt = '';
+                                        } elseif (!empty($shortlist)) {
+                                            $shortlist_onclick = 0;
+                                            $shortlist_text = translate('Shortlisted');
+                                            $shortlist_prompt = '';
+                                        } else {
+                                            $shortlist_onclick = -1;
+                                            $shortlist_text = translate('Shortlist');
+                                            $shortlist_prompt = empty($do_expressed_interest) && empty($received_expressed_interest)
+                                                ? translate('Please express interest first before shortlisting this member.')
+                                                : translate('Please wait for interest approval before shortlisting this member.');
+                                        }
+
+                                        $profile_reported = \App\Models\ReportedUser::where('user_id', $user->id)
+                                            ->where('reported_by', Auth::user()->id)
+                                            ->exists();
+                                    @endphp
+
+                                    <article class="hq-discovery-card" id="block_id_{{ $user->id }}">
+                                        <div class="hq-discovery-photo">
+                                            <img
+                                                src="{{ $profile_picture_show ? (uploaded_asset($user->photo) ?: static_asset($avatar_image)) : static_asset($avatar_image) }}"
+                                                onerror="this.onerror=null;this.src='{{ static_asset($avatar_image) }}';"
+                                                alt="{{ $user->first_name . ' ' . $user->last_name }}">
+
+                                            <div class="hq-profile-badges">
+                                                @if($isVerified)
+                                                    <span class="hq-verified-tag"><i class="las la-certificate"></i> {{ translate('CNIC Verified') }}</span>
+                                                @endif
+                                                <span class="hq-active-tag {{ $isOnline ? 'is-online' : '' }}">
+                                                    <i class="las la-circle"></i> {{ $isOnline ? translate('Online Now') : translate('Active Recently') }}
+                                                </span>
+                                            </div>
+
+                                            <a id="shortlist_a_id_{{ $user->id }}"
+                                                @if ($shortlist_onclick == 1) onclick="do_shortlist({{ $user->id }})"
+                                                @elseif($shortlist_onclick == 0) onclick="remove_shortlist({{ $user->id }})"
+                                                @else onclick="show_shortlist_requirement(@json($shortlist_prompt))" @endif
+                                                class="hq-card-heart c-pointer" title="{{ $shortlist_text }}">
+                                                <i class="{{ $shortlist ? 'las' : 'lar' }} la-heart"></i>
+                                            </a>
+
+                                            <div class="hq-discovery-photo-overlay">
+                                                <div>
+                                                    <h2>{{ $user->first_name . ' ' . $user->last_name }}</h2>
+                                                    <small>ID: {{ $user->code }}</small>
+                                                </div>
+                                                @if($compatibility)
+                                                    <span class="hq-match-pill"><i class="las la-heart"></i> {{ (int) $compatibility->match_percentage }}% {{ translate('Match') }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <div class="hq-discovery-body">
+                                            <div class="hq-profile-facts">
+                                                @if($age)<span><i class="las la-user"></i>{{ $age }} {{ translate('Years') }}</span>@endif
+                                                @if($height)<span><i class="las la-ruler-vertical"></i>{{ $height }}</span>@endif
+                                                @if($locationText)<span><i class="las la-map-marker"></i>{{ $locationText }}</span>@endif
+                                            </div>
+
+                                            @if($career?->designation || $education?->degree)
+                                                <div class="hq-profile-profession">
+                                                    <i class="las la-graduation-cap"></i>
+                                                    <span>{{ $career?->designation ?: $education?->degree }}</span>
+                                                    @if($religionName)<b>• {{ $religionName }}</b>@endif
+                                                </div>
+                                            @endif
+
+                                            <p class="hq-profile-summary">
+                                                {{ \Illuminate\Support\Str::limit($compatibility?->compatibility_explanation ?: translate('A verified Hamqadam member seeking a respectful, family-minded lifelong partnership.'), 145) }}
+                                            </p>
+
+                                            <div class="hq-profile-tags">
+                                                @foreach(array_filter([$languageName, $casteName, $maritalStatus]) as $tag)
+                                                    <span>{{ $tag }}</span>
+                                                @endforeach
+                                                @if($member?->trust_badge)<span>{{ translate('Trust Badge') }}</span>@endif
+                                            </div>
+
+                                            <div class="hq-discovery-actions">
+                                                @if($interest_onclick === 1)
+                                                    <button type="button" id="interest_a_id_{{ $user->id }}" onclick="express_interest({{ $user->id }})" class="btn btn-primary">
+                                                        <i class="lar la-heart"></i><span id="interest_id_{{ $user->id }}">{{ $interest_text }}</span>
+                                                    </button>
+                                                @elseif($interest_onclick === 'do_response')
+                                                    <a id="interest_a_id_{{ $user->id }}" href="{{ route('interest_requests') }}" class="btn btn-primary">
+                                                        <i class="las la-reply"></i><span id="interest_id_{{ $user->id }}">{{ $interest_text }}</span>
+                                                    </a>
                                                 @else
-                                                src="{{ static_asset($avatar_image) }}" @endif
-                                                    onerror="this.onerror=null;this.src='{{ static_asset($avatar_image) }}';"
-                                                    class="img-fit member-listing-md-img mw-100 size-150px rounded-circle ">
+                                                    <button type="button" id="interest_a_id_{{ $user->id }}" class="btn btn-soft-primary" disabled>
+                                                        <i class="las la-check"></i><span id="interest_id_{{ $user->id }}">{{ $interest_text }}</span>
+                                                    </button>
+                                                @endif
+
+                                                @if($profileNeedsUpgrade)
+                                                    <button type="button" onclick="package_update_alert()" class="btn btn-soft-primary"><i class="las la-user-lock"></i>{{ translate('View Profile') }}</button>
+                                                @else
+                                                    <a href="{{ route('member_profile', $user->id) }}" class="btn btn-soft-primary"><i class="las la-user"></i>{{ translate('View Profile') }}</a>
+                                                @endif
+                                            </div>
+
+                                            <div class="hq-card-secondary-actions">
+                                                <button type="button" onclick="ignore_member({{ $user->id }})"><i class="las la-ban"></i>{{ translate('Ignore') }}</button>
+                                                <button type="button" @if(!$profile_reported) onclick="report_member({{ $user->id }})" @endif {{ $profile_reported ? 'disabled' : '' }}><i class="las la-flag"></i>{{ $profile_reported ? translate('Reported') : translate('Report') }}</button>
                                             </div>
                                         </div>
-                                        <div class="col-md position-static d-flex align-items-center">
-                                            <span class="absolute-top-right px-4 py-3">
-                                                @if ($user->membership == 1)
-                                                    <span
-                                                        class="badge badge-inline badge-info">{{ translate('Free') }}</span>
-                                                @elseif($user->membership == 2)
-                                                    <span
-                                                        class="badge badge-inline badge-success">{{ translate('Premium') }}</span>
-                                                @endif
-                                                @if($compatibility)
-                                                    <span class="badge badge-inline badge-primary ml-1">
-                                                        {{ (int) $compatibility->match_percentage }}% {{ translate('Match') }}
-                                                    </span>
-                                                @endif
-                                            </span>
-                                            <div class="px-md-4 p-3 flex-grow-1">
-
-                                                <h2 class="h6 fw-600 fs-18 text-truncate mb-1">
-                                                    {{ $user->first_name . ' ' . $user->last_name }}</h2>
-                                                <div class="mb-2">
-                                                    @if(app(\App\Services\BadgeService::class)->isVerified($user->member))
-                                                        <span class="badge badge-soft-success mr-1"><i class="las la-check-circle"></i> {{ translate('Verified') }}</span>
-                                                    @endif
-                                                    @if($user->member?->trust_badge)
-                                                        <span class="badge badge-soft-warning"><i class="las la-shield-alt"></i> {{ translate('Trust') }}</span>
-                                                    @endif
-                                                </div>
-                                                <div class="mb-2 fs-12">
-                                                    <span class="opacity-60">{{ translate('Member ID: ') }}</span>
-                                                    <span class="ml-4 text-primary">{{ $user->code }}</span>
-                                                </div>
-                                                <table class="w-100 opacity-70 mb-2 fs-12">
-                                                    <tr>
-                                                        <td class="py-1 w-25">
-                                                            <span>{{ translate('Age') }}</span>
-                                                        </td>
-                                                        <td class="py-1 w-25 fw-700 text-dark">
-                                                            {{ \Carbon\Carbon::parse($user->member->birthday)->age }}</td>
-                                                        <td class="py-1 w-25"><span>{{ translate('Height') }}</span></td>
-                                                        <td class="py-1 w-25 fw-700 text-dark">
-                                                            @if (!empty($user->physical_attributes->height))
-                                                                {{ $user->physical_attributes->height }}
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="py-1"><span>{{ translate('Religion') }}</span></td>
-                                                        <td class="py-1 fw-700 text-dark">
-                                                            @if (!empty($user->spiritual_backgrounds->religion_id))
-                                                                {{ $user->spiritual_backgrounds->religion->name }}
-                                                            @endif
-                                                        </td>
-                                                        <td class="py-1"><span>{{ translate('Caste') }}</span></td>
-                                                        <td class="py-1 fw-700 text-dark">
-                                                            @if (!empty($user->spiritual_backgrounds->caste_id))
-                                                                {{ $user->spiritual_backgrounds->caste->name }}
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="py-1"><span>{{ translate('First Language') }}</span>
-                                                        </td>
-                                                        <td class="py-1 fw-700 text-dark">
-                                                            @if ($user->member->mothere_tongue != null)
-                                                                {{ \App\Models\MemberLanguage::where('id', $user->member->mothere_tongue)->first()->name }}
-                                                            @endif
-                                                        </td>
-                                                        <td class="py-1"><span>{{ translate('Marital Status') }}</span>
-                                                        </td>
-                                                        <td class="py-1 fw-700 text-dark">
-                                                            {{ $user->member->marital_status != null ? $user->member->marital_status->name : '' }}
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td class="py-1"><span>{{ translate('Education') }}</span></td>
-                                                        <td class="py-1 fw-700 text-dark">
-                                                            @if($user->education->count() > 0)
-                                                                {{ $user->education->where('is_highest_degree', 1)->first()->degree ?? $user->education->last()->degree  }}
-                                                            @endif
-                                                        </td>
-                                                        <td class="py-1"><span>{{ translate('Profession') }}</span>
-                                                        </td>
-                                                        <td class="py-1 fw-700 text-dark">
-                                                            @if($user->career->count() > 0)
-                                                                {{ $user->career->where('present', 1)->first()->designation ?? $user->career->last()->designation }}
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                    
-                                                    <tr>
-                                                        <td class="py-1"><span>{{ translate('Location') }}</span></td>
-                                                        <td class="py-1 fw-700 text-dark">
-                                                            @php
-                                                                $present_address = $user->addresses->where('type', 'present')->first();
-                                                            @endphp
-                                                            @if (!empty($present_address->country_id))
-                                                                {{ $present_address->country->name }}
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                </table>
-                                                @if($compatibility)
-                                                    <div class="bg-soft-primary rounded px-3 py-2 mb-3">
-                                                        <div class="d-flex justify-content-between align-items-center">
-                                                            <span class="fw-600">{{ translate('AI Compatibility') }}</span>
-                                                            <span class="text-primary fw-700">{{ (int) $compatibility->match_percentage }}%</span>
-                                                        </div>
-                                                        <div class="progress mt-2" style="height: 6px;">
-                                                            <div class="progress-bar bg-primary" style="width: {{ (int) $compatibility->match_percentage }}%"></div>
-                                                        </div>
-                                                        <div class="fs-12 opacity-70 mt-1">
-                                                            {{ $compatibility->compatibility_explanation ?: translate('Based on your partner preference and profile signals.') }}
-                                                        </div>
-                                                    </div>
-                                                @endif
-                                                @php
-                                                    $remaining_full_profile_views = (int) get_remaining_package_value(Auth::user()->id, 'remaining_profile_viewer_view');
-                                                    $can_view_full_profile = package_validity(Auth::user()->id) && $remaining_full_profile_views > 0;
-                                                @endphp
-                                                <div class="row gutters-5 text-center">
-                                                                                                        <div class="col">
-                                                        @php
-                                                            $already_viewed_full_profile = \App\Models\ProfileViewer::where('user_id', $user->id)->where('viewed_by', Auth::user()->id)->exists();
-                                                        @endphp
-                                                        @if ($already_viewed_full_profile)
-                                                            <a href="{{ route('member_profile', $user->id) }}" class="text-success d-inline-block">
-                                                                <i class="las la-check-circle fs-20"></i>
-                                                                <span class="d-block fs-10 opacity-60">{{ translate('Viewed') }}</span>
-                                                            </a>
-                                                        @elseif (get_setting('full_profile_show_according_to_membership') == 1 && ! $can_view_full_profile)
-                                                            <a href="javascript:void(0);" onclick="package_update_alert()" class="text-reset c-pointer">
-                                                                <i class="las la-user-lock fs-20 text-muted"></i>
-                                                                <span class="d-block fs-10 opacity-60">{{ translate('Upgrade to View') }}</span>
-                                                            </a>
-                                                        @else
-                                                            <a href="{{ route('member_profile', $user->id) }}" class="text-reset c-pointer">
-                                                                <i class="las la-user fs-20 text-primary"></i>
-                                                                <span class="d-block fs-10 opacity-60">{{ translate('Full Profile') }}</span>
-                                                            </a>
-                                                        @endif
-                                                    </div>
-                                                    <div class="col">
-                                                        @php
-                                                            $interest_class = 'text-primary';
-                                                            $do_expressed_interest = \App\Models\ExpressInterest::where('user_id', $user->id)
-                                                                ->where('interested_by', Auth::user()->id)
-                                                                ->first();
-                                                            $received_expressed_interest = \App\Models\ExpressInterest::where('user_id', Auth::user()->id)
-                                                                ->where('interested_by', $user->id)
-                                                                ->first();
-                                                            if (!empty($do_expressed_interest)) {
-                                                                $interest_onclick = 0;
-                                                                $interest_text = $do_expressed_interest->status->value == 0 ? translate('Interest Expressed') : translate('Interest Accepted');
-                                                                $interest_class = $do_expressed_interest->status->value == 0 ? 'text-primary' : 'text-primary';
-                                                            } elseif (!empty($received_expressed_interest)) {
-                                                                $interest_onclick = 'do_response';
-                                                                $interest_text = $received_expressed_interest->status->value == 0 ? translate('Response to Interest') : translate('You Accepted Interest');
-                                                                $interest_class = 'text-primary';
-                                                            } else {
-                                                                $interest_onclick = 1;
-                                                                $interest_text = translate('Interest');
-                                                                $interest_class = 'text-dark';
-                                                            }
-                                                        @endphp
-
-                                                        <a id="interest_a_id_{{ $user->id }}"
-                                                            @if ($interest_onclick == 1) onclick="express_interest({{ $user->id }})"
-                                                    @elseif($interest_onclick == 'do_response')
-                                                        href="{{ route('interest_requests') }}" @endif
-                                                            class="text-reset c-pointer">
-                                                            <i class="la la-heart-o fs-20 text-primary"></i>
-                                                            <span id="interest_id_{{ $user->id }}"
-                                                                class="d-block fs-10 opacity-60 {{ $interest_class }}">
-                                                                {{ $interest_text }}
-                                                            </span>
-                                                        </a>
-                                                    </div>
-                                                    <div class="col">
-                                                        @php
-                                                            $shortlist = \App\Models\Shortlist::where('user_id', $user->id)
-                                                                ->where('shortlisted_by', Auth::user()->id)
-                                                                ->first();
-                                                            $can_shortlist = (!empty($do_expressed_interest) && $do_expressed_interest->status->value == 1)
-                                                                || (!empty($received_expressed_interest) && $received_expressed_interest->status->value == 1);
-                                                            if (empty($shortlist) && $can_shortlist) {
-                                                                $shortlist_onclick = 1;
-                                                                $shortlist_text = translate('Shortlist');
-                                                                $shortlist_class = 'text-dark';
-                                                                $shortlist_prompt = '';
-                                                            } elseif (!empty($shortlist)) {
-                                                                $shortlist_onclick = 0;
-                                                                $shortlist_text = translate('Shortlisted');
-                                                                $shortlist_class = 'text-primary';
-                                                                $shortlist_prompt = '';
-                                                            } else {
-                                                                $shortlist_onclick = -1;
-                                                                $shortlist_text = translate('Shortlist');
-                                                                $shortlist_class = 'text-muted';
-                                                                if (empty($do_expressed_interest) && empty($received_expressed_interest)) {
-                                                                    $shortlist_prompt = translate('Please express interest first before shortlisting this member.');
-                                                                } elseif (!empty($do_expressed_interest) && $do_expressed_interest->status->value == 0) {
-                                                                    $shortlist_prompt = translate('Your interest request has been sent. Please wait for approval before shortlisting.');
-                                                                } elseif (!empty($received_expressed_interest) && $received_expressed_interest->status->value == 0) {
-                                                                    $shortlist_prompt = translate('Please respond to the received interest before shortlisting this member.');
-                                                                } else {
-                                                                    $shortlist_prompt = translate('Please wait for interest approval before shortlisting this member.');
-                                                                }
-                                                            }
-                                                        @endphp
-                                                        <a id="shortlist_a_id_{{ $user->id }}"
-                                                            @if ($shortlist_onclick == 1) onclick="do_shortlist({{ $user->id }})"
-                                                    @elseif($shortlist_onclick == 0)
-                                                        onclick="remove_shortlist({{ $user->id }})"
-                                                    @else
-                                                        onclick="show_shortlist_requirement('{{ addslashes($shortlist_prompt) }}')" @endif
-                                                            class="text-reset c-pointer">
-                                                            <i class="las la-list fs-20 text-primary"></i>
-                                                            <span id="shortlist_id_{{ $user->id }}"
-                                                                class="d-block fs-10 opacity-60 {{ $shortlist_class }}">
-                                                                {{ $shortlist_text }}
-                                                            </span>
-                                                        </a>
-                                                    </div>
-                                                    <div class="col">
-                                                        <a onclick="ignore_member({{ $user->id }})"
-                                                            class="text-reset c-pointer">
-                                                            <span class="text-dark">
-                                                                <i class="las la-ban fs-20 text-primary"></i>
-                                                                <span
-                                                                    class="d-block fs-10 opacity-60">{{ translate('Ignore') }}</span>
-                                                            </span>
-                                                        </a>
-                                                    </div>
-                                                    <div class="col">
-                                                        @php
-                                                            $profile_reported = \App\Models\ReportedUser::where('user_id', $user->id)
-                                                                ->where('reported_by', Auth::user()->id)
-                                                                ->first();
-                                                            if (empty($profile_reported)) {
-                                                                $report_onclick = 1;
-                                                                $report_text = translate('Report');
-                                                                $report_class = 'text-dark';
-                                                            } else {
-                                                                $report_onclick = 0;
-                                                                $report_text = translate('Reported');
-                                                                $report_class = 'text-primary';
-                                                            }
-                                                        @endphp
-                                                        <a id="report_a_id_{{ $user->id }}"
-                                                            @if ($report_onclick == 1) onclick="report_member({{ $user->id }})" @endif
-                                                            class="text-reset c-pointer">
-                                                            <span id="report_id_{{ $user->id }}"
-                                                                class="{{ $report_class }}">
-                                                                <i class="las la-info-circle fs-20 text-primary"></i>
-                                                                <span
-                                                                    class="d-block fs-10 opacity-60">{{ $report_text }}</span>
-                                                            </span>
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    </article>
                                 @endforeach
                             </div>
                             <div class="aiz-pagination">

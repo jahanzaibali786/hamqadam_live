@@ -291,6 +291,7 @@ Route::group(['middleware' => ['app_language']], function () {
                 Route::post('/support-ticket/store', 'store');
                 Route::get('/support-ticket/categories', 'support_ticket_categories');
                 Route::post('/ticket-reply', 'ticket_reply');
+                Route::post('/support-ticket/{id}/rate', 'rate');
             });
 
             Route::controller(HomeController::class)->group(function () {
@@ -411,4 +412,3 @@ Route::group(['middleware' => ['app_language']], function () {
     });
 });
 Route::prefix('v1/bridge')->middleware('auth:sanctum')->group(base_path('routes/api_bridge.php'));
-

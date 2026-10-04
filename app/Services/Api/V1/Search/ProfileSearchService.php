@@ -205,7 +205,15 @@ class ProfileSearchService
         }
 
         if (! empty($filters['education'])) {
-            $query->whereHas('education', fn ($education) => $education->where('degree', 'like', '%' . $filters['education'] . '%'));
+            $educationTerm = trim((string) $filters['education']);
+
+            $query->whereHas('education', function ($education) use ($educationTerm) {
+                $education->where(function ($match) use ($educationTerm) {
+                    $match->where('degree_legacy', 'like', '%' . $educationTerm . '%')
+                        ->orWhereHas('degree', fn ($degree) => $degree->where('name', 'like', '%' . $educationTerm . '%'))
+                        ->orWhereHas('educationLevel', fn ($level) => $level->where('name', 'like', '%' . $educationTerm . '%'));
+                });
+            });
         }
 
         if (! empty($filters['profession'])) {

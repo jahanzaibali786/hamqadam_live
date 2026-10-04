@@ -25,7 +25,7 @@
     <!-- Open Graph data -->
     <meta property="og:title" content="{{ $page->meta_title }}" />
     <meta property="og:type" content="product" />
-    <meta property="og:url" content="{{ env('APP_URL') }}" />
+    <meta property="og:url" content="{{ url()->current() }}" />
     <meta property="og:image" content="{{ uploaded_asset($page->meta_img) }}" />
     <meta property="og:description" content="{{ $page->meta_description }}" />
     <meta property="og:site_name" content="{{ env('APP_NAME') }}" />

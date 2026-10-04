@@ -1,9 +1,78 @@
+@php
+    $referenceHelpline = get_setting('header_helpline_no') ?: '+01 112 352 566';
+@endphp
+<div class="hq-reference-header @if(get_setting('header_stikcy') == 'on') position-fixed @else position-absolute @endif w-100 top-0 z-1020">
+    <div class="hq-reference-topbar d-none d-lg-block"><div class="container d-flex align-items-center justify-content-between"><div><span class="mr-4"><i class="las la-headset mr-1"></i>{{ translate('Helpline') }}: <strong>{{ $referenceHelpline }}</strong></span><span class="hq-verified-community"><i class="las la-shield-alt mr-1"></i>{{ translate('100% ID Verified Community') }}</span></div><div class="hq-top-links"><span><i class="las la-globe mr-1"></i>{{ translate('English') }}</span><span>/</span><a href="{{ route('contact_us') }}">{{ translate('FAQ') }}</a><a href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a></div></div></div>
+    <header class="hq-reference-navbar">
+        <div class="container hq-reference-navbar-inner">
+            <a href="{{ route('home') }}" class="hq-reference-brand">
+                <span class="hq-reference-brand-mark"><i class="las la-heart"></i></span>
+                <span><strong>{{ get_setting('website_name') ?: 'Hamqadam' }}</strong><small>{{ translate('Matrimonial Sanctuary') }}</small></span>
+            </a>
+            <nav class="hq-reference-menu d-none d-lg-flex">
+                <a class="{{ areActiveRoutes(['home'], 'is-active') }}" href="{{ route('home') }}">{{ translate('Home') }}</a>
+                <a class="{{ areActiveRoutes(['member.listing'], 'is-active') }}" href="{{ route('member.listing') }}">{{ translate('Active Members') }}</a>
+                <a class="{{ areActiveRoutes(['packages'], 'is-active') }}" href="{{ route('packages') }}">{{ translate('Premium Plans') }}</a>
+                <a class="{{ areActiveRoutes(['happy_stories'], 'is-active') }}" href="{{ route('happy_stories') }}">{{ translate('Happy Stories') }}</a>
+                <a class="{{ areActiveRoutes(['contact_us'], 'is-active') }}" href="{{ route('contact_us') }}">{{ translate('Help & Support') }}</a>
+            </nav>
+            <div class="hq-reference-actions">
+                @auth
+                    @if(auth()->user()->user_type === 'member')
+                        @php
+                            $unseen_notif = \App\Models\Notification::where('notifiable_id', auth()->id())->whereNull('read_at')->count();
+                            $unseen_chat = count(chat_threads());
+                        @endphp
+                        <a class="hq-header-icon d-none d-lg-inline-flex position-relative" href="{{ route('frontend.notifications') }}" title="{{ translate('Notifications') }}">
+                            <i class="las la-bell"></i>
+                            @if($unseen_notif > 0)
+                                <span class="badge badge-sm badge-circle badge-primary position-absolute" style="top:-3px;right:-3px;font-size:9px;padding:2px 4px;">{{ $unseen_notif }}</span>
+                            @endif
+                        </a>
+                        <a class="hq-header-icon d-none d-lg-inline-flex position-relative" href="{{ route('all.messages') }}" title="{{ translate('Messages') }}">
+                            <i class="las la-comment-dots"></i>
+                            @if($unseen_chat > 0)
+                                <span class="badge badge-sm badge-circle badge-primary position-absolute chat-header-badge" style="top:-3px;right:-3px;font-size:9px;padding:2px 4px;">{{ $unseen_chat }}</span>
+                            @endif
+                        </a>
+                        <a class="hq-dashboard-pill" href="{{ route('dashboard') }}">
+                            <img src="{{ uploaded_asset(auth()->user()->photo) }}" onerror="this.onerror=null;this.src='{{ static_asset('assets/img/avatar-place.png') }}';" class="hq-nav-avatar rounded-circle">
+                            <span class="hq-nav-user-name">{{ auth()->user()->first_name ?: translate('Dashboard') }}</span>
+                            <i class="las la-angle-right ml-1 opacity-60"></i>
+                        </a>
+                    @else
+                        <a class="hq-dashboard-pill" href="{{ route('admin.dashboard') }}">
+                            <i class="las la-tachometer-alt mr-1"></i>
+                            <span>{{ translate('Admin Panel') }}</span>
+                        </a>
+                    @endif
+                    <a class="hq-logout-button" href="{{ route('user.logout') }}" title="{{ translate('Logout') }}">
+                        <i class="las la-sign-out-alt mr-1"></i>{{ translate('Logout') }}
+                    </a>
+                @else
+                    <a class="hq-login-button" href="{{ route('login') }}">{{ translate('Log In') }}</a>
+                    <a class="hq-register-button" href="{{ route('register') }}">{{ translate('Register Now') }}</a>
+                @endauth
+            </div>
+        </div>
+        <div class="hq-reference-mobile-menu d-lg-none">
+            <a href="{{ route('home') }}">{{ translate('Home') }}</a>
+            <a href="{{ route('member.listing') }}">{{ translate('Members') }}</a>
+            <a href="{{ route('packages') }}">{{ translate('Plans') }}</a>
+            <a href="{{ route('contact_us') }}">{{ translate('Support') }}</a>
+        </div>
+    </header>
+</div>
+<div class="hq-legacy-header">
 <div class="hq-site-header @if(get_setting('header_stikcy') == 'on') position-fixed @else position-absolute @endif w-100 top-0 z-1020">
     <div class="top-navbar bg-white border-bottom z-1035 py-2 d-none d-lg-block">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-5 col">
-                    <ul class="list-inline d-flex justify-content-between justify-content-lg-start mb-0">
+                    <ul class="list-inline d-flex align-items-center justify-content-between justify-content-lg-start mb-0">
+                        <li class="list-inline-item mr-4 hq-community-note">
+                            <i class="las la-shield-alt mr-1"></i>{{ translate('100% ID Verified Community') }}
+                        </li>
                         <li class="list-inline-item">
                           <a href="{{ get_setting('header_left_quick_link1') }}" class="text-reset opacity-60">
                             <span>{{ get_setting('header_left_quick_link1_text') }}</span>
@@ -14,7 +83,7 @@
                 <div class="col-lg-7 col">
                     <ul class="list-inline mb-0 d-flex align-items-center justify-content-end ">
                         <li class="list-inline-item mr-3 pr-3 border-right text-reset opacity-60">
-                            <span>{{ translate(' Help Line') }}</span>
+                            <span>{{ translate('Help Line') }}</span>
                             <span>{{ get_setting('header_helpline_no') }}</span>
                         </li>
                         @if (Auth::check())
@@ -272,4 +341,5 @@
             </div>
         @endif
     </header>
+</div>
 </div>

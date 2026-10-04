@@ -57,6 +57,27 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
+    public function firebase_messaging_config()
+    {
+        $config = [
+            'apiKey' => (string) env('FCM_API_KEY'),
+            'authDomain' => (string) env('FCM_AUTH_DOMAIN'),
+            'projectId' => (string) env('FCM_PROJECT_ID'),
+            'storageBucket' => (string) env('FCM_STORAGE_BUCKET'),
+            'messagingSenderId' => (string) env('FCM_MESSAGING_SENDER_ID'),
+            'appId' => (string) env('FCM_APP_ID'),
+        ];
+
+        return response(
+            'self.HAMQADAM_FIREBASE_CONFIG = ' . json_encode($config, JSON_UNESCAPED_SLASHES) . ';',
+            200,
+            [
+                'Content-Type' => 'application/javascript; charset=UTF-8',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            ]
+        );
+    }
+
     public function index()
     {
 

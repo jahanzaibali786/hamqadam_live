@@ -8,6 +8,8 @@ use App\Enums\ProposalStatus;
 use App\Http\Controllers\Api\V1\ApiController;
 use App\Http\Resources\Api\V1\Interest\InterestResource;
 use App\Models\ExpressInterest;
+use App\Models\PackageUsage;
+use App\Models\AnalyticsEvent;
 use App\Models\User;
 use App\Services\InterestService;
 use Illuminate\Http\JsonResponse;
@@ -95,6 +97,7 @@ class InterestController extends ApiController
         $data = $request->validate([
             'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
             'initial_note' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'priority' => ['sometimes', 'boolean'],
         ]);
 
         $sender = $request->user();
@@ -130,7 +133,15 @@ class InterestController extends ApiController
             );
         }
 
-        $cost = (int) feature_coin_cost('express_interest', 3);
+        $priority = (bool) ($data['priority'] ?? false);
+        $featureFlags = (array) ($sender->member?->package?->feature_flags ?? []);
+        if ($priority && ! in_array('priority_interest', $featureFlags, true)) {
+            return $this->error('Priority Interest / Super Like is not included in your current plan.', 403, 'plan_feature_required');
+        }
+
+        $cost = $priority
+            ? (int) feature_coin_cost('priority_interest', 5)
+            : (int) feature_coin_cost('express_interest', 3);
         $balance = (int) ($sender->member?->remaining_interest ?? 0);
 
         if ($balance < $cost) {
@@ -149,9 +160,17 @@ class InterestController extends ApiController
             ->where('interested_by', $sender->id)->where('user_id', $recipient->id)
             ->latest('id')->first();
 
-        if ($interest && array_key_exists('initial_note', $data) && $data['initial_note'] !== null) {
-            $interest->initial_note = $data['initial_note'];
+        if ($interest) {
+            if (array_key_exists('initial_note', $data) && $data['initial_note'] !== null) {
+                $interest->initial_note = $data['initial_note'];
+            }
+            if ($priority) {
+                $interest->is_priority = true;
+                $interest->priority_expires_at = now()->addDays(7);
+            }
             $interest->save();
+            PackageUsage::record($sender->id, $priority ? 'priority_interest' : 'express_interest', $priority ? 'Priority Interest / Super Like' : 'Express Interest', $cost, ExpressInterest::class, $interest->id);
+            AnalyticsEvent::create(['user_id'=>$sender->id,'event_name'=>$priority ? 'priority_interest_sent' : 'interest_sent','feature_key'=>$priority ? 'priority_interest' : 'interest','metadata'=>['recipient_id'=>$recipient->id],'occurred_at'=>now()]);
         }
 
         return $this->success([

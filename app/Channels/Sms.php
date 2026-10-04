@@ -13,7 +13,7 @@ class Sms
      */
     public function send($notifiable, Notification $notification)
     {
-        dd($notifiable, $notification)
+        dd($notifiable, $notification);
         //sendSMS();
     }
 }

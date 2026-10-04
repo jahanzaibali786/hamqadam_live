@@ -1,196 +1,175 @@
 @extends('frontend.layouts.app')
 @section('content')
 
-<!-- Homepage Slider Section -->
-@if (get_setting('show_homepage_slider') == 'on' && get_setting('home_slider_images') != null)
-<section class="hq-home-hero position-relative overflow-hidden min-vh-100 d-flex home-slider-area">
-    @php
-    $slider_images = json_decode(get_setting('home_slider_images'), true);
-    $slider_images_small = json_decode(get_setting('home_slider_images_small'), true);
-    @endphp
-    <div class="absolute-full">
-        <div class="aiz-carousel aiz-carousel-full h-100 d-none {{ get_setting('home_slider_images_small') != null ? 'd-md-block' : 'd-block' }}"
-            data-fade='true' data-infinite='true' data-autoplay='true'>
-            @foreach ($slider_images as $key => $slider_image)
-            <img class="img-fit" src="{{ uploaded_asset($slider_image) }}">
-            @endforeach
-        </div>
-        @if (get_setting('home_slider_images_small') != null)
-        <div class="aiz-carousel aiz-carousel-full h-100 d-md-none" data-fade='true' data-infinite='true'
-            data-autoplay='true'>
-            @foreach ($slider_images_small as $key => $slider_image)
-            <img class="img-fit" src="{{ uploaded_asset($slider_image) }}">
-            @endforeach
-        </div>
-        @endif
-
-    </div>
+<!-- Supplied-design homepage: real Blade/HTML/CSS, no full-page screenshot rendering. -->
+<section class="hq-home-hero hq-design-home-hero position-relative overflow-hidden d-flex">
     <div class="container position-relative d-flex flex-column">
-        <div class="row pt-11 pb-8 my-auto align-items-center">
-            <div class="col-xl-5 col-lg-6">
-                <div class="text-dark home-slider-text hq-hero-copy">
-                    <h1>{{ translate('Find Your Perfect Partner') }}<br><span>{{ translate('With Trust & Care.') }}</span></h1>
+        <div class="row align-items-center hq-design-hero-row">
+            <div class="col-lg-6 col-xl-6">
+                <div class="hq-hero-copy">
+                    <span class="hq-home-kicker"><i class="las la-heart"></i> {{ translate('Sanctuary of Dignified Matrimony') }}</span>
+                    <h1>{{ translate('Find Your') }} <em>{{ translate('Perfect Partner') }}</em> {{ translate('With Trust & Care.') }}</h1>
                     <p>{{ translate('Join thousands of happy couples on HamQadam, where meaningful relationships begin. Verified profiles, secure connections, and genuine matches tailored for you.') }}</p>
                     <div class="hq-hero-actions">
                         @guest
-                            <button type="button" class="btn btn-primary hq-hero-btn" onclick="document.getElementById('show-register-form')?.click()">{{ translate('Get Started') }}</button>
+                            <a href="#home-register" class="btn btn-primary hq-hero-btn">{{ translate('Get Started') }} <i class="las la-arrow-right ml-1"></i></a>
                         @else
                             <a href="{{ route('member.listing') }}" class="btn btn-primary hq-hero-btn">{{ translate('Find Matches') }}</a>
                         @endguest
                         <a href="#how-it-works" class="btn hq-hero-btn hq-hero-btn-outline">{{ translate('Learn More') }}</a>
                     </div>
                     <div class="hq-hero-stats">
-                        <div><i class="las la-shield-alt"></i><strong>{{ translate('Verified Members') }}</strong><small>{{ translate('Safe & Trusted') }}</small></div>
+                        <div><i class="las la-certificate"></i><strong>{{ translate('Verified Members') }}</strong><small>{{ translate('Safe & Trusted') }}</small></div>
                         <div><i class="las la-heart"></i><strong>{{ translate('Success Stories') }}</strong><small>{{ translate('Real Couples Joined') }}</small></div>
                         <div><i class="las la-lock"></i><strong>{{ translate('Secure & Private') }}</strong><small>{{ translate('Your Privacy First') }}</small></div>
                     </div>
                 </div>
             </div>
+            <div class="col-lg-6 col-xl-6 d-none d-lg-block">
+                @php
+                    $hero_female = \App\Models\User::where('user_type', 'member')
+                        ->where('approved', 1)
+                        ->where('blocked', 0)
+                        ->where('deactivated', 0)
+                        ->whereHas('member', function($q) {
+                            $q->where('gender', 2);
+                        })
+                        ->latest('id')
+                        ->first()
+                        ?? collect($new_members ?? [])->first(fn($u) => optional($u->member)->gender == 2)
+                        ?? collect($new_members ?? [])->first();
 
-            @if (!Auth::check() && get_setting('show_homepage_slider_registration') == 'on')
-
-            @php
-                $registrationPackage = \App\Support\RegistrationReward::registrationPackage();
-                $registrationRewardCoins = $registrationPackage?->express_interest ?? 0;
-            @endphp
-
-
-            <div class="offset-xxl-2 offset-xl-1 col-lg-6 col-xxl-5 position-relative">
-                <button type="button" class="account-btn animated-btn" id="show-register-form" >
-                    <!-- Animated Borders -->
-                    <span class="border-anim top"></span>
-                    <span class="border-anim right"></span>
-                    <span class="border-anim bottom"></span>
-                    <span class="border-anim left"></span>
-
-                    <!-- Content -->
-                    <div class="text-center">
-                        <div class="big-title">{{ translate('Register Now') }}</div>
-                        <div class="sub-title">{{ translate('Get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('registration package') }}</div>
+                    $hero_male = \App\Models\User::where('user_type', 'member')
+                        ->where('approved', 1)
+                        ->where('blocked', 0)
+                        ->where('deactivated', 0)
+                        ->where('id', '!=', $hero_female?->id ?? 0)
+                        ->whereHas('member', function($q) {
+                            $q->where('gender', 1);
+                        })
+                        ->latest('id')
+                        ->first()
+                        ?? collect($premium_members ?? [])->first(fn($u) => optional($u->member)->gender == 1 && (!$hero_female || $u->id != $hero_female->id))
+                        ?? collect($new_members ?? [])->filter(fn($u) => !$hero_female || $u->id != $hero_female->id)->first()
+                        ?? $hero_female;
+                @endphp
+                <div class="hq-hero-visual" aria-hidden="true">
+                    <div class="hq-match-float hq-match-float-top">
+                        <span class="hq-match-score">96% {{ translate('Match') }}</span>
+                        <span class="hq-match-verified"><i class="las la-shield-alt"></i> {{ translate('ID Verified') }}</span>
+                        <strong>{{ $hero_female ? $hero_female->first_name : translate('Laiba') }}</strong>
+                        <small>ID: {{ $hero_female ? ($hero_female->code ?: $hero_female->id) : '202609213' }} · {{ $hero_female?->member?->permanent_address?->city ?: ($hero_female?->member?->present_address?->city ?: 'Lahore') }}</small>
                     </div>
-                    <div class="svg-container">
-                        <!-- Your SVG -->
-                    </div>
-                </button>
-
-                <div id="register-form-container" class="form-slide-wrapper">
-
-                    <div class="card h-100 border-0 bg-white custom-shadow-card">
-
-
-
-                        <div class="card-body p-4 p-lg-5">
-                            <button type="button" id="close-register-form"
-                                class="close-registration-btn btn p-0 border-0 bg-transparent position-absolute start-0 m-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 485.34 485.34">
-                                    <path d="M254.67-237.33l-17.34-17.34L462.67-480,237.33-705.33l17.34-17.34L480-497.33,705.33-722.67l17.34,17.34L497.33-480,722.67-254.67l-17.34,17.34L480-462.67Z"
-                                        transform="translate(-237.33 722.67)" fill="#A9A9A9" />
-                                </svg>
-                            </button>
-
-
-                            <div class="mb-4 text-center mt-2">
-                                <h2 class="h3 text-primary mb-0">{{ translate('Create Your Account') }}</h2>
-                                <p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('registration package') }}.</p>
-                            </div>
-
-                            <form class="form-default" id="reg-form" role="form"
-                                action="{{ route('register') }}" method="POST" enctype="multipart/form-data">
-                                @csrf
-
-                                @include('frontend.partials.registration_onboarding_steps')
-
-                                <div class="mb-3 d-none" id="registrationTermsBlock">
-                                    <label class="aiz-checkbox">
-                                        <input type="checkbox" name="checkbox_example_1" required>
-                                        <span
-                                            class=opacity-60>{{ translate('By signing up you agree to our') }}
-                                            <a href="{{ env('APP_URL') . '/terms-conditions' }}"
-                                                target="_blank">{{ translate('terms and conditions') }}.</a>
-                                        </span>
-                                        <span class="aiz-square-check"></span>
-                                    </label>
-                                </div>
-                                @error('checkbox_example_1')
-                                <span class="invalid-feedback" role="alert">{{ $message }}</span>
-                                @enderror
-
-                                <div class="">
-                                    <button type="submit"
-                                        class="btn btn-block btn-primary round-btn d-none"  id="createAccountBtn">{{ translate('Create Account') }}</button>
-                                </div>
-
-                                </form>
-                        </div>
+                    <div class="hq-hero-photo-caption"><span>{{ translate('Private Sanctuary') }}</span><strong>{{ translate('Where pure intentions meet companionship.') }}</strong></div>
+                    <div class="hq-match-float hq-match-float-bottom">
+                        <span class="hq-match-score">{{ $hero_male && $hero_male->membership == 2 ? translate('Premium Match') : translate('Verified Match') }}</span>
+                        <strong>{{ $hero_male ? $hero_male->first_name : translate('Ubaid') }}</strong>
+                        <small>ID: {{ $hero_male ? ($hero_male->code ?: $hero_male->id) : '202609201' }} · {{ $hero_male?->member?->permanent_address?->city ?: ($hero_male?->member?->present_address?->city ?: 'Islamabad') }}</small>
                     </div>
                 </div>
             </div>
-
-            @endif
         </div>
 
-        <!-- search  -->
-        @if (Auth::check() && Auth::user()->user_type == 'member')
-            <div class="p-4 bg-white rounded-top border-bottom"
-                style="box-shadow: 0 -25px 50px -12px rgb(0 0 0 / 25%);">
-                <div class="row">
-                    <div class="col-xl-10 mx-auto">
-                        <form action="{{ route('member.listing') }}" method="get">
-                            <div class="row gutters-5">
-                                <div class="col-lg">
-                                    <div class="form-group mb-3">
-                                        <label class="form-label" for="name">{{ translate('Age From') }}</label>
-                                        <input type="number" name="age_from" class="form-control">
-                                    </div>
-                                </div>
-                                <div class="col-lg">
-                                    <div class="form-group mb-3">
-                                        <label class="form-label" for="name">{{ translate('To') }}</label>
-                                        <input type="number" name="age_to" class="form-control">
-                                    </div>
-                                </div>
-                                <div class="col-lg">
-                                    <div class="form-group mb-3">
-                                        <label class="form-label" for="name">{{ translate('Religion') }}</label>
-                                        <select name="religion_id" id="religion_id"
-                                            class="form-control aiz-selectpicker" data-live-search="true"
-                                            data-container="body">
-                                            <option value="">{{ translate('Choose One') }}</option>
-                                            @foreach ($religions as $religion)
-                                                <option value="{{ $religion->id }}">{{ $religion->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-lg">
-                                    <div class="form-group mb-3">
-                                        <label class="form-label" for="name">{{ translate('Mother Language') }}</label>
-                                        <select name="mother_tongue" class="form-control aiz-selectpicker"
-                                            data-live-search="true" data-container="body">
-                                            <option value="">{{ translate('Select One') }}</option>
-                                            @foreach ($mother_tongues as $mother_tongue_select)
-                                                <option value="{{ $mother_tongue_select->id }}">
-                                                    {{ $mother_tongue_select->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-lg">
-                                    <button type="submit" class="btn btn-block btn-primary mt-4 round-btn">
-                                        {{ translate('Search') }}
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+        @if (get_setting('show_homepage_quick_search') !== 'off')
+            <div class="hq-quick-search hq-design-search bg-white">
+                <div class="hq-quick-search-heading">
+                    <strong><i class="las la-user-friends"></i> {{ translate('Quick Partner Search') }}</strong>
+                    <span>{{ translate('Filter through verified prospective life partners') }}</span>
+                    <span class="hq-live-verify"><i class="las la-shield-alt"></i> {{ translate('Real-time Verification Active') }}</span>
                 </div>
+                <form action="{{ route('member.listing') }}" method="get">
+                    <div class="row gutters-10 align-items-end">
+                        <div class="col-6 col-lg">
+                            <div class="form-group mb-0">
+                                <label>{{ translate('Looking For') }}</label>
+                                <select name="gender" class="form-control aiz-selectpicker" data-container="body">
+                                    <option value="">{{ translate('Any') }}</option>
+                                    <option value="2">{{ translate('Bride (Female)') }}</option>
+                                    <option value="1">{{ translate('Groom (Male)') }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg">
+                            <div class="form-group mb-0">
+                                <label>{{ translate('Age From') }}</label>
+                                <input type="number" min="18" name="age_from" class="form-control" placeholder="20">
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg">
+                            <div class="form-group mb-0">
+                                <label>{{ translate('Age To') }}</label>
+                                <input type="number" min="18" name="age_to" class="form-control" placeholder="32">
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg">
+                            <div class="form-group mb-0">
+                                <label>{{ translate('Religion & Sect') }}</label>
+                                <select name="religion_id" class="form-control aiz-selectpicker" data-live-search="true" data-container="body">
+                                    <option value="">{{ translate('Any Religion') }}</option>
+                                    @foreach ($religions as $religion)
+                                        <option value="{{ $religion->id }}">{{ $religion->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-8 col-lg">
+                            <div class="form-group mb-0">
+                                <label>{{ translate('Mother Language') }}</label>
+                                <select name="mother_tongue" class="form-control aiz-selectpicker" data-live-search="true" data-container="body">
+                                    <option value="">{{ translate('Any Language') }}</option>
+                                    @foreach ($mother_tongues as $mother_tongue_select)
+                                        <option value="{{ $mother_tongue_select->id }}">{{ $mother_tongue_select->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-4 col-lg-auto">
+                            <button type="submit" class="btn btn-primary hq-search-submit"><i class="las la-search mr-1"></i>{{ translate('Search') }}</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         @endif
+    </div>
 </section>
+
+@if (!Auth::check() && get_setting('show_homepage_slider_registration') == 'on')
+    @php
+        $registrationPackage = \App\Support\RegistrationReward::registrationPackage();
+        $registrationRewardCoins = $registrationPackage?->express_interest ?? 0;
+    @endphp
+    <section id="home-register" class="hq-home-registration">
+        <div class="container">
+            <div class="hq-register-shell">
+                <div class="hq-register-intro">
+                    <span class="hq-reference-eyebrow"><i class="las la-coins"></i> {{ translate('Auspicious Welcome Gift') }}</span>
+                    <h2>{{ translate('Create Your Account') }}</h2>
+                    <p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('Free plan') }} {{ translate('instantly upon verification.') }}</p>
+                    <div class="hq-register-steps" aria-hidden="true">
+                        <span class="active">01 {{ translate('Basic') }}</span><span>02 {{ translate('Personal') }}</span><span>03 {{ translate('Career') }}</span><span>04 {{ translate('Verify') }}</span>
+                    </div>
+                </div>
+                <div id="register-form-container" class="hq-register-form-card">
+                    <form class="form-default" id="reg-form" role="form" action="{{ route('register') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        @include('frontend.partials.registration_onboarding_steps')
+                        <div class="mb-3 d-none" id="registrationTermsBlock">
+                            <label class="aiz-checkbox">
+                                <input type="checkbox" name="checkbox_example_1" required>
+                                <span class="opacity-60">{{ translate('By signing up you agree to our') }} <a href="{{ url('/terms-conditions') }}" target="_blank">{{ translate('terms and conditions') }}.</a></span>
+                                <span class="aiz-square-check"></span>
+                            </label>
+                        </div>
+                        @error('checkbox_example_1')
+                            <span class="invalid-feedback" role="alert">{{ $message }}</span>
+                        @enderror
+                        <button type="submit" class="btn btn-block btn-primary round-btn d-none" id="createAccountBtn">{{ translate('Create Account') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
 @endif
-
-
 
 <!-- premium member Section -->
 @if (get_setting('show_premium_member_section') == 'on')

@@ -42,6 +42,7 @@ use App\Http\Controllers\PhysicalAttributeController;
 use App\Http\Controllers\ProfileMatchController;
 use App\Http\Controllers\RazorpayController;
 use App\Http\Controllers\ProfileViewerController;
+use App\Http\Controllers\ProfileShareController;
 use App\Http\Controllers\RecidencyController;
 use App\Http\Controllers\ReportedUserController;
 use App\Http\Controllers\ShortlistController;
@@ -81,11 +82,19 @@ Route::view('/delete-account', 'frontend.delete_account')->name('delete-account'
 Route::view('/csae-standards', 'frontend.csae_standards')->name('csae-standards');
 
 Route::controller(HomeController::class)->group(function () {
-    //Home Page
+    // Home Page
     Route::get('/', 'index')->name('home');
+
+    // Compatibility alias for the project's common XAMPP folder URL.
+    // Normally Symfony strips /hamqadam as the request base path and the '/'
+    // route above handles it. This alias also covers Apache setups that pass
+    // the folder segment through to Laravel instead of recognizing it as the
+    // base path. It is intentionally unnamed and does not affect route('home').
+    Route::get('/hamqadam', 'index');
 
     // fcm
     Route::post('/fcm-token', 'updateToken')->name('fcmToken');
+    Route::get('/firebase-messaging-config.js', 'firebase_messaging_config')->name('firebase.messaging.config');
 
     Route::get('/email_change/callback', 'email_change_callback')->name('email_change.callback');
     Route::post('/password/reset/email/submit', 'reset_password_with_code')->name('password.update');
@@ -129,6 +138,7 @@ Route::get('/email/verify', function () {
 })->middleware('auth')->name('verification.notice');
 
 Route::post('/language', [LanguageController::class, 'changeLanguage'])->name('language.change');
+Route::get('/p/{user}', [ProfileShareController::class, 'show'])->whereNumber('user')->name('profile.share');
 Route::get('/packages', [PackageController::class, 'select_package'])->name('packages');
 
 //Blog

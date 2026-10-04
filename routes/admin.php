@@ -4,6 +4,8 @@ use App\Http\Controllers\AdditionalAttributeController;
 use App\Http\Controllers\AddonController;
 use App\Http\Controllers\AizUploadController;
 use App\Http\Controllers\Admin\UserActivityController;
+use App\Http\Controllers\Admin\PaymentCouponController;
+use App\Http\Controllers\Admin\CompletionCenterController;
 use App\Http\Controllers\AnnualSalaryRangeyController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BlogCategoryController;
@@ -69,6 +71,11 @@ Route::get('/admin/login', [HomeController::class, 'admin_login'])->name('admin.
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function () {
     Route::get('/dashboard', [HomeController::class, 'admin_dashboard'])->name('admin.dashboard');
+    Route::get('/completion-center', [CompletionCenterController::class, 'index'])->name('admin.completion.index');
+    Route::post('/completion-center/sponsored', [CompletionCenterController::class, 'storeSponsored'])->name('admin.completion.sponsored.store');
+    Route::delete('/completion-center/sponsored/{sponsoredListing}', [CompletionCenterController::class, 'destroySponsored'])->name('admin.completion.sponsored.destroy');
+    Route::post('/completion-center/rewards', [CompletionCenterController::class, 'storeReward'])->name('admin.completion.rewards.store');
+    Route::post('/completion-center/ad-gating', [CompletionCenterController::class, 'updateAds'])->name('admin.completion.ads.update');
     Route::get('/ai-platform', [V1PlatformConsoleController::class, 'admin'])->name('admin.v1_platform');
     Route::get('/ai-platform/matchmaking-settings', [V1PlatformConsoleController::class, 'matchmakingSettings'])->name('admin.v1_platform.matchmaking_settings');
     Route::post('/ai-platform/matchmaking-settings', [V1PlatformConsoleController::class, 'updateMatchmakingSettings'])->name('admin.v1_platform.matchmaking_settings.update');
@@ -166,6 +173,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::post('/packages/update-registration-default', 'update_registration_default')->name('packages.update_registration_default');
         Route::get('/packages/destroy/{id}', 'destroy')->name('packages.destroy');
     });
+    Route::resource('/payment-coupons', PaymentCouponController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // package Payments
     Route::resource('package-payments', PackagePaymentController::class);
@@ -376,6 +384,5 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('manual_payment_methods', ManualPaymentMethodController::class)->except(['destroy']);
     Route::get('/manual_payment_methods/destroy/{id}', [ManualPaymentMethodController::class, 'destroy'])->name('manual_payment_methods.destroy');
 });
-
 
 

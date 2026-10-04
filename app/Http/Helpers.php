@@ -17,10 +17,61 @@ use Carbon\Carbon;
 use AizPackages\ColorCodeConverter\Services\ColorCodeConverter;
 use App\Models\AdditionalMemberInfo;
 
+
+if (!function_exists('application_mount_path')) {
+    /**
+     * Return the URL path where this Laravel repository is mounted.
+     *
+     * Examples:
+     * - C:/xampp/htdocs/hamqadam + DOCUMENT_ROOT C:/xampp/htdocs => /hamqadam
+     * - /var/www/site/public as DOCUMENT_ROOT => '' (public/ is already web root)
+     *
+     * This intentionally does not trust APP_URL because local/shared-host installs
+     * often leave APP_URL as only the scheme + host (for example https://localhost).
+     */
+    function application_mount_path()
+    {
+        $normalize = static function ($value) {
+            $value = str_replace('\\', '/', (string) $value);
+            return rtrim($value, '/');
+        };
+
+        $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+        $scriptDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/.');
+
+        // When the repository-root index.php handles the request, SCRIPT_NAME is
+        // normally /hamqadam/index.php and is the most reliable answer.
+        if ($scriptDir !== '' && !preg_match('#/public$#i', $scriptDir)) {
+            return '/' . ltrim($scriptDir, '/');
+        }
+
+        // When Apache/IIS hides the script path during rewriting, derive the mount
+        // from the physical repository location relative to DOCUMENT_ROOT.
+        $documentRoot = $normalize($_SERVER['DOCUMENT_ROOT'] ?? '');
+        $applicationRoot = $normalize(function_exists('base_path') ? base_path() : dirname(__DIR__, 2));
+        $documentRootLower = strtolower($documentRoot);
+        $applicationRootLower = strtolower($applicationRoot);
+
+        if ($documentRoot !== '' && $applicationRoot !== ''
+            && $applicationRootLower !== $documentRootLower
+            && str_starts_with($applicationRootLower, $documentRootLower . '/')) {
+            $relative = substr($applicationRoot, strlen($documentRoot));
+            return '/' . trim($relative, '/');
+        }
+
+        // public/index.php is the web root (or the app is mounted at domain root).
+        return '';
+    }
+}
+
 if (!function_exists('site_url')) {
     function site_url()
     {
-        return !empty(env('APP_URL')) ? env('APP_URL') : url('');
+        try {
+            return rtrim(getBaseURL(), '/');
+        } catch (\Throwable $e) {
+            return !empty(env('APP_URL')) ? rtrim((string) env('APP_URL'), '/') : url('');
+        }
     }
 }
 
@@ -40,7 +91,20 @@ if (!function_exists('uploaded_asset')) {
     function uploaded_asset($id)
     {
         if (($asset = Upload::find($id)) != null) {
-            return static_asset($asset->file_name);
+            $fileName = ltrim((string) $asset->file_name, '/');
+
+            // A few older database records can outlive their physical upload.
+            // Do not emit a guaranteed 404 into an <img> tag in that case.
+            if (env('FILESYSTEM_DRIVER') != 's3' && $fileName !== '' && ! file_exists(public_path($fileName))) {
+                $extension = strtolower((string) ($asset->extension ?: pathinfo($fileName, PATHINFO_EXTENSION)));
+                if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'avif'], true)) {
+                    return static_asset('assets/img/placeholder.jpg');
+                }
+
+                return null;
+            }
+
+            return static_asset($fileName);
         }
         return null;
     }
@@ -58,8 +122,33 @@ if (!function_exists('static_asset')) {
     {
         if (env('FILESYSTEM_DRIVER') == 's3') {
             return Storage::disk('s3')->url($path);
-        } else {
-            return app('url')->asset('public/' . $path, $secure);
+        }
+
+        // The project supports both common deployments used by Hamqadam:
+        // 1) the repository root is the web root (/hamqadam/index.php), where
+        //    static files live under /hamqadam/public/...; and
+        // 2) public/ itself is the web root, where files live directly under
+        //    /assets, /uploads, etc.
+        //
+        // Laravel's asset() can lose the sub-directory when APP_URL is set to
+        // https://localhost instead of https://localhost/hamqadam. Build from
+        // the current request/script path so local sub-folder installs remain
+        // portable and do not hard-code the folder name "hamqadam".
+        $path = ltrim((string) $path, '/');
+        $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+        $scriptDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/.');
+        $publicIsWebRoot = preg_match('#/public$#i', $scriptDir) === 1
+            || (isset($_SERVER['DOCUMENT_ROOT']) && realpath((string) $_SERVER['DOCUMENT_ROOT']) === realpath(public_path()));
+        $assetPath = ($publicIsWebRoot ? '' : 'public/') . $path;
+        $mountPath = application_mount_path();
+
+        try {
+            $request = request();
+            $scheme = $secure === true ? 'https' : ($secure === false ? 'http' : $request->getScheme());
+            $host = $request->getHttpHost();
+            return $scheme . '://' . $host . $mountPath . '/' . $assetPath;
+        } catch (\Throwable $e) {
+            return app('url')->asset($assetPath, $secure);
         }
     }
 }
@@ -73,13 +162,17 @@ if (!function_exists('isHttps')) {
 
 
 if (!function_exists('getBaseURL')) {
-function getBaseURL()
-{
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8080';
-    $root = '//' . $host;
-    $root .= str_replace(basename($_SERVER['SCRIPT_NAME'] ?? '/'), '', $_SERVER['SCRIPT_NAME'] ?? '/');
+    function getBaseURL()
+    {
+        try {
+            $request = request();
+            $schemeHost = $request->getSchemeAndHttpHost();
+        } catch (\Throwable $e) {
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $schemeHost = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        }
 
-        return $root;
+        return rtrim($schemeHost . application_mount_path(), '/') . '/';
     }
 }
 
@@ -87,10 +180,15 @@ if (!function_exists('getFileBaseURL')) {
     function getFileBaseURL()
     {
         if (env('FILESYSTEM_DRIVER') == 's3') {
-            return env('AWS_URL') . '/';
-        } else {
-            return getBaseURL() . 'public/';
+            return rtrim((string) env('AWS_URL'), '/') . '/';
         }
+
+        $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '/index.php'));
+        $scriptDir = rtrim(str_replace('\\', '/', dirname($scriptName)), '/.');
+        $publicIsWebRoot = preg_match('#/public$#i', $scriptDir) === 1
+            || (isset($_SERVER['DOCUMENT_ROOT']) && realpath((string) $_SERVER['DOCUMENT_ROOT']) === realpath(public_path()));
+
+        return getBaseURL() . ($publicIsWebRoot ? '' : 'public/');
     }
 }
 
@@ -120,13 +218,20 @@ function translate($key, $lang = null)
     });
 
     //Check for session lang
-    if (isset($translation_locale[$lang_key])) {
-        return $translation_locale[$lang_key];
-    } elseif (isset($translations_default[$lang_key])) {
-        return $translations_default[$lang_key];
+    $val = null;
+    if (isset($translation_locale[$lang_key]) && $translation_locale[$lang_key] !== '' && $translation_locale[$lang_key] !== $lang_key) {
+        $val = $translation_locale[$lang_key];
+    } elseif (isset($translations_default[$lang_key]) && $translations_default[$lang_key] !== '' && $translations_default[$lang_key] !== $lang_key) {
+        $val = $translations_default[$lang_key];
     } else {
-        return $key;
+        $val = $key;
     }
+
+    if (is_string($val) && str_contains($val, '_') && !str_contains($val, ' ')) {
+        return ucwords(str_replace('_', ' ', $val));
+    }
+
+    return $val;
 }
 
 if (!function_exists('formatBytes')) {
@@ -430,6 +535,7 @@ if (!function_exists('feature_coin_cost')) {
     {
         $settingKey = match ($feature) {
             'express_interest' => 'feature_coin_cost_express_interest',
+            'priority_interest' => 'feature_coin_cost_priority_interest',
             'proposal' => 'feature_coin_cost_proposal',
             'favourite' => 'feature_coin_cost_favourite',
             'shortlist' => 'feature_coin_cost_shortlist',

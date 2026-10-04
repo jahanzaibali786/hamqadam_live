@@ -1,169 +1,66 @@
-<footer class="aiz-footer hq-site-footer fs-13 mt-auto fw-400 pt-5">
+@php
+    $referenceFooterPhone = get_setting('header_helpline_no') ?: '+92 300 1234567';
+    $referenceFooterEmail = get_setting('footer_email') ?: 'support@hamqadam.com';
+    $referenceFooterAddress = get_setting('footer_address') ?: 'Islamabad, Pakistan';
+    $referenceSiteName = get_setting('website_name') ?: 'Hamqadam';
+    $unseen_notification = 0;
+    $unseen_chat_thread_count = 0;
+@endphp
+
+<footer class="hq-reference-footer mt-auto">
     <div class="container">
+        <div class="hq-footer-grid">
+            <div class="hq-footer-about">
+                <a href="{{ route('home') }}" class="hq-footer-brand">
+                    <span><i class="las la-heart"></i></span>{{ $referenceSiteName }}
+                </a>
+                <p>{{ translate('Find Your Perfect Partner With Trust & Care. Hamqadam is a dignified, secure matrimonial platform committed to verified profiles, family respect, and lasting lifelong unions.') }}</p>
+                <div class="hq-footer-trust">
+                    <span><i class="las la-shield-alt"></i>{{ translate('100% Verified Profiles') }}</span>
+                    <span><i class="las la-lock"></i>{{ translate('256-Bit SSL Protection') }}</span>
+                </div>
+            </div>
 
-        <div class="row mb-4">
-            <div class="col-xxl-6 col-xl-7 col-lg-8 col-md-10 text-center mx-auto">
-                <div class="logo mb-4">
-                    <a href="{{ route('home') }}" class="d-inline-block">
-                        @if(get_setting('footer_logo') != null)
-                            <img src="{{ uploaded_asset(get_setting('footer_logo')) }}" alt="{{ env('APP_NAME') }}" class="mw-100 h-30px" style="height:80px; width:140px;">
-                        @else
-                            <img src="{{ static_asset('assets/img/logo.png') }}" alt="{{ env('APP_NAME') }}" class="mw-100 h-30px" style="height:80px; width:140px;">
-                        @endif
-                    </a>
+            <div>
+                <h4>{{ translate('Discovery') }}</h4>
+                <a href="{{ route('member.listing') }}">{{ translate('Active Profiles') }}</a>
+                <a href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a>
+                <a href="{{ route('packages') }}">{{ translate('Membership Packages') }}</a>
+                <a href="{{ route('member.listing') }}">{{ translate('Advanced Search') }}</a>
+            </div>
+
+            <div>
+                <h4>{{ translate('Trust & Safety') }}</h4>
+                <a href="{{ url('/privacy-policy') }}">{{ translate('Privacy Policy') }}</a>
+                <a href="{{ url('/terms-conditions') }}">{{ translate('Terms & Conditions') }}</a>
+                <a href="{{ route('contact_us') }}">{{ translate('Identity Verification') }}</a>
+                <a href="{{ route('contact_us') }}">{{ translate('Safe Matrimony Guide') }}</a>
+            </div>
+
+            <div class="hq-footer-assistance">
+                <h4>{{ translate('Assistance') }}</h4>
+                <p>{{ translate('Direct Dedicated Support') }}</p>
+                <a class="hq-footer-phone" href="tel:{{ preg_replace('/[^0-9+]/', '', $referenceFooterPhone) }}">
+                    <i class="las la-phone mr-1"></i>{{ $referenceFooterPhone }}
+                </a>
+                <a href="mailto:{{ $referenceFooterEmail }}">
+                    <i class="las la-envelope mr-1"></i>{{ $referenceFooterEmail }}
+                </a>
+                <div class="mt-2 text-muted fs-12">
+                    <i class="las la-map-marker mr-1"></i>{{ strip_tags($referenceFooterAddress) }}
                 </div>
-                <div class="opacity-60">
-                    {!! get_setting('about_us_description') !!}
-                </div>
+                <small class="d-block mt-2">{{ translate('Available 24/7 for Family Consultations') }}</small>
             </div>
         </div>
 
-        @if (get_setting('footer_address') != null || get_setting('footer_website') != null || get_setting('footer_email') != null || get_setting('footer_phones') != null)
-        <div class="mb-4">
-            <h4 class="text-uppercase text-primary fs-14 border-bottom border-primary pb-4 mb-4">{{ translate('Contacts') }}</h4>
-            <div class="row opacity-60 no-gutters">
-                <div class="col-xl col-md-6 mb-4">
-                    <div class="mb-3 opacity-60">
-                        <i class="las la-home mr-2"></i>
-                        <span>{{ translate('Address') }}</span>
-                    </div>
-                    <div>{!! get_setting('footer_address') !!}</div>
-                </div>
-                <div class="col-xl col-md-6 mb-4">
-                    <div class="mb-3 opacity-60">
-                        <i class="las la-globe mr-2"></i>
-                        <span>{{ translate('Website') }}</span>
-                    </div>
-                    <div>{{ get_setting('footer_website') }}</div>
-                </div>
-                <div class="col-xl col-md-6 mb-4">
-                    <div class="mb-3 opacity-60">
-                        <i class="las la-envelope mr-2"></i>
-                        <span>{{ translate('Email') }}</span>
-                    </div>
-                    <div>{{ get_setting('footer_email') }}</div>
-                </div>
-                <div class="col-xl col-md-6 mb-4">
-                    <div class="mb-3 opacity-60">
-                        <i class="las la-phone mr-2"></i>
-                        <span>{{ translate('Phone') }}</span>
-                    </div>
-                    @if (get_setting('footer_phones') != null)
-                        @foreach (json_decode(get_setting('footer_phones'), true) as $key => $value)
-                            <div>{{ $value }}</div>
-                        @endforeach
-                    @endif
-                </div>
+        <div class="hq-footer-bottom">
+            <span>{{ get_setting('footer_copyright_text') ? strip_tags(get_setting('footer_copyright_text')) : '© ' . date('Y') . ' ' . $referenceSiteName . ' Matrimonial Platform. All rights reserved.' }}</span>
+            <div>
+                <a href="{{ url('/terms-conditions') }}">{{ translate('Terms') }}</a>
+                <a href="{{ url('/privacy-policy') }}">{{ translate('Privacy') }}</a>
+                <a href="{{ route('contact_us') }}">{{ translate('Help Center') }}</a>
             </div>
         </div>
-        @endif
-
-        <div class="row no-gutters">
-            @if ( !empty(get_setting('widget_one_labels')) )
-            <div class="col-xl col-md-6 mb-4">
-                <h4 class="text-uppercase text-primary fs-14 border-bottom border-primary pb-4 mb-4">{{ get_setting('widget_one_title') }}</h4>
-                <div>
-                    <ul class="list-unstyled">
-                        @foreach (json_decode( get_setting('widget_one_labels'), true) as $key => $value)
-                            <li class="my-3">
-                                <a href="{{ json_decode( get_setting('widget_one_links'), true)[$key] }}" class="text-reset opacity-60">{{ $value }}</a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-            @endif
-
-            @if ( !empty(get_setting('widget_two_labels')) )
-            <div class="col-xl col-md-6 mb-4">
-                <h4 class="text-uppercase text-primary fs-14 border-bottom border-primary pb-4 mb-4">{{ get_setting('widget_two_title') }}</h4>
-                <div>
-                    <ul class="list-unstyled">
-                        @foreach (json_decode( get_setting('widget_two_labels'), true) as $key => $value)
-                            <li class="my-3">
-                                <a href="{{ json_decode( get_setting('widget_two_links'), true)[$key] }}" class="text-reset opacity-60">{{ $value }}</a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-            @endif
-
-            @if ( !empty(get_setting('widget_three_labels')) )
-            <div class="col-xl col-md-6 mb-4">
-                <h4 class="text-uppercase text-primary fs-14 border-bottom border-primary pb-4 mb-4">{{ get_setting('widget_three_title') }}</h4>
-                <div>
-                    <ul class="list-unstyled">
-                        @foreach (json_decode( get_setting('widget_three_labels'), true) as $key => $value)
-                            <li class="my-3">
-                                <a href="{{ json_decode( get_setting('widget_three_links'), true)[$key] }}" class="text-reset opacity-60">{{ $value }}</a>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-            @endif
-
-            @if ( !empty(get_setting('widget_mobile_app_title')) )
-            <div class="col-xl col-md-6 mb-4">
-                <h4 class="text-uppercase text-primary fs-14 border-bottom border-primary pb-4 mb-4">{{ get_setting('widget_mobile_app_title') }}</h4>
-                <div class="mb-3">
-                    <a href="{{ get_setting('footer_play_store_link') }}">
-                        <img src="{{ uploaded_asset(get_setting('footer_play_store_img')) }}" height="50">
-                    </a>
-                </div>
-                <div class="mb-3">
-                    <a href="{{ get_setting('footer_app_store_link') }}">
-                        <img src="{{ uploaded_asset(get_setting('footer_app_store_img')) }}" height="50">
-                    </a>
-                </div>
-            </div>
-            @endif
-        </div>
-
-        <div class="border-top border-primary pt-4 pb-7 pb-xl-4">
-            <div class="row">
-                <div class="col-lg-6">
-                    <div class="lh-1" current-verison="{{get_setting("current_version")}}">
-                        {!! get_setting('footer_copyright_text') !!}
-                    </div>
-                </div>
-                @if(get_setting('show_social_links') == 'on')
-                <div class="col-lg-6">
-                    <div class="text-left text-lg-right">
-                        <ul class="list-inline social colored mb-0">
-                            @if ( !empty(get_setting('facebook_link')) )
-                                <li class="list-inline-item">
-                                    <a href="{{ get_setting('facebook_link') }}" target="_blank" class="facebook"><i class="lab la-facebook-f"></i></a>
-                                </li>
-                            @endif
-                            @if ( !empty(get_setting('twitter_link')) )
-                            <li class="list-inline-item">
-                                <a href="{{ get_setting('twitter_link') }}" target="_blank" class="twitter"><i class="lab la-twitter"></i></a>
-                            </li>
-                            @endif
-                            @if ( !empty(get_setting('instagram_link')) )
-                            <li class="list-inline-item">
-                                <a href="{{ get_setting('instagram_link') }}" target="_blank" class="instagram"><i class="lab la-instagram"></i></a>
-                            </li>
-                            @endif
-                            @if ( !empty(get_setting('youtube_link')) )
-                            <li class="list-inline-item">
-                                <a href="{{ get_setting('youtube_link') }}" target="_blank" class="youtube"><i class="lab la-youtube"></i></a>
-                            </li>
-                            @endif
-                            @if ( !empty(get_setting('linkedin_link')) )
-                            <li class="list-inline-item">
-                                <a href="{{ get_setting('linkedin_link') }}" target="_blank" class="linkedin"><i class="lab la-linkedin-in"></i></a>
-                            </li>
-                            @endif
-                        </ul>
-                    </div>
-                </div>
-                @endif
-            </div>
-        </div>
-
     </div>
 </footer>
 
@@ -179,13 +76,13 @@
             <a href="{{ route('frontend.notifications') }}" class="text-reset d-block flex-grow-1 text-center py-2">
                 <span class="d-inline-block position-relative px-2">
                     <i class="las la-bell fs-18 opacity-60 {{ areActiveRoutes(['frontend.notifications'],'opacity-100')}}"></i>
-                    @if(Auth::check() && Auth::user()->user_type == 'member')
-                        @php
-                            $unseen_notification = \App\Models\Notification::where('notifiable_id',Auth()->user()->id)->where('read_at',null)->count();
-                        @endphp
-                        @if($unseen_notification > 0)
-                            <span class="badge badge-sm badge-circle badge-primary position-absolute absolute-top-right">{{ $unseen_notification }}</span>
-                        @endif
+                    @php
+                        $unseen_notification = (Auth::check() && Auth::user()->user_type == 'member')
+                            ? \App\Models\Notification::where('notifiable_id', Auth::user()->id)->whereNull('read_at')->count()
+                            : 0;
+                    @endphp
+                    @if(isset($unseen_notification) && $unseen_notification > 0)
+                        <span class="badge badge-sm badge-circle badge-primary position-absolute absolute-top-right">{{ $unseen_notification }}</span>
                     @endif
                 </span>
                 <span class="d-block fs-10 opacity-60 {{ areActiveRoutes(['frontend.notifications'],'opacity-100 fw-600')}}">{{ translate('Notifications') }}</span>
@@ -195,12 +92,12 @@
           <a href="{{ route('all.messages') }}" class="text-reset d-block flex-grow-1 text-center py-2 {{ areActiveRoutes(['all.messages'],'opacity-100')}}">
               <span class="d-inline-block position-relative px-2">
                   <i class="las la-comment-dots fs-18 opacity-60 {{ areActiveRoutes(['all.messages'],'opacity-100')}}"></i>
-                    @if(Auth::check() && Auth::user()->user_type == 'member')
-                        @php
-                            $unseen_chat_thread_count = count(chat_threads());
-                        @endphp
-                        <span class="badge badge-sm badge-circle badge-primary position-absolute absolute-top-right chat-footer-badge" @if($unseen_chat_thread_count <= 0) style="display:none" @endif>{{ $unseen_chat_thread_count }}</span>
-                    @endif
+                    @php
+                        $unseen_chat_thread_count = (Auth::check() && Auth::user()->user_type == 'member')
+                            ? count(chat_threads())
+                            : 0;
+                    @endphp
+                    <span class="badge badge-sm badge-circle badge-primary position-absolute absolute-top-right chat-footer-badge" @if($unseen_chat_thread_count <= 0) style="display:none" @endif>{{ $unseen_chat_thread_count }}</span>
               </span>
               <span class="d-block fs-10 opacity-60 {{ areActiveRoutes(['all.messages'],'opacity-100 fw-600')}}">{{ translate('Messages') }}</span>
           </a>

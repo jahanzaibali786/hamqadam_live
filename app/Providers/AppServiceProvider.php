@@ -7,6 +7,7 @@ namespace App\Providers;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -16,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->configureSubdirectoryUrlRoot();
         $this->keepFileBackedStoresWritable();
 
         Schema::defaultStringLength(191);
@@ -52,6 +54,36 @@ class AppServiceProvider extends ServiceProvider
                 'broadcasting.connections.pusher.app_id' => $pusherAppId,
                 'broadcasting.connections.pusher.options' => $pusherOptions,
             ]);
+        }
+    }
+
+    /**
+     * Keep generated route/asset URLs inside the current installation folder.
+     *
+     * This matters for local/shared-host installs such as
+     * https://localhost/hamqadam where APP_URL is often left as
+     * https://localhost. Without this, route(), url() and asset() generate
+     * links from the domain root and requests incorrectly go to /public/...
+     * instead of /hamqadam/public/....
+     */
+    private function configureSubdirectoryUrlRoot(): void
+    {
+        try {
+            $request = $this->app->bound('request') ? $this->app->make('request') : null;
+            if (! $request) {
+                return;
+            }
+
+            $basePath = function_exists('application_mount_path') ? application_mount_path() : '';
+            $rootUrl = $request->getSchemeAndHttpHost() . $basePath;
+
+            URL::forceRootUrl($rootUrl);
+            if ($request->isSecure()) {
+                URL::forceScheme('https');
+            }
+        } catch (\Throwable) {
+            // URL generation can safely fall back to Laravel defaults in CLI
+            // or during an incomplete early bootstrap.
         }
     }
 

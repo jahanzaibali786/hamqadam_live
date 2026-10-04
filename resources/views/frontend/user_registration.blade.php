@@ -33,7 +33,7 @@
 								<label class="aiz-checkbox">
 								<input type="checkbox" name="checkbox_example_1" required>
 									<span class=opacity-60>{{ translate('By signing up you agree to our')}}
-										<a href="{{ env('APP_URL').'/terms-conditions' }}" target="_blank">{{ translate('terms and conditions')}}.</a>
+										<a href="{{ url('/terms-conditions') }}" target="_blank">{{ translate('terms and conditions')}}.</a>
 									</span>
 									<span class="aiz-square-check"></span>
 								</label>

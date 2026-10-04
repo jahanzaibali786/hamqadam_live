@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Notification;
+use App\Models\NotificationDeliveryLog;
+use App\Models\NotificationPreference;
 use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -294,10 +298,20 @@ class NotificationHelper
         bool $push = true,
     ): void {
         try {
+            $preferences = NotificationPreference::firstOrCreate(['user_id' => $recipient->id]);
+            $eventPreference = (array) ($preferences->event_preferences ?? []);
+            $eventEnabled = ! array_key_exists($type, $eventPreference) || (bool) $eventPreference[$type];
+
+            if (! $eventEnabled) {
+                return;
+            }
+
             // 1. Store in database (Laravel's notification table)
             // NOTE: id column is bigint auto-increment — do NOT set it manually.
             // Use raw DB insert to avoid Eloquent double-encoding the data column.
-            \Illuminate\Support\Facades\DB::table('notifications')->insert([
+            $notificationId = null;
+            if ($preferences->in_app_enabled) {
+                $notificationId = DB::table('notifications')->insertGetId([
                 'type' => $type,
                 'notifiable_type' => \App\Models\User::class,
                 'notifiable_id' => $recipient->id,
@@ -312,7 +326,16 @@ class NotificationHelper
                 'read_at' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]);
+                ]);
+                NotificationDeliveryLog::create([
+                    'notification_id' => (string) $notificationId,
+                    'user_id' => $recipient->id,
+                    'channel' => 'in_app',
+                    'status' => 'sent',
+                    'payload' => ['type' => $type, 'route' => $route],
+                    'sent_at' => now(),
+                ]);
+            }
 
             // 2. Send the FCM v1 push, to every device this member has.
             //
@@ -322,7 +345,7 @@ class NotificationHelper
             // background - which the app cannot de-duplicate, because a
             // notification-block push is drawn by the system before any app
             // code runs.
-            if ($push) {
+            if ($push && $preferences->push_enabled && ! self::isQuietHours($preferences)) {
                 try {
                     FcmV1Service::sendToUser(
                         (int) $recipient->id,
@@ -334,7 +357,23 @@ class NotificationHelper
                             'route' => $route,
                         ],
                     );
+                    NotificationDeliveryLog::create([
+                        'notification_id' => $notificationId ? (string) $notificationId : null,
+                        'user_id' => $recipient->id,
+                        'channel' => 'push',
+                        'status' => 'sent',
+                        'payload' => ['type' => $type, 'route' => $route],
+                        'sent_at' => now(),
+                    ]);
                 } catch (\Throwable $e) {
+                    NotificationDeliveryLog::create([
+                        'notification_id' => $notificationId ? (string) $notificationId : null,
+                        'user_id' => $recipient->id,
+                        'channel' => 'push',
+                        'status' => 'failed',
+                        'error_message' => mb_substr($e->getMessage(), 0, 1000),
+                        'payload' => ['type' => $type, 'route' => $route],
+                    ]);
                     Log::warning('FCM push failed for notification.', [
                         'user_id' => $recipient->id,
                         'type' => $type,
@@ -349,5 +388,20 @@ class NotificationHelper
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    private static function isQuietHours(NotificationPreference $preferences): bool
+    {
+        if (! $preferences->quiet_hours_start || ! $preferences->quiet_hours_end) {
+            return false;
+        }
+
+        $now = Carbon::now($preferences->timezone ?: config('app.timezone'))->format('H:i:s');
+        $start = (string) $preferences->quiet_hours_start;
+        $end = (string) $preferences->quiet_hours_end;
+
+        return $start <= $end
+            ? $now >= $start && $now < $end
+            : $now >= $start || $now < $end;
     }
 }
