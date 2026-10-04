@@ -8,6 +8,7 @@ use App\Models\IgnoredUser;
 use App\Models\MatchSuggestionFeedback;
 use App\Models\ProfileMatch;
 use App\Models\User;
+use App\Services\NotificationHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
@@ -62,6 +63,14 @@ class MatchRecommendationService
                 );
 
                 $created++;
+            }
+
+            if ($created > 0) {
+                NotificationHelper::event($user, 'new_top_match', [
+                    'event_id' => 'ai-top5:' . $user->id . ':' . now()->toDateString(),
+                    'info_id' => $user->id,
+                    'count' => min(5, $created),
+                ]);
             }
 
             return ProfileMatch::query()

@@ -311,6 +311,15 @@
                 </li>
                 @endcan
 
+                @can('show_packages')
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('payment-coupons.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['payment-coupons.index']) }}">
+                        <i class="las la-ticket-alt aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Promo Codes') }}</span>
+                    </a>
+                </li>
+                @endcan
+
                 <!-- Earnings -->
                 @can('show_package_payments')
                 <li class="aiz-side-nav-item ">
@@ -353,6 +362,14 @@
                 </li>
                 @endif
                 @endif
+
+
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.completion.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.completion.index']) }}">
+                        <i class="las la-chart-line aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Completion & Analytics') }}</span>
+                    </a>
+                </li>
 
                 {{-- Happy Stories --}}
                 @can('show_happy_stories')

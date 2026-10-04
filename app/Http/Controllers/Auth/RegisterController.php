@@ -25,6 +25,7 @@ use Illuminate\Validation\ValidationException;
 use App\Notifications\DbStoreNotification;
 use Kutia\Larafirebase\Facades\Larafirebase;
 use App\Http\Controllers\OTPVerificationController;
+use App\Services\NotificationHelper;
 
 class RegisterController extends Controller
 {
@@ -172,6 +173,14 @@ class RegisterController extends Controller
 
         RegistrationOnboarding::persist($user, $data);
         RegistrationReward::applyBasicPackage($user);
+        NotificationHelper::event($user, 'account_created', [
+            'event_id' => 'account:' . $user->id . ':created',
+            'info_id' => $user->id,
+        ]);
+        NotificationHelper::event($user, 'profile_created', [
+            'event_id' => 'profile:' . $user->id . ':created',
+            'info_id' => $user->id,
+        ]);
 
 
         // Account opening Email to member
@@ -190,26 +199,36 @@ class RegisterController extends Controller
         // Check if this is an AJAX request (from our stepwise form)
         $isAjax = $request->ajax() || $request->wantsJson();
 
-        if (filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
-            if (User::where('email', $request->email)->first() != null) {
+        $email = !empty($request->email) ? trim(strtolower($request->email)) : null;
+        $cleanPhone = !empty($request->phone) ? preg_replace('/\D+/', '', $request->phone) : null;
+        $countryCode = !empty($request->country_code) ? preg_replace('/\D+/', '', $request->country_code) : '';
+        $fullPhone = $cleanPhone ? '+' . $countryCode . $cleanPhone : null;
+
+        if ($email) {
+            $request->merge(['email' => $email]);
+            if (User::where('email', $email)->exists()) {
                 if ($isAjax) {
                     return response()->json([
                         'success' => false,
-                        'message' => translate('Email or Phone already exists.')
+                        'message' => translate('An account with this email already exists.')
                     ], 422);
                 }
-                flash(translate('Email or Phone already exists.'));
+                flash(translate('An account with this email already exists.'))->error();
                 return back();
             }
-        } elseif (User::where('phone', '+' . $request->country_code . $request->phone)->first() != null) {
-            if ($isAjax) {
-                return response()->json([
-                    'success' => false,
-                    'message' => translate('Phone already exists.')
-                ], 422);
+        }
+
+        if ($fullPhone) {
+            if (User::where('phone', $fullPhone)->orWhere('phone', $cleanPhone)->exists()) {
+                if ($isAjax) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => translate('An account with this phone number already exists.')
+                    ], 422);
+                }
+                flash(translate('An account with this phone number already exists.'))->error();
+                return back();
             }
-            flash(translate('Phone already exists.'));
-            return back();
         }
 
         try {

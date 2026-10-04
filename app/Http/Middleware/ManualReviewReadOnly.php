@@ -49,8 +49,21 @@ class ManualReviewReadOnly
             'api.v1.safety.*',
         ]);
 
+        // These writes only maintain the member's authenticated client state.
+        // They must remain available in read-only review mode so private Pusher
+        // channels, push notifications and notification badges keep working.
+        $clientStateAllowed = $request->routeIs([
+            'api.v1.broadcasting.auth',
+            'api.v1.notifications.read',
+            'api.v1.notifications.read_all',
+            'api.v1.notifications.push_tokens.store',
+            'api.v1.notifications.push_tokens.delete',
+            'api.v1.notifications.preferences.update',
+        ]);
+
         if ($profileSettingsRoute
             || $helpCenterAllowed
+            || $clientStateAllowed
             || ($request->isMethodSafe() && ! $legacyMutation)
             || $request->routeIs('api.v1.auth.manual_review.contact', 'api.v1.auth.logout', 'api.v1.auth.logout_all') || str_ends_with($routeName, '.logout')) {
             return $next($request);
@@ -73,7 +86,6 @@ class ManualReviewReadOnly
         return redirect()->back()->with('manual_review_blocked', $state);
     }
 }
-
 
 
 

@@ -14,6 +14,8 @@ class ExpressInterest extends Model
         'interested_by',
         'status',
         'initial_note',
+        'is_priority',
+        'priority_expires_at',
         'responded_at',
         'withdrawn_at',
         'cancelled_at',
@@ -23,6 +25,8 @@ class ExpressInterest extends Model
     ];
 
     protected $casts = [
+        'is_priority' => 'boolean',
+        'priority_expires_at' => 'datetime',
         'status' => ProposalStatus::class,
         'responded_at' => 'datetime',
         'withdrawn_at' => 'datetime',

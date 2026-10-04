@@ -27,4 +27,22 @@ class PaymentCoupon extends Model
         'expires_at' => 'datetime',
         'active' => 'boolean',
     ];
+
+    public function isNotStartedYet(): bool
+    {
+        if (! $this->starts_at) {
+            return false;
+        }
+
+        return $this->starts_at->copy()->startOfDay()->isFuture();
+    }
+
+    public function hasExpired(): bool
+    {
+        if (! $this->expires_at) {
+            return false;
+        }
+
+        return $this->expires_at->copy()->endOfDay()->isPast();
+    }
 }

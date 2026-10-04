@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace App\Services\Api\V1\Matching;
 
 use App\Models\User;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Thin client for the AI Matchmaking model at https://matchmaking.hamqadam.com.
@@ -127,6 +130,8 @@ class MatchmakingIntegrationService
             ],
         );
 
+        $this->recordResponse($user, $res, 'matches');
+
         if (! $res->successful()) {
             return null;
         }
@@ -159,6 +164,8 @@ class MatchmakingIntegrationService
             'logged_in_user' => $profile,
             'users'          => [$candidateProfile],
         ]);
+
+        $this->recordResponse($viewer, $res, 'preview', $candidate->id);
 
         if (! $res->successful()) {
             return [
@@ -220,6 +227,29 @@ class MatchmakingIntegrationService
     // ------------------------------------------------------------------
     // Internal
     // ------------------------------------------------------------------
+
+    private function recordResponse(User $user, Response $response, string $context, ?int $candidateId = null): void
+    {
+        try {
+            DB::table('compatibility_model_response_logs')->insert([
+                'user_id' => $user->id,
+                'context' => $context,
+                'candidate_id' => $candidateId,
+                'http_status' => $response->status(),
+                'response_body' => $response->body(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Throwable $exception) {
+            // Diagnostics must not interrupt existing matching results.
+            Log::warning('Compatibility model response could not be saved.', [
+                'user_id' => $user->id,
+                'context' => $context,
+                'http_status' => $response->status(),
+                'exception_class' => $exception::class,
+            ]);
+        }
+    }
 
     /**
      * Convert a Laravel User + relations into the model's UserProfile schema.

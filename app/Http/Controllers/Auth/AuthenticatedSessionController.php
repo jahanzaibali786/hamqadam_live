@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileMatchController;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Astrology;
 use App\Models\User;
+use App\Models\FamilyGuardianLink;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,6 +38,11 @@ class AuthenticatedSessionController extends Controller
 
         if (auth()->user() != null && (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff')) {
             $redirect_route = 'admin.dashboard';
+        } elseif (FamilyGuardianLink::where('guardian_user_id', auth()->id())
+            ->where('status', 'approved')
+            ->whereNull('revoked_at')
+            ->exists()) {
+            $redirect_route = 'guardian_panel.index';
         } else {
             if (auth()->user() != null && (auth()->user()->member->current_package_id != null)) {
                 $redirect_route = 'dashboard';

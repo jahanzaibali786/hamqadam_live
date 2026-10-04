@@ -17,6 +17,13 @@ class NotificationPreferenceResource extends JsonResource
             'email_enabled' => (bool) $this->email_enabled,
             'sms_enabled' => (bool) $this->sms_enabled,
             'event_preferences' => $this->event_preferences ?? [],
+            'quiet_hours_start' => $this->quiet_hours_start,
+            'quiet_hours_end' => $this->quiet_hours_end,
+            'timezone' => $this->timezone ?: config('app.timezone'),
+            'digest_frequency' => $this->digest_frequency ?: 'instant',
+            'reminder_interval_minutes' => (int) ($this->reminder_interval_minutes ?: 1440),
+            'reminder_max_attempts' => (int) ($this->reminder_max_attempts ?? 3),
+            'engagement_enabled' => (bool) ($this->engagement_enabled ?? true),
             'updated_at' => optional($this->updated_at)->toISOString(),
         ];
     }

@@ -31,6 +31,7 @@ Route::controller(SupportTicketController::class)->group(function () {
 	Route::post('support-ticket/user-reply', 'ticket_reply')->name('support-ticket.user_reply');
 	Route::get('support-ticket/history', 'user_index')->name('support-tickets.user_index');
 	Route::get('support-ticket/view-details/{id}', 'user_view_details')->name('support-tickets.user_view_details');
+	Route::post('support-ticket/{id}/rate', 'rate')->name('support-tickets.rate');
 });
 
 ?>

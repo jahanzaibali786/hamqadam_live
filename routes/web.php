@@ -42,6 +42,7 @@ use App\Http\Controllers\PhysicalAttributeController;
 use App\Http\Controllers\ProfileMatchController;
 use App\Http\Controllers\RazorpayController;
 use App\Http\Controllers\ProfileViewerController;
+use App\Http\Controllers\ProfileShareController;
 use App\Http\Controllers\RecidencyController;
 use App\Http\Controllers\ReportedUserController;
 use App\Http\Controllers\ShortlistController;
@@ -81,11 +82,19 @@ Route::view('/delete-account', 'frontend.delete_account')->name('delete-account'
 Route::view('/csae-standards', 'frontend.csae_standards')->name('csae-standards');
 
 Route::controller(HomeController::class)->group(function () {
-    //Home Page
+    // Home Page
     Route::get('/', 'index')->name('home');
+
+    // Compatibility alias for the project's common XAMPP folder URL.
+    // Normally Symfony strips /hamqadam as the request base path and the '/'
+    // route above handles it. This alias also covers Apache setups that pass
+    // the folder segment through to Laravel instead of recognizing it as the
+    // base path. It is intentionally unnamed and does not affect route('home').
+    Route::get('/hamqadam', 'index');
 
     // fcm
     Route::post('/fcm-token', 'updateToken')->name('fcmToken');
+    Route::get('/firebase-messaging-config.js', 'firebase_messaging_config')->name('firebase.messaging.config');
 
     Route::get('/email_change/callback', 'email_change_callback')->name('email_change.callback');
     Route::post('/password/reset/email/submit', 'reset_password_with_code')->name('password.update');
@@ -129,6 +138,7 @@ Route::get('/email/verify', function () {
 })->middleware('auth')->name('verification.notice');
 
 Route::post('/language', [LanguageController::class, 'changeLanguage'])->name('language.change');
+Route::get('/p/{user}', [ProfileShareController::class, 'show'])->whereNumber('user')->name('profile.share');
 Route::get('/packages', [PackageController::class, 'select_package'])->name('packages');
 
 //Blog
@@ -181,6 +191,8 @@ Route::post('/registration/sect-main/get-by-religion', [App\Http\Controllers\Sec
 Route::post('/registration/school-of-thought/get-by-sect', [App\Http\Controllers\SchoolOfThoughtController::class, 'get_school_of_thought_by_sect'])->name('registration.school_of_thought.get_by_sect');
 Route::post('/registration/traditions/get-by-school-of-thought', [App\Http\Controllers\TraditionController::class, 'get_traditions_by_school_of_thought'])->name('registration.traditions.get_by_school_of_thought');
 
+Route::get('/guardian-mode/accept/{token}', [\App\Http\Controllers\GuardianModeWebController::class, 'acceptInvitationByToken'])->name('guardian_mode.web_accept_token');
+
 Route::group(['middleware' => ['member', 'verified', 'manual.review']], function () {
     Route::get('/member/ai-dashboard', [V1PlatformConsoleController::class, 'member'])->name('member.v1_dashboard');
 
@@ -190,13 +202,14 @@ Route::group(['middleware' => ['member', 'verified', 'manual.review']], function
         Route::post('/guardian-mode/toggle', 'toggle')->name('guardian_mode.toggle');
         Route::post('/guardian-mode/invitations', 'storeInvitation')->middleware('throttle:10,1')->name('guardian_mode.invitations.store');
         Route::post('/guardian-mode/invitations/{invitation}/revoke', 'revokeInvitation')->whereNumber('invitation')->name('guardian_mode.invitations.revoke');
-        Route::post('/guardian-mode/guardians/{link}/{action}', 'lifecycle')->whereNumber('link')->whereIn('action', ['pause', 'resume', 'revoke'])->name('guardian_mode.lifecycle');
+        Route::post('/guardian-mode/guardians/{link}/{action}', 'lifecycle')->whereNumber('link')->whereIn('action', ['pause', 'resume', 'revoke', 'grant', 'restore'])->name('guardian_mode.lifecycle');
         Route::get('/guardian-mode/guardians/{link}/permissions', 'editPermissions')->whereNumber('link')->name('guardian_mode.permissions.edit');
         Route::post('/guardian-mode/guardians/{link}/permissions', 'updatePermissions')->whereNumber('link')->name('guardian_mode.permissions.update');
         Route::get('/guardian-mode/activity', 'activity')->name('guardian_mode.activity');
         Route::get('/guardian-mode/introductions', 'introductions')->name('guardian_mode.introductions');
         Route::post('/guardian-mode/introductions', 'storeIntroduction')->name('guardian_mode.introductions.store');
         Route::post('/guardian-mode/introductions/{introduction}/respond', 'respondIntroduction')->whereNumber('introduction')->name('guardian_mode.introductions.respond');
+        Route::post('/guardian-mode/accept', 'acceptInvitationForm')->name('guardian_mode.web_accept_form');
 
         // Guardian's own panel
         Route::get('/guardian-panel', 'guardianPanel')->name('guardian_panel.index');
@@ -234,6 +247,7 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
         Route::get('/package-payment-methods/{id}', [PackageController::class, 'package_payemnt_methods'])->name('package_payment_methods');
         Route::controller(PackagePaymentController::class)->group(function () {
             Route::post('/package-payment', 'store')->name('package.payment');
+            Route::post('/package-payment/validate-coupon', 'validateCoupon')->name('package.payment.coupon');
             Route::get('/package-purchase-history', 'package_purchase_history')->name('package_purchase_history');
             Route::get('/free-package-purchase/{id}', 'free_package_purchase')->name('free_package_purchase');
 
@@ -493,7 +507,12 @@ require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/otp.php';
 require __DIR__.'/referral.php';
-require __DIR__.'/support_tickets.php';
+// Support routes are deployed separately on some older FTP mirrors. Do not
+// take down the entire application when that optional file is temporarily absent.
+$supportRoutesFile = __DIR__.'/support_tickets.php';
+if (is_file($supportRoutesFile)) {
+    require $supportRoutesFile;
+}
 
 
 
@@ -512,4 +531,3 @@ Route::get('/api-docs', function () {
 
 //Custom page
 Route::get('/{slug}', [PageController::class, 'show_custom_page'])->name('custom-pages.show_custom_page');
-

@@ -50,6 +50,13 @@ class NotificationController extends ApiController
         );
     }
 
+    public function markClicked(Request $request, string $notification): JsonResponse
+    {
+        $row = $this->notifications->markClicked($request->user(), $notification);
+        $data = (array) ($row->data ?? []);
+        return $this->success(['notification' => (new NotificationResource($row))->resolve($request), 'deep_link' => $data['route'] ?? '/']);
+    }
+
     public function markAllRead(Request $request): JsonResponse
     {
         $updated = $this->notifications->markAllRead($request->user());

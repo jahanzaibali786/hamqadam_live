@@ -7,6 +7,7 @@ namespace App\Services\Api\V1\Notification;
 use App\Enums\ApiErrorCode;
 use App\Exceptions\ApiException;
 use App\Models\Notification;
+use App\Models\NotificationDeliveryLog;
 use App\Models\NotificationPreference;
 use App\Models\User;
 use App\Models\UserPushToken;
@@ -17,12 +18,25 @@ class NotificationService
     public function list(User $user, array $filters): LengthAwarePaginator
     {
         $query = Notification::query()
+            ->with('deliveries')
             ->where('notifiable_id', $user->id)
             ->where('notifiable_type', User::class)
             ->latest();
 
         if (! empty($filters['unread_only'])) {
             $query->whereNull('read_at');
+        }
+
+        if (array_key_exists('read', $filters)) {
+            $filters['read'] ? $query->whereNotNull('read_at') : $query->whereNull('read_at');
+        }
+
+        if (! empty($filters['event_key'])) {
+            $query->where('type', $filters['event_key']);
+        }
+
+        if (! empty($filters['category'])) {
+            $query->where('category', $filters['category']);
         }
 
         return $query->paginate((int) ($filters['per_page'] ?? 20));
@@ -49,17 +63,32 @@ class NotificationService
 
         if (! $notification->read_at) {
             $notification->forceFill(['read_at' => now()])->save();
+            NotificationDeliveryLog::where('notification_id', (string) $notification->id)
+                ->where('user_id', $user->id)
+                ->whereNull('read_at')
+                ->update(['read_at' => now(), 'status' => 'read']);
         }
 
         return $notification;
     }
 
+    public function markClicked(User $user, string $id): Notification
+    {
+        $notification = $this->markRead($user, $id);
+        NotificationDeliveryLog::where('notification_id', (string) $notification->id)
+            ->where('user_id', $user->id)->update(['clicked_at' => now()]);
+        return $notification;
+    }
+
     public function markAllRead(User $user): int
     {
-        return Notification::where('notifiable_id', $user->id)
+        $ids = Notification::where('notifiable_id', $user->id)
             ->where('notifiable_type', User::class)
-            ->whereNull('read_at')
-            ->update(['read_at' => now()]);
+            ->whereNull('read_at')->pluck('id');
+        $updated = Notification::whereIn('id', $ids)->update(['read_at' => now()]);
+        NotificationDeliveryLog::where('user_id', $user->id)->whereIn('notification_id', $ids->map(fn ($id) => (string) $id))
+            ->whereNull('read_at')->update(['read_at' => now(), 'status' => 'read']);
+        return $updated;
     }
 
     public function preferences(User $user): NotificationPreference

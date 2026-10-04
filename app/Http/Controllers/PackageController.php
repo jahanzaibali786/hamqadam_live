@@ -30,6 +30,8 @@ class PackageController extends Controller
             'gallery_image_view' => ['required'],
             'validity'          => ['required'],
             'activate_on_registration' => ['nullable', 'boolean'],
+            'feature_flags' => ['nullable', 'array'],
+            'feature_flags.*' => ['string', 'in:profile_boost,priority_search,unlimited_messaging,advanced_filters,ad_free,priority_interest'],
         ];
 
         $this->package_messages = [
@@ -105,6 +107,7 @@ class PackageController extends Controller
         $package->validity          = filter_min_value($request->validity);
         $package->image             = $request->package_image;
         $package->activate_on_registration = $request->boolean('activate_on_registration');
+        $package->feature_flags = array_values($request->input('feature_flags', []));
 
         if ($package->activate_on_registration) {
             Package::where('activate_on_registration', true)->update(['activate_on_registration' => false]);
@@ -185,6 +188,7 @@ class PackageController extends Controller
         $package->validity          = filter_min_value($request->validity);
         $package->image             = $request->package_image;
         $package->activate_on_registration = $request->boolean('activate_on_registration');
+        $package->feature_flags = array_values($request->input('feature_flags', []));
 
         if ($package->activate_on_registration) {
             Package::where('id', '!=', $package->id)

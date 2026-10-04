@@ -59,7 +59,7 @@
                                 <img src="{{ uploaded_asset($document->upload_id) }}" class="img-fluid rounded border" alt="{{ translate('Verification Document') }}">
                             </a>
                         @elseif($document->file_path)
-                            <a href="{{ asset($document->file_path) }}" target="_blank">{{ translate('View File') }}</a>
+                            <a href="{{ static_asset($document->file_path) }}" target="_blank">{{ translate('View File') }}</a>
                         @endif
                     </div>
                 @endforeach

@@ -165,6 +165,26 @@
                                 </label>
                             </div>
                         </div>
+                        <div class="form-group row">
+                            <label class="col-md-3 col-form-label">{{ translate('Premium Features') }}</label>
+                            <div class="col-md-9">
+                                @php($enabledFeatures = old('feature_flags', $package->feature_flags ?? []))
+                                @foreach([
+                                    'profile_boost' => 'Profile Boost',
+                                    'priority_search' => 'Priority Search Placement',
+                                    'unlimited_messaging' => 'Unlimited Messaging',
+                                    'advanced_filters' => 'Advanced Search Filters',
+                                    'priority_interest' => 'Priority Interest / Super Like',
+                                    'ad_free' => 'Ad-Free Experience',
+                                ] as $flag => $label)
+                                    <label class="d-flex align-items-center mb-2">
+                                        <input type="checkbox" name="feature_flags[]" value="{{ $flag }}" class="mr-2" @checked(in_array($flag, $enabledFeatures, true))>
+                                        <span>{{ translate($label) }}</span>
+                                    </label>
+                                @endforeach
+                                <small class="text-muted">{{ translate('These entitlements are returned by the plan APIs and used by web/mobile feature gates.') }}</small>
+                            </div>
+                        </div>
                         <div class="form-group mb-3 text-right">
                             <button type="submit" class="btn btn-primary">{{translate('Update Package Info')}}</button>
                         </div>

@@ -55,6 +55,7 @@ class SupportTicketController extends Controller
             'sender_user_id' => auth()->id(),
             'ticket_id' => date('YmdHis'),
             'status' => 0,
+            'expected_response_at' => now()->addHours((int) get_setting('support_first_response_hours', 24)),
         ]);
 
         flash(translate('Support Ticket has been sent successfully'))->success();
@@ -77,10 +78,28 @@ class SupportTicketController extends Controller
         ]);
 
         if (array_key_exists('status', $data)) {
-            SupportTicket::whereKey($data['support_ticket_id'])->update(['status' => $data['status']]);
+            SupportTicket::whereKey($data['support_ticket_id'])->update([
+                'status' => $data['status'],
+                'resolved_at' => (string) $data['status'] === '1' ? now() : null,
+            ]);
         }
 
         flash(translate('Reply has been sent successfully'))->success();
+
+        return back();
+    }
+
+    public function rate(Request $request, $id)
+    {
+        $ticket = SupportTicket::whereKey($id)->where('sender_user_id', auth()->id())->firstOrFail();
+        abort_unless((string) $ticket->status === '1', 422, translate('Only resolved tickets can be rated.'));
+
+        $data = $request->validate([
+            'rating' => ['required', 'integer', 'between:1,5'],
+            'comment' => ['nullable', 'string', 'max:1000'],
+        ]);
+        $ticket->update(['rating' => $data['rating'], 'rating_comment' => $data['comment'] ?? null, 'rated_at' => now()]);
+        flash(translate('Thank you for rating our support.'))->success();
 
         return back();
     }
@@ -101,4 +120,3 @@ class SupportTicketController extends Controller
         return back();
     }
 }
-

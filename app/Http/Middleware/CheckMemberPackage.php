@@ -18,11 +18,22 @@ class CheckMemberPackage
     {
         $user = Auth::user();
 
-        if ($user && $user->member && is_null($user->member->current_package_id)) {
+        if ($user) {
+            // Guardians act on behalf of invited members and are exempt from buying separate packages
+            $isGuardian = \App\Models\FamilyGuardianLink::where('guardian_user_id', $user->id)
+                ->where('status', 'approved')
+                ->whereNull('revoked_at')
+                ->exists();
 
-            if (!$request->routeIs(['home', 'packages', 'package_payment_methods', 'free_package_purchase', 'package_payment.invoice', 'package_purchase_history', 'package.payment'])) {
-                flash(translate('Please purchase a package first.'))->warning();
-                return redirect()->route('packages');
+            if ($isGuardian) {
+                return $next($request);
+            }
+
+            if ($user->member && is_null($user->member->current_package_id)) {
+                if (!$request->routeIs(['home', 'packages', 'package_payment_methods', 'free_package_purchase', 'package_payment.invoice', 'package_purchase_history', 'package.payment', 'guardian_panel.*', 'guardian_mode.*'])) {
+                    flash(translate('Please purchase a package first.'))->warning();
+                    return redirect()->route('packages');
+                }
             }
         }
 

@@ -72,75 +72,64 @@
     <script src="{{ static_asset('assets/js/vendors.js') }}"></script>
     <script src="{{ static_asset('assets/js/aiz-core.js') }}"></script>
 
-    @if (get_setting('firebase_push_notification') == 1)
-        {{-- fcm --}}
-        <!-- The core Firebase JS SDK is always required and must be listed first -->
+    @php
+        $firebaseAdminConfig = [
+            'apiKey' => (string) env('FCM_API_KEY'),
+            'authDomain' => (string) env('FCM_AUTH_DOMAIN'),
+            'projectId' => (string) env('FCM_PROJECT_ID'),
+            'storageBucket' => (string) env('FCM_STORAGE_BUCKET'),
+            'messagingSenderId' => (string) env('FCM_MESSAGING_SENDER_ID'),
+            'appId' => (string) env('FCM_APP_ID'),
+        ];
+        $firebaseAdminReady = get_setting('firebase_push_notification') == 1
+            && collect($firebaseAdminConfig)->every(fn ($value) => trim($value) !== '');
+    @endphp
+    @if ($firebaseAdminReady)
         <script src="https://www.gstatic.com/firebasejs/8.3.2/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/8.3.2/firebase-messaging.js"></script>
-
-        <!-- TODO: Add SDKs for Firebase products that you want to use
-        https://firebase.google.com/docs/web/setup#available-libraries -->
-
         <script>
-            // Your web app's Firebase configuration
-            var firebaseConfig = {
-                apiKey: "{{ env('FCM_API_KEY') }}",
-                authDomain: "{{ env('FCM_AUTH_DOMAIN') }}",
-                projectId: "{{ env('FCM_PROJECT_ID') }}",
-                storageBucket: "{{ env('FCM_STORAGE_BUCKET') }}",
-                messagingSenderId: "{{ env('FCM_MESSAGING_SENDER_ID') }}",
-                appId: "{{ env('FCM_APP_ID') }}",
-            };
+            (function () {
+                var firebaseConfig = @json($firebaseAdminConfig);
+                if (!window.firebase || !firebaseConfig.projectId) { return; }
+                if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+                var messaging = firebase.messaging();
 
-            // Initialize Firebase
-            firebase.initializeApp(firebaseConfig);
-
-            const messaging = firebase.messaging();
-
-            function initFirebaseMessagingRegistration() {
-                messaging.requestPermission()
-                .then(function() {
-                    return messaging.getToken()
-                }).then(function(token) {
-                    
-                    $.ajax({
-                        url: '{{ route('fcmToken') }}',
-                        type: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        data: {
-                        
-                            fcm_token: token
-                        },
-                        dataType: 'JSON',
-                        success: function (response) {
-                            
-                        },
-                        error: function (err) {
-                            console.log(" Can't do because: " + err);
-                        },
-                    });
-
-                }).catch(function(err) {
-                    console.log(`Token Error :: ${err}`);
-                });
-            }
-
-            initFirebaseMessagingRegistration();        
-
-            messaging.onMessage(function({
-                data: {
-                    body,
-                    title
+                function initFirebaseMessagingRegistration() {
+                    if (!('Notification' in window)) { return; }
+                    messaging.requestPermission()
+                        .then(function () { return messaging.getToken(); })
+                        .then(function (token) {
+                            if (!token) { return; }
+                            $.ajax({
+                                url: @json(route('fcmToken')),
+                                type: 'POST',
+                                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                                data: { fcm_token: token },
+                                dataType: 'JSON'
+                            });
+                        })
+                        .catch(function () {});
                 }
-            }) {
-                new Notification(title, {
-                    body
+
+                var serviceWorkerUrl = @json(rtrim(getBaseURL(), '/') . '/firebase-messaging-sw.js');
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register(serviceWorkerUrl)
+                        .then(function (registration) {
+                            if (typeof messaging.useServiceWorker === 'function') {
+                                messaging.useServiceWorker(registration);
+                            }
+                            initFirebaseMessagingRegistration();
+                        })
+                        .catch(function () {});
+                }
+                messaging.onMessage(function (payload) {
+                    var data = payload && payload.data ? payload.data : {};
+                    if (Notification.permission === 'granted') {
+                        new Notification(data.title || 'Hamqadam', { body: data.body || '' });
+                    }
                 });
-            });
+            }());
         </script>
-        {{-- End of fcm --}}
     @endif
 
     @yield('script')
@@ -149,7 +138,7 @@
 
     <script type="text/javascript">
         @foreach (session('flash_notification', collect())->toArray() as $message)
-            AIZ.plugins.notify('{{ $message['level'] }}', '{{ $message['message'] }}');
+            AIZ.plugins.notify(@json($message['level']), @json($message['message']));
         @endforeach
 
         // language Switch

@@ -119,15 +119,15 @@
                 <div class="card-body">
                     @forelse($topMatches as $match)
                         @php $matchedUser = $match->matchedUser; @endphp
-                        <div class="d-flex align-items-center border-bottom pb-3 mb-3">
-                            <div class="avatar avatar-md mr-3">
+                        <div class="d-flex align-items-start border-bottom pb-3 mb-3" style="min-width: 0;">
+                            <div class="avatar avatar-md mr-3 flex-shrink-0">
                                 @if ($matchedUser?->photo)
                                     <img src="{{ uploaded_asset($matchedUser->photo) }}">
                                 @else
                                     <img src="{{ static_asset('assets/img/avatar-place.png') }}">
                                 @endif
                             </div>
-                            <div class="flex-grow-1">
+                            <div class="flex-grow-1" style="min-width: 0;">
                                 <a href="{{ $matchedUser ? route('member_profile', $matchedUser->id) : '#' }}"
                                     class="text-dark fw-600">
                                     {{ $matchedUser ? trim($matchedUser->first_name . ' ' . $matchedUser->last_name) : translate('Profile unavailable') }}
@@ -139,8 +139,27 @@
                                 <div class="fs-12 opacity-70 mt-1">
                                     {{ $match->compatibility_explanation ?: translate('Compatibility explanation will appear after recalculation.') }}
                                 </div>
+                                @if (!empty($match->compatibility_summary['facts']))
+                                    <div class="d-flex flex-wrap mt-2" style="gap: 6px;">
+                                        @foreach ($match->compatibility_summary['facts'] as $fact)
+                                            <span class="text-muted" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border: 1px solid #e6d7df; border-radius: 999px; background: #fff8fb; font-size: 11px; line-height: 1.35; white-space: normal;">
+                                                <i class="las la-check-circle mr-1"></i>{{ $fact[0] }}: {{ $fact[1] }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                                @if (!empty($match->compatibility_summary['matched_criteria']))
+                                    <div class="fs-12 fw-600 mt-2 mb-1">{{ translate('Matched preferences') }}</div>
+                                    <div class="d-flex flex-wrap" style="gap: 6px;">
+                                        @foreach ($match->compatibility_summary['matched_criteria'] as $criterion)
+                                            <span title="{{ $criterion['reason'] ?? '' }}" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border: 1px solid #cde9dc; border-radius: 999px; background: #f3fff8; color: #28784c; font-size: 11px; line-height: 1.35; white-space: normal;">
+                                                <i class="las la-heart mr-1"></i>{{ $criterion['label'] }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
-                            <div class="ml-3 h5 mb-0">{{ (int) $match->match_percentage }}%</div>
+                            <div class="ml-3 h5 mb-0 flex-shrink-0" style="min-width: 42px; text-align: right;">{{ (int) $match->match_percentage }}%</div>
                         </div>
                     @empty
                         <div class="text-center text-muted py-4">

@@ -155,6 +155,26 @@
                             </div>
                         </div>
 
+                        <div class="form-group row">
+                            <label class="col-md-3 col-form-label">{{ translate('Premium Features') }}</label>
+                            <div class="col-md-9">
+                                @foreach([
+                                    'profile_boost' => 'Profile Boost',
+                                    'priority_search' => 'Priority Search Placement',
+                                    'unlimited_messaging' => 'Unlimited Messaging',
+                                    'advanced_filters' => 'Advanced Search Filters',
+                                    'priority_interest' => 'Priority Interest / Super Like',
+                                    'ad_free' => 'Ad-Free Experience',
+                                ] as $flag => $label)
+                                    <label class="d-flex align-items-center mb-2">
+                                        <input type="checkbox" name="feature_flags[]" value="{{ $flag }}" class="mr-2" @checked(in_array($flag, old('feature_flags', []), true))>
+                                        <span>{{ translate($label) }}</span>
+                                    </label>
+                                @endforeach
+                                <small class="text-muted">{{ translate('Enable only the benefits included in this membership plan.') }}</small>
+                            </div>
+                        </div>
+
                         <div class="form-group mb-3 text-right">
                             <button type="submit" class="btn btn-primary">{{translate('Add New Package')}}</button>
                         </div>

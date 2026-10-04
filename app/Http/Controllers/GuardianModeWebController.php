@@ -10,7 +10,6 @@ use App\Models\FamilyGuardianLink;
 use App\Models\FamilyIntroduction;
 use App\Models\GuardianActivityLog;
 use App\Models\GuardianInvitation;
-use App\Models\GuardianPermission as GuardianPermissionModel;
 use App\Services\Api\V1\Family\GuardianAuthService;
 use App\Services\Api\V1\Family\GuardianModeService;
 use Illuminate\Http\Request;
@@ -76,7 +75,10 @@ class GuardianModeWebController extends Controller
     public function storeInvitation(Request $request)
     {
         $request->validate([
+            'first_name' => ['nullable', 'string', 'max:120'],
+            'last_name' => ['nullable', 'string', 'max:120'],
             'contact' => ['required', 'string', 'max:120'],
+            'password' => ['nullable', 'string', 'min:6'],
             'relationship' => ['required', 'string', 'max:60'],
             'guardian_role' => ['nullable', 'string', 'max:40', 'in:primary,supporting,custom'],
             'permission_preset' => ['required', 'string', 'in:view_only,review,participate,custom'],
@@ -92,7 +94,7 @@ class GuardianModeWebController extends Controller
             return back()->withInput();
         }
 
-        flash(translate('Guardian invitation created. Share this acceptance code with your guardian: ') . $invitation->token)->success();
+        flash(translate('Guardian added and invitation/credentials sent to their email successfully!'))->success();
 
         return back();
     }
@@ -111,10 +113,16 @@ class GuardianModeWebController extends Controller
         return back();
     }
 
-    /** POST /guardian-mode/guardians/{link}/pause|resume|revoke — lifecycle. */
+    /** POST /guardian-mode/guardians/{link}/pause|resume|revoke|grant — lifecycle. */
     public function lifecycle(Request $request, int $link, string $action)
     {
-        $map = ['pause' => 'pause', 'resume' => 'resume', 'revoke' => 'revoke'];
+        $map = [
+            'pause' => 'pause',
+            'resume' => 'resume',
+            'revoke' => 'revoke',
+            'grant' => 'grant',
+            'restore' => 'grant',
+        ];
 
         if (! isset($map[$action])) {
             abort(404);
@@ -128,7 +136,15 @@ class GuardianModeWebController extends Controller
             return back();
         }
 
-        flash(translate('Guardian ' . $action . ' successful.'))->success();
+        $msgAction = match ($action) {
+            'grant', 'restore' => translate('Guardian access granted again.'),
+            'pause' => translate('Guardian access paused.'),
+            'resume' => translate('Guardian access resumed.'),
+            'revoke' => translate('Guardian access revoked.'),
+            default => translate('Guardian updated.'),
+        };
+
+        flash($msgAction)->success();
 
         return back();
     }
@@ -159,11 +175,11 @@ class GuardianModeWebController extends Controller
     /** POST /guardian-mode/guardians/{link}/permissions — save granular keys. */
     public function updatePermissions(Request $request, int $link)
     {
-        $request->validate(['permissions' => ['required', 'array']]);
+        $request->validate(['permissions' => ['nullable', 'array']]);
 
         $guardianLink = FamilyGuardianLink::where('profile_user_id', Auth::id())->findOrFail($link);
 
-        $this->guardianAuth->syncPermissions($guardianLink, $request->input('permissions'), (int) Auth::id());
+        $this->guardianAuth->syncPermissions($guardianLink, (array) $request->input('permissions', []), (int) Auth::id());
 
         GuardianActivityLog::record($guardianLink->id, $guardianLink->guardian_user_id, (int) Auth::id(), 'guardian_permissions_changed', FamilyGuardianLink::class, $guardianLink->id);
 
@@ -243,17 +259,20 @@ class GuardianModeWebController extends Controller
     {
         $user = Auth::user();
 
-        $managed = FamilyGuardianLink::with(['profile.member', 'profile'])
+        $allLinks = FamilyGuardianLink::with(['profile.member', 'profile'])
             ->where('guardian_user_id', $user->id)
             ->where('status', 'approved')
             ->whereNull('revoked_at')
-            ->get()
-            ->filter(fn (FamilyGuardianLink $link) => $link->paused_at === null);
+            ->get();
+
+        $managed = $allLinks->filter(fn (FamilyGuardianLink $link) => $link->paused_at === null);
+        $paused = $allLinks->filter(fn (FamilyGuardianLink $link) => $link->paused_at !== null);
 
         $activeIds = $managed->pluck('profile_user_id');
 
         return view('frontend.member.guardian_mode.guardian_panel', [
             'managed' => $managed,
+            'paused' => $paused,
             'pendingApprovals' => \App\Models\FamilyApprovalRequest::where('guardian_user_id', $user->id)
                 ->whereIn('profile_user_id', $activeIds)
                 ->where('status', 'pending')
@@ -314,17 +333,17 @@ class GuardianModeWebController extends Controller
             ->whereNull('revoked_at')
             ->firstOrFail();
 
-        abort_if($link->paused_at !== null, 403, 'Guardian access is paused.');
+        if ($link->paused_at !== null) {
+            flash(translate('Guardian access for this member is currently paused.'))->warning();
+
+            return redirect()->route('guardian_panel.index');
+        }
 
         $matches = \App\Models\ProfileMatch::with('matchedUser.member')
             ->where('user_id', $profileUserId)
             ->orderByDesc('match_percentage')
             ->limit(20)
             ->get();
-
-        $feedback = GuardianPermissionModel::query()->exists()
-            ? collect()
-            : collect();
 
         return view('frontend.member.guardian_mode.guardian_matches', [
             'link' => $link,
@@ -336,4 +355,44 @@ class GuardianModeWebController extends Controller
             'permissionCatalog' => GuardianPermission::catalog(),
         ]);
     }
+
+    /** GET /guardian-mode/accept/{token} — accept an invitation via direct link. */
+    public function acceptInvitationByToken(Request $request, string $token)
+    {
+        if (! Auth::check()) {
+            session(['pending_guardian_token' => $token]);
+            flash(translate('Please log in or register to accept the guardian invitation.'))->info();
+
+            return redirect()->route('user.login');
+        }
+
+        try {
+            $this->guardianMode->acceptInvitation(Auth::user(), $token);
+            flash(translate('Guardian invitation accepted successfully! Welcome to your Guardian Panel.'))->success();
+
+            return redirect()->route('guardian_panel.index');
+        } catch (\Throwable $e) {
+            flash($e->getMessage())->error();
+
+            return redirect()->route('guardian_panel.index');
+        }
+    }
+
+    /** POST /guardian-mode/accept — accept an invitation code via web form. */
+    public function acceptInvitationForm(Request $request)
+    {
+        $request->validate([
+            'token' => ['required', 'string'],
+        ]);
+
+        try {
+            $this->guardianMode->acceptInvitation(Auth::user(), trim($request->input('token')));
+            flash(translate('Guardian invitation accepted successfully!'))->success();
+        } catch (\Throwable $e) {
+            flash($e->getMessage())->error();
+        }
+
+        return redirect()->route('guardian_panel.index');
+    }
 }
+

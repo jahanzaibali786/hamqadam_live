@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\CompletionController;
 use App\Http\Controllers\Api\V1\Ai\AiController;
 use App\Http\Controllers\Api\V1\Admin\AdminOverviewController;
 use App\Http\Controllers\Api\V1\Chat\CallController;
@@ -336,6 +337,7 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::post('/push-tokens', [NotificationController::class, 'storePushToken'])->name('push_tokens.store');
     Route::delete('/push-tokens/{token}', [NotificationController::class, 'deletePushToken'])->name('push_tokens.delete');
     Route::post('/{notification}/read', [NotificationController::class, 'markRead'])->name('read');
+    Route::post('/{notification}/click', [NotificationController::class, 'markClicked'])->name('click');
 });
 
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('family')->name('api.v1.family.')->group(function () {
@@ -453,16 +455,6 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::post('/moderation-cases/{case}/resolve', [SafetyController::class, 'resolve'])->name('moderation_cases.resolve');
 });
 
-/*
-| API catch-all: unknown /api/v1/* paths must answer JSON 404, never fall
-| through to the website. Without this, a missing route inherits the web
-| catch-all (`/{slug}` → PageController) and the SPA serves its homepage
-| HTML after a redirect — the app then parses `<html>` instead of JSON.
-*/
-Route::fallback(function () {
-    return \App\Support\Api\ApiResponse::error('API route not found.', 404, 'not_found');
-});
-
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('ai')->name('api.v1.ai.')->group(function () {
     Route::post('/bio', [AiController::class, 'bio'])->middleware('throttle:20,1')->name('bio');
     Route::post('/conversation-starters', [AiController::class, 'conversationStarters'])->middleware('throttle:20,1')->name('conversation_starters');
@@ -471,6 +463,23 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::post('/red-flag-check', [AiController::class, 'redFlagCheck'])->middleware('throttle:30,1')->name('red_flag_check');
 });
 
+/*
+| API catch-all: unknown /api/v1/* paths must answer JSON 404, never fall
+| through to the website. Keep this after every real API route; Laravel
+| evaluates route declarations in order.
+*/
+Route::fallback(function () {
+    return \App\Support\Api\ApiResponse::error('API route not found.', 404, 'not_found');
+});
 
 
 
+
+Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('completion')->name('api.v1.completion.')->group(function () {
+    Route::post('/events', [CompletionController::class, 'track'])->name('events.store');
+    Route::post('/nps', [CompletionController::class, 'nps'])->name('nps.store');
+    Route::post('/got-match', [CompletionController::class, 'gotMatch'])->name('got_match.store');
+    Route::get('/sponsored', [CompletionController::class, 'sponsored'])->name('sponsored.index');
+    Route::get('/rewards', [CompletionController::class, 'rewards'])->name('rewards.index');
+    Route::get('/profile-link', [CompletionController::class, 'profileLink'])->name('profile_link');
+});

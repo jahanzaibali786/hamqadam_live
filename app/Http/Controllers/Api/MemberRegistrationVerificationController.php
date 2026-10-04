@@ -14,22 +14,52 @@ class MemberRegistrationVerificationController extends Controller
    
     public function sendRegVerificationCode(Request $request)
     {
+        $email = !empty($request->email) ? trim(strtolower($request->email)) : null;
+        $cleanPhone = !empty($request->phone) ? preg_replace('/\D+/', '', $request->phone) : null;
+        $countryCode = !empty($request->country_code) ? preg_replace('/\D+/', '', $request->country_code) : '';
+        $phone = $cleanPhone ? '+' . $countryCode . $cleanPhone : null;
 
-        $email = $request->email ?? null;
-        $phone = $request->phone != null ? '+' . $request->country_code . $request->phone : null;
-        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            if (User::where('email', $email)->first() != null) {
-                return response()->json(['status' => 0, 'message' => translate('Email already exists.')]);
+        if ($email) {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return response()->json(['status' => 0, 'message' => translate('Please enter a valid email address.')]);
             }
-        } elseif (User::where('phone', $phone)->first() != null) {
-            return response()->json(['status' => 0, 'message' => translate('Phone already exists.')]);
+            if (User::where('email', $email)->exists()) {
+                return response()->json(['status' => 0, 'message' => translate('Email already exists. Please use a different email.')]);
+            }
+        }
+
+        if ($phone) {
+            if (User::where('phone', $phone)->orWhere('phone', $cleanPhone)->exists()) {
+                return response()->json(['status' => 0, 'message' => translate('Phone already exists. Please use a different phone number.')]);
+            }
+        }
+
+        if (!$email && !$phone) {
+            return response()->json(['status' => 0, 'message' => translate('Please enter your email or phone number.')]);
         }
 
         $verificationCode = rand(100000, 999999);
-        $customerVerification = RegistrationVerificationCode::updateOrCreate(
-            ['email' => $email, 'phone' => $phone],
-            ['code' => $verificationCode]
-        );
+
+        // Invalidate and delete ALL previous OTP requests for this email or phone so old codes cannot be reused
+        RegistrationVerificationCode::where(function ($q) use ($email, $phone, $cleanPhone) {
+            if ($email) {
+                $q->where('email', $email);
+            }
+            if ($phone) {
+                $q->orWhere('phone', $phone);
+                if ($cleanPhone) {
+                    $q->orWhere('phone', $cleanPhone);
+                }
+            }
+        })->delete();
+
+        RegistrationVerificationCode::create([
+            'email'       => $email,
+            'phone'       => $phone,
+            'code'        => $verificationCode,
+            'is_verified' => 0,
+        ]);
+
         $success = 1;
 
         if ($email) {
@@ -46,7 +76,6 @@ class MemberRegistrationVerificationController extends Controller
             }
         }
 
-
         if ($success) {
             return response()->json(['status' => 1, 'message' => translate('Verification code sent successfully.')]);
         } else {
@@ -56,19 +85,61 @@ class MemberRegistrationVerificationController extends Controller
 
     public function regVerifyCodeConfirmation(Request $request)
     {
-        $email = isset($request->email) ? $request->email : null;
-        $phone = isset($request->phone) ? $request->phone  : null;
+        $email = !empty($request->email) ? trim(strtolower($request->email)) : null;
+        $cleanPhone = !empty($request->phone) ? preg_replace('/\D+/', '', $request->phone) : null;
+        $countryCode = !empty($request->country_code) ? preg_replace('/\D+/', '', $request->country_code) : '';
+        $phone = $cleanPhone ? '+' . $countryCode . $cleanPhone : null;
+        $code = isset($request->code) ? trim((string)$request->code) : '';
 
-        $customerVerification = RegistrationVerificationCode::where('code', $request->code);
-        $customerVerification = $request->email != null ?
-            $customerVerification->where('email', $email) :
-            $customerVerification->where('phone', $phone);
-        $customerVerification = $customerVerification->first();
+        if (empty($code)) {
+            return response()->json(['status' => 0, 'message' => translate('Please enter the verification code.')]);
+        }
+
+        if ($email && User::where('email', $email)->exists()) {
+            return response()->json(['status' => 0, 'message' => translate('This email is already registered. Please use a different email.')]);
+        }
+        if ($phone && (User::where('phone', $phone)->orWhere('phone', $cleanPhone)->exists())) {
+            return response()->json(['status' => 0, 'message' => translate('This phone number is already registered. Please use a different phone number.')]);
+        }
+
+        // Query the latest unverified code generated within 15 minutes
+        $customerVerification = RegistrationVerificationCode::where('code', $code)
+            ->where('is_verified', 0)
+            ->where(function ($q) use ($email, $phone, $cleanPhone) {
+                if ($email) {
+                    $q->where('email', $email);
+                }
+                if ($phone) {
+                    $q->orWhere('phone', $phone);
+                    if ($cleanPhone) {
+                        $q->orWhere('phone', $cleanPhone);
+                    }
+                }
+            })
+            ->where('created_at', '>=', now()->subMinutes(15))
+            ->latest()
+            ->first();
+
         if ($customerVerification == null) {
-            return response()->json(['status' => 0, 'message' => translate('Verification Code did not match')]);
+            return response()->json(['status' => 0, 'message' => translate('Verification Code did not match or has expired.')]);
         } else {
             $customerVerification->is_verified = 1;
             $customerVerification->save();
+
+            // Clean up any other old verification records for this target
+            RegistrationVerificationCode::where('id', '!=', $customerVerification->id)
+                ->where(function ($q) use ($email, $phone, $cleanPhone) {
+                    if ($email) {
+                        $q->where('email', $email);
+                    }
+                    if ($phone) {
+                        $q->orWhere('phone', $phone);
+                        if ($cleanPhone) {
+                            $q->orWhere('phone', $cleanPhone);
+                        }
+                    }
+                })->delete();
+
             return response()->json(['status' => 1, 'message' => translate('Verification Successful')]);
         }
     }

@@ -57,6 +57,27 @@ class HomeController extends Controller
      *
      * @return \Illuminate\Contracts\Support\Renderable
      */
+    public function firebase_messaging_config()
+    {
+        $config = [
+            'apiKey' => (string) env('FCM_API_KEY'),
+            'authDomain' => (string) env('FCM_AUTH_DOMAIN'),
+            'projectId' => (string) env('FCM_PROJECT_ID'),
+            'storageBucket' => (string) env('FCM_STORAGE_BUCKET'),
+            'messagingSenderId' => (string) env('FCM_MESSAGING_SENDER_ID'),
+            'appId' => (string) env('FCM_APP_ID'),
+        ];
+
+        return response(
+            'self.HAMQADAM_FIREBASE_CONFIG = ' . json_encode($config, JSON_UNESCAPED_SLASHES) . ';',
+            200,
+            [
+                'Content-Type' => 'application/javascript; charset=UTF-8',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            ]
+        );
+    }
+
     public function index()
     {
 
@@ -183,6 +204,15 @@ class HomeController extends Controller
             
             if($user->blocked == 1){
                 return redirect()->route('user.blocked');
+            }
+
+            // Guardians are directed straight to the Guardian Panel
+            $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $user->id)
+                ->where('status', 'approved')
+                ->whereNull('revoked_at')
+                ->first();
+            if ($guardianLink && ($user->member == null || empty($user->member->birthday))) {
+                return redirect()->route('guardian_panel.index');
             }
 
             $similar_profiles = ProfileMatch::orderBy('match_percentage', 'desc')
@@ -458,27 +488,36 @@ class HomeController extends Controller
 
         $user = User::findOrFail($id);
 
+        $quotaUserId = $authUser->id;
+        $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $authUser->id)
+            ->where('status', 'approved')
+            ->whereNull('revoked_at')
+            ->first();
+        if ($guardianLink) {
+            $quotaUserId = $guardianLink->profile_user_id;
+        }
+
         // Profile view data store
-        if($user->id != $authUser->id){
-            $profileViewed = ProfileViewer::where('user_id', $user->id)->where('viewed_by', $authUser->id)->first();
+        if($user->id != $authUser->id && $user->id != $quotaUserId){
+            $profileViewed = ProfileViewer::where('user_id', $user->id)->where('viewed_by', $quotaUserId)->first();
             if($profileViewed == null){
-                $viewerMember = Member::where('user_id', $authUser->id)->first();
-                if(package_validity($authUser->id) && $viewerMember->remaining_profile_viewer_view > 0){
+                $viewerMember = Member::where('user_id', $quotaUserId)->first();
+                if($viewerMember && package_validity($quotaUserId) && $viewerMember->remaining_profile_viewer_view > 0){
                     $profileViewed = ProfileViewer::create([
                         'user_id' => $user->id,
-                        'viewed_by' => $authUser->id
+                        'viewed_by' => $quotaUserId
                     ]);
-                                        $viewerMember->remaining_profile_viewer_view = max(0, $viewerMember->remaining_profile_viewer_view - 1);
+                    $viewerMember->remaining_profile_viewer_view = max(0, $viewerMember->remaining_profile_viewer_view - 1);
                     $viewerMember->save();
 
                     PackageUsage::record(
-                        $authUser->id,
+                        $quotaUserId,
                         'profile_viewer_view',
                         'Profile Viewer View',
                         1,
                         ProfileViewer::class,
                         $profileViewed?->id ?? null,
-                        'Used 1 coin to view a profile.'
+                        'Used 1 coin to view a profile' . ($guardianLink ? ' (via Guardian ' . $authUser->first_name . ')' : '') . '.'
                     );
 
                     // Profile viewed Notification for member
@@ -487,8 +526,8 @@ class HomeController extends Controller
                         $id = unique_notify_id();
                         $notify_by = $authUser->id;
                         $info_id = $user->id;
-                        $message = $authUser->first_name . ' ' . $authUser->last_name . ' ' . translate(' has viewed your profile.');
-                        $route = route('member_profile', $authUser->id);
+                        $message = ($guardianLink ? $authUser->first_name . ' (Guardian)' : $authUser->first_name . ' ' . $authUser->last_name) . ' ' . translate(' has viewed your profile.');
+                        $route = route('member_profile', $quotaUserId);
         
                         // fcm 
                         if (get_setting('firebase_push_notification') == 1) {
@@ -745,22 +784,52 @@ class HomeController extends Controller
 
     public function sendRegVerificationCode(Request $request)
     {
+        $email = !empty($request->email) ? trim(strtolower($request->email)) : null;
+        $cleanPhone = !empty($request->phone) ? preg_replace('/\D+/', '', $request->phone) : null;
+        $countryCode = !empty($request->country_code) ? preg_replace('/\D+/', '', $request->country_code) : '';
+        $phone = $cleanPhone ? '+' . $countryCode . $cleanPhone : null;
 
-        $email = $request->email ?? null;
-        $phone = $request->phone != null ? '+' . $request->country_code . $request->phone : null;
-        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            if (User::where('email', $email)->first() != null) {
-                return response()->json(['status' => 0, 'message' => translate('Email already exists.')]);
+        if ($email) {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return response()->json(['status' => 0, 'message' => translate('Please enter a valid email address.')]);
             }
-        } elseif (User::where('phone', $phone)->first() != null) {
-            return response()->json(['status' => 0, 'message' => translate('Phone already exists.')]);
+            if (User::where('email', $email)->exists()) {
+                return response()->json(['status' => 0, 'message' => translate('Email already exists. Please use a different email.')]);
+            }
+        }
+
+        if ($phone) {
+            if (User::where('phone', $phone)->orWhere('phone', $cleanPhone)->exists()) {
+                return response()->json(['status' => 0, 'message' => translate('Phone already exists. Please use a different phone number.')]);
+            }
+        }
+
+        if (!$email && !$phone) {
+            return response()->json(['status' => 0, 'message' => translate('Please enter your email or phone number.')]);
         }
 
         $verificationCode = rand(100000, 999999);
-        $customerVerification = RegistrationVerificationCode::updateOrCreate(
-            ['email' => $email, 'phone' => $phone],
-            ['code' => $verificationCode]
-        );
+
+        // Invalidate and delete ALL previous OTP requests for this email or phone so old codes cannot be reused
+        RegistrationVerificationCode::where(function ($q) use ($email, $phone, $cleanPhone) {
+            if ($email) {
+                $q->where('email', $email);
+            }
+            if ($phone) {
+                $q->orWhere('phone', $phone);
+                if ($cleanPhone) {
+                    $q->orWhere('phone', $cleanPhone);
+                }
+            }
+        })->delete();
+
+        RegistrationVerificationCode::create([
+            'email'       => $email,
+            'phone'       => $phone,
+            'code'        => $verificationCode,
+            'is_verified' => 0,
+        ]);
+
         $success = 1;
 
         if ($email) {
@@ -777,7 +846,6 @@ class HomeController extends Controller
             }
         }
 
-
         if ($success) {
             return response()->json(['status' => 1, 'message' => translate('Verification code sent successfully.')]);
         } else {
@@ -787,19 +855,61 @@ class HomeController extends Controller
 
     public function regVerifyCodeConfirmation(Request $request)
     {
-        $email = isset($request->email) ? $request->email : null;
-        $phone = $request->phone != null ? '+' . $request->country_code . $request->phone : null;
-        
-        $customerVerification = RegistrationVerificationCode::where('code', $request->code);
-        $customerVerification = $request->email != null ?
-            $customerVerification->where('email', $email) :
-            $customerVerification->where('phone', $phone);
-        $customerVerification = $customerVerification->first();
+        $email = !empty($request->email) ? trim(strtolower($request->email)) : null;
+        $cleanPhone = !empty($request->phone) ? preg_replace('/\D+/', '', $request->phone) : null;
+        $countryCode = !empty($request->country_code) ? preg_replace('/\D+/', '', $request->country_code) : '';
+        $phone = $cleanPhone ? '+' . $countryCode . $cleanPhone : null;
+        $code = isset($request->code) ? trim((string)$request->code) : '';
+
+        if (empty($code)) {
+            return response()->json(['status' => 0, 'message' => translate('Please enter the verification code.')]);
+        }
+
+        if ($email && User::where('email', $email)->exists()) {
+            return response()->json(['status' => 0, 'message' => translate('This email is already registered. Please use a different email.')]);
+        }
+        if ($phone && (User::where('phone', $phone)->orWhere('phone', $cleanPhone)->exists())) {
+            return response()->json(['status' => 0, 'message' => translate('This phone number is already registered. Please use a different phone number.')]);
+        }
+
+        // Query the latest unverified code generated within 15 minutes
+        $customerVerification = RegistrationVerificationCode::where('code', $code)
+            ->where('is_verified', 0)
+            ->where(function ($q) use ($email, $phone, $cleanPhone) {
+                if ($email) {
+                    $q->where('email', $email);
+                }
+                if ($phone) {
+                    $q->orWhere('phone', $phone);
+                    if ($cleanPhone) {
+                        $q->orWhere('phone', $cleanPhone);
+                    }
+                }
+            })
+            ->where('created_at', '>=', now()->subMinutes(15))
+            ->latest()
+            ->first();
+
         if ($customerVerification == null) {
-            return response()->json(['status' => 0, 'message' => translate('Verification Code did not match')]);
+            return response()->json(['status' => 0, 'message' => translate('Verification Code did not match or has expired.')]);
         } else {
             $customerVerification->is_verified = 1;
             $customerVerification->save();
+
+            // Clean up any other old verification records for this target
+            RegistrationVerificationCode::where('id', '!=', $customerVerification->id)
+                ->where(function ($q) use ($email, $phone, $cleanPhone) {
+                    if ($email) {
+                        $q->where('email', $email);
+                    }
+                    if ($phone) {
+                        $q->orWhere('phone', $phone);
+                        if ($cleanPhone) {
+                            $q->orWhere('phone', $cleanPhone);
+                        }
+                    }
+                })->delete();
+
             return response()->json(['status' => 1, 'message' => translate('Verification Successful')]);
         }
     }

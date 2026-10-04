@@ -47,7 +47,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
         <!-- Open Graph data -->
         <meta property="og:title" content="{{ config('app.name', env('APP_NAME')) }}" />
         <meta property="og:type" content="Business Site" />
-        <meta property="og:url" content="{{ env('APP_URL') }}" />
+        <meta property="og:url" content="{{ url()->current() }}" />
         <meta property="og:image" content="{{ uploaded_asset(get_setting('meta_image')) }}" />
         <meta property="og:description" content="{{ get_setting('meta_description') }}" />
         <meta property="og:site_name" content="{{ get_setting('website_name') }}" />
@@ -151,7 +151,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                 s.parentNode.insertBefore(t, s)
             }(window, document, 'script',
                 'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', {{ env('FACEBOOK_PIXEL_ID') }});
+            fbq('init', @json((string) env('FACEBOOK_PIXEL_ID')));
             fbq('track', 'PageView');
         </script>
         <noscript>
@@ -181,11 +181,12 @@ $lang = \App\Models\Language::where('code', $locale)->first();
         <div class="aiz-cookie-alert shadow-xl">
             <div class="p-3 bg-dark rounded">
                 <div class="text-white mb-3">
-                    {{strip_tags(get_setting('cookies_agreement_text')) }}
+                    {{ strip_tags(get_setting('cookies_agreement_text')) ?: translate('We use cookies to safeguard identity, privacy, and a respectful partner-finding experience.') }}
                 </div>
                 <button class="btn btn-primary aiz-cookie-accepet">
                     {{ translate('Ok. I Understood') }}
                 </button>
+                <a href="{{ url('/privacy-policy') }}" class="hq-cookie-policy">{{ translate('Read Policy') }}</a>
             </div>
         </div>
     @endif
@@ -266,10 +267,10 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                 return;
             }            var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
             var pusherOptions = {
-                cluster: '{{ get_setting('pusher_app_cluster', env('PUSHER_APP_CLUSTER')) }}',
+                cluster: @json((string) get_setting('pusher_app_cluster', env('PUSHER_APP_CLUSTER'))),
                 forceTLS: true,
                 enabledTransports: ['ws', 'wss'],
-                authEndpoint: '{{ url('/broadcasting/auth') }}',
+                authEndpoint: @json(url('/broadcasting/auth')),
                 authTransport: 'ajax',
                 auth: {
                     headers: {
@@ -279,7 +280,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                     }
                 },
                 channelAuthorization: {
-                    endpoint: '{{ url('/broadcasting/auth') }}',
+                    endpoint: @json(url('/broadcasting/auth')),
                     transport: 'ajax',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken,
@@ -291,8 +292,8 @@ $lang = \App\Models\Language::where('code', $locale)->first();
 
             Pusher.logToConsole = true;
             var pusherClient = null;
-            if ('{{ get_setting('chat_realtime_enabled') }}' == 1 && '{{ get_setting('pusher_app_key', env('PUSHER_APP_KEY')) }}' !== '') {
-                pusherClient = new window.Pusher('{{ get_setting('pusher_app_key', env('PUSHER_APP_KEY')) }}', pusherOptions);
+            if (@json((int) get_setting('chat_realtime_enabled')) === 1 && @json((string) get_setting('pusher_app_key', env('PUSHER_APP_KEY'))) !== '') {
+                pusherClient = new window.Pusher(@json((string) get_setting('pusher_app_key', env('PUSHER_APP_KEY'))), pusherOptions);
             }
 
             window.Echo = {
@@ -328,72 +329,78 @@ $lang = \App\Models\Language::where('code', $locale)->first();
     <script src="{{ static_asset('assets/js/vendors.js') }}"></script>
     <script src="{{ static_asset('assets/js/aiz-core.js') }}"></script>
 
-    @if (get_setting('firebase_push_notification') == 1)
-        {{-- fcm --}}
-        <!-- The core Firebase JS SDK is always required and must be listed first -->
+    @php
+        $firebaseWebConfig = [
+            'apiKey' => (string) env('FCM_API_KEY'),
+            'authDomain' => (string) env('FCM_AUTH_DOMAIN'),
+            'projectId' => (string) env('FCM_PROJECT_ID'),
+            'storageBucket' => (string) env('FCM_STORAGE_BUCKET'),
+            'messagingSenderId' => (string) env('FCM_MESSAGING_SENDER_ID'),
+            'appId' => (string) env('FCM_APP_ID'),
+        ];
+        $firebaseWebReady = get_setting('firebase_push_notification') == 1
+            && collect($firebaseWebConfig)->every(fn ($value) => trim($value) !== '');
+    @endphp
+    @if ($firebaseWebReady)
         <script src="https://www.gstatic.com/firebasejs/8.3.2/firebase-app.js"></script>
         <script src="https://www.gstatic.com/firebasejs/8.3.2/firebase-messaging.js"></script>
-
-        <!-- TODO: Add SDKs for Firebase products that you want to use
-        https://firebase.google.com/docs/web/setup#available-libraries -->
-
         <script>
-            // Your web app's Firebase configuration
-            var firebaseConfig = {
-                apiKey: "{{ env('FCM_API_KEY') }}",
-                authDomain: "{{ env('FCM_AUTH_DOMAIN') }}",
-                projectId: "{{ env('FCM_PROJECT_ID') }}",
-                storageBucket: "{{ env('FCM_STORAGE_BUCKET') }}",
-                messagingSenderId: "{{ env('FCM_MESSAGING_SENDER_ID') }}",
-                appId: "{{ env('FCM_APP_ID') }}",
-            };
-
-            // Initialize Firebase
-            firebase.initializeApp(firebaseConfig);
-
-            const messaging = firebase.messaging();
-
-            function initFirebaseMessagingRegistration() {
-                messaging.requestPermission()
-                .then(function() {
-                    return messaging.getToken()
-                }).then(function(token) {
-                    
-                    $.ajax({
-                        url: '{{ route('fcmToken') }}',
-                        type: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        data: {
-                            fcm_token: token
-                        },
-                        dataType: 'JSON',
-                        success: function (response) {
-                            
-                        },
-                        error: function (err) {
-                        },
-                    });
-
-                }).catch(function(err) {
-                });
-            }
-
-            initFirebaseMessagingRegistration();        
-
-            messaging.onMessage(function({
-                data: {
-                    body,
-                    title
+            (function () {
+                var firebaseConfig = @json($firebaseWebConfig);
+                if (!window.firebase || !firebaseConfig.projectId) {
+                    return;
                 }
-            }) {
-                new Notification(title, {
-                    body
+
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+
+                var messaging = firebase.messaging();
+
+                function initFirebaseMessagingRegistration() {
+                    if (!('Notification' in window)) {
+                        return;
+                    }
+
+                    messaging.requestPermission()
+                        .then(function () { return messaging.getToken(); })
+                        .then(function (token) {
+                            if (!token) { return; }
+                            $.ajax({
+                                url: @json(route('fcmToken')),
+                                type: 'POST',
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                data: { fcm_token: token },
+                                dataType: 'JSON'
+                            });
+                        })
+                        .catch(function () {});
+                }
+
+                var serviceWorkerUrl = @json(rtrim(getBaseURL(), '/') . '/firebase-messaging-sw.js');
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register(serviceWorkerUrl)
+                        .then(function (registration) {
+                            if (typeof messaging.useServiceWorker === 'function') {
+                                messaging.useServiceWorker(registration);
+                            }
+                            initFirebaseMessagingRegistration();
+                        })
+                        .catch(function () {
+                            // Push is optional; a service-worker problem must never break the page.
+                        });
+                }
+
+                messaging.onMessage(function (payload) {
+                    var data = payload && payload.data ? payload.data : {};
+                    if (Notification.permission === 'granted') {
+                        new Notification(data.title || 'Hamqadam', { body: data.body || '' });
+                    }
                 });
-            });
+            }());
         </script>
-        {{-- End of fcm --}}
     @endif
 
     @yield('script')
@@ -423,7 +430,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                     var threadId = $('#chat_thread_id').val();
                     if (!threadId) { return; }
                     $.ajax({
-                        url: "{{ route('chat.call.start') }}",
+                        url: @json(route('chat.call.start')),
                         method: 'POST',
                         dataType: 'json',
                         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
@@ -457,11 +464,12 @@ $lang = \App\Models\Language::where('code', $locale)->first();
     @endif
 
 
+    @if (Auth::check() && Auth::user()->user_type == 'member')
     <script type="text/javascript">
         (function (window, $) {
             if (typeof window.acceptIncomingCall !== 'function') {
                 window.currentCallState = window.currentCallState || null;
-                window.currentUserId = {{ Auth::id() }};
+                window.currentUserId = @json(Auth::id());
                 window.currentCallId = window.currentCallId || null;
                 window.currentCallTracks = window.currentCallTracks || [];
                 window.currentCallClient = window.currentCallClient || null;
@@ -474,7 +482,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                 }
 
                 function getCallCounterpart(call) {
-                    var userId = parseInt(window.currentUserId || {{ Auth::id() }}, 10);
+                    var userId = parseInt(window.currentUserId || @json(Auth::id()), 10);
                     var callerId = call && call.caller && call.caller.id ? parseInt(call.caller.id, 10) : null;
                     var receiverId = call && call.receiver && call.receiver.id ? parseInt(call.receiver.id, 10) : null;
                     if (callerId && userId && callerId === userId) {
@@ -510,7 +518,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                     window.currentCallId = call && call.id ? call.id : null;
                     modalRoot().attr('data-call-id', window.currentCallId);
                     var peer = (call && call.peer && (call.peer.name || call.peer.photo || call.peer.id)) ? call.peer : (getCallCounterpart(call) || {});
-                    $('#global-call-shell-avatar').attr('src', peer.photo ? peer.photo : '{{ static_asset('assets/img/avatar-place.png') }}');
+                    $('#global-call-shell-avatar').attr('src', peer.photo ? peer.photo : @json(static_asset('assets/img/avatar-place.png')));
                     $('#global-call-shell-name').text(peer.name ? peer.name : 'Calling');
                     $('#global-call-shell-status').text('Calling...');
                     $('#global-call-shell-meta').html('<span class="badge badge-light">' + ((call && call.call_type) || 'audio') + '</span>');
@@ -525,7 +533,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                     window.currentCallId = call && call.id ? call.id : null;
                     modalRoot().attr('data-call-id', window.currentCallId);
                     var peer = (call && call.peer && (call.peer.name || call.peer.photo || call.peer.id)) ? call.peer : (getCallCounterpart(call) || {});
-                    $('#global-call-shell-avatar').attr('src', peer.photo ? peer.photo : '{{ static_asset('assets/img/avatar-place.png') }}');
+                    $('#global-call-shell-avatar').attr('src', peer.photo ? peer.photo : @json(static_asset('assets/img/avatar-place.png')));
                     $('#global-call-shell-name').text(peer.name ? peer.name : 'Incoming Call');
                     $('#global-call-shell-status').text(call && call.call_type === 'video' ? 'Incoming Video Call' : 'Incoming Audio Call');
                     $('#global-call-shell-meta').html('<div class="global-call-ringing-pill">Ringing</div>');
@@ -559,7 +567,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                     } else {
                         $('#global-call-video-area').addClass('d-none');
                         var peer = (call && call.peer && (call.peer.name || call.peer.photo || call.peer.id)) ? call.peer : (getCallCounterpart(call) || {});
-                        $('#global-call-audio-area').removeClass('d-none').html('<div class="global-call-audio-avatar mb-3"><img src="' + (peer.photo ? peer.photo : '{{ static_asset('assets/img/avatar-place.png') }}') + '" alt="avatar"></div><h3 class="mb-0">' + (peer.name ? peer.name : '') + '</h3><p class="mb-0 text-white-50">Connected</p>');
+                        $('#global-call-audio-area').removeClass('d-none').html('<div class="global-call-audio-avatar mb-3"><img src="' + (peer.photo ? peer.photo : @json(static_asset('assets/img/avatar-place.png'))) + '" alt="avatar"></div><h3 class="mb-0">' + (peer.name ? peer.name : '') + '</h3><p class="mb-0 text-white-50">Connected</p>');
                         $('#global-call-toggle-camera, #global-call-switch-camera').addClass('d-none');
                     }
                     screenRoot().modal('show');
@@ -610,7 +618,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                         }
                         await window.currentCallClient.join(rtc.app_id, rtc.channel, rtc.token, rtc.uid);
                         await window.currentCallClient.publish(tracks);
-                        callRequest('{{ route('chat.call.connect', ['call' => '__CALL__']) }}'.replace('__CALL__', call.id), {}, function () {});
+                        callRequest(@json(route('chat.call.connect', ['call' => '__CALL__'])).replace('__CALL__', call.id), {}, function () {});
                         window.startCallTimer();
                     } catch (error) {
                         console.error('[global call] join failed', error);
@@ -647,7 +655,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                     var callId = window.currentCallId || $('#global-call-action-modal').attr('data-call-id') || $('#global-call-shell-accept').attr('data-call-id');
                     if (!callId) { return; }
                     console.log('[global call] acceptIncomingCall', callId);
-                    callRequest('{{ route('chat.call.accept', ['call' => '__CALL__']) }}'.replace('__CALL__', callId), {}, function (response) {
+                    callRequest(@json(route('chat.call.accept', ['call' => '__CALL__'])).replace('__CALL__', callId), {}, function (response) {
                         if (!response || !response.success) {
                             return;
                         }
@@ -665,7 +673,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                     var callId = window.currentCallId || $('#global-call-action-modal').attr('data-call-id') || $('#global-call-shell-decline').attr('data-call-id');
                     if (!callId) { return; }
                     console.log('[global call] declineIncomingCall', callId);
-                    callRequest('{{ route('chat.call.reject', ['call' => '__CALL__']) }}'.replace('__CALL__', callId), {}, function (response) {
+                    callRequest(@json(route('chat.call.reject', ['call' => '__CALL__'])).replace('__CALL__', callId), {}, function (response) {
                         $('#global-call-action-modal').modal('hide');
                         window.stopCallSession();
                         if (response && response.data && response.data.call && typeof window.appendCallTimelineEntry === 'function') {
@@ -678,7 +686,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                     var callId = window.currentCallId || $('#global-call-action-modal').attr('data-call-id') || $('#global-call-shell-cancel').attr('data-call-id');
                     if (!callId) { return; }
                     console.log('[global call] cancelOutgoingCall', callId);
-                    callRequest('{{ route('chat.call.cancel', ['call' => '__CALL__']) }}'.replace('__CALL__', callId), {}, function (response) {
+                    callRequest(@json(route('chat.call.cancel', ['call' => '__CALL__'])).replace('__CALL__', callId), {}, function (response) {
                         $('#global-call-action-modal').modal('hide');
                         window.stopCallSession();
                         if (response && response.data && response.data.call && typeof window.appendCallTimelineEntry === 'function') {
@@ -691,7 +699,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                     var callId = window.currentCallId || $('#global-call-action-modal').attr('data-call-id') || $('#global-call-screen-modal').attr('data-call-id');
                     if (!callId) { return; }
                     console.log('[global call] endActiveCall', callId, status || 'ended');
-                    callRequest('{{ route('chat.call.end', ['call' => '__CALL__']) }}'.replace('__CALL__', callId), { status: status || 'ended' }, function (response) {
+                    callRequest(@json(route('chat.call.end', ['call' => '__CALL__'])).replace('__CALL__', callId), { status: status || 'ended' }, function (response) {
                         $('#global-call-screen-modal').modal('hide');
                         window.stopCallSession();
                         if (response && response.data && response.data.call && typeof window.appendCallTimelineEntry === 'function') {
@@ -752,6 +760,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
             }
         })(window, window.jQuery);
     </script>
+    @endif
 
     @if (Auth::check() && Auth::user()->user_type == 'member')
     <script type="text/javascript">
@@ -775,7 +784,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
             }
         }
         function checkUnreadChats() {
-            $.get('{{ route('chat.unread_count') }}', {
+            $.get(@json(route('chat.unread_count')), {
                 active_thread_id: window.activeChatThreadId
                     || $('.chat-user-item.selected-chat').first().data('thread-id')
                     || ($('#chat_thread_id').length ? $('#chat_thread_id').val() : 0)
@@ -785,14 +794,14 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                 console.log('[chat badge] unread count parsed', count, 'previous', lastUnreadCount);
                 updateChatBadges(count);
                 if (count > lastUnreadCount && !window.location.pathname.endsWith('/chat')) {
-                    var msg = data.sender_name ? data.sender_name + ': ' + data.message : '{{ translate('You have a new message') }}';
+                    var msg = data.sender_name ? data.sender_name + ': ' + data.message : @json(translate('You have a new message'));
                     AIZ.plugins.notify('info', msg);
                 }
                 lastUnreadCount = count;
             });
         }
         $(document).ready(function() {
-            $.get('{{ route('chat.unread_count') }}', {
+            $.get(@json(route('chat.unread_count')), {
                 active_thread_id: window.activeChatThreadId
                     || $('.chat-user-item.selected-chat').first().data('thread-id')
                     || ($('#chat_thread_id').length ? $('#chat_thread_id').val() : 0)
@@ -802,7 +811,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
             });
 
             if (typeof window.Echo !== 'undefined') {
-                window.Echo.private('App.User.{{ Auth::id() }}')
+                window.Echo.private('App.User.' + @json((int) Auth::id()))
                     .listen('.message-sent', function (event) {
                         console.log('[chat badge] message-sent event', event);
                         var activeThreadId = window.activeChatThreadId ? parseInt(window.activeChatThreadId) : (($(".chat-user-item.selected-chat").first().data("thread-id")) ? parseInt($(".chat-user-item.selected-chat").first().data("thread-id")) : (($("#chat_thread_id").length) ? parseInt($("#chat_thread_id").val()) : null));
@@ -845,9 +854,9 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                         var call = event && event.call ? event.call : event;
                         if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && call) {
                             try {
-                                new Notification('{{ translate('Incoming call from Hamqadam') }}', {
-                                    body: (call.caller && call.caller.name ? call.caller.name : '{{ translate('Someone is calling you') }}') + ' - ' + (call.call_type === 'video' ? '{{ translate('Video call') }}' : '{{ translate('Audio call') }}'),
-                                    icon: call.caller && call.caller.photo ? call.caller.photo : '{{ static_asset('assets/img/avatar-place.png') }}'
+                                new Notification(@json(translate('Incoming call from Hamqadam')), {
+                                    body: (call.caller && call.caller.name ? call.caller.name : @json(translate('Someone is calling you'))) + ' - ' + (call.call_type === 'video' ? @json(translate('Video call')) : @json(translate('Audio call'))),
+                                    icon: call.caller && call.caller.photo ? call.caller.photo : @json(static_asset('assets/img/avatar-place.png'))
                                 });
                             } catch (e) {}
                         }
@@ -894,27 +903,27 @@ $lang = \App\Models\Language::where('code', $locale)->first();
 
     <script type="text/javascript">
         @foreach (session('flash_notification', collect())->toArray() as $message)
-            AIZ.plugins.notify('{{ $message['level'] }}', '{{ $message['message'] }}');
+            AIZ.plugins.notify(@json($message['level']), @json($message['message']));
         @endforeach
 
         @if (Auth::check() && Auth::user()->user_type == 'member')
             function account_deactivation() {
-                var status = {{ Auth::user()->deactivated }}
+                var status = @json((int) Auth::user()->deactivated);
                 $('.account_status_change_modal').modal('show');
                 if (status == 0) {
                     $('#deacticvation_status').val(1);
-                    $('#confirmation_note').html('{{ translate('Deactivating your account will prevent you from performing any actions. Are you sure you want to deactivate your account?') }}');
+                    $('#confirmation_note').html(@json(translate('Deactivating your account will prevent you from performing any actions. Are you sure you want to deactivate your account?')));
                 } else {
                     $('#deacticvation_status').val(0);
-                    $('#confirmation_note').html('{{ translate('Are You Sure To Reactive Your Account') }}');
+                    $('#confirmation_note').html(@json(translate('Are You Sure To Reactive Your Account')));
                 }
             }
         @endif
         @if (Auth::check() && Auth::user()->user_type == 'member')
             function account_delete() {
-                var status = {{ Auth::user()->deactivated }}
+                var status = @json((int) Auth::user()->deactivated);
                 $('.account_delete_modal').modal('show');
-                    $('#delete_confirmation_note').html('{{ translate('Do You Really Want To Delete Your Account') }}');
+                    $('#delete_confirmation_note').html(@json(translate('Do You Really Want To Delete Your Account')));
             }
         @endif
     </script>
@@ -937,6 +946,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
 
     {!! get_setting('footer_script') !!}
 
+@if (Auth::check() && Auth::user()->user_type == 'member')
 <script type="text/javascript">
 (function (window, $) {
     if (window.__hamqadamGlobalCallUiPatched) { return; }
@@ -950,11 +960,11 @@ $lang = \App\Models\Language::where('code', $locale)->first();
     window.currentCallToneState = window.currentCallToneState || null;
 
     function avatarFallback() {
-        return '{{ static_asset('assets/img/avatar-place.png') }}';
+        return @json(static_asset('assets/img/avatar-place.png'));
     }
 
     function getCallCounterpart(call) {
-        var userId = parseInt(window.currentUserId || {{ Auth::id() }}, 10);
+        var userId = parseInt(window.currentUserId || @json(Auth::id()), 10);
         var caller = call && call.caller ? call.caller : null;
         var receiver = call && call.receiver ? call.receiver : null;
         var callerId = caller && (caller.id || caller.user_id || caller.member_id) ? parseInt(caller.id || caller.user_id || caller.member_id, 10) : null;
@@ -1168,7 +1178,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
             await window.currentCallClient.publish(tracks);
             if (!isCaller || ['accepted', 'connected'].indexOf(String(call.status || '').toLowerCase()) !== -1) {
                 $.ajax({
-                    url: '{{ route('chat.call.connect', ['call' => '__CALL__']) }}'.replace('__CALL__', call.id),
+                    url: @json(route('chat.call.connect', ['call' => '__CALL__'])).replace('__CALL__', call.id),
                     method: 'POST',
                     data: { _token: $('meta[name="csrf-token"]').attr('content') },
                     success: function (response) {
@@ -1357,8 +1367,8 @@ $lang = \App\Models\Language::where('code', $locale)->first();
     window.normalizedCallMessage = function (event, fallback) {
         var call = callObj(event);
         var peer = callPeer(call);
-        var type = String(call.call_type || 'audio').toLowerCase() === 'video' ? '{{ translate('Video call') }}' : '{{ translate('Audio call') }}';
-        var name = peer && peer.name ? peer.name : '{{ translate('Hamqadam member') }}';
+        var type = String(call.call_type || 'audio').toLowerCase() === 'video' ? @json(translate('Video call')) : @json(translate('Audio call'));
+        var name = peer && peer.name ? peer.name : @json(translate('Hamqadam member'));
         return name + ' - ' + (fallback || type);
     };
 
@@ -1382,7 +1392,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
                 window.openActiveCallScreen(call);
             }
             if (window.AIZ && AIZ.plugins && typeof AIZ.plugins.notify === 'function') {
-                AIZ.plugins.notify('success', '{{ translate('Call connected.') }}');
+                AIZ.plugins.notify('success', @json(translate('Call connected.')));
             }
             return;
         }
@@ -1396,6 +1406,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
     };
 })(window, window.jQuery);
 </script>
+@endif
 @if(auth()->check() && auth()->user()->user_type === 'member' && auth()->user()->isUnderManualReview())
     @php($manualReviewState = auth()->user()->manualReviewState())
     <style>
@@ -1462,7 +1473,6 @@ $lang = \App\Models\Language::where('code', $locale)->first();
 </body>
 
 </html>
-
 
 
 

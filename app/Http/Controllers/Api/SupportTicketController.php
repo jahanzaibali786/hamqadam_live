@@ -71,6 +71,7 @@ class SupportTicketController extends Controller
             $support_ticket->ticket_id = date('Ymd-his');
             $support_ticket->description = $request->description;
             $support_ticket->attachments = $attachment;
+            $support_ticket->expected_response_at = now()->addHours((int) get_setting('support_first_response_hours', 24));
             $support_ticket->save();
             $submit_id = $support_ticket->ticket_id;
             return $this->response_data($submit_id);
@@ -118,7 +119,8 @@ class SupportTicketController extends Controller
         if (addon_activation('support_tickets')) {
             $attachments = [];
             if ($request->hasFile('attachment')) {
-                $attachments = upload_api_file($request->file('attachment'));
+                $uploaded = upload_api_file($request->file('attachment'));
+                $attachments = $uploaded !== null ? [(string) $uploaded] : [];
             }
             // if ($request->hasFile('attachments')) {
             //     foreach ($request->file('attachments') as $key => $file) {
@@ -137,6 +139,7 @@ class SupportTicketController extends Controller
             if ($ticket_reply->save()) {
                 if (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff') {
                     $support_ticket->status   = $request->status;
+                    $support_ticket->resolved_at = (string) $request->status === '1' ? now() : null;
                     $support_ticket->save();
                     return $this->success_message('Reply has been sent successfully');
                 } else {
@@ -165,5 +168,21 @@ class SupportTicketController extends Controller
     public function support_ticket_categories(){
         $support_categories = SupportCategory::orderBy('created_at','desc')->paginate(10);
         return SupportTicketCategoryResource::collection($support_categories);
+    }
+
+    public function rate(Request $request, $id)
+    {
+        $ticket = SupportTicket::whereKey($id)->where('sender_user_id', auth()->id())->firstOrFail();
+        if ((string) $ticket->status !== '1') {
+            return $this->failure_message('Only resolved tickets can be rated.');
+        }
+
+        $data = $request->validate([
+            'rating' => ['required', 'integer', 'between:1,5'],
+            'comment' => ['nullable', 'string', 'max:1000'],
+        ]);
+        $ticket->update(['rating' => $data['rating'], 'rating_comment' => $data['comment'] ?? null, 'rated_at' => now()]);
+
+        return $this->success_message('Thank you for rating our support.');
     }
 }

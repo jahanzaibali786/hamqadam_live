@@ -18,6 +18,7 @@ use App\Notifications\DbStoreNotification;
 use App\Notifications\VerificationCode;
 use App\Services\MemberService;
 use App\Services\UserService;
+use App\Services\NotificationHelper;
 use App\Utility\EmailUtility;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -43,6 +44,14 @@ class AuthController extends Controller
         $request->merge(['user_id' => $user->id]);
         $member = $member_service->store($request->only(['gender', 'birthday', 'on_behalves_id', 'user_id']));
         RegistrationOnboarding::persist($user, $request->validated());
+        NotificationHelper::event($user, 'account_created', [
+            'event_id' => 'account:' . $user->id . ':created',
+            'info_id' => $user->id,
+        ]);
+        NotificationHelper::event($user, 'profile_created', [
+            'event_id' => 'profile:' . $user->id . ':created',
+            'info_id' => $user->id,
+        ]);
 
         if (addon_activation('otp_system') && $request->phone != null && get_setting('registration_verification') != 1) {
             $otpController = new OTPVerificationController();
