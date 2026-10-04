@@ -2,7 +2,7 @@
 @section('content')
 <section class="hq-reference-page-hero hq-stories-reference-hero text-center">
     <div class="container">
-        <div class="hq-reference-breadcrumb text-left">{{ translate('Home') }} <span>/</span> {{ translate('Happy Stories') }}</div>
+        <!-- <div class="hq-reference-breadcrumb text-left">{{ translate('Home') }} <span>/</span> {{ translate('Happy Stories') }}</div> -->
         <span class="hq-reference-eyebrow"><i class="las la-heart"></i> {{ translate('Sacred Unions & Auspicious Beginnings') }}</span>
         <h1>{{ translate('Real Happy Stories of Lifetime Companionship')}}</h1>
         <p>{{ translate('Read how thousands of respectful families and couples found their destined match through Hamqadam’s verified, dignified matrimonial sanctuary.') }}</p>

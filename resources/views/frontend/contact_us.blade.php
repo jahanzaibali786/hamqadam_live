@@ -10,7 +10,7 @@
 @endphp
 <section class="hq-reference-page-hero hq-ticket-reference-hero text-center">
     <div class="container">
-        <div class="hq-reference-breadcrumb text-left">{{ translate('Home') }} <span>/</span> {{ translate('Help & Support') }}</div>
+        <!-- <div class="hq-reference-breadcrumb text-left">{{ translate('Home') }} <span>/</span> {{ translate('Help & Support') }}</div> -->
         <span class="hq-reference-eyebrow"><i class="las la-shield-alt"></i> {{ translate('Dedicated Family Assistance & Concierge') }}</span>
         <h1>{{ translate('How Can Our Matrimonial Counselors Assist You?') }}</h1>
         <p>{{ translate('Get confidential guidance for identity verification, packages, privacy, proposals, and respectful introductions.') }}</p>

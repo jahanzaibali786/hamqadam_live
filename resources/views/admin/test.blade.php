@@ -2,8 +2,8 @@
     @foreach ($notifications as $key => $notification)
         @php
             $user_data = '';
-            $notify_data = json_decode($notification->data);
-            $link = env('APP_URL').$notify_data->url;
+            $notify_data = is_array($notification->data) ? (object)$notification->data : (is_string($notification->data) ? json_decode($notification->data) : (object)$notification->data);
+            $link = env('APP_URL').($notify_data->url ?? '');
         @endphp
         @if($notify_data->type == 'express_interest')
             @php

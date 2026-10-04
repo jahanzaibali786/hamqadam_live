@@ -2,7 +2,7 @@
 @section('content')
     <section class="hq-reference-page-hero hq-discovery-reference-hero">
         <div class="container">
-            <div class="hq-reference-breadcrumb">{{ translate('Home') }} <span>/</span> {{ translate('Active Members Discovery') }}</div>
+            <!-- <div class="hq-reference-breadcrumb">{{ translate('Home') }} <span>/</span> {{ translate('Active Members Discovery') }}</div> -->
             <span class="hq-reference-eyebrow"><i class="las la-certificate"></i> {{ translate('Curated Sanctuary of Verified Hearts') }}</span>
             <h1>{{ translate('Active Members Discovery') }}</h1>
             <p>{{ translate('Explore respectful prospective matches with verified identities, family-minded discovery, and private communication.') }}</p>

@@ -31,7 +31,7 @@ class NotificationController extends Controller
     public function notification_view($id)
     {
         $notification = Notification::findOrFail($id);
-        $notification_data = json_decode($notification->data);
+        $notification_data = is_array($notification->data) ? (object)$notification->data : (is_string($notification->data) ? json_decode($notification->data) : (object)$notification->data);
 
         // Notification seen
         if($notification->read_at == null)
