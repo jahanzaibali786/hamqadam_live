@@ -64,10 +64,15 @@ return [
             'strict' => env('DB_STRICT', true),
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                // Classic PDO constant: works on every PHP version. The
-                // \Pdo\Mysql::ATTR_SSL_CA alias only exists on PHP 8.4+ and
-                // fatals on XAMPP's PHP 8.2.
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                // The constant moved to \Pdo\Mysql in PHP 8.4, and PHP 8.5
+                // emits E_DEPRECATED for the classic PDO::MYSQL_ATTR_SSL_CA
+                // alias. Resolve whichever exists so this runs clean on the
+                // live server (8.3), on XAMPP's 8.2, and on newer PHP.
+                // The ternary is lazy, so the deprecated constant is only
+                // touched when the new one is unavailable.
+                (defined('Pdo\Mysql::ATTR_SSL_CA')
+                    ? constant('Pdo\Mysql::ATTR_SSL_CA')
+                    : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
