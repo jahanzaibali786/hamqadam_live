@@ -84,6 +84,27 @@ class WelcomeBonusService
                 'Claimed '.self::COINS.' free welcome coins.',
             );
 
+            // Mirror the credit into the reward ledger so `GET /completion/rewards`
+            // (the app's Redeem > Reward history list) actually has a row to show.
+            // `reward_rule_id` stays null: this is a built-in product reward, not an
+            // admin-configured rule. Keyed on the member so a re-entry (blocked by
+            // the check above) cannot double-post.
+            \App\Models\RewardTransaction::firstOrCreate(
+                [
+                    'user_id' => (int) $member->user_id,
+                    'event_key' => 'welcome_bonus',
+                    'reference_type' => Member::class,
+                    'reference_id' => (int) $member->user_id,
+                ],
+                [
+                    'coins' => self::COINS,
+                    'metadata' => [
+                        'title' => 'Welcome Bonus',
+                        'description' => 'Claimed '.self::COINS.' free welcome coins.',
+                    ],
+                ],
+            );
+
             return (int) $fresh->remaining_interest;
         });
 
