@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Payment;
 use Exception;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\Controller;
-use App\Http\Controllers\APi\WalletController;
+use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\PackageController;
 
 class InstamojoController extends Controller
