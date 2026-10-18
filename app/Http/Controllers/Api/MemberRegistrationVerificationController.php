@@ -6,141 +6,104 @@ use App\Http\Controllers\Controller;
 use App\Models\RegistrationVerificationCode;
 use App\Models\User;
 use App\Utility\EmailUtility;
-use App\Utility\SmsUtility;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 
+/** Email-only registration OTP, as required by the approved 30-feature scope. */
 class MemberRegistrationVerificationController extends Controller
 {
-   
+    private function email(Request $request): string
+    {
+        return trim(mb_strtolower((string) $request->input('email', '')));
+    }
+
+    private function respond(string $message, int $status = 0)
+    {
+        return response()->json(['status' => $status, 'message' => translate($message)]);
+    }
+
     public function sendRegVerificationCode(Request $request)
     {
-        $email = !empty($request->email) ? trim(strtolower($request->email)) : null;
-        $cleanPhone = !empty($request->phone) ? preg_replace('/\D+/', '', $request->phone) : null;
-        $countryCode = !empty($request->country_code) ? preg_replace('/\D+/', '', $request->country_code) : '';
-        $phone = $cleanPhone ? '+' . $countryCode . $cleanPhone : null;
-
-        if ($email) {
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                return response()->json(['status' => 0, 'message' => translate('Please enter a valid email address.')]);
-            }
-            if (User::where('email', $email)->exists()) {
-                return response()->json(['status' => 0, 'message' => translate('Email already exists. Please use a different email.')]);
-            }
+        $email = $this->email($request);
+        if (!$email || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->respond('Please enter a valid email address.');
+        }
+        if (User::whereRaw('LOWER(email) = ?', [$email])->exists()) {
+            return $this->respond('Email already exists. Please use a different email.');
         }
 
-        if ($phone) {
-            if (User::where('phone', $phone)->orWhere('phone', $cleanPhone)->exists()) {
-                return response()->json(['status' => 0, 'message' => translate('Phone already exists. Please use a different phone number.')]);
-            }
+        $identifier = 'email:'.$email;
+        $limitKey = 'registration-otp-send:'.hash('sha256', $request->ip().':'.$identifier);
+        if (RateLimiter::tooManyAttempts($limitKey, 5)) {
+            return $this->respond('Too many verification requests. Please try again later.');
         }
+        RateLimiter::hit($limitKey, 600);
 
-        if (!$email && !$phone) {
-            return response()->json(['status' => 0, 'message' => translate('Please enter your email or phone number.')]);
-        }
-
-        $verificationCode = rand(100000, 999999);
-
-        // Invalidate and delete ALL previous OTP requests for this email or phone so old codes cannot be reused
-        RegistrationVerificationCode::where(function ($q) use ($email, $phone, $cleanPhone) {
-            if ($email) {
-                $q->where('email', $email);
-            }
-            if ($phone) {
-                $q->orWhere('phone', $phone);
-                if ($cleanPhone) {
-                    $q->orWhere('phone', $cleanPhone);
-                }
-            }
-        })->delete();
-
-        RegistrationVerificationCode::create([
-            'email'       => $email,
-            'phone'       => $phone,
-            'code'        => $verificationCode,
-            'is_verified' => 0,
+        // An email change or resend invalidates any earlier verification proof.
+        $request->session()->forget('registration_otp_verified');
+        $request->session()->put('registration_otp_pending', $identifier);
+        $code = (string) random_int(100000, 999999);
+        RegistrationVerificationCode::where('email', $email)->delete();
+        $verification = RegistrationVerificationCode::create([
+            'email' => $email, 'phone' => null, 'code' => $code, 'is_verified' => 0,
         ]);
 
-        $success = 1;
-
-        if ($email) {
-            try {
-                $success = EmailUtility::email_verification_for_registration_user('email_registration_verification', $email, $verificationCode);
-            } catch (\Exception $e) {
-                $success = 0;
+        try {
+            $success = EmailUtility::email_verification_for_registration_user('email_registration_verification', $email, $code);
+            if ($success === false || $success === 0) {
+                throw new \RuntimeException('The mail service reported an OTP delivery failure.');
             }
-        } elseif ($phone != null && addon_activation('otp_system') && (get_sms_template('mobile_registration_verification', 'status') == 1)) {
-            try {
-                SmsUtility::mobile_registration_verification($phone, $verificationCode);
-            } catch (\Exception $e) {
-                $success = 0;
-            }
+        } catch (\Throwable $exception) {
+            $verification->delete();
+            report($exception);
+            return $this->respond('Verification code sending failed.');
         }
-
-        if ($success) {
-            return response()->json(['status' => 1, 'message' => translate('Verification code sent successfully.')]);
-        } else {
-            return response()->json(['status' => 0, 'message' => translate('Verification code sending failed.')]);
-        }
+        return $this->respond('Verification code sent successfully.', 1);
     }
 
     public function regVerifyCodeConfirmation(Request $request)
     {
-        $email = !empty($request->email) ? trim(strtolower($request->email)) : null;
-        $cleanPhone = !empty($request->phone) ? preg_replace('/\D+/', '', $request->phone) : null;
-        $countryCode = !empty($request->country_code) ? preg_replace('/\D+/', '', $request->country_code) : '';
-        $phone = $cleanPhone ? '+' . $countryCode . $cleanPhone : null;
-        $code = isset($request->code) ? trim((string)$request->code) : '';
-
-        if (empty($code)) {
-            return response()->json(['status' => 0, 'message' => translate('Please enter the verification code.')]);
+        $email = $this->email($request);
+        $code = trim((string) $request->input('code', ''));
+        if (! $email || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->respond('Please enter a valid email address.');
+        }
+        if (! preg_match('/^\d{6}$/', $code)) {
+            return $this->respond('Please enter a valid verification code.');
+        }
+        $identifier = 'email:'.$email;
+        if ($request->session()->get('registration_otp_pending') !== $identifier) {
+            return $this->respond('Please request a new verification code for the current email address.');
+        }
+        if (User::whereRaw('LOWER(email) = ?', [$email])->exists()) {
+            return $this->respond('This email is already registered. Please use a different email.');
         }
 
-        if ($email && User::where('email', $email)->exists()) {
-            return response()->json(['status' => 0, 'message' => translate('This email is already registered. Please use a different email.')]);
+        $limitKey = 'registration-otp-check:'.hash('sha256', $request->ip().':'.$identifier);
+        if (RateLimiter::tooManyAttempts($limitKey, 5)) {
+            return $this->respond('Too many verification attempts. Please request a new code.');
         }
-        if ($phone && (User::where('phone', $phone)->orWhere('phone', $cleanPhone)->exists())) {
-            return response()->json(['status' => 0, 'message' => translate('This phone number is already registered. Please use a different phone number.')]);
+        RateLimiter::hit($limitKey, 900);
+
+        $verified = DB::transaction(function () use ($email, $code): bool {
+            $record = RegistrationVerificationCode::where('email', $email)
+                ->whereNull('phone')->where('is_verified', 0)
+                ->where('created_at', '>=', now()->subMinutes(15))
+                ->latest('id')->lockForUpdate()->first();
+            if (! $record || ! hash_equals((string) $record->code, $code)) {
+                return false;
+            }
+            $record->is_verified = 1;
+            $record->save();
+            return true;
+        });
+        if (! $verified) {
+            return $this->respond('Verification Code did not match or has expired.');
         }
-
-        // Query the latest unverified code generated within 15 minutes
-        $customerVerification = RegistrationVerificationCode::where('code', $code)
-            ->where('is_verified', 0)
-            ->where(function ($q) use ($email, $phone, $cleanPhone) {
-                if ($email) {
-                    $q->where('email', $email);
-                }
-                if ($phone) {
-                    $q->orWhere('phone', $phone);
-                    if ($cleanPhone) {
-                        $q->orWhere('phone', $cleanPhone);
-                    }
-                }
-            })
-            ->where('created_at', '>=', now()->subMinutes(15))
-            ->latest()
-            ->first();
-
-        if ($customerVerification == null) {
-            return response()->json(['status' => 0, 'message' => translate('Verification Code did not match or has expired.')]);
-        } else {
-            $customerVerification->is_verified = 1;
-            $customerVerification->save();
-
-            // Clean up any other old verification records for this target
-            RegistrationVerificationCode::where('id', '!=', $customerVerification->id)
-                ->where(function ($q) use ($email, $phone, $cleanPhone) {
-                    if ($email) {
-                        $q->where('email', $email);
-                    }
-                    if ($phone) {
-                        $q->orWhere('phone', $phone);
-                        if ($cleanPhone) {
-                            $q->orWhere('phone', $cleanPhone);
-                        }
-                    }
-                })->delete();
-
-            return response()->json(['status' => 1, 'message' => translate('Verification Successful')]);
-        }
+        RateLimiter::clear($limitKey);
+        $request->session()->put('registration_otp_verified', $identifier);
+        $request->session()->forget('registration_otp_pending');
+        return $this->respond('Verification Successful', 1);
     }
 }
