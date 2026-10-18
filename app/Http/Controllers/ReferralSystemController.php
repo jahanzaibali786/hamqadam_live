@@ -1,56 +1,97 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Models\RewardRule;
+use App\Models\RewardTransaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\Referral\ReferralRewardService;
+use Illuminate\Http\Request;
 
 class ReferralSystemController extends Controller
 {
+    public function __construct(private readonly ReferralRewardService $rewards)
+    {
+    }
+
+    /** Admin referral settings and referral overview. */
     public function set_referral_commission()
     {
-        return view()->exists('admin.settings.general_settings')
-            ? view('admin.settings.general_settings')
-            : redirect()->route('admin.dashboard');
+        return $this->adminDashboard();
     }
 
     public function index()
     {
-        $referredUsers = User::whereNotNull('referred_by')->latest()->paginate(20);
+        return $this->adminDashboard();
+    }
 
-        return view()->exists('admin.members.index')
-            ? view('admin.members.index', ['members' => $referredUsers])
-            : response()->json($referredUsers);
+    private function adminDashboard()
+    {
+        return view('admin.referrals.index', [
+            'referrals' => User::with('member')->whereNotNull('referred_by')->latest()->paginate(20),
+            'rewardRule' => $this->rewards->rule(),
+            'totalReferrals' => User::whereNotNull('referred_by')->count(),
+            'totalCoins' => (int) RewardTransaction::where('event_key', ReferralRewardService::EVENT)->sum('coins'),
+            'rewardHistory' => RewardTransaction::where('event_key', ReferralRewardService::EVENT)
+                ->latest()->limit(25)->get(),
+        ]);
+    }
+
+    public function save_reward_settings(Request $request)
+    {
+        $data = $request->validate([
+            'coin_reward' => ['required','integer','between:0,1000'],
+            'max_per_user' => ['required','integer','between:1,10000'],
+            'active' => ['nullable','boolean'],
+        ]);
+        RewardRule::updateOrCreate(['event_key' => ReferralRewardService::EVENT], [
+            'title' => 'Verified referral completion',
+            'coin_reward' => (int) $data['coin_reward'],
+            'max_per_user' => (int) $data['max_per_user'],
+            'active' => $request->boolean('active') && (int) $data['coin_reward'] > 0,
+            'conditions' => ['requires_email_verification' => true, 'requires_completed_registration' => true],
+        ]);
+        return back()->with('success', 'Referral reward settings saved. Eligible rewards will be reconciled by scheduler.');
     }
 
     public function referal_earnings_admin()
     {
-        $earnings = Wallet::where('payment_method', 'reffered_commission')->latest()->paginate(20);
-
-        return view()->exists('admin.wallet.transaction_history')
-            ? view('admin.wallet.transaction_history', ['wallets' => $earnings])
-            : response()->json($earnings);
+        return view('admin.referrals.index', [
+            'referrals' => User::whereNotNull('referred_by')->latest()->paginate(20),
+            'rewardRule' => $this->rewards->rule(),
+            'totalReferrals' => User::whereNotNull('referred_by')->count(),
+            'totalCoins' => (int) RewardTransaction::where('event_key', ReferralRewardService::EVENT)->sum('coins'),
+            'rewardHistory' => RewardTransaction::where('event_key', ReferralRewardService::EVENT)->latest()->limit(25)->get(),
+        ]);
     }
 
-    public function my_referred_users()
+    public function dashboard(Request $request)
     {
-        $referredUsers = User::where('referred_by', auth()->id())->latest()->paginate(20);
-
-        return view()->exists('frontend.member.my_shortlists')
-            ? view('frontend.member.my_shortlists', ['shortlists' => $referredUsers])
-            : response()->json($referredUsers);
+        $member = $request->user();
+        $summary = $this->rewards->summary($member, true);
+        $referrals = User::where('referred_by', $member->id)->latest()->paginate(15, ['id','first_name','last_name','created_at','email_verified_at','approved','user_type','blocked','deactivated']);
+        $rewardedIds = RewardTransaction::where('user_id', $member->id)
+            ->where('event_key', ReferralRewardService::EVENT)
+            ->where('reference_type', 'referred_user')
+            ->whereIn('reference_id', $referrals->getCollection()->pluck('id'))->pluck('reference_id')
+            ->map(fn ($id) => (int) $id)->all();
+        $history = RewardTransaction::where('user_id', $member->id)
+            ->where('event_key', ReferralRewardService::EVENT)->latest()->paginate(15, ['*'], 'rewards_page');
+        $commissions = Wallet::where('user_id', $member->id)
+            ->where('payment_method', 'reffered_commission')->latest()->limit(10)->get();
+        return view('frontend.member.referrals.index', compact('summary','referrals','history','commissions','rewardedIds'));
     }
 
-    public function my_referral_earnings()
+    public function my_referred_users(Request $request)
     {
-        $earnings = Wallet::where('payment_method', 'reffered_commission')
-            ->where('user_id', auth()->id())
-            ->latest()
-            ->paginate(20);
+        return $this->dashboard($request);
+    }
 
-        return view()->exists('frontend.member.wallet.index')
-            ? view('frontend.member.wallet.index', ['wallets' => $earnings])
-            : response()->json($earnings);
+    public function my_referral_earnings(Request $request)
+    {
+        return $this->dashboard($request);
     }
 }
-

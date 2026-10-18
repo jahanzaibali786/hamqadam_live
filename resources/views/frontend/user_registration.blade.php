@@ -2,97 +2,86 @@
 
 @section('content')
 <div class="py-4 py-lg-5">
-	<div class="container">
-		<div class="row">
-			<div class="col-xxl-6 col-xl-6 col-md-8 mx-auto">
-				<div class="card">
-					<div class="card-body">
-
-						<div class="mb-5 text-center">
+    <div class="container">
+        <div class="row">
+            <div class="col-xxl-6 col-xl-6 col-md-8 mx-auto">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-5 text-center">
                             @php($registrationPackage = \App\Support\RegistrationReward::registrationPackage())
                             @php($registrationRewardCoins = $registrationPackage?->express_interest ?? 0)
-							<h1 class="h3 text-primary mb-0">{{ translate('Create Your Account') }}</h1>
-							<p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('registration package') }}.</p>
-						</div>
-						<form class="form-default" id="reg-form" role="form" action="{{ route('register') }}" method="POST" enctype="multipart/form-data">
-							@csrf
-
-								<!-- Recaptcha -->
-							@if(get_setting('google_recaptcha_activation') == 1 && get_setting('recaptcha_user_register') == 1)
-
-							@if ($errors->has('g-recaptcha-response'))
-							<span class="border invalid-feedback rounded p-2 mb-3 bg-danger text-white" role="alert" style="display: block;">
-								<strong>{{ $errors->first('g-recaptcha-response') }}</strong>
-							</span>
-							@endif
-							@endif
+                            <h1 class="h3 text-primary mb-0">{{ translate('Create Your Account') }}</h1>
+                            <p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('registration package') }}.</p>
+                        </div>
+                        <form class="form-default" id="reg-form" role="form" action="{{ route('register') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            @if(get_setting('google_recaptcha_activation') == 1 && get_setting('recaptcha_user_register') == 1)
+                                @if ($errors->has('g-recaptcha-response'))
+                                    <span class="border invalid-feedback rounded p-2 mb-3 bg-danger text-white" role="alert" style="display: block;">
+                                        <strong>{{ $errors->first('g-recaptcha-response') }}</strong>
+                                    </span>
+                                @endif
+                            @endif
 
                             @include('frontend.partials.registration_onboarding_steps')
 
-							<div class="mb-3 d-none" id="registrationTermsBlock">
-								<label class="aiz-checkbox">
-								<input type="checkbox" name="checkbox_example_1" required>
-									<span class=opacity-60>{{ translate('By signing up you agree to our')}}
-										<a href="{{ url('/terms-conditions') }}" target="_blank">{{ translate('terms and conditions')}}.</a>
-									</span>
-									<span class="aiz-square-check"></span>
-								</label>
-							</div>
-							@error('checkbox_example_1')
-								<span class="invalid-feedback" role="alert">{{ $message }}</span>
-							@enderror
+                            <div class="form-group mt-3" id="registrationReferralBlock">
+                                <label for="referral_code">{{ translate('Referral code (optional)') }}</label>
+                                <input type="text" id="referral_code" name="referral_code" class="form-control @error('referral_code') is-invalid @enderror"
+                                    maxlength="100" autocomplete="off"
+                                    value="{{ old('referral_code', request()->query('referral_code', '')) }}"
+                                    placeholder="{{ translate('Enter an invitation code') }}">
+                                @error('referral_code')<div class="invalid-feedback" role="alert">{{ $message }}</div>@enderror
+                            </div>
 
-							<div class="mb-5">
-								<button type="submit" id="createAccountBtn" class="btn btn-block btn-primary d-none">{{ translate('Create Account') }}</button>
-							</div>
-
-							<div class="text-center">
-								<p class="text-muted mb-0">{{ translate("Already have an account?") }}</p>
-								<a href="{{ route('login') }}">{{ translate('Login to your account') }}</a>
-							</div>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+                            <div class="mb-3 d-none" id="registrationTermsBlock">
+                                <label class="aiz-checkbox">
+                                    <input type="checkbox" name="checkbox_example_1" required>
+                                    <span class="opacity-60">{{ translate('By signing up you agree to our') }}
+                                        <a href="{{ url('/terms-conditions') }}" target="_blank">{{ translate('terms and conditions') }}.</a>
+                                    </span>
+                                    <span class="aiz-square-check"></span>
+                                </label>
+                            </div>
+                            @error('checkbox_example_1')<span class="invalid-feedback" role="alert">{{ $message }}</span>@enderror
+                            <div class="mb-5">
+                                <button type="submit" id="createAccountBtn" class="btn btn-block btn-primary d-none">{{ translate('Create Account') }}</button>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-muted mb-0">{{ translate('Already have an account?') }}</p>
+                                <a href="{{ route('login') }}">{{ translate('Login to your account') }}</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
-
 @section('script')
-
-
-	@if(get_setting('google_recaptcha_activation') == 1 && get_setting('recaptcha_user_register') == 1)
-		@include('partials.recaptcha', ['action' => 'recaptcha_user_register','form_id' => 'reg-form'])
-	@endif
-	@if(addon_activation('otp_system'))
-		@include('partials.emailOrPhone')
-	@endif
-
-	 @if (get_setting('registration_verification'))
+    @if(get_setting('google_recaptcha_activation') == 1 && get_setting('recaptcha_user_register') == 1)
+        @include('partials.recaptcha', ['action' => 'recaptcha_user_register','form_id' => 'reg-form'])
+    @endif
+    @if(addon_activation('otp_system'))
+        @include('partials.emailOrPhone')
+    @endif
+    @if(get_setting('registration_verification'))
         @include('partials.verifyEmailOrPhone')
     @endif
-
-	<script type="text/javascript">
-		const regVerifyRequired = {{get_setting('registration_verification') ? 'true' : 'false' }};
-		const createBtn   = $('#createAccountBtn');
-		const termsCheckbox = $('input[name="checkbox_example_1"]');
-		function toggleCreateBtn() {
-			const termsChecked = termsCheckbox.is(':checked');
-			const regVerified  = regVerifyRequired ? (verifyBtn && verifyBtn.classList.contains('disabled')) : true;
-			let enableBtn = false;
-			if (regVerifyRequired) {
-				enableBtn = termsChecked && regVerified;
-			} else {
-				enableBtn = termsChecked;
-			}
-			createBtn.prop('disabled', !enableBtn);
-		}
-
-		document.addEventListener('DOMContentLoaded', function() {
-			toggleCreateBtn();
-			termsCheckbox.on('change', toggleCreateBtn);
-		});
-	</script>
+    <script type="text/javascript">
+        const regVerifyRequired = {{ get_setting('registration_verification') ? 'true' : 'false' }};
+        const createBtn = $('#createAccountBtn');
+        const termsCheckbox = $('input[name="checkbox_example_1"]');
+        function toggleCreateBtn() {
+            const termsChecked = termsCheckbox.is(':checked');
+            const regVerified = regVerifyRequired ? (typeof verifyBtn !== 'undefined' && verifyBtn && verifyBtn.classList.contains('disabled')) : true;
+            createBtn.prop('disabled', !(termsChecked && regVerified));
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            toggleCreateBtn();
+            termsCheckbox.on('change', toggleCreateBtn);
+        });
+    </script>
 @endsection

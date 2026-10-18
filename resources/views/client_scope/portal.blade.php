@@ -16,6 +16,7 @@
       <a class="btn btn-outline-primary mb-2" href="{{ route('client.scope.satisfaction') }}">Rate your experience</a>
       <a class="btn btn-outline-primary mb-2" href="{{ route('client.scope.notifications') }}">Notifications & preferences</a>
       <a class="btn btn-outline-primary mb-2" href="{{ route('blog') }}">Articles & advice</a>
+      <a class="btn btn-outline-primary mb-2" href="{{ route('member.referrals.index') }}">Refer Friends &amp; Coin Rewards</a>
     </div></div></div>
   </div>
   <h2 class="h4">Suggested matches</h2>

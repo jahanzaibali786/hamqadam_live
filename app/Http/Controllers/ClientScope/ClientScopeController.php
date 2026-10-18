@@ -84,54 +84,21 @@ class ClientScopeController extends Controller
 
     public function gotMatch(Request $request)
     {
-        $data = $request->validate(['matched_user_id' => ['required','integer','exists:users,id']]);
-        $id = (int) $data['matched_user_id'];
-        abort_if($id === (int) $request->user()->id, 422, 'You cannot match with your own account.');
-        $match = ProfileMatch::query()->where('user_id', $request->user()->id)->where('match_id', $id)->first();
-        abort_unless($match, 403, 'This profile has not been matched with your account.');
-
-        $created = false;
-        $mutual = false;
-        $confirmation = DB::transaction(function () use ($request, $id, $match, &$created, &$mutual): MatchSuccess {
-            // Lock both accounts in stable order: concurrent reciprocal submissions
-            // cannot separately decide the match is still one-sided.
-            $ids = [(int) $request->user()->id, $id];
-            sort($ids, SORT_NUMERIC);
-            User::query()->whereIn('id',$ids)->orderBy('id')->lockForUpdate()->get();
-            $existing = MatchSuccess::query()->where('user_id',$request->user()->id)
-                ->where('matched_user_id',$id)->where('status','got_match')->first();
-            if ($existing) {
-                $confirmation = $existing;
-            } else {
-                $confirmation = MatchSuccess::query()->create([
-                    'user_id' => $request->user()->id,
-                    'matched_user_id' => $id,
-                    'profile_match_id' => $match->id,
-                    'status' => 'got_match',
-                    'confirmed_at' => now(),
-                ]);
-                $created = true;
-            }
-            $mutual = MatchSuccess::query()->where('user_id',$id)
-                ->where('matched_user_id',$request->user()->id)->where('status','got_match')->exists();
-            return $confirmation;
-        });
-        if ($created) {
-            $this->events->record($request,'got_match_confirmed','match_tracking', [
-                'profile_match_id' => $match->id, 'mutual' => $mutual,
+        $data = $request->validate([
+            'matched_user_id' => ['required', 'integer', 'exists:users,id'],
+        ]);
+        $result = app(\App\Services\ClientScope\MatchConfirmationService::class)
+            ->confirm($request->user(), (int) $data['matched_user_id']);
+        if ($result['created']) {
+            $this->events->record($request, 'got_match_confirmed', 'match_tracking', [
+                'matched_user_id' => (int) $data['matched_user_id'],
+                'mutual' => $result['mutual'],
             ]);
         }
-        if ($mutual) {
-            // No coin award for an uncorroborated report. The reward ledger
-            // independently enforces one award per member/reference.
-            $this->rewards->issue((int) $request->user()->id, 'got_match', 'match_success', (int) $confirmation->id);
-            $other = MatchSuccess::query()->where('user_id',$id)
-                ->where('matched_user_id',$request->user()->id)->where('status','got_match')->first();
-            if ($other) $this->rewards->issue($id, 'got_match', 'match_success', (int) $other->id);
-        }
         return redirect()->route('client.scope.portal')->with('success',
-            $mutual ? 'Both members have confirmed this match. This is not independently verified as a marriage outcome.'
-                    : 'Your confirmation is recorded. Awaiting confirmation from the other member.');
+            $result['mutual']
+                ? 'Both members confirmed this match. Marriage outcome is not independently verified.'
+                : 'Your confirmation is recorded. Awaiting confirmation from the other member.');
     }
 
     public function sponsoredVisit(Request $request, SponsoredListing $sponsor)
@@ -160,16 +127,8 @@ class ClientScopeController extends Controller
 
     private function visibleSponsors(User $user)
     {
-        // A free package can also have a current_package_id; classify paid
-        // entitlement using actual plan price, not the presence of any package.
-        $package = $user->member?->package;
-        $isPaid = $package && (float) $package->price > 0;
-        if ($isPaid && ClientScopeSetting::valueOf('show_ads_to_paid','0') !== '1') return collect();
-        $packageId = $user->member?->current_package_id;
-        return SponsoredListing::live()->orderByDesc('priority')->limit(30)->get()
-            ->filter(fn (SponsoredListing $s) => empty($s->eligible_plan_ids)
-                || ($packageId && in_array((int) $packageId, array_map('intval',(array)$s->eligible_plan_ids),true)))
-            ->take(6)->values();
+        return app(\App\Services\ClientScope\AdVisibilityService::class)
+            ->visibleFor($user, null, 6);
     }
 
     public function notifications(Request $request)
