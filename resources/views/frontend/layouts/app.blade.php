@@ -173,12 +173,21 @@ if (! $lang) {
 
 <body class="text-left hq-site hq-route-{{ str_replace('.', '-', Route::currentRouteName() ?? 'page') }}">
 
+    <a href="#hamqadam-main-content" class="hq-skip-link">Skip to main content</a>
+    <style>
+      .hq-skip-link{position:absolute;left:1rem;top:-120px;z-index:999999;padding:.75rem 1rem;background:#fff;color:#153b69;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+      .hq-skip-link:focus{top:1rem;outline:3px solid #155eef}
+      :focus-visible{outline:3px solid #155eef;outline-offset:2px}
+      @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    </style>
     <div
         class="aiz-main-wrapper d-flex flex-column position-relative @if (Route::currentRouteName() != 'home') pt-8 pt-lg-10 @endif bg-white">
 
         @include('frontend.inc.header')
 
+        <main id="hamqadam-main-content" tabindex="-1" style="flex:1">
         @yield('content')
+        </main>
 
         @include('frontend.inc.footer')
     </div>
