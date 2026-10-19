@@ -1,0 +1,38 @@
+name: Laravel PR Validation
+
+on:
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  lint-and-views:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, sqlite3, pdo_sqlite, bcmath, gd, zip
+          tools: composer:v2
+          coverage: none
+      - name: Lint changed PHP files and Blade PHP fragments
+        run: |
+          set -e
+          find app routes database/migrations tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l > /tmp/hamqadam-php-lint.log
+          tail -n 8 /tmp/hamqadam-php-lint.log
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          php artisan config:clear
+      - name: Compile all Blade views (catches dashboard parse regressions)
+        run: |
+          php artisan view:clear
+          php artisan view:cache
+      - name: Run route and payment contract tests
+        run: |
+          php artisan test --filter='PaymentAuditRouteTest|MemberBillingAndRefundRoutesTest|CompletionRoutesTest|PremiumPolicyTest'
