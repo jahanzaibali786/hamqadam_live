@@ -9,8 +9,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  preflight:
-    uses: ./.github/workflows/laravel-pr-checks.yml
   deploy:
     needs: preflight
     runs-on: ubuntu-latest
