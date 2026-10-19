@@ -329,6 +329,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('/additional-attributes', AdditionalAttributeController::class);
     Route::post('/additional-attributes/update', [AdditionalAttributeController::class, 'update'])->name('additional-attributes.update');
 
+    Route::get('/languages/batch/{language}/export', [\App\Http\Controllers\Admin\TranslationBatchController::class, 'export'])
+        ->middleware('permission:translate_languages')->name('languages.batch.export');
+    Route::post('/languages/batch/import', [\App\Http\Controllers\Admin\TranslationBatchController::class, 'import'])
+        ->middleware('permission:translate_languages')->name('languages.batch.import');
     Route::resource('/languages', LanguageController::class);
 
     // Currency settings
