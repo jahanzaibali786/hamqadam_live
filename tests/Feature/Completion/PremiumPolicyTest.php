@@ -41,4 +41,27 @@ class PremiumPolicyTest extends TestCase
         $user->setRelation('member', $member);
         $this->assertFalse(app(PremiumEntitlementService::class)->has($user,'profile_boost'));
     }
+    public function test_active_paid_plan_only_grants_its_explicitly_enabled_features(): void
+    {
+        $user = new User();
+        $member = new Member();
+        $member->package_validity = now()->addDays(3)->toDateString();
+        $package = new Package();
+        $package->price = 1000;
+        $package->active = true;
+        $package->feature_flags = [
+            'profile_boost' => true,
+            'unlimited_messaging' => false,
+            'priority_interest' => true,
+        ];
+        $member->setRelation('package', $package);
+        $user->setRelation('member', $member);
+        $policy = app(PremiumEntitlementService::class);
+        $this->assertTrue($policy->has($user, 'profile_boost'));
+        $this->assertTrue($policy->has($user, 'priority_interest'));
+        $this->assertFalse($policy->has($user, 'unlimited_messaging'));
+        $this->assertFalse($policy->has($user, 'advanced_filters'));
+        $this->assertFalse($policy->has($user, 'nonexistent_feature'));
+    }
+
 }
