@@ -21,7 +21,7 @@ final class MatchOutcomeReviewController extends Controller {
             'status'=>['required','in:verified,rejected'],
             'verification_method'=>['required_if:status,verified','nullable','in:staff_contact,documents,other'],
             'happy_story_id'=>['nullable','integer','exists:happy_stories,id'],
-            'internal_notes'=>['nullable','string','max:2000']
+            'internal_notes'=>['required_if:status,verified','nullable','string','min:20','max:2000']
         ]);
         DB::transaction(function()use($outcome,$data,$request){
             $row=MatchOutcomeReview::whereKey($outcome->id)->lockForUpdate()->firstOrFail();
