@@ -7,7 +7,8 @@
     var links = Array.prototype.slice.call(region.querySelectorAll('a.aiz-side-nav-link[href]'));
     var currentUrl = new URL(window.location.href);
     function normalize(url) {
-      var path = url.pathname.replace(/\\/+$/, '') || '/';
+      var path = url.pathname || '/';
+      while (path.length > 1 && path.charAt(path.length - 1) === '/') path = path.slice(0, -1);
       return path;
     }
     var currentPath = normalize(currentUrl);
