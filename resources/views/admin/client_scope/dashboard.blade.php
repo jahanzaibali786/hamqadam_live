@@ -1,5 +1,6 @@
 @extends('admin.layouts.app')
 @section('content')
+@include('admin.client_scope.partials.completion_insights')
 @include('admin.client_scope.partials.observed_retention')
 <div class="aiz-titlebar text-left mt-2 mb-3"><h1 class="h3">Hamqadam Client Scope — Admin Monitoring</h1><p class="text-muted">All figures use recorded database events. Missing instrumentation is reported as zero observed events, not proof of inactivity.</p></div>
 @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
@@ -60,6 +61,17 @@
 </div></div>
 <div class="row"><div class="col-lg-5 mb-4"><div class="card"><div class="card-header"><h2 class="h6 mb-0">Gamification — Got Match reward rule</h2></div><div class="card-body">
 <p class="small text-muted">Coin reward is issued at most once for each server-verified user confirmation and subject to the per-user limit. Other achievement types remain out of scope of this rule.</p>
+<section class="border rounded p-3 mb-3"><h3 class="h6">Verified milestone rewards</h3>
+@foreach(['profile_completed'=>'Verified completed profile','first_interest'=>'First real interest sent'] as $event => $title)
+@php($configuredRule = $rewardRules->firstWhere('event_key', $event))
+<form method="POST" action="{{ route('admin.client.scope.rewards.rules') }}" class="border-top py-2">@csrf
+<input type="hidden" name="event_key" value="{{ $event }}"><label>{{ $title }}</label>
+<input class="form-control mb-2" name="title" maxlength="150" required value="{{ $configuredRule?->title ?? $title }}">
+<div class="form-row"><div class="col"><label>Coins</label><input type="number" class="form-control" required name="coin_reward" min="0" max="1000" value="{{ $configuredRule?->coin_reward ?? 0 }}"></div>
+<div class="col"><label>Max per member</label><input type="number" class="form-control" required name="max_per_user" min="1" max="20" value="{{ $configuredRule?->max_per_user ?? 1 }}"></div></div>
+<label><input type="checkbox" name="active" value="1" @checked((bool)($configuredRule?->active ?? false))> Enabled</label>
+<button class="btn btn-outline-primary btn-sm">Save</button></form>
+@endforeach</section>
 <form method="POST" action="{{ route('admin.client.scope.rewards.rules') }}">@csrf<input type="hidden" name="event_key" value="got_match">
 <div class="form-group"><label>Title</label><input class="form-control" required name="title" value="Got Match confirmation"></div>
 <div class="form-group"><label>Coins rewarded</label><input type="number" min="0" max="1000" required class="form-control" name="coin_reward" value="0"></div>
