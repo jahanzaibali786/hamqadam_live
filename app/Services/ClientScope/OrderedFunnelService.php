@@ -24,7 +24,7 @@ final class OrderedFunnelService
         ];
         $registered = DB::table('users')->where('user_type','member')->where('created_at','>=',$since)->pluck('id')->all();
         $previous = count($registered);
-        $eligible = array_fill_keys($registered, $since->copy()->subSecond());
+        $eligible = array_fill_keys($registered, $since->copy()->subSecond()->toDateTimeString());
         $rows = [['label'=>'Registered','users'=>$previous,'conversion_pct'=>null]];
         foreach ($stages as $stage) {
             if ($eligible === []) {
