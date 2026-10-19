@@ -394,6 +394,32 @@
                     </a>
                 </li>
 
+                {{-- Client scope feature navigation: existing named, protected admin routes. --}}
+                <li class="aiz-side-nav-item">
+                    <a href="javascript:void(0);" class="aiz-side-nav-link">
+                        <i class="las la-tasks aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Client Features & Reporting') }}</span>
+                        <span class="aiz-side-nav-arrow"></span>
+                    </a>
+                    <ul class="aiz-side-nav-list level-2">
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.client.scope.dashboard') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Analytics, Rewards & Sponsored Ads') }}</span></a></li>
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.client.scope.profiles') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Advanced Profile Search') }}</span></a></li>
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.client.scope.outcomes.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Got Match Outcome Reviews') }}</span></a></li>
+                        @can('show_package_payments')
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.payment_refunds.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Payment Refund Reviews') }}</span></a></li>
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.payment_audit.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Payment Reconciliation') }}</span></a></li>
+                        @endcan
+                        @can('show_packages')
+                        <li class="aiz-side-nav-item"><a href="{{ route('payment-coupons.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Promo Codes') }}</span></a></li>
+                        @endcan
+                        @can('show_happy_stories')
+                        <li class="aiz-side-nav-item"><a href="{{ route('happy-story.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Success Stories') }}</span></a></li>
+                        @endcan
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.help-chat.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Live Help Center') }}</span></a></li>
+                        <li class="aiz-side-nav-item"><a href="{{ route('support-tickets.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Support Ticket Management') }}</span></a></li>
+                    </ul>
+                </li>
+
                 {{-- Happy Stories --}}
                 @can('show_happy_stories')
                 <li class="aiz-side-nav-item ">
