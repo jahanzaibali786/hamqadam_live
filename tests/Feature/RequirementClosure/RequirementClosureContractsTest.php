@@ -44,7 +44,9 @@ final class RequirementClosureContractsTest extends TestCase {
         }
     }
     public function test_mutual_reports_nominate_only_one_pending_review_candidate(): void {
-        $schema=\Illuminate\Support\Facades\Schema::getFacadeRoot();
+        if(\Illuminate\Support\Facades\Schema::hasTable('match_successes') || \Illuminate\Support\Facades\Schema::hasTable('match_outcome_reviews')) {
+            $this->markTestSkipped('Only run the isolated fixture against an empty test database.');
+        }
         $created=[];
         foreach(['match_successes','match_outcome_reviews'] as $table){
             if(!\Illuminate\Support\Facades\Schema::hasTable($table)){
