@@ -20,6 +20,12 @@ final class RequirementClosureContractsTest extends TestCase {
             $this->assertNotEmpty($compiled);
         }
     }
+    public function test_help_chat_preferred_language_endpoint_requires_sanctum(): void {
+        $route=Route::getRoutes()->getByName('api.v1.help_chat.language');
+        $this->assertNotNull($route);
+        $this->assertContains('POST',$route->methods());
+        $this->assertContains('auth:sanctum',$route->gatherMiddleware());
+    }
     public function test_bulk_translation_routes_require_admin_translation_permission(): void {
         foreach(['languages.batch.import','languages.batch.export'] as $name){
             $route=Route::getRoutes()->getByName($name);
