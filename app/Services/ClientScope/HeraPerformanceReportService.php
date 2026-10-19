@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 final class HeraPerformanceReportService {
     public function report(): array {
-        if(!Schema::hasTable('profile_matches')) return [];
+        if(!Schema::hasTable('profile_matches')||!Schema::hasColumn('profile_matches','ai_enhanced')) return [];
         $records=DB::table('profile_matches')
             ->selectRaw('COUNT(*) as recommendations, SUM(CASE WHEN ai_enhanced = 1 THEN 1 ELSE 0 END) as ai_assisted')
             ->selectRaw('AVG(CASE WHEN ai_enhanced = 1 THEN match_percentage ELSE NULL END) as mean_ai_match_score')
