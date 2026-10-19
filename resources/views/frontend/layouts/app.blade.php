@@ -185,9 +185,9 @@ if (! $lang) {
 
         @include('frontend.inc.header')
 
-        <main id="hamqadam-main-content" tabindex="-1" style="flex:1">
+        <div id="hamqadam-main-content" tabindex="-1" style="flex:1">
         @yield('content')
-        </main>
+        </div>
 
         @include('frontend.inc.footer')
     </div>
