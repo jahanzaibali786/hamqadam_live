@@ -41,7 +41,7 @@ final class PaymentRefundController extends Controller
             'status' => ['required','in:reviewing,rejected,provider_refund_confirmed'],
             'admin_note' => ['nullable','string','max:2000'],
             'provider_refund_reference' => ['required_if:status,provider_refund_confirmed','nullable','string','max:255'],
-            'provider_verified' => ['required_if:status,provider_refund_confirmed','nullable','accepted'],
+            'provider_verified' => ['accepted_if:status,provider_refund_confirmed'],
         ]);
         if ($data['status'] === 'provider_refund_confirmed') {
             $payment = $refund->payment;
