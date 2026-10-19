@@ -281,7 +281,14 @@ if (!function_exists('get_setting')) {
             } catch (\Throwable) {
             }
 
-            $settings = Setting::all();
+            // Keep boot, Composer discovery and route/view compilation usable
+            // when MySQL is offline. Cache failure must not trigger a second,
+            // uncaught query. Live requests can use the provided safe default.
+            try {
+                $settings = Setting::all();
+            } catch (\Throwable $databaseError) {
+                return $default;
+            }
         }
 
         $setting = $settings->where('type', $key)->first();
