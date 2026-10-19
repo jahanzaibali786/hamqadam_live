@@ -118,6 +118,7 @@ class ChatController extends Controller
                 'message' => translate('This chat is blocked. Unblock it before sending messages.'),
             ], 403);
         }
+        $chat = app(\App\Services\ClientScope\MessagingAllowanceService::class)->sendWithinLimit(Auth::user(), function () use ($request, $chat_thread) {
         $chat = new Chat();
         $chat->chat_thread_id = $chat_thread->id;
         $chat->sender_user_id = Auth::user()->id;
@@ -132,6 +133,8 @@ class ChatController extends Controller
             : (int) ($chat_thread->disappear_after ?? 0);
         $chat->expires_at = $ttl > 0 ? now()->addSeconds(min($ttl, 31536000)) : null;
         $chat->save();
+        return $chat;
+        });
         $recipientId = (int) $chat_thread->sender_user_id === (int) Auth::id()
             ? (int) $chat_thread->receiver_user_id
             : (int) $chat_thread->sender_user_id;
