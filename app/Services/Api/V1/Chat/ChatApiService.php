@@ -172,6 +172,21 @@ class ChatApiService
             ]);
             $thread->forceFill(['last_message_at' => now()])->save();
             $message = $message->load(['sender', 'replyTo.sender']);
+            // Record actual successful communication, never message contents.
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('analytics_events')) {
+                    \App\Models\AnalyticsEvent::create([
+                        'user_id'=>$user->id,
+                        'event_name'=>'message_sent',
+                        'feature_key'=>'messaging',
+                        'source'=>'chat_api_v1',
+                        'platform'=>'android',
+                        'metadata'=>['chat_thread_id'=>$thread->id],
+                        'occurred_at'=>now(),
+                    ]);
+                }
+            } catch (\Throwable $analyticsError) { report($analyticsError); }
+
             $recipientId = (int) $thread->sender_user_id === (int) $user->id
                 ? (int) $thread->receiver_user_id
                 : (int) $thread->sender_user_id;
