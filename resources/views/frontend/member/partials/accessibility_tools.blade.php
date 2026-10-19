@@ -15,6 +15,11 @@
     .hq-accessible-contrast .hq-member-panel-page {filter: contrast(1.22)}
     .hq-reduce-motion *, .hq-reduce-motion *::before, .hq-reduce-motion *::after {animation-duration:0.01ms!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}
     [dir="rtl"] .hq-member-panel-page {direction:rtl;text-align:right}
+    .hq-member-panel-page :focus-visible {outline:3px solid #155eef!important;outline-offset:3px}
+    .hq-accessible-contrast .hq-member-panel-page a, .hq-accessible-contrast .hq-member-panel-page button {text-decoration:underline}
+    @media (prefers-reduced-motion: reduce) {
+        .hq-member-panel-page *, .hq-member-panel-page *::before, .hq-member-panel-page *::after {animation-duration:0.01ms!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}
+    }
 </style>
 <script>
 (function () {
