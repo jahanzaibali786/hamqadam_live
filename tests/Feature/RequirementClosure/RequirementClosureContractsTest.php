@@ -43,6 +43,40 @@ final class RequirementClosureContractsTest extends TestCase {
             $this->assertTrue(method_exists($service,'nominate'));
         }
     }
+    public function test_mutual_reports_nominate_only_one_pending_review_candidate(): void {
+        $schema=\Illuminate\Support\Facades\Schema::getFacadeRoot();
+        $created=[];
+        foreach(['match_successes','match_outcome_reviews'] as $table){
+            if(!\Illuminate\Support\Facades\Schema::hasTable($table)){
+                \Illuminate\Support\Facades\Schema::create($table,function(\Illuminate\Database\Schema\Blueprint $t)use($table){
+                    $t->id();
+                    if($table==='match_successes'){
+                        $t->unsignedBigInteger('user_id');$t->unsignedBigInteger('matched_user_id');$t->string('status');
+                    }else{
+                        $t->unsignedBigInteger('member_a_id');$t->unsignedBigInteger('member_b_id');$t->string('status')->default('pending');
+                        $t->unique(['member_a_id','member_b_id']);
+                    }
+                    $t->timestamps();
+                });
+                $created[]=$table;
+            }
+        }
+        try{
+            $service=app(\App\Services\ClientScope\OutcomeVerificationService::class);
+            $first=\App\Models\MatchSuccess::create(['user_id'=>501,'matched_user_id'=>502,'status'=>'got_match']);
+            $this->assertNull($service->nominate(502,501));
+            $second=\App\Models\MatchSuccess::create(['user_id'=>502,'matched_user_id'=>501,'status'=>'got_match']);
+            $row=$service->nominate(502,501);
+            $this->assertNotNull($row);
+            $this->assertSame('pending',$row->status);
+            $this->assertSame($row->id,$service->nominate(501,502)->id);
+            $this->assertSame(1,\App\Models\MatchOutcomeReview::query()->where('member_a_id',501)->where('member_b_id',502)->count());
+        }finally{
+            if(isset($first))$first->delete();
+            if(isset($second))$second->delete();
+            foreach(array_reverse($created) as $table)\Illuminate\Support\Facades\Schema::dropIfExists($table);
+        }
+    }
     public function test_confirmed_matches_need_independent_staff_review(): void {
         $this->assertTrue(method_exists(\App\Services\ClientScope\OutcomeVerificationService::class,'nominate'));
         $this->assertTrue(method_exists(\App\Http\Controllers\Admin\MatchOutcomeReviewController::class,'review'));
