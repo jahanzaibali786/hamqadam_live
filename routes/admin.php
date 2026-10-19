@@ -112,6 +112,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::post('/{id}/reply', 'reply')->whereNumber('id')->name('reply');
         Route::get('/{id}/message-html', 'messageHtml')->whereNumber('id')->name('message_html');
         Route::post('/{id}/status', 'updateStatus')->whereNumber('id')->name('status');
+        Route::post('/{id}/assign', 'assign')->whereNumber('id')->name('assign');
         Route::get('/{id}/destroy', 'destroy')->whereNumber('id')->name('destroy');
     });
 
@@ -370,6 +371,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::post('/roles/add_permission', [RoleController::class, 'add_permission'])->name('roles.permission');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications');
+    Route::get('/notification-delivery-audit', [\App\Http\Controllers\Admin\NotificationAuditController::class, 'index'])->name('admin.notification_audit.index');
 
     Route::resource('addons', AddonController::class);
     Route::post('/addons/activation', [AddonController::class, 'activation'])->name('addons.activation');

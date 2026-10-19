@@ -336,6 +336,13 @@
                     </a>
                 </li>
                 @endcan
+                {{-- Recorded notification deliveries; does not imply gateway-confirmed receipt. --}}
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.notification_audit.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.notification_audit.index']) }}">
+                        <i class="las la-bell aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Notification Delivery Audit') }}</span>
+                    </a>
+                </li>
                 <!-- Earnings -->
                 @can('show_package_payments')
                 <li class="aiz-side-nav-item ">

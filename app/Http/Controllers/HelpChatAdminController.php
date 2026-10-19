@@ -123,6 +123,29 @@ class HelpChatAdminController extends Controller
     /**
      * POST /admin/help-chat/{thread}/status — close or reopen.
      */
+    /** Assign an existing support conversation to a validated staff member. */
+    public function assign(Request $request, int $id)
+    {
+        $data = $request->validate([
+            'assigned_agent_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+        $thread = $this->help->adminThread($id);
+        if (isset($data['assigned_agent_id'])) {
+            $agent = \App\Models\User::query()->whereKey($data['assigned_agent_id'])
+                ->whereIn('user_type', ['admin', 'staff'])->first();
+            if (! $agent) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'assigned_agent_id' => 'Only an active support administrator or staff member can be assigned.',
+                ]);
+            }
+        }
+        $thread->forceFill([
+            'assigned_agent_id' => $data['assigned_agent_id'] ?? null,
+            'assigned_at' => isset($data['assigned_agent_id']) ? now() : null,
+        ])->save();
+        return back()->with('success', 'Support agent assignment saved.');
+    }
+
     public function updateStatus(Request $request, int $id)
     {
         $data = $request->validate([
