@@ -3,6 +3,9 @@
 <main class="container py-5"><h1 class="h3">Support Center</h1>
 @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
 @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
+@if(!$supportReady)
+<div class="alert alert-warning" role="status">Support ticket setup is incomplete. An administrator must apply the support tables migration. Existing Help Center chat is available from the member dashboard.</div>
+@else
 <div class="card mb-4"><div class="card-body"><h2 class="h5">Create support ticket</h2>
 <form method="POST" action="{{ route('support-ticket.store') }}">@csrf
 <div class="form-group"><label for="subject">Subject</label><input id="subject" class="form-control" name="subject" required maxlength="255" value="{{ old('subject') }}"></div>
@@ -35,5 +38,6 @@
 </div></article>
 @empty<p>No support tickets yet.</p>@endforelse
 {{ $tickets->links() }}
+@endif
 </main>
 @endsection
