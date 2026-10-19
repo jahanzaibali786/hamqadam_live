@@ -8,6 +8,7 @@
     <div class="form-group col-6"><label>{{ translate('Minimum Amount') }}</label><input class="form-control" type="number" step="0.01" min="0" name="minimum_amount" value="{{ $value('minimum_amount', 0) }}"></div>
     <div class="form-group col-6"><label>{{ translate('Total Usage Limit') }}</label><input class="form-control" type="number" min="1" name="usage_limit" value="{{ $value('usage_limit') }}" placeholder="{{ translate('Unlimited') }}"></div>
 </div>
+<div class="form-group"><label>{{ translate('Maximum uses per member') }}</label><input class="form-control" type="number" min="1" max="1000" name="per_user_limit" value="{{ $value('per_user_limit') }}" placeholder="{{ translate('Unlimited') }}"></div>
 <div class="form-row">
     <div class="form-group col-6"><label>{{ translate('Starts At') }}</label><input class="form-control" type="datetime-local" name="starts_at" value="{{ $coupon?->starts_at?->format('Y-m-d\TH:i') }}"></div>
     <div class="form-group col-6"><label>{{ translate('Expires At') }}</label><input class="form-control" type="datetime-local" name="expires_at" value="{{ $coupon?->expires_at?->format('Y-m-d\TH:i') }}"></div>
