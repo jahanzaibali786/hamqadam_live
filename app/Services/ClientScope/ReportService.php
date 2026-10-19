@@ -64,6 +64,7 @@ class ReportService
 
         return [
             'funnel' => $funnel,
+            'linked_funnel' => app(\App\Services\ClientScope\LinkedFunnelService::class)->build(90),
             'nps' => $nps,
             'nps_trend' => $this->npsTrend(),
             'adoption' => $adoption,
