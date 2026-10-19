@@ -178,7 +178,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     // package Payments
     Route::get('/payment-audit', [\App\Http\Controllers\Admin\PaymentAuditController::class, 'index'])->middleware('permission:show_package_payments')->name('admin.payment_audit.index');
     Route::get('/payment-refunds', [\App\Http\Controllers\Admin\PaymentRefundController::class, 'index'])->name('admin.payment_refunds.index');
-    Route::post('/payment-refunds/{refund}/review', [\App\Http\Controllers\Admin\PaymentRefundController::class, 'review'])->name('admin.payment_refunds.review');
+    Route::post('/payment-refunds/{refund}/review', [\App\Http\Controllers\Admin\PaymentRefundController::class, 'review'])->middleware('permission:show_package_payments')->name('admin.payment_refunds.review');
+    Route::post('/payment-refunds/{refund}/execute', [\App\Http\Controllers\Admin\PaymentRefundController::class, 'execute'])->middleware('permission:show_package_payments')->name('admin.payment_refunds.execute');
     Route::resource('package-payments', PackagePaymentController::class);
     Route::controller(PackagePaymentController::class)->group(function () {
         Route::get('/manual-payment-accept/{id}', 'manual_payment_accept')->name('manual_payment_accept');
