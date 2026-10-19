@@ -379,6 +379,37 @@
                             </li>
                         </ul>
                     </li>
+                    {{-- Client-requested member features, visible in the member dashboard. --}}
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('client.scope.portal') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.portal', 'client.scope.got-match']) }}">
+                            <i class="las la-heart aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('My Matches & Got Match') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('client.scope.notifications') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.notifications']) }}">
+                            <i class="las la-bell aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Notification Preferences & History') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('client.scope.support') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.support']) }}">
+                            <i class="las la-headset aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Support Tickets & Ratings') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('client.scope.satisfaction') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.satisfaction']) }}">
+                            <i class="las la-star aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Rate Hamqadam (NPS)') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('blog') }}" class="aiz-side-nav-link">
+                            <i class="las la-book-open aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Articles & Marriage Advice') }}</span>
+                        </a>
+                    </li>
                     {{-- Dedicated referral & refund destinations use the regular member panel layout. --}}
                     <li class="aiz-side-nav-item">
                         <a href="{{ route('member.referrals.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.referrals.index']) }}" @if(request()->routeIs('member.referrals.index')) aria-current="page" @endif>
