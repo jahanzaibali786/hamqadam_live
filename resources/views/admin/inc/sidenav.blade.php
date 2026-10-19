@@ -417,6 +417,16 @@
                         @endcan
                         <li class="aiz-side-nav-item"><a href="{{ route('admin.help-chat.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Live Help Center') }}</span></a></li>
                         <li class="aiz-side-nav-item"><a href="{{ route('support-tickets.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Support Ticket Management') }}</span></a></li>
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.notification_audit.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Notifications & Delivery Audit') }}</span></a></li>
+                        @can('set_referral_commission')
+                        <li class="aiz-side-nav-item"><a href="{{ route('set_referral_commission') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Referral Reward Rules') }}</span></a></li>
+                        @endcan
+                        @can('view_refferal_users')
+                        <li class="aiz-side-nav-item"><a href="{{ route('referals.users') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Referral Tracking') }}</span></a></li>
+                        @endcan
+                        @can('show_blogs')
+                        <li class="aiz-side-nav-item"><a href="{{ route('blog.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Blogs & Articles') }}</span></a></li>
+                        @endcan
                     </ul>
                 </li>
 
