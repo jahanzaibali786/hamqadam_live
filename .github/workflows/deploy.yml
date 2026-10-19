@@ -56,6 +56,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          # This file is generated only in the runner and is never committed.
+          # It provides a safe browser-visible proof of the deployed revision.
+          printf 'Hamqadam deployment\nCommit: %s\nBranch: %s\nUTC: %s\n' \
+            "$GITHUB_SHA" "$GITHUB_REF_NAME" "$(date -u '+%Y-%m-%d %H:%M:%S')" \
+            > public/deployment-build.txt
+
           rsync -az --delete-delay --partial --omit-dir-times \
             --no-perms --no-owner --no-group --itemize-changes --stats \
             -e "ssh -T -p $SSH_PORT -o BatchMode=yes -o ConnectTimeout=15" \
@@ -80,7 +87,6 @@ jobs:
             --exclude='storage/app/' \
             --exclude='bootstrap/cache/*.php' \
             --exclude='public/uploads/' \
-            --exclude='tests/' \
             --exclude='*.zip' \
             --exclude='*.sql' \
             ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
