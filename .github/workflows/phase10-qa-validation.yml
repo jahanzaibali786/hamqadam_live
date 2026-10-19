@@ -1,0 +1,54 @@
+name: Phase 10 QA Tests
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'database/seeders/HamqadamQa*.php'
+      - 'tests/Feature/Phase10/**'
+      - '.github/workflows/phase10-qa-validation.yml'
+  workflow_dispatch:
+
+jobs:
+  isolated-laravel-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, gd, zip, sqlite3, pdo_sqlite, bcmath
+          tools: composer:v2
+          coverage: none
+      - name: Validate source syntax
+        run: |
+          set -euo pipefail
+          find database/seeders tests/Feature/Phase10 -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Configure isolated test services
+        run: |
+          mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/framework/testing storage/logs
+          chmod -R ug+rwX bootstrap/cache storage/framework
+          cp .env.example .env
+          printf '\nAPP_ENV=testing\nDB_CONNECTION=sqlite\nDB_DATABASE=:memory:\nCACHE_STORE=array\nSESSION_DRIVER=array\nMAIL_MAILER=array\nQUEUE_CONNECTION=sync\n' >> .env
+      - name: Install dependencies
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Prepare Laravel
+        run: |
+          php artisan key:generate
+          php artisan optimize:clear
+          php artisan view:cache
+      - name: Run isolated Phase 10 test suite
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+        run: php artisan test tests/Feature/Phase10 --stop-on-failure
+
