@@ -71,6 +71,7 @@ class ReportService
             'adoption' => $adoption,
             'geography' => $geography,
             'geo_heatmap' => app(\App\Services\ClientScope\GeographicHeatmapService::class)->report(),
+            'translation_coverage' => app(\App\Services\ClientScope\TranslationCoverageService::class)->report(),
             'verified_outcomes' => Schema::hasTable('match_outcome_reviews') ? (int) DB::table('match_outcome_reviews')->where('status','verified')->count() : 0,
             'verified_stories' => Schema::hasTable('match_outcome_reviews') ? (int) DB::table('match_outcome_reviews')->where('status','verified')->whereNotNull('happy_story_id')->count() : 0,
             'outcome_candidates' => Schema::hasTable('match_outcome_reviews') ? (int) DB::table('match_outcome_reviews')->count() : 0,
