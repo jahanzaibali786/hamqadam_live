@@ -1,7 +1,7 @@
 <section class="card mb-4" aria-labelledby="hq-outcome-title"><div class="card-header"><h2 class="h6 mb-0" id="hq-outcome-title">Verified match outcomes</h2></div><div class="card-body">
 <div class="row"><div class="col-md-4"><strong>{{ number_format($report['outcome_candidates'] ?? 0) }}</strong> mutual-report review candidates</div>
 <div class="col-md-4"><strong>{{ number_format($report['verified_outcomes'] ?? 0) }}</strong> staff-reviewed outcomes</div>
-<div class="col-md-4"><strong>{{ number_format($report['verified_stories'] ?? 0) }}</strong> linked published-story candidates</div></div>
+<div class="col-md-4"><strong>{{ number_format($report['verified_stories'] ?? 0) }}</strong> linked story records</div></div>
 <p class="small text-muted mt-2">Staff-reviewed outcomes are not evidence of a legally documented marriage. Counts are based on a separate auditable review ledger.</p>
 <a href="{{ route('admin.client.scope.outcomes.index') }}">Open outcome reviews</a></div></section>
 <section class="card mb-4" aria-labelledby="hq-geo-title"><div class="card-header"><h2 class="h6 mb-0" id="hq-geo-title">Member geographic concentration (coordinates supplied by staff)</h2></div><div class="card-body">
