@@ -29,7 +29,7 @@
     }
 @endphp
 
-<div class="aiz-user-sidenav-wrap pt-4 sticky-top c-scrollbar-light position-relative z-1 shadow-none">
+<div class="aiz-user-sidenav-wrap hq-member-scroll-shell pt-4 sticky-top c-scrollbar-light position-relative z-1 shadow-none">
     <div class="absolute-top-left d-xl-none">
         <button class="btn btn-sm p-2" data-toggle="class-toggle" data-target=".aiz-mobile-side-nav"
             data-same=".mobile-side-nav-thumb">
@@ -81,7 +81,7 @@
             @endif
         </div>
 
-        <div class="sidemnenu mb-3">
+        <div class="sidemnenu hq-member-side-scroll mb-3" id="hq-member-side-scroll" tabindex="0" role="region" aria-label="Member dashboard navigation">
             <ul class="aiz-side-nav-list" data-toggle="aiz-side-menu">
 
                 @if ($isDedicatedGuardian)
