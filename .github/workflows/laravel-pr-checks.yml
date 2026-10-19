@@ -35,4 +35,4 @@ jobs:
           php artisan view:cache
       - name: Run route and payment contract tests
         run: |
-          php artisan test --filter='PaymentAuditRouteTest|MemberBillingAndRefundRoutesTest|CompletionRoutesTest|PremiumPolicyTest'
+          php artisan test --filter='PaymentAuditRouteTest|MemberBillingAndRefundRoutesTest|CompletionRoutesTest|PremiumPolicyTest|DashboardBladeCompilationTest'
