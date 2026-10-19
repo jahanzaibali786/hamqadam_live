@@ -15,11 +15,10 @@ class AdVisibilityService
     public function visibleFor(User $user, ?string $placement = null, int $limit = 12): Collection
     {
         $package = $user->member?->package;
-        $flags = (array) ($package?->feature_flags ?? []);
-        $adFree = (bool) ($flags['ad_free'] ?? in_array('ad_free', $flags, true));
-        $isPaid = $package && (float) $package->price > 0
-            && ($user->member?->package_validity === null
-                || \Carbon\Carbon::parse($user->member->package_validity)->endOfDay()->isFuture());
+        $isPaid = (bool) ($package && (float) $package->price > 0
+            && $user->member?->package_validity
+            && \Carbon\Carbon::parse($user->member->package_validity)->endOfDay()->isFuture());
+        $adFree = app(PremiumEntitlementService::class)->has($user, 'ad_free');
 
         if ($adFree && $isPaid) {
             return collect();
