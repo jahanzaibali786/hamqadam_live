@@ -14,7 +14,7 @@ final class RequirementClosureContractsTest extends TestCase {
         }
     }
     public function test_review_and_geo_dashboard_views_compile(): void {
-        foreach(['admin.client_scope.match_outcomes','admin.client_scope.partials.verified_geo_and_outcomes'] as $view) {
+        foreach(['admin.client_scope.match_outcomes','admin.client_scope.partials.verified_geo_and_outcomes','admin.client_scope.partials.engagement_performance','admin.client_scope.partials.translation_coverage'] as $view) {
             $this->assertTrue(view()->exists($view));
             $compiled=Blade::compileString(file_get_contents(resource_path('views/'.str_replace('.','/',$view).'.blade.php')));
             $this->assertNotEmpty($compiled);
