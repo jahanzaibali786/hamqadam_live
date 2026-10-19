@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/connector-a', [BridgeController::class, 'channelA'])->name('connector_a');
 Route::get('/connector-b', [BridgeController::class, 'channelB'])->name('connector_b');
 Route::get('/connector-c', [BridgeController::class, 'channelC'])->name('connector_c');
+Route::get('/premium/boost', [\App\Http\Controllers\Api\V1\Premium\BoostController::class, 'status'])->name('api.v1.bridge.premium.boost.status');
+Route::post('/premium/boost', [\App\Http\Controllers\Api\V1\Premium\BoostController::class, 'activate'])->middleware('throttle:3,1')->name('api.v1.bridge.premium.boost.activate');
+Route::get('/localization', [\App\Http\Controllers\Api\V1\Localization\LocalizationController::class, 'index'])->name('api.v1.bridge.localization');
 Route::get('/entitlements', [PremiumEntitlementController::class, 'index'])->name('api.v1.bridge.entitlements');
 
 // Inherited auth:sanctum from routes/api.php. No untrusted award endpoints:
