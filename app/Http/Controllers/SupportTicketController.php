@@ -51,7 +51,7 @@ class SupportTicketController extends Controller
         $data = $request->validate([
             'subject' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:10000'],
-            'support_category_id' => ['nullable', 'integer'],
+            'support_category_id' => ['nullable', 'integer', 'exists:support_categories,id'],
         ]);
         SupportTicket::create($data + [
             'sender_user_id' => auth()->id(),

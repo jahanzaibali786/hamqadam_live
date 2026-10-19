@@ -21,12 +21,12 @@ final class RetentionCohortService
         $sql = <<<'SQL'
             SELECT DATE_FORMAT(u.created_at, '%Y-%m') AS cohort,
               COUNT(DISTINCT CASE WHEN e.occurred_at >= DATE_ADD(u.created_at, INTERVAL 1 DAY)
-                  AND e.occurred_at < DATE_ADD(u.created_at, INTERVAL 2 DAY) THEN u.id END) AS d1_active,
+                  AND e.occurred_at < DATE_ADD(u.created_at, INTERVAL 2 DAY) AND u.created_at <= DATE_SUB(NOW(), INTERVAL 2 DAY) THEN u.id END) AS d1_active,
               COUNT(DISTINCT CASE WHEN e.occurred_at >= DATE_ADD(u.created_at, INTERVAL 7 DAY)
-                  AND e.occurred_at < DATE_ADD(u.created_at, INTERVAL 8 DAY) THEN u.id END) AS d7_active,
+                  AND e.occurred_at < DATE_ADD(u.created_at, INTERVAL 8 DAY) AND u.created_at <= DATE_SUB(NOW(), INTERVAL 8 DAY) THEN u.id END) AS d7_active,
               COUNT(DISTINCT CASE WHEN e.occurred_at >= DATE_ADD(u.created_at, INTERVAL 30 DAY)
-                  AND e.occurred_at < DATE_ADD(u.created_at, INTERVAL 31 DAY) THEN u.id END) AS d30_active
-            FROM users u INNER JOIN analytics_events e ON e.user_id = u.id
+                  AND e.occurred_at < DATE_ADD(u.created_at, INTERVAL 31 DAY) AND u.created_at <= DATE_SUB(NOW(), INTERVAL 31 DAY) THEN u.id END) AS d30_active
+            FROM users u LEFT JOIN analytics_events e ON e.user_id = u.id
             WHERE u.user_type = 'member' AND u.created_at >= ?
             GROUP BY DATE_FORMAT(u.created_at, '%Y-%m')
         SQL;

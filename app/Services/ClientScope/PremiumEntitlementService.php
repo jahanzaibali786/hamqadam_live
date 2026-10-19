@@ -20,6 +20,7 @@ final class PremiumEntitlementService
         if (! in_array($feature, self::PAID_FEATURES, true)) return false;
         $member = $user->member;
         $package = $member?->package;
+        // A paid flag must never survive an expired subscription or an inactive package.
         if (! $member || ! $package || (float) ($package->price ?? 0) <= 0) return false;
         if (! $member->package_validity || Carbon::parse($member->package_validity)->endOfDay()->isPast()) return false;
         if (isset($package->active) && ! $package->active) return false;
