@@ -7,6 +7,8 @@
                 <i class="las la-user-plus" aria-hidden="true"></i> {{ translate('Refer Friends & Rewards') }}
             </a>
         </div>
+        @include('frontend.member.partials.accessibility_tools')
+        <div class="mb-3"><a href="{{ route('member.payment_refunds.index') }}" class="btn btn-sm btn-outline-secondary">{{ translate('Billing & Refund Requests') }}</a></div>
         <div class="d-flex align-items-start">
             @include('frontend.member.sidebar')
             <div class="aiz-user-panel overflow-hidden">

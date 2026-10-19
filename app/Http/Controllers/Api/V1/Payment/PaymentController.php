@@ -125,6 +125,19 @@ class PaymentController extends ApiController
         ], 'Checkout status fetched successfully.');
     }
 
+    public function retry(Request $request, int $payment): JsonResponse
+    {
+        $result = $this->payments->retryCheckout($request->user(), $payment);
+        if ($result['gateway'] === PaymentGateway::JazzCash->value && $result['payment']->payment_status !== 'Paid') {
+            $result['checkout'] = $this->wallets->jazzcashCheckout($result['payment']);
+        }
+        return $this->success([
+            'payment' => new PaymentResource($result['payment']->fresh()),
+            'checkout' => $result['checkout'],
+            'security' => $result['security'],
+        ], 'New checkout created for retry.', 201);
+    }
+
     public function history(PaymentHistoryRequest $request): JsonResponse
     {
         return PaymentResource::collection($this->payments->history($request->user(), $request->validated()))

@@ -176,6 +176,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('/payment-coupons', PaymentCouponController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // package Payments
+    Route::get('/payment-refunds', [\App\Http\Controllers\Admin\PaymentRefundController::class, 'index'])->name('admin.payment_refunds.index');
+    Route::post('/payment-refunds/{refund}/review', [\App\Http\Controllers\Admin\PaymentRefundController::class, 'review'])->name('admin.payment_refunds.review');
     Route::resource('package-payments', PackagePaymentController::class);
     Route::controller(PackagePaymentController::class)->group(function () {
         Route::get('/manual-payment-accept/{id}', 'manual_payment_accept')->name('manual_payment_accept');

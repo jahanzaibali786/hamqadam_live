@@ -69,6 +69,7 @@ class ReportService
             'adoption' => $adoption,
             'geography' => $geography,
             'cohorts' => $this->cohorts(),
+            'observed_retention' => app(\App\Services\ClientScope\RetentionCohortService::class)->monthly(),
             'total_matches' => $this->countTable('profile_matches'),
             'got_match_confirmations' => $this->countTable('match_successes'),
             'successful_stories' => $this->countTable('happy_stories'),

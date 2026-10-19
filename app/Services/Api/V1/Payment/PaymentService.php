@@ -151,6 +151,20 @@ class PaymentService
         $checkoutTokenExpiresAt = now()->addMinutes(15);
 
         $result = DB::transaction(function () use ($user, $package, $coupon, $discount, $payableAmount, $gateway, $reference, $data, $checkoutToken, $checkoutTokenHash, $checkoutTokenExpiresAt) {
+            if ($coupon) {
+                $lockedCoupon = PaymentCoupon::query()->whereKey($coupon->id)->lockForUpdate()->firstOrFail();
+                $freshCoupon = $this->couponByCode($lockedCoupon->code);
+                if (abs($this->discountFor($freshCoupon, (float) $package->price) - $discount) > 0.009) {
+                    throw new ApiException('Promo code changed. Please revalidate it.', 409, ApiErrorCode::ValidationFailed->value);
+                }
+                if ($lockedCoupon->usage_limit !== null) {
+                    $reserved = PackagePayment::query()->where('coupon_id',$lockedCoupon->id)
+                        ->where('payment_status','Due')->where('created_at','>=',now()->subMinutes(45))->count();
+                    if ((int)$lockedCoupon->used_count + $reserved >= (int)$lockedCoupon->usage_limit) {
+                        throw new ApiException('Promo code is fully reserved. Please try later.', 409, ApiErrorCode::ValidationFailed->value);
+                    }
+                }
+            }
             $payment = PackagePayment::create([
                 'payment_code' => now()->format('ymd-His') . '-' . random_int(1000, 9999),
                 'invoice_number' => 'INV-' . now()->format('YmdHis') . '-' . random_int(1000, 9999),
@@ -388,39 +402,64 @@ class PaymentService
         ];
     }
 
+    /** Accept only already-authenticated provider events. Row locking ensures
+     * that repeat and concurrent deliveries cannot re-credit entitlements. */
     public function processWebhook(PaymentGateway $gateway, array $data): PackagePayment
     {
-        return DB::transaction(function () use ($gateway, $data) {
-            PaymentWebhookEvent::firstOrCreate([
-                'gateway' => $gateway->value,
-                'event_id' => $data['event_id'] ?? ($data['gateway_reference'] ?? null),
-            ], [
-                'event_type' => $data['event_type'] ?? 'payment.updated',
-                'payload' => $data,
-                'processed_at' => now(),
-            ]);
-
-            $payment = PackagePayment::where('payment_method', $gateway->value)
-                ->when(! empty($data['payment_code']), fn ($query) => $query->where('payment_code', $data['payment_code']))
-                ->when(empty($data['payment_code']) && ! empty($data['gateway_reference']), fn ($query) => $query->where('gateway_reference', $data['gateway_reference']))
-                ->first();
-
+        $eventId = trim((string) ($data['event_id'] ?? ''));
+        $status = strtolower(trim((string) ($data['status'] ?? '')));
+        $accepted = ['paid','success','completed','failed','declined','cancelled','expired','pending','processing'];
+        if ($eventId === '' || ! in_array($status, $accepted, true)) {
+            throw new ApiException('Invalid payment event.', 422, ApiErrorCode::ValidationFailed->value);
+        }
+        if (empty($data['payment_code']) && empty($data['gateway_reference'])) {
+            throw new ApiException('Payment reference is required.', 422, ApiErrorCode::ValidationFailed->value);
+        }
+        return DB::transaction(function () use ($gateway, $data, $eventId, $status) {
+            $payment = PackagePayment::query()->where('payment_method', $gateway->value)
+                ->when(! empty($data['payment_code']), fn ($q) => $q->where('payment_code', $data['payment_code']))
+                ->when(! empty($data['gateway_reference']), fn ($q) => $q->where('gateway_reference', $data['gateway_reference']))
+                ->lockForUpdate()->first();
             if (! $payment) {
                 throw new ApiException('Payment record not found for webhook.', 404, ApiErrorCode::NotFound->value);
             }
-
-            if (in_array($data['status'], ['paid', 'success', 'completed'], true)) {
-                return $this->markPaid($payment, $data)->fresh(['package', 'coupon']);
+            // Signed Stripe Checkout Sessions include authoritative charge amount/currency.
+            if (isset($data['amount_minor']) && (int) $data['amount_minor'] !== (int) round((float) $payment->payable_amount * 100)) {
+                throw new ApiException('Gateway amount does not match the invoice.', 409, ApiErrorCode::ValidationFailed->value);
             }
-
-            $payment->forceFill([
-                'payment_status' => $data['status'] === 'cancelled' ? 'Cancelled' : 'Failed',
-                'gateway_status' => $data['status'],
-                'payment_details' => json_encode($data),
-            ])->save();
-
-            return $payment->fresh(['package', 'coupon']);
-        });
+            if (! empty($data['currency']) && strcasecmp((string) $payment->currency, (string) $data['currency']) !== 0) {
+                throw new ApiException('Gateway currency does not match the invoice.', 409, ApiErrorCode::ValidationFailed->value);
+            }
+            $existing = PaymentWebhookEvent::query()->where('gateway', $gateway->value)
+                ->where('event_id', $eventId)->lockForUpdate()->first();
+            if ($existing && $existing->processed_at) return $payment->fresh(['package','coupon']);
+            // Never downgrade a settled payment because webhooks may arrive out of order.
+            if ($payment->payment_status !== 'Paid') {
+                if (in_array($status, ['paid','success','completed'], true)) {
+                    $this->markPaid($payment, $data);
+                } elseif (in_array($status, ['failed','declined','cancelled','expired'], true)) {
+                    $payment->forceFill([
+                        'payment_status' => in_array($status, ['cancelled','expired'], true) ? 'Cancelled' : 'Failed',
+                        'gateway_status' => $status,
+                        'payment_details' => json_encode($data),
+                    ])->save();
+                } else {
+                    $payment->forceFill(['gateway_status' => $status])->save();
+                }
+            }
+            if (! $existing) {
+                $existing = PaymentWebhookEvent::query()->create([
+                    'gateway' => $gateway->value,
+                    'event_id' => $eventId,
+                    'event_type' => $data['event_type'] ?? 'payment.updated',
+                    'payload' => $data,
+                    'processed_at' => now(),
+                ]);
+            } else {
+                $existing->forceFill(['processed_at' => now(), 'payload' => $data])->save();
+            }
+            return $payment->fresh(['package','coupon']);
+        }, 3);
     }
 
     /**
@@ -479,7 +518,9 @@ class PaymentService
             'event_type' => $type,
             'payment_code' => $metadata['payment_code'] ?? null,
             'gateway_reference' => $gatewayReference,
-            'status' => $paid ? 'paid' : 'failed',
+            'status' => $paid ? 'paid' : ($type === 'checkout.session.completed' ? 'pending' : ($type === 'checkout.session.expired' ? 'cancelled' : 'failed')),
+            'amount_minor' => isset($session->amount_total) ? (int) $session->amount_total : null,
+            'currency' => isset($session->currency) ? strtoupper((string) $session->currency) : null,
             'payload' => json_decode($payload, true) ?: [],
         ]);
     }
@@ -542,6 +583,31 @@ class PaymentService
         return $payment;
     }
 
+
+    public function retryCheckout(User $user, int $paymentId): array
+    {
+        $previous = PackagePayment::query()->where('user_id', $user->id)
+            ->with('coupon')->findOrFail($paymentId);
+        if (! in_array($previous->payment_status, ['Failed','Cancelled'], true)) {
+            throw new ApiException('Only failed or cancelled payments can be retried.', 409, ApiErrorCode::ValidationFailed->value);
+        }
+        if (! $previous->package_id || CustomCoinService::payloadOf($previous) !== null) {
+            throw new ApiException('This purchase type requires a new checkout.', 422, ApiErrorCode::ValidationFailed->value);
+        }
+        $payload = [
+            'package_id' => $previous->package_id,
+            'gateway' => $previous->payment_method,
+            'currency' => $previous->currency ?: 'PKR',
+        ];
+        if ($previous->coupon && $previous->coupon->active) {
+            $payload['coupon_code'] = $previous->coupon->code;
+        }
+        $previousMeta = (array) ($previous->metadata ?? []);
+        foreach (['jazzcash_phone','easypaisa_phone'] as $phoneKey) {
+            if (filled($previousMeta[$phoneKey] ?? null)) $payload[$phoneKey] = $previousMeta[$phoneKey];
+        }
+        return $this->checkout($user, $payload);
+    }
 
     public function gateways(): array
     {

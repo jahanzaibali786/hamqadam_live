@@ -316,9 +316,12 @@ Route::prefix('payments')->name('api.v1.payments.')->group(function () {
         Route::get('/packages/{package}', [PaymentController::class, 'package'])->whereNumber('package')->name('package');
         Route::get('/usage', [PaymentController::class, 'usage'])->name('usage');
         Route::post('/checkout', [PaymentController::class, 'checkout'])->middleware('throttle:10,1')->name('checkout');
+        Route::post('/checkout/{payment}/retry', [PaymentController::class, 'retry'])->whereNumber('payment')->middleware('throttle:5,1')->name('checkout.retry');
         Route::get('/history', [PaymentController::class, 'history'])->name('history');
         Route::get('/checkout/{payment}/status', [PaymentController::class, 'checkoutStatus'])->whereNumber('payment')->name('checkout.status');
         Route::get('/invoices/{payment}', [PaymentController::class, 'invoice'])->name('invoice');
+        Route::get('/refund-requests', [\App\Http\Controllers\Api\V1\Payment\RefundRequestController::class, 'index'])->name('refunds.index');
+        Route::post('/refund-requests/{payment}', [\App\Http\Controllers\Api\V1\Payment\RefundRequestController::class, 'store'])->whereNumber('payment')->middleware('throttle:5,1')->name('refunds.store');
         Route::post('/coupons/validate', [PaymentController::class, 'validateCoupon'])->middleware('throttle:20,1')->name('coupons.validate');
     });
 });

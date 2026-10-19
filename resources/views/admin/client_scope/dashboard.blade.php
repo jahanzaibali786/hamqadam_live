@@ -1,5 +1,6 @@
 @extends('admin.layouts.app')
 @section('content')
+@include('admin.client_scope.partials.observed_retention')
 <div class="aiz-titlebar text-left mt-2 mb-3"><h1 class="h3">Hamqadam Client Scope — Admin Monitoring</h1><p class="text-muted">All figures use recorded database events. Missing instrumentation is reported as zero observed events, not proof of inactivity.</p></div>
 @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
 @if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif

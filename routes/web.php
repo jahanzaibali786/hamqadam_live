@@ -507,6 +507,7 @@ require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/otp.php';
 require __DIR__.'/referral.php';
+require __DIR__.'/hamqadam_step3.php';
 // Support routes are deployed separately on some older FTP mirrors. Do not
 // take down the entire application when that optional file is temporarily absent.
 $supportRoutesFile = __DIR__.'/support_tickets.php';

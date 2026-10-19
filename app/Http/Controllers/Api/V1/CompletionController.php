@@ -35,8 +35,10 @@ class CompletionController extends ApiController
         ]);
         // Client analytics do not count as independently verified business
         // outcomes. Sensitive reward/match events are generated server-side.
-        abort_if(in_array($data['event_name'], ['got_match','got_match_confirmed','referral_reward_issued'], true),
-            422, 'This event must be recorded by the backend.');
+        $clientEvents = ['discovery_viewed','profile_viewed','search_performed','article_opened',
+            'sponsor_viewed','help_center_opened','feature_explored'];
+        abort_unless(in_array($data['event_name'], $clientEvents, true),
+            422, 'This event is server-managed or unsupported.');
         AnalyticsEvent::create($data + ['user_id' => $request->user()->id,'occurred_at' => now()]);
         return $this->success(null, 'Event recorded.', 201);
     }

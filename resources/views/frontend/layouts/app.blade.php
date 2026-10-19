@@ -4,11 +4,17 @@ if (Session::has('locale')) {
 } else {
     $locale = env('DEFAULT_LANGUAGE');
 }
+$locale = $locale ?: env('DEFAULT_LANGUAGE', 'en');
 $lang = \App\Models\Language::where('code', $locale)->first();
+if (! $lang) {
+    $locale = env('DEFAULT_LANGUAGE', 'en');
+    $lang = \App\Models\Language::where('code', $locale)->first();
+}
+\Illuminate\Support\Facades\App::setLocale($locale);
 @endphp
 
 <!DOCTYPE html>
-@if (\App\Models\Language::where('code', Session::get('locale', Config::get('app.locale')))->first()->rtl == 1)
+@if (($lang?->rtl == 1 || in_array($locale, ['ur','ar'],true)))
     <html dir="rtl" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 @else
     <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -63,7 +69,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
     <link rel="stylesheet" href="{{ static_asset('assets/css/aiz-core.css?v=') }}{{ rand(1000,9999) }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-luxury.css?v=') }}{{ rand(1000,9999) }}">
 
-    @if (\App\Models\Language::where('code', Session::get('locale', Config::get('app.locale')))->first()->rtl == 1)
+    @if (($lang?->rtl == 1 || in_array($locale, ['ur','ar'],true)))
         <link rel="stylesheet" href="{{ static_asset('assets/css/bootstrap-rtl.min.css') }}">
     @endif
 

@@ -320,6 +320,14 @@
                 </li>
                 @endcan
 
+                @can('show_package_payments')
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.payment_refunds.index') }}" class="aiz-side-nav-link">
+                        <i class="las la-file-invoice-dollar aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Refund Requests') }}</span>
+                    </a>
+                </li>
+                @endcan
                 <!-- Earnings -->
                 @can('show_package_payments')
                 <li class="aiz-side-nav-item ">

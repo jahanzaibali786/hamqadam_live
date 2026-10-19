@@ -3,11 +3,13 @@
 use App\Http\Controllers\Api\V1\System\BridgeController;
 use App\Http\Controllers\Api\V1\Referral\ReferralDashboardController;
 use App\Http\Controllers\Api\V1\CompletionController;
+use App\Http\Controllers\Api\V1\Premium\PremiumEntitlementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/connector-a', [BridgeController::class, 'channelA'])->name('connector_a');
 Route::get('/connector-b', [BridgeController::class, 'channelB'])->name('connector_b');
 Route::get('/connector-c', [BridgeController::class, 'channelC'])->name('connector_c');
+Route::get('/entitlements', [PremiumEntitlementController::class, 'index'])->name('api.v1.bridge.entitlements');
 
 // Inherited auth:sanctum from routes/api.php. No untrusted award endpoints:
 // credits are granted by the server-side eligibility/reconciliation service.
