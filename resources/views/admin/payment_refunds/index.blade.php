@@ -8,6 +8,11 @@
 @forelse($items as $refund)
 <tr><td>{{ $refund->id }}</td><td>{{ $refund->user?->email ?? $refund->user_id }}</td><td>#{{ $refund->package_payment_id }}</td><td>{{ $refund->amount }} {{ $refund->currency }}</td><td>{{ $refund->reason }}</td><td>{{ $refund->status }}</td><td>
 @if($refund->status!=='provider_refund_confirmed')
+@if(config('hamqadam_payments.stripe_refunds_enabled', false) && $refund->payment?->payment_method === 'stripe' && in_array($refund->status, ['requested','reviewing'], true))
+<form action="{{ route('admin.payment_refunds.execute', $refund) }}" method="POST" class="mb-2" onsubmit="return confirm('Issue or retry this Stripe refund? This moves real funds.');">@csrf
+<label class="small"><input type="checkbox" name="confirm" value="1" required> I authorize refund of {{ $refund->amount }} {{ $refund->currency }}</label>
+<button class="btn btn-danger btn-sm" type="submit">Issue verified Stripe refund</button></form>
+@endif
 <form action="{{ route('admin.payment_refunds.review',$refund) }}" method="POST">@csrf
 <select name="status" class="form-control form-control-sm mb-1" required><option value="reviewing">{{ translate('Reviewing') }}</option><option value="rejected">{{ translate('Reject') }}</option><option value="provider_refund_confirmed">{{ translate('Provider-confirmed refund') }}</option></select>
 <input name="provider_refund_reference" class="form-control form-control-sm mb-1" placeholder="{{ translate('Provider refund reference (mandatory if confirmed)') }}">
