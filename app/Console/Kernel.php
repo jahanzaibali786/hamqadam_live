@@ -15,6 +15,8 @@ class Kernel extends ConsoleKernel
         // Hourly job enforces each user's configured reminder interval and maximum.
         $schedule->command('notifications:remind-unread --limit=500')->hourly()->withoutOverlapping();
         $schedule->command('referrals:award-verified --limit=500')->hourly()->withoutOverlapping();
+        $schedule->command('notifications:send-digests --limit=200')->hourly()->withoutOverlapping();
+        $schedule->command('rewards:award-milestones --limit=500')->dailyAt('04:30')->withoutOverlapping();
     }
 
     protected function commands()
