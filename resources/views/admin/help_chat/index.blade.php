@@ -52,7 +52,7 @@
                                 <th data-breakpoints="md">{{ translate('Last message') }}</th>
                                 <th data-breakpoints="md">{{ translate('Last activity') }}</th>
                                 <th>{{ translate('Status') }}</th>
-                                <th>Agent / Response SLA</th>
+                                <th>Agent / Response SLA</th><th>Language</th>
                                 <th class="text-right" width="10%">{{ translate('Options') }}</th>
                             </tr>
                         </thead>
@@ -95,6 +95,7 @@
                                         @if($sla->isOverdue($thread))<span class="badge badge-danger">Response overdue</span>
                                         @elseif($sla->isAwaitingAgent($thread))<span class="badge badge-warning">Awaiting agent</span>@endif
                                     </td>
+                                    <td>{{ strtoupper($thread->preferred_language ?? 'en') }}</td>
                                     <td class="text-right">
                                         <a href="{{ route('admin.help-chat.show', $thread->id) }}"
                                             class="btn btn-soft-info btn-icon btn-circle btn-sm" title="{{ translate('Open chat') }}">
@@ -109,7 +110,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">
+                                    <td colspan="9" class="text-center text-muted py-4">
                                         {{ translate('No help conversations yet.') }}
                                     </td>
                                 </tr>
