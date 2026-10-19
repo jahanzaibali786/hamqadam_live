@@ -39,7 +39,7 @@ class CompletionController extends ApiController
             'sponsor_viewed','help_center_opened','feature_explored'];
         abort_unless(in_array($data['event_name'], $clientEvents, true),
             422, 'This event is server-managed or unsupported.');
-        AnalyticsEvent::create($data + ['user_id' => $request->user()->id,'occurred_at' => now()]);
+        AnalyticsEvent::create($data + ['user_id' => $request->user()->id,'source' => 'mobile_client', 'occurred_at' => now()]);
         return $this->success(null, 'Event recorded.', 201);
     }
 
