@@ -19,6 +19,7 @@
         <tr><th scope="row">{{ $feature->feature_key }}</th><td>{{ number_format($feature->uses) }}</td><td>{{ number_format($feature->members) }}</td></tr>
       @empty <tr><td colspan="3">No instrumented feature activity yet.</td></tr> @endforelse
     </tbody></table></div>
+    <p class="small text-muted" role="note">Only explicitly recorded member events are included. Anonymous activity and uninstrumented client screens are not counted; do not interpret missing data as zero activity.</p>
     <h3 class="h6 mt-4">Geographic member distribution (top cities)</h3>
     @php($maxCity = max(1,(int)($hqInsights['geography']->max('members') ?? 0)))
     <div class="row">
