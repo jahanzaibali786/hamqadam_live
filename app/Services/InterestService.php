@@ -91,6 +91,19 @@ class InterestService
                         SmsUtility::sms_on_request($notify_user, 'express_interest');
                   }
 
+                  // Business-event provenance: record only a successful interest,
+                  // never private note text or recipient contact details.
+                  try {
+                        if (\Illuminate\Support\Facades\Schema::hasTable('analytics_events')) {
+                              \App\Models\AnalyticsEvent::create([
+                                    'user_id'=>$interested_by_user->id,
+                                    'event_name'=>'interest_sent', 'feature_key'=>'interest',
+                                    'source'=>'legacy_interest_service',
+                                    'metadata'=>['interest_id'=>$express_interest->id],
+                                    'platform'=>'web','occurred_at'=>now(),
+                              ]);
+                        }
+                  } catch (\Throwable $exception) { report($exception); }
                   return true;
             } else {
                   return false;
