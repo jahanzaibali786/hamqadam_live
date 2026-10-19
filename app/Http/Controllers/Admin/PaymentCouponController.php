@@ -82,6 +82,7 @@ class PaymentCouponController extends Controller
             'discount_value' => ['required', 'numeric', 'min:0.01'],
             'minimum_amount' => ['nullable', 'numeric', 'min:0'],
             'usage_limit' => ['nullable', 'integer', 'min:1'],
+            'per_user_limit' => ['nullable', 'integer', 'min:1', 'max:1000'],
             'starts_at' => ['nullable', 'date'],
             'expires_at' => ['nullable', 'date', 'after:starts_at'],
             'active' => ['nullable', 'boolean'],
