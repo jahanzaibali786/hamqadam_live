@@ -52,7 +52,11 @@ class SupportTicketController extends Controller
             'subject' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:10000'],
             'support_category_id' => ['nullable', 'integer', 'exists:support_categories,id'],
+            'preferred_language' => ['nullable','in:en,ur,ar,hi'],
         ]);
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('support_tickets','preferred_language')) {
+            unset($data['preferred_language']);
+        }
         SupportTicket::create($data + [
             'sender_user_id' => auth()->id(),
             'ticket_id' => now()->format('YmdHis').'-'.random_int(1000, 9999),
