@@ -252,6 +252,7 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
 */
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('help-chat')->name('api.v1.help_chat.')->group(function () {
     Route::get('/thread', [HelpChatController::class, 'thread'])->name('thread');
+    Route::post('/language', [HelpChatController::class, 'setLanguage'])->middleware('throttle:10,1')->name('language');
     Route::get('/messages', [HelpChatController::class, 'messages'])->name('messages');
     Route::post('/messages', [HelpChatController::class, 'send'])->middleware('throttle:30,1')->name('send');
     Route::post('/new', [HelpChatController::class, 'startNew'])->middleware('throttle:30,1')->name('new');
