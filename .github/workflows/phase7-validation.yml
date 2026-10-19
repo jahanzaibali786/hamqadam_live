@@ -46,4 +46,4 @@ jobs:
       - name: Blade view compilation
         run: php artisan view:cache
       - name: Phase-specific contract tests
-        run: php artisan test --filter='CompletionGuardTest|DashboardBladeCompilationTest|PremiumPolicyTest|PaymentRefundExecutionGuardTest|PaymentAuditRouteTest|MemberBillingAndRefundRoutesTest|Phase8RouteContractsTest|Phase9QualityContractsTest'
+        run: php artisan test --filter='CompletionGuardTest|DashboardBladeCompilationTest|PremiumPolicyTest|PaymentRefundExecutionGuardTest|PaymentAuditRouteTest|MemberBillingAndRefundRoutesTest|Phase8RouteContractsTest|Phase9QualityContractsTest|RequirementClosureContractsTest'
