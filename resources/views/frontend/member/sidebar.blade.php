@@ -379,11 +379,24 @@
                             </li>
                         </ul>
                     </li>
+                    {{-- Dedicated referral & refund destinations use the regular member panel layout. --}}
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('member.referrals.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.referrals.index']) }}" @if(request()->routeIs('member.referrals.index')) aria-current="page" @endif>
+                            <i class="las la-user-plus aiz-side-nav-icon" aria-hidden="true"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Refer Friends & Rewards') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('member.payment_refunds.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.payment_refunds.index', 'member.payment_refunds.store']) }}" @if(request()->routeIs('member.payment_refunds.index')) aria-current="page" @endif>
+                            <i class="las la-file-invoice-dollar aiz-side-nav-icon" aria-hidden="true"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Payments & Refunds') }}</span>
+                        </a>
+                    </li>
                     @if (addon_activation('referral_system'))
                         <li class="aiz-side-nav-item">
                             <a href="javascript:void(0);" class="aiz-side-nav-link">
                                 <i class="las la-shopping-basket aiz-side-nav-icon"></i>
-                                <span class="aiz-side-nav-text">{{ translate('Referral System') }}</span>
+                                <span class="aiz-side-nav-text">{{ translate('Legacy Referral Wallet') }}</span>
                                 @if (env('DEMO_MODE') == 'On')
                                     <span class="badge badge-inline badge-danger">{{ translate('Addon') }}</span>
                                 @endif
