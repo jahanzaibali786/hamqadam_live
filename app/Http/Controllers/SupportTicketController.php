@@ -7,12 +7,15 @@ use App\Models\SupportTicketReply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Schema;
 
 class SupportTicketController extends Controller
 {
     public function index()
     {
-        return response()->json(SupportTicket::latest()->paginate(20));
+        $ready = Schema::hasTable('support_tickets');
+        $tickets = $ready ? SupportTicket::with('replies')->latest()->paginate(20) : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        return view('admin.support_tickets.dashboard', compact('tickets', 'ready'));
     }
 
     public function my_ticket()
@@ -48,6 +51,7 @@ class SupportTicketController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(Schema::hasTable('support_tickets'), 503, 'Support tickets require the support schema migration.');
         $data = $request->validate([
             'subject' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:10000'],

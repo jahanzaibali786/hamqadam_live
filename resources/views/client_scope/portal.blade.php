@@ -1,5 +1,5 @@
-@extends('frontend.layouts.app')
-@section('content')
+@extends('frontend.layouts.member_panel')
+@section('panel_content')
 <main class="container py-5" aria-labelledby="scope-title">
   <h1 id="scope-title" class="h3 mb-3">My Matches &amp; Engagement</h1>
   @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif

@@ -1,5 +1,5 @@
-@extends('frontend.layouts.app')
-@section('content')
+@extends('frontend.layouts.member_panel')
+@section('panel_content')
 <main class="container py-5" style="max-width:700px"><h1 class="h3">User satisfaction survey</h1>
   @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
   @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
