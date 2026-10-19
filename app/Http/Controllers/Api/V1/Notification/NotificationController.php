@@ -54,7 +54,7 @@ class NotificationController extends ApiController
     {
         $row = $this->notifications->markClicked($request->user(), $notification);
         $data = (array) ($row->data ?? []);
-        return $this->success(['notification' => (new NotificationResource($row))->resolve($request), 'deep_link' => $data['route'] ?? '/']);
+        return $this->success(['notification' => (new NotificationResource($row))->resolve($request), 'deep_link' => app(\App\Services\Api\V1\Notification\NotificationDeepLinkService::class)->resolve($request->user(), $data)]);
     }
 
     public function markAllRead(Request $request): JsonResponse
