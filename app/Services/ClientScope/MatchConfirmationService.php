@@ -64,6 +64,7 @@ class MatchConfirmationService
 
         $rewarded = false;
         if ($mutual) {
+            app(\App\Services\ClientScope\OutcomeVerificationService::class)->nominate((int)$actor->id, $targetId);
             $rewarded = $this->rewards->issue((int) $actor->id, 'got_match', 'match_success', (int) $confirmation->id);
             $other = MatchSuccess::query()->where('user_id', $targetId)
                 ->where('matched_user_id', $actor->id)->where('status', 'got_match')->first();

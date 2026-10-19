@@ -20,6 +20,9 @@ Route::middleware(['auth'])->prefix('member/client-scope')->name('client.scope.'
 Route::middleware(['auth', 'admin'])->prefix('admin/client-scope')->name('admin.client.scope.')->group(function (): void {
     Route::get('/', [ClientScopeController::class, 'adminDashboard'])->name('dashboard');
     Route::get('/profiles', [ClientScopeController::class, 'adminProfiles'])->name('profiles');
+    Route::get('/match-outcomes', [\App\Http\Controllers\Admin\MatchOutcomeReviewController::class, 'index'])->name('outcomes.index');
+    Route::post('/match-outcomes/{outcome}', [\App\Http\Controllers\Admin\MatchOutcomeReviewController::class, 'review'])->name('outcomes.review');
+    Route::post('/city-coordinates', [\App\Http\Controllers\Admin\CityGeoCoordinateController::class, 'store'])->name('city_coordinates.store');
     Route::post('/options', [ClientScopeController::class, 'setOptions'])->name('options');
     Route::post('/sponsors', [ClientScopeController::class, 'storeSponsor'])->name('sponsors.store');
     Route::put('/sponsors/{sponsor}', [ClientScopeController::class, 'updateSponsor'])->name('sponsors.update');

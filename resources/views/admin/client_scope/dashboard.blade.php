@@ -5,7 +5,10 @@
 <div class="aiz-titlebar text-left mt-2 mb-3"><h1 class="h3">Hamqadam Client Scope — Admin Monitoring</h1><p class="text-muted">All figures use recorded database events. Missing instrumentation is reported as zero observed events, not proof of inactivity.</p></div>
 @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
 @if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
-<p><a class="btn btn-outline-primary" href="{{ route('admin.client.scope.profiles') }}">Advanced member profile search</a></p>
+<p><a class="btn btn-outline-primary" href="{{ route('admin.client.scope.profiles') }}">Advanced member profile search</a> <a class="btn btn-outline-primary" href="{{ route('admin.client.scope.outcomes.index') }}">Independent match outcome reviews</a></p>
+@include('admin.client_scope.partials.verified_geo_and_outcomes')
+@include('admin.client_scope.partials.translation_coverage')
+@include('admin.client_scope.partials.engagement_performance')
 <div class="row">
  <div class="col-md-3 mb-3"><div class="card"><div class="card-body"><h2 class="h6">Total recorded matches</h2><strong class="h3">{{ number_format($report['total_matches']) }}</strong></div></div></div>
  <div class="col-md-3 mb-3"><div class="card"><div class="card-body"><h2 class="h6">Got Match confirmations</h2><strong class="h3">{{ number_format($report['got_match_confirmations']) }}</strong><small class="d-block">User-reported, not independently confirmed</small></div></div></div>

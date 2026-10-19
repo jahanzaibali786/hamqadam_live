@@ -31,14 +31,15 @@ class HelpChatAdminController extends Controller
 
         $queue = (string) $request->query('queue', 'all');
         $agentId = $request->integer('agent_id') ?: null;
-        $threads = $this->help->adminThreads($status, $q, 20, $queue, $agentId);
+        $language = in_array($request->query('language'), ['en','ur','ar','hi'], true) ? (string)$request->query('language') : null;
+        $threads = $this->help->adminThreads($status, $q, 20, $queue, $agentId, $language);
         $sla = app(\App\Services\HelpChatSlaService::class);
 
         $openCount = HelpChatThread::where('status', HelpChatThread::STATUS_OPEN)->count();
         $closedCount = HelpChatThread::where('status', HelpChatThread::STATUS_CLOSED)->count();
         $totalUnread = (int) HelpChatThread::query()->sum('admin_unread_count');
 
-        return view('admin.help_chat.index', compact('threads', 'status', 'q', 'queue', 'agentId', 'sla', 'openCount', 'closedCount', 'totalUnread'));
+        return view('admin.help_chat.index', compact('threads', 'status', 'q', 'queue', 'agentId', 'language', 'sla', 'openCount', 'closedCount', 'totalUnread'));
     }
 
     /**

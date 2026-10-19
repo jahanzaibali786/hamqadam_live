@@ -27,6 +27,15 @@ class HelpChatController extends ApiController
     /**
      * GET /help-chat/thread — the member's conversation (created on first use).
      */
+    public function setLanguage(Request $request): JsonResponse
+    {
+        $data = $request->validate(['preferred_language' => ['required','in:en,ur,ar,hi']]);
+        abort_unless(\Illuminate\Support\Facades\Schema::hasColumn('help_chat_threads','preferred_language'), 503, 'Apply the support-language migration before updating preference.');
+        $thread = $this->help->threadFor($request->user());
+        $thread->forceFill(['preferred_language'=>$data['preferred_language']])->save();
+        return $this->success(new HelpChatThreadResource($thread->fresh(['user'])), 'Support language saved.');
+    }
+
     public function thread(Request $request): JsonResponse
     {
         return $this->success(new HelpChatThreadResource($this->help->threadFor($request->user())));
