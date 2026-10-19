@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('member_profile_boosts', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->timestamp('starts_at');
-            $table->timestamp('ends_at');
+            $table->dateTime('starts_at');
+            $table->dateTime('ends_at');
             $table->timestamps();
             $table->index(['user_id','starts_at']);
             $table->index('ends_at');
