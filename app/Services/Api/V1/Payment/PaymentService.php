@@ -75,10 +75,15 @@ class PaymentService
         return $payment;
     }
 
-    public function validateCoupon(string $code, int $packageId): array
+    public function validateCoupon(string $code, int $packageId, ?User $user = null): array
     {
         $package = $this->activePackage($packageId);
         $coupon = $this->couponByCode($code);
+        if ($user && $coupon->per_user_limit !== null) {
+            $previous = PackagePayment::where('coupon_id', $coupon->id)->where('user_id', $user->id)
+                ->where(fn ($q) => $q->where('payment_status', 'Paid')->orWhere(fn ($pending) => $pending->where('payment_status', 'Due')->where('created_at', '>=', now()->subMinutes(45))))->count();
+            if ($previous >= (int) $coupon->per_user_limit) throw new ApiException('Coupon usage limit reached.', 422, ApiErrorCode::ValidationFailed->value);
+        }
         $discount = $this->discountFor($coupon, (float) $package->price);
 
         return [
