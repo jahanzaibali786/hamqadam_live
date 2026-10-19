@@ -24,6 +24,26 @@ final class Phase9QualityContractsTest extends TestCase
         $this->assertFalse($sla->isOverdue($thread));
     }
 
+    public function test_expired_and_free_members_cannot_unlock_paid_features(): void
+    {
+        $policy = app(\App\Services\ClientScope\PremiumEntitlementService::class);
+        $user = new \App\Models\User();
+        $member = new \App\Models\Member();
+        $member->package_validity = now()->subDays(2)->toDateString();
+        $package = new \App\Models\Package();
+        $package->price = 1500;
+        $package->feature_flags = ['ad_free'=>true, 'priority_interest'=>true, 'advanced_filters'=>true];
+        $member->setRelation('package', $package);
+        $user->setRelation('member', $member);
+        foreach (\App\Services\ClientScope\PremiumEntitlementService::PAID_FEATURES as $feature) {
+            $this->assertFalse($policy->has($user, $feature));
+        }
+        $package->price = 0;
+        $member->package_validity = now()->addDays(5)->toDateString();
+        $this->assertFalse($policy->has($user, 'ad_free'));
+        $this->assertFalse($policy->has($user, 'priority_interest'));
+    }
+
     public function test_admin_help_chat_remains_authenticated(): void
     {
         $route = Route::getRoutes()->getByName('admin.help-chat.index');
