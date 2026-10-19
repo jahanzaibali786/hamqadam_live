@@ -52,7 +52,7 @@ class ClientScopeController extends Controller
             ? SupportTicket::query()->where('sender_user_id', $request->user()->id)
                 ->with(['replies' => fn ($q) => $q->oldest()])->latest()->paginate(15)
             : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
-        return view('client_scope.support', compact('tickets'));
+        return view('client_scope.support', compact('tickets', 'supportReady'));
     }
 
     public function satisfaction(Request $request)
