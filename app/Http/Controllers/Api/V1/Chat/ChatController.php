@@ -40,11 +40,8 @@ class ChatController extends ApiController
 
     public function send(SendMessageRequest $request, int $thread): JsonResponse
     {
-        $message = $this->chat->send(
-            $request->user(),
-            $thread,
-            $request->validated(),
-            $request->file('attachments', [])
+        $message = app(\App\Services\ClientScope\MessagingAllowanceService::class)->sendWithinLimit(
+            $request->user(), fn () => $this->chat->send($request->user(), $thread, $request->validated(), $request->file('attachments', []))
         );
 
         return $this->success(new ChatMessageResource($message), 'Message sent successfully.', 201);

@@ -151,7 +151,7 @@ class PaymentController extends ApiController
 
     public function validateCoupon(CouponValidationRequest $request): JsonResponse
     {
-        return $this->success($this->payments->validateCoupon($request->validated('code'), (int) $request->validated('package_id')));
+        return $this->success($this->payments->validateCoupon($request->validated('code'), (int) $request->validated('package_id'), $request->user()));
     }
 
     public function stripeWebhook(Request $request): JsonResponse

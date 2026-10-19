@@ -14,6 +14,7 @@ class PaymentCoupon extends Model
         'discount_value',
         'minimum_amount',
         'usage_limit',
+        'per_user_limit',
         'used_count',
         'starts_at',
         'expires_at',

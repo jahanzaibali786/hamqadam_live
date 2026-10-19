@@ -63,6 +63,9 @@ class ProfileSearchService
             }
         }
         $this->applyFilters($query, $viewer, $filters);
+        if (\Illuminate\Support\Facades\Schema::hasTable('member_profile_boosts')) {
+            $query->orderByRaw('CASE WHEN EXISTS (SELECT 1 FROM member_profile_boosts boost WHERE boost.user_id = users.id AND boost.ends_at > ?) THEN 1 ELSE 0 END DESC', [now()]);
+        }
         $this->applySorting($query, $viewer, $filters);
 
         $results = $query->paginate((int) ($filters['per_page'] ?? 20));

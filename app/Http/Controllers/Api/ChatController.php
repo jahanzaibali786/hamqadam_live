@@ -70,7 +70,7 @@ class ChatController extends Controller
         }      
 
         $chat = new ChatService();
-        $new_chat = $chat->store($request->except(['_token']), $attachments);
+        $new_chat = app(\App\Services\ClientScope\MessagingAllowanceService::class)->sendWithinLimit($request->user(), fn () => $chat->store($request->except(['_token']), $attachments));
         return $this->success_message('Data inserted successfully!');
     }
 }

@@ -310,6 +310,7 @@ class HomeController extends Controller
                     $query->where('user_id', Auth::user()->id);
                 },
             ])
+            ->orderByRaw('CASE WHEN EXISTS (SELECT 1 FROM member_profile_boosts boost WHERE boost.user_id = users.id AND boost.ends_at > ?) THEN 1 ELSE 0 END DESC', [now()])
             ->orderBy('created_at', 'desc')
             ->where('user_type', 'member')
             ->where('id', '!=', Auth::user()->id)
