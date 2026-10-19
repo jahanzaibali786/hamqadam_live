@@ -48,6 +48,8 @@ final class QaSupportMenuAndSchemaTest extends TestCase
     {
         $blade = file_get_contents(resource_path('views/client_scope/support.blade.php'));
         $this->assertStringContainsString('@if(!$supportReady)', $blade);
+        $controller = file_get_contents(app_path('Http/Controllers/ClientScope/ClientScopeController.php'));
+        $this->assertStringContainsString("return view('client_scope.support', compact('tickets', 'supportReady'));", $controller);
         $this->assertFileExists(resource_path('views/admin/support_tickets/dashboard.blade.php'));
         $this->assertFileExists(database_path('migrations/2026_10_19_000029_restore_optional_support_ticket_tables.php'));
     }
