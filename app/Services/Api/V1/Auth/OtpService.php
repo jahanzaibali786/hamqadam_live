@@ -41,14 +41,26 @@ class OtpService
         ]);
 
         if ($channel === OtpChannel::Email) {
+            // An undelivered email code must never be reported as successfully sent.
+            // The email helper returns false instead of throwing when the mailer fails.
+            $sender = strtolower(trim((string) config('mail.from.address', '')));
+            if (app()->environment('production') && (! str_ends_with($sender, '@hamqadam.com')
+                || in_array(config('mail.default'), ['log', 'array'], true))) {
+                $otp->delete();
+                throw new ApiException('Official Hamqadam OTP email sender is not configured.', 503, 'otp_mail_not_configured');
+            }
+            $template = $purpose->value === OtpPurpose::PasswordReset->value
+                ? 'password_reset_email'
+                : 'email_registration_verification';
             try {
-                $template = $purpose->value === OtpPurpose::PasswordReset->value
-                    ? 'password_reset_email'
-                    : 'email_registration_verification';
-
-                EmailUtility::email_verification_for_registration_user($template, $identifier, $code);
+                $sent = EmailUtility::email_verification_for_registration_user($template, $identifier, $code);
             } catch (\Throwable $e) {
                 report($e);
+                $sent = false;
+            }
+            if ($sent !== true) {
+                $otp->delete();
+                throw new ApiException('Verification email could not be sent. Please retry.', 503, 'otp_delivery_failed');
             }
         }
 
