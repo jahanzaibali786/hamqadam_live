@@ -328,6 +328,14 @@
                     </a>
                 </li>
                 @endcan
+                @can('show_package_payments')
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.payment_audit.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.payment_audit.index']) }}">
+                        <i class="las la-chart-bar aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Payment Reconciliation') }}</span>
+                    </a>
+                </li>
+                @endcan
                 <!-- Earnings -->
                 @can('show_package_payments')
                 <li class="aiz-side-nav-item ">
