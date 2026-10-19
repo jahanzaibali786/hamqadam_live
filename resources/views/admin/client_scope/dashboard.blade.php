@@ -8,6 +8,7 @@
 <p><a class="btn btn-outline-primary" href="{{ route('admin.client.scope.profiles') }}">Advanced member profile search</a> <a class="btn btn-outline-primary" href="{{ route('admin.client.scope.outcomes.index') }}">Independent match outcome reviews</a></p>
 @include('admin.client_scope.partials.verified_geo_and_outcomes')
 @include('admin.client_scope.partials.translation_coverage')
+@include('admin.client_scope.partials.engagement_performance')
 <div class="row">
  <div class="col-md-3 mb-3"><div class="card"><div class="card-body"><h2 class="h6">Total recorded matches</h2><strong class="h3">{{ number_format($report['total_matches']) }}</strong></div></div></div>
  <div class="col-md-3 mb-3"><div class="card"><div class="card-body"><h2 class="h6">Got Match confirmations</h2><strong class="h3">{{ number_format($report['got_match_confirmations']) }}</strong><small class="d-block">User-reported, not independently confirmed</small></div></div></div>
