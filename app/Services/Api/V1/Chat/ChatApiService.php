@@ -180,7 +180,7 @@ class ChatApiService
                         'event_name'=>'message_sent',
                         'feature_key'=>'messaging',
                         'source'=>'chat_api_v1',
-                        'platform'=>'android',
+                        'platform'=>null,
                         'metadata'=>['chat_thread_id'=>$thread->id],
                         'occurred_at'=>now(),
                     ]);
