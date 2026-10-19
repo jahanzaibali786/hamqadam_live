@@ -53,6 +53,9 @@ final class TranslationBatchController extends Controller
             while(($line=fgetcsv($fh))!==false){
                 if(++$count>5000) throw ValidationException::withMessages(['file'=>'Maximum 5000 translations per import.']);
                 $key=trim((string)($line[0]??''));$value=trim((string)($line[1]??''));
+                // Undo spreadsheet-safety quoting applied during export.
+                if(preg_match('/^\x27[=+@\-]/u',$key))$key=substr($key,1);
+                if(preg_match('/^\x27[=+@\-]/u',$value))$value=substr($value,1);
                 if($key===''||$value==='')continue;
                 if(mb_strlen($key)>255||mb_strlen($value)>10000||strip_tags($value)!==$value){
                     throw ValidationException::withMessages(['file'=>'Translation row contains invalid length or HTML tags.']);
