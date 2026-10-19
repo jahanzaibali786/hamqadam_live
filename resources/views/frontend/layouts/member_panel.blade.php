@@ -1,20 +1,18 @@
 @extends('frontend.layouts.app')
 @section('content')
-<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-sidebar-scroll.css') }}">
-<section class="hq-member-panel-page py-5">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-sidebar-scroll.css') }}?v=2">
+<section class="hq-member-panel-page hq-member-two-scroll py-5">
     <div class="container">
-        @include('frontend.member.partials.accessibility_tools')
-        <div class="d-flex align-items-start">
-            @include('frontend.member.sidebar')
-            <div class="aiz-user-panel overflow-hidden">
-                @yield('panel_content')
+        <div class="hq-member-panel-viewport">
+            @include('frontend.member.partials.accessibility_tools')
+            <div class="d-flex align-items-start hq-member-panel-columns">
+                @include('frontend.member.sidebar')
+                <div class="aiz-user-panel hq-member-content-scroll">
+                    @yield('panel_content')
+                </div>
             </div>
         </div>
     </div>
 </section>
-@endsection
-
-@section('script')
-@parent
-<script src="{{ static_asset('assets/js/hamqadam-member-sidebar-scroll.js') }}" defer></script>
+<script src="{{ static_asset('assets/js/hamqadam-member-sidebar-scroll.js') }}?v=2" defer></script>
 @endsection
