@@ -2,6 +2,15 @@
 
 @section('content')
 
+<div class="card mb-3"><div class="card-body">
+<h2 class="h6">Bulk translation import/export</h2>
+<p class="small text-muted">Export the English reference keys, translate the empty `lang_value` cells professionally, then import the CSV. Only known English keys are accepted; empty cells are skipped.</p>
+<a class="btn btn-outline-primary btn-sm mb-2" href="{{ route('languages.batch.export',$language->code) }}">Export {{ strtoupper($language->code) }} CSV</a>
+<form method="POST" enctype="multipart/form-data" action="{{ route('languages.batch.import') }}" class="form-inline">@csrf
+<input type="hidden" name="language" value="{{ $language->code }}">
+<input class="form-control-file mb-2" type="file" name="file" accept=".csv,text/csv" required aria-label="Approved translation CSV">
+<button class="btn btn-primary btn-sm mb-2">Import approved translations</button></form>
+</div></div>
 <div class="card">
   <div class="card-header row gutters-5">
    <div class="col text-center text-md-left">
