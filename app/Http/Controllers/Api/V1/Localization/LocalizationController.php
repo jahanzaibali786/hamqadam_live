@@ -31,9 +31,11 @@ class LocalizationController extends ApiController
         $translations = Translation::query()->where('lang',$language)
             ->orderBy('lang_key')->paginate($perPage, ['lang_key','lang_value'],'page',(int)($data['page'] ?? 1));
         $translatedKeys = Translation::query()->where('lang',$language)->whereNotNull('lang_value')->where('lang_value','!=','')->count();
+        $referenceKeys = Translation::query()->where('lang', 'en')->count();
+        $coveragePct = $referenceKeys > 0 ? round(100 * min($translatedKeys, $referenceKeys) / $referenceKeys, 1) : null;
         return $this->success([
             'language'=>$language,'available'=>true,
-            'translation_coverage' => ['non_empty_keys' => $translatedKeys, 'is_complete' => false],
+            'translation_coverage' => ['non_empty_keys' => $translatedKeys, 'reference_keys' => $referenceKeys, 'coverage_pct' => $coveragePct, 'is_complete' => false],
             'direction'=>(bool)$row->rtl?'rtl':'ltr',
             'translations'=>$translations->getCollection()->mapWithKeys(
                 fn ($line) => [$line->lang_key => $line->lang_value]
