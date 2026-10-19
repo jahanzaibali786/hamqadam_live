@@ -267,7 +267,7 @@ class ClientScopeController extends Controller
     public function saveRewardRule(Request $request)
     {
         $data = $request->validate([
-            'event_key'=>['required','in:got_match'],
+            'event_key'=>['required','in:got_match,profile_completed,first_interest'],
             'title'=>['required','string','max:150'],
             'coin_reward'=>['required','integer','between:0,1000'],
             'max_per_user'=>['required','integer','between:1,20'],
