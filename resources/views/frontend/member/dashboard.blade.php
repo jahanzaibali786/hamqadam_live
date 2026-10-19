@@ -16,6 +16,13 @@
         @php
         $badges = app(\App\Services\BadgeService::class)->payload($user);
     @endphp
+    @if(app(\App\Services\ClientScope\PremiumEntitlementService::class)->has($user, 'profile_boost'))
+      @php($boostStatus = app(\App\Services\ClientScope\ProfileBoostService::class)->current($user))
+      <section class="alert alert-info"><h2 class="h6">{{ translate('Boost your profile') }}</h2>
+      <p>{{ $boostStatus['active'] ? translate('Your profile is currently boosted.') : translate('Appear above regular discovery results for 24 hours, once every seven days.') }}</p>
+      @unless($boostStatus['active'])<form method="POST" action="{{ route('member.profile_boost.activate') }}">@csrf<button class="btn btn-primary btn-sm">{{ translate('Activate premium boost') }}</button></form>@endunless
+      </section>
+    @endif
     <div class="row gutters-5 mb-4">
         <div class="col-md-6 mb-2">
             <div class="bg-white border rounded p-3 h-100 d-flex align-items-center">
