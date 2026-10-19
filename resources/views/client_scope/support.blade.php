@@ -11,7 +11,7 @@
 <h2 class="h4">Your tickets</h2>
 @forelse($tickets as $ticket)
 <article class="card mb-3"><div class="card-body">
-<h3 class="h6">{{ $ticket->subject }}</h3>
+<h3 class="h6">{{ $ticket->subject }}</h3><p class="small text-muted">{{ translate('Conversation with your support team') }} · #{{ $ticket->ticket_id }}</p>
 <p>Status: <strong>{{ $ticket->status_label }}</strong>
 @if($ticket->expected_response_at && (string)$ticket->status !== '1') · Expected first response: {{ $ticket->expected_response_at->format('d M Y H:i') }} @endif</p>
 @if($ticket->description)<p>{{ $ticket->description }}</p>@endif
