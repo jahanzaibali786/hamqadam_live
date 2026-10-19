@@ -72,6 +72,36 @@ final class QaRefundAdminSafetyTest extends TestCase
         }
     }
 
+    public function test_provider_confirmation_requires_verified_checkbox(): void
+    {
+        $refund = PaymentRefundRequest::query()->findOrFail(10);
+        try {
+            app(PaymentRefundController::class)->review($this->adminRequest([
+                'status' => 'provider_refund_confirmed',
+                'provider_refund_reference' => 're_fake_qa_reference',
+            ]), $refund);
+            $this->fail('Provider confirmation must require an accepted verification checkbox.');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('provider_verified', $e->errors());
+            $this->assertDatabaseHas('payment_refund_requests', ['id' => 10, 'status' => 'requested']);
+        }
+    }
+
+    public function test_rejection_does_not_require_provider_confirmation(): void
+    {
+        app(PaymentRefundController::class)->review($this->adminRequest([
+            'status' => 'rejected',
+            'admin_note' => 'QA: rejected after administrative review.',
+        ]), PaymentRefundRequest::query()->findOrFail(10));
+
+        $this->assertDatabaseHas('payment_refund_requests', [
+            'id' => 10,
+            'status' => 'rejected',
+            'provider_refund_reference' => null,
+            'reviewed_by' => 99,
+        ]);
+    }
+
     public function test_admin_reviewing_updates_status_but_does_not_issue_a_refund(): void
     {
         app(PaymentRefundController::class)->review($this->adminRequest([
