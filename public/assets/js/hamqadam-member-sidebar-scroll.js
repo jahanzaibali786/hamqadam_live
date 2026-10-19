@@ -50,6 +50,7 @@
     window.requestAnimationFrame(function () {
       window.requestAnimationFrame(reveal);
     });
+    window.addEventListener('load', reveal, {once:true});
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initialize);
   else initialize();
