@@ -10,9 +10,7 @@ on:
 
 jobs:
   deploy:
-    needs: preflight
     runs-on: ubuntu-latest
-
     steps:
 
       ###########################################################
