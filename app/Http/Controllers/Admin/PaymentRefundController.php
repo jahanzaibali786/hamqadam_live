@@ -28,6 +28,13 @@ final class PaymentRefundController extends Controller
      * Records a review decision only. Provider-confirmed Stripe refunds must
      * actually exist at Stripe and belong to the purchased payment intent.
      */
+    public function execute(Request $request, PaymentRefundRequest $refund): RedirectResponse
+    {
+        $request->validate(['confirm' => ['required', 'accepted']]);
+        app(\App\Services\Api\V1\Payment\StripeRefundExecutionService::class)->execute($refund, (int) $request->user()->id);
+        return back()->with('success', 'Stripe refund attempt submitted. Check provider status before closing the request.');
+    }
+
     public function review(Request $request, PaymentRefundRequest $refund): RedirectResponse
     {
         $data = $request->validate([
