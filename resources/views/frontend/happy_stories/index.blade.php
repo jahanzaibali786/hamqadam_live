@@ -1,5 +1,6 @@
 @extends('frontend.layouts.app')
 @section('content')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-stories-v2.css') }}?v=2">
 <section class="hq-reference-page-hero hq-stories-reference-hero text-center">
     <div class="container">
         <!-- <div class="hq-reference-breadcrumb text-left">{{ translate('Home') }} <span>/</span> {{ translate('Happy Stories') }}</div> -->
