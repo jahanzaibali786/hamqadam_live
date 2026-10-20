@@ -257,7 +257,15 @@ class HomeController extends Controller
 
     public function story_details($id)
     {
-        $happy_story = HappyStory::findOrFail($id);
+        // Old numeric links remain usable, but immediately redirect to the
+        // canonical encrypted story URL; only published stories are public.
+        if (ctype_digit((string) $id)) {
+            $story = HappyStory::query()->where('approved', 1)->findOrFail((int) $id);
+            return redirect()->route('story_details', \App\Support\StoryPublicId::encode((int) $story->id), 301);
+        }
+        $storyId = \App\Support\StoryPublicId::decode((string) $id);
+        abort_unless($storyId !== null, 404);
+        $happy_story = HappyStory::query()->where('approved', 1)->with('user')->findOrFail($storyId);
         return view('frontend.happy_stories.story_details', compact('happy_story'));
     }
 
