@@ -64,9 +64,11 @@ class ClientScopeController extends Controller
     public function support(Request $request)
     {
         $supportReady = Schema::hasTable('support_tickets') && Schema::hasTable('support_ticket_replies');
+        $ticketId = $request->integer('ticket_id');
         $tickets = $supportReady
             ? SupportTicket::query()->where('sender_user_id', $request->user()->id)
-                ->with(['replies' => fn ($q) => $q->oldest()])->latest()->paginate(15)
+                ->when($ticketId > 0, fn ($q) => $q->whereKey($ticketId))
+                ->with(['replies' => fn ($q) => $q->oldest()])->latest()->paginate(15)->withQueryString()
             : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
         return view('client_scope.support', compact('tickets', 'supportReady'));
     }

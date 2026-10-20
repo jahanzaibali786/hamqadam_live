@@ -20,7 +20,7 @@ final class NotificationEngagementReportService {
                 'channel'=>$r->channel,'event'=>$r->event_key,'attempts'=>(int)$r->attempts,
                 'sent'=>(int)$r->sent,'delivered'=>(int)$r->delivered_confirmations,
                 'reads'=>(int)$r->read_events,'clicks'=>(int)$r->clicks,'failures'=>(int)$r->failures,
-                'reminders'=>(int)$r->reminders,'read_rate'=>(int)$r->sent>0?round(100*$r->reads/$r->sent,1):null
+                'reminders'=>(int)$r->reminders,'read_rate'=>(int)$r->sent>0?round(100*$r->read_events/$r->sent,1):null
             ])->all();
     }
 }
