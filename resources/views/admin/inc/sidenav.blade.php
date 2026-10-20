@@ -405,28 +405,7 @@
                         <li class="aiz-side-nav-item"><a href="{{ route('admin.client.scope.dashboard') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Analytics, Rewards & Sponsored Ads') }}</span></a></li>
                         <li class="aiz-side-nav-item"><a href="{{ route('admin.client.scope.profiles') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Advanced Profile Search') }}</span></a></li>
                         <li class="aiz-side-nav-item"><a href="{{ route('admin.client.scope.outcomes.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Got Match Outcome Reviews') }}</span></a></li>
-                        @can('show_package_payments')
-                        <li class="aiz-side-nav-item"><a href="{{ route('admin.payment_refunds.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Payment Refund Reviews') }}</span></a></li>
-                        <li class="aiz-side-nav-item"><a href="{{ route('admin.payment_audit.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Payment Reconciliation') }}</span></a></li>
-                        @endcan
-                        @can('show_packages')
-                        <li class="aiz-side-nav-item"><a href="{{ route('payment-coupons.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Promo Codes') }}</span></a></li>
-                        @endcan
-                        @can('show_happy_stories')
-                        <li class="aiz-side-nav-item"><a href="{{ route('happy-story.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Success Stories') }}</span></a></li>
-                        @endcan
-                        <li class="aiz-side-nav-item"><a href="{{ route('admin.help-chat.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Live Help Center') }}</span></a></li>
-                        <li class="aiz-side-nav-item"><a href="{{ route('support-tickets.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Support Ticket Management') }}</span></a></li>
-                        <li class="aiz-side-nav-item"><a href="{{ route('admin.notification_audit.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Notifications & Delivery Audit') }}</span></a></li>
-                        @can('set_referral_commission')
-                        <li class="aiz-side-nav-item"><a href="{{ route('set_referral_commission') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Referral Reward Rules') }}</span></a></li>
-                        @endcan
-                        @can('view_refferal_users')
-                        <li class="aiz-side-nav-item"><a href="{{ route('referals.users') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Referral Tracking') }}</span></a></li>
-                        @endcan
-                        @can('show_blogs')
-                        <li class="aiz-side-nav-item"><a href="{{ route('blog.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Blogs & Articles') }}</span></a></li>
-                        @endcan
+                        {{-- Support ticket management is in Customer Support. --}}
                     </ul>
                 </li>
 
@@ -506,6 +485,12 @@
                             </a>
                         </li>
                         @endcan
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('support-tickets.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['support-tickets.index']) }}">
+                                <i class="las la-ticket-alt aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Support Ticket Management') }}</span>
+                            </a>
+                        </li>
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('admin.help-chat.index') }}"
                                 class="aiz-side-nav-link {{ areActiveRoutes(['admin.help-chat.index', 'admin.help-chat.show']) }}">
