@@ -347,7 +347,7 @@
             $photo = explode(',', $happy_story->photos);
             @endphp
             <div class="card border-gray-800 overflow-hidden mb-2">
-                <a href="{{ route('story_details', $happy_story->id) }}"
+                <a href="{{ route('story_details', \App\Support\StoryPublicId::encode((int)$happy_story->id)) }}"
                     class="text-reset d-block position-relative">
                     <img src="{{ uploaded_asset($photo[0]) }}" class="img-fluid">
                     <div class="absolute-bottom-left p-3">
