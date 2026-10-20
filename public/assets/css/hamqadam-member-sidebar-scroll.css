@@ -14,10 +14,11 @@
   .hq-member-sticky-layout .hq-member-scroll-shell {
     display:block !important;
     position:sticky !important;
-    top:92px !important;
+    /* The script measures the live fixed header and adds a safe gap. */
+    top:var(--hq-member-sticky-top, 148px) !important;
     align-self:flex-start;
-    height:calc(100dvh - 108px);
-    max-height:calc(100dvh - 108px);
+    height:calc(100dvh - var(--hq-member-sticky-top, 148px) - 12px);
+    max-height:calc(100dvh - var(--hq-member-sticky-top, 148px) - 12px);
     min-height:0;
     overflow:hidden;
     padding-top:0 !important;

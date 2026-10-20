@@ -1,9 +1,23 @@
 (function () {
   'use strict';
+  function updateSidebarOffset() {
+    var shell = document.querySelector('.hq-member-sticky-layout .hq-member-scroll-shell');
+    if (!shell || !window.matchMedia('(min-width: 1200px)').matches) return;
+    var header = document.querySelector('.hq-reference-header');
+    // Use the full visible header, including the announcement strip.
+    var bottom = header ? header.getBoundingClientRect().bottom : 0;
+    var offset = Math.max(12, Math.ceil(bottom + 12));
+    // A fixed header remains at the same viewport position; a non-fixed
+    // header can scroll away. Re-measure rather than freezing its first height.
+    shell.style.setProperty('--hq-member-sticky-top', offset + 'px');
+  }
   function initialize() {
     var region = document.getElementById('hq-member-side-scroll');
     if (!region || region.dataset.scrollInitialized === '1') return;
     region.dataset.scrollInitialized = '1';
+    updateSidebarOffset();
+    window.addEventListener('resize', updateSidebarOffset, {passive:true});
+    window.addEventListener('scroll', updateSidebarOffset, {passive:true});
     var links = Array.prototype.slice.call(region.querySelectorAll('a.aiz-side-nav-link[href]'));
     var currentUrl = new URL(window.location.href);
     function normalize(url) {
