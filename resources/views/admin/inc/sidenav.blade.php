@@ -37,6 +37,12 @@
                 </li>
 
                 <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.matchmaking_logs.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.matchmaking_logs.index','admin.matchmaking_logs.show']) }}">
+                        <i class="las la-file-code aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('AI Matchmaking API Logs') }}</span>
+                    </a>
+                </li>
+                <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
                         <i class="las la-tasks aiz-side-nav-icon"></i>
                         <span class="aiz-side-nav-text">{{ translate('MVP Operations') }}</span>
