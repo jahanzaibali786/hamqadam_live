@@ -24,8 +24,30 @@
   <div class="row">
     @forelse($matches as $match)
       <div class="col-md-6 col-lg-4 mb-3"><article class="card h-100"><div class="card-body">
-        <h3 class="h6">{{ $match->matchedUser?->name ?? 'Profile #'.$match->match_id }}</h3>
-        <p>{{ is_numeric($match->match_percentage) ? round($match->match_percentage, 1).'%' : 'Score unavailable' }} compatibility</p>
+        @php
+          $matchedMember = $match->matchedUser;
+          $displayName = trim(($matchedMember?->first_name ?? '').' '.($matchedMember?->last_name ?? ''));
+          $alreadyViewed = \App\Models\ProfileViewer::query()
+              ->where('user_id', $matchedMember->id)
+              ->where('viewed_by', auth()->id())->exists();
+          $remainingViews = (int) get_remaining_package_value(auth()->id(), 'remaining_profile_viewer_view');
+          $needsUpgrade = get_setting('full_profile_show_according_to_membership') == 1
+              && !$alreadyViewed
+              && !(package_validity(auth()->id()) && $remainingViews > 0);
+        @endphp
+        <h3 class="h6">
+          @if($needsUpgrade)
+            <span>{{ $displayName !== '' ? $displayName : translate('Member') }}</span>
+          @else
+            <a href="{{ route('member_profile', $matchedMember->id) }}">{{ $displayName !== '' ? $displayName : translate('Member') }}</a>
+          @endif
+        </h3>
+        <p>{{ round((float) $match->match_percentage, 1) }}% compatibility</p>
+        @if($needsUpgrade)
+          <a href="{{ route('packages') }}" class="btn btn-outline-primary btn-sm mb-2">{{ translate('Upgrade to view profile') }}</a>
+        @else
+          <a href="{{ route('member_profile', $matchedMember->id) }}" class="btn btn-outline-primary btn-sm mb-2">{{ translate('View Profile') }}</a>
+        @endif
         @if(in_array((int) $match->match_id, $confirmations, true))
           @if(in_array((int) $match->match_id, $mutualConfirmations, true))
             <span class="badge badge-success">Both members confirmed</span>
