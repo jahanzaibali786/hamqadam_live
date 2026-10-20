@@ -1,96 +1,66 @@
 @extends('frontend.layouts.app')
+@section('meta_title', $happy_story->title.' | Hamqadam Stories')
+@section('meta_description', \Illuminate\Support\Str::limit(strip_tags((string)$happy_story->details),155))
 @section('content')
-    <section class="py-5 text-center bg-white">
-        <div class="container">
-            <div class="row">
-                <div class="col-xl-8 mx-auto">
-                    <h1 class="fw-600 h2 lh-1-5 text-dark">{{ $happy_story->title }}</h1>
-                    <div>
-                        <span class="opacity-40">{{ translate('Posted By') }}:</span>
-                        <a
-                            @if(!Auth::check())
-                                onclick="loginModal()"
-                            @elseif(get_setting('full_profile_show_according_to_membership') == 1 && Auth::user()->membership == 1)
-                                href="javascript:void(0);" onclick="package_update_alert()"
-                            @else
-                                href="{{ route('member_profile', $happy_story->user_id) }}"
-                            @endif
-                            class="c-pointer text-primary">
-                            {{ $happy_story->user->first_name.' '.$happy_story->user->last_name.''  }}
-                        </a>
-                        <span class="opacity-40">{{ translate('On') }}:</span>
-                        <span class="opacity-70">{{ $happy_story->created_at->format('d F, Y') }}</span>
-                    </div>
-                </div>
+@php
+  $photos = array_values(array_filter(array_map('trim',explode(',',(string)$happy_story->photos))));
+  $owner = $happy_story->user;
+  $byline = trim(($owner?->first_name ?? '').' '.($owner?->last_name ?? ''));
+  $description = strip_tags((string)$happy_story->details,'<p><br><strong><em><ul><ol><li><blockquote>');
+  $videoUrl = null;
+  $link = (string)$happy_story->video_link;
+  if ($happy_story->video_provider === 'youtube' && preg_match('~(?:youtu\\.be/|youtube\\.com/(?:watch\\?v=|embed/))([A-Za-z0-9_-]{11})~',$link,$m)) $videoUrl='https://www.youtube-nocookie.com/embed/'.$m[1];
+  elseif ($happy_story->video_provider === 'vimeo' && preg_match('~vimeo\\.com/(?:video/)?(\\d+)~',$link,$m)) $videoUrl='https://player.vimeo.com/video/'.$m[1];
+  elseif ($happy_story->video_provider === 'dailymotion' && preg_match('~dailymotion\\.com/video/([A-Za-z0-9]+)~',$link,$m)) $videoUrl='https://www.dailymotion.com/embed/video/'.$m[1];
+@endphp
+<section class="hq-story-detail-page">
+  <div class="container">
+    <nav class="hq-story-breadcrumb" aria-label="Breadcrumb"><a href="{{ route('home') }}">{{ translate('Home') }}</a><i class="las la-angle-right"></i><a href="{{ route('happy_stories') }}">{{ translate('Happy Stories') }}</a><i class="las la-angle-right"></i><span>{{ \Illuminate\Support\Str::limit($happy_story->title,55) }}</span></nav>
+    <header class="hq-story-detail-header text-center">
+      <span class="hq-story-kicker"><i class="las la-heart"></i> {{ translate('A Hamqadam Community Story') }}</span>
+      <h1>{{ $happy_story->title }}</h1>
+      <div class="hq-story-detail-meta">
+        @if($byline !== '')<span><i class="las la-user-circle"></i> {{ $byline }}</span>@endif
+        @if($happy_story->created_at)<span><i class="las la-calendar"></i> {{ $happy_story->created_at->format('d F Y') }}</span>@endif
+      </div>
+    </header>
+    <div class="hq-story-detail-shell">
+      <div class="hq-story-detail-main">
+        @if(count($photos))
+          <div class="hq-story-detail-gallery">
+            <div class="hq-story-detail-cover">
+              <img src="{{ uploaded_asset($photos[0]) }}" alt="{{ $happy_story->title }}" fetchpriority="high" onerror="this.onerror=null;this.src='{{ static_asset('assets/img/placeholder.jpg') }}'">
             </div>
+            @if(count($photos)>1)
+              <div class="hq-story-detail-thumbs">
+                @foreach(array_slice($photos,1) as $photo)
+                <a href="{{ uploaded_asset($photo) }}" target="_blank" rel="noopener noreferrer" aria-label="{{ translate('View story photo') }} {{ $loop->iteration+1 }}"><img src="{{ uploaded_asset($photo) }}" loading="lazy" alt="{{ $happy_story->title }} · {{ $loop->iteration+1 }}"></a>
+                @endforeach
+              </div>
+            @endif
+          </div>
+        @else
+          <div class="hq-story-detail-cover hq-story-detail-placeholder"><i class="las la-heart"></i></div>
+        @endif
+        <article class="hq-story-article">
+          <div class="hq-story-article-eyebrow">{{ translate('Our Journey') }}</div>
+          <div class="hq-story-body">{!! $description !!}</div>
+        </article>
+        @if($videoUrl)
+        <div class="hq-story-video"><h2>{{ translate('Our Story on Video') }}</h2><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="{{ $videoUrl }}" loading="lazy" title="{{ translate('Happy story video') }}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div></div>
+        @endif
+      </div>
+      <aside class="hq-story-detail-aside">
+        <div class="hq-story-detail-aside-card">
+          <span class="hq-story-kicker"><i class="las la-heart"></i> Hamqadam</span>
+          <h2>{{ translate('Every beautiful journey begins with a connection.') }}</h2>
+          <p>{{ translate('Explore more community journeys or begin your own with care and confidence.') }}</p>
+          <a href="{{ route('happy_stories') }}" class="btn btn-outline-primary btn-block">{{ translate('Explore More Stories') }}</a>
+          <a href="{{ auth()->check() ? route('happy_story.member') : route('login') }}" class="btn btn-primary btn-block">{{ translate('Share Your Story') }}</a>
         </div>
-    </section>
-
-    <section class="py-4 bg-white">
-        <div class="container">
-            <div class="aiz-carousel dots-inside-bottom" data-arrows="true" data-dots="true" data-autoplay="true">
-                @if ($happy_story->photos != null)
-                    @foreach (explode(',',$happy_story->photos) as $key => $photo)
-                        <div class="carousel-box">
-                            <img class="d-block lazyload img-fluid mx-auto" src="{{ static_asset('assets/img/placeholder-rect.jpg') }}" data-src="{{ uploaded_asset($photo) }}" alt="{{ $happy_story->title }}">
-                        </div>
-                    @endforeach
-                @endif
-            </div>
-            <div class="row">
-                <div class="col-xl-8 mx-auto">
-                    <div class="py-4">
-                        <div class="overflow-hidden mb-4 lh-1-8">{!! $happy_story->details !!}</div>
-                        <div class="">
-                            <div class="embed-responsive embed-responsive-16by9">
-                                @if ($happy_story->video_provider == 'youtube' && isset(explode('=', $happy_story->video_link)[1]))
-                                    <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/{{ explode('=', $happy_story->video_link)[1] }}"></iframe>
-                                @elseif ($happy_story->video_provider == 'dailymotion' && isset(explode('video/', $happy_story->video_link)[1]))
-                                    <iframe class="embed-responsive-item" src="https://www.dailymotion.com/embed/video/{{ explode('video/', $happy_story->video_link)[1] }}"></iframe>
-                                @elseif ($happy_story->video_provider == 'vimeo' && isset(explode('vimeo.com/', $happy_story->video_link)[1]))
-                                    <iframe src="https://player.vimeo.com/video/{{ explode('vimeo.com/', $happy_story->video_link)[1] }}" width="500" height="281" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
-                    @if (get_setting('facebook_comment_activation') == 1)
-                        <div class="border-top">
-                            <div class="fb-comments" data-width="" data-numposts="5"></div>
-                        </div>
-                    @endif
-
-                </div>
-            </div>
-        </div>
-    </section>
-@endsection
-
-@section('modal')
-    @include('modals.login_modal')
-    @include('modals.package_update_alert_modal')
-@endsection
-
-@section('script')
-<script type="text/javascript">
-
-	// Login alert
-    function loginModal(){
-        $('#LoginModal').modal();
-    }
-
-    // Package update alert
-    function package_update_alert(){
-      $('.package_update_alert_modal').modal('show');
-    }
-
-</script>
-
-@if (get_setting('facebook_comment_activation') == 1)
-<div id="fb-root"></div>
-<script async defer crossorigin="anonymous"
-    src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v9.0&appId={{ env('FACEBOOK_APP_ID') }}&autoLogAppEvents=1"
-    nonce="ji6tXwgZ">
-</script>
-@endif
+      </aside>
+    </div>
+    <div class="hq-story-bottom-link"><a href="{{ route('happy_stories') }}"><i class="las la-arrow-left"></i> {{ translate('Back to all happy stories') }}</a></div>
+  </div>
+</section>
 @endsection
