@@ -18,7 +18,9 @@ final class PaymentRefundController extends Controller
     public function index(Request $request): View
     {
         $data = $request->validate(['status' => ['nullable','in:requested,reviewing,rejected,provider_refund_confirmed']]);
+        $refundId = $request->integer('refund_id');
         $items = PaymentRefundRequest::query()->with(['user','payment'])
+            ->when($refundId > 0, fn($q) => $q->whereKey($refundId))
             ->when(! empty($data['status']), fn($q) => $q->where('status',$data['status']))
             ->latest()->paginate(20)->withQueryString();
         return view('admin.payment_refunds.index', compact('items'));
