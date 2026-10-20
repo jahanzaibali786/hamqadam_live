@@ -14,7 +14,7 @@ final class QaMemberSidebarScrollTest extends TestCase
         $css = file_get_contents(public_path('assets/css/hamqadam-member-sidebar-scroll.css'));
         $this->assertStringContainsString('overflow-y:auto', $css);
         $this->assertStringContainsString('position:sticky !important', $css);
-        $this->assertStringContainsString('height:calc(100dvh - 108px)', $css);
+        $this->assertStringContainsString('height:calc(100dvh - var(--hq-member-sticky-top, 148px) - 12px)', $css);
         $this->assertStringContainsString('overflow-y:auto !important', $css);
         $this->assertStringContainsString('overflow:visible !important', $css);
     }
@@ -30,5 +30,6 @@ final class QaMemberSidebarScrollTest extends TestCase
         $this->assertStringContainsString('aria-current', $js);
         $this->assertStringContainsString('region.scrollTop', $js);
         $this->assertStringContainsString('currentUrl', $js);
+        $this->assertStringContainsString('updateSidebarOffset', $js);
     }
 }
