@@ -38,8 +38,7 @@ final class QaHappyStoryPublicUrlsTest extends TestCase
     public function test_admin_sidebar_uses_script_after_shared_vendor_scripts(): void
     {
         $layout=file_get_contents(resource_path('views/admin/layouts/app.blade.php'));
-        $script=$layout=str_replace('\\','', $layout);
-        $this->assertStringContainsString('hamqadam-admin-active-sidebar.js', $script);
+        $this->assertStringContainsString('hamqadam-admin-active-sidebar.js', $layout);
         $this->assertLessThan(strpos($layout,"hamqadam-admin-active-sidebar.js"),strpos($layout,"assets/js/aiz-core.js"));
     }
 }
