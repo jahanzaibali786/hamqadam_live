@@ -7,7 +7,7 @@
   $photos = array_values(array_filter(array_map('trim',explode(',',(string)$happy_story->photos))));
   $owner = $happy_story->user;
   $byline = trim(($owner?->first_name ?? '').' '.($owner?->last_name ?? ''));
-  $description = strip_tags((string)$happy_story->details,'<p><br><strong><em><ul><ol><li><blockquote>');
+  $description = trim(preg_replace('/\\s+/', ' ', strip_tags((string)$happy_story->details)));
   $videoUrl = null;
   $link = (string)$happy_story->video_link;
   if ($happy_story->video_provider === 'youtube' && preg_match('~(?:youtu\\.be/|youtube\\.com/(?:watch\\?v=|embed/))([A-Za-z0-9_-]{11})~',$link,$m)) $videoUrl='https://www.youtube-nocookie.com/embed/'.$m[1];
@@ -45,7 +45,7 @@
         @endif
         <article class="hq-story-article">
           <div class="hq-story-article-eyebrow">{{ translate('Our Journey') }}</div>
-          <div class="hq-story-body">{!! $description !!}</div>
+          <div class="hq-story-body">{{ $description }}</div>
         </article>
         @if($videoUrl)
         <div class="hq-story-video"><h2>{{ translate('Our Story on Video') }}</h2><div class="embed-responsive embed-responsive-16by9"><iframe class="embed-responsive-item" src="{{ $videoUrl }}" loading="lazy" title="{{ translate('Happy story video') }}" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div></div>
