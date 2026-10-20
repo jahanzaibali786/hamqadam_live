@@ -34,7 +34,23 @@ class ClientScopeController extends Controller
     public function portal(Request $request)
     {
         $user = $request->user();
-        $matches = ProfileMatch::query()->with('matchedUser')->where('user_id', $user->id)->latest()->paginate(12);
+        $matches = ProfileMatch::query()
+            ->with('matchedUser')
+            ->where('user_id', $user->id)
+            ->where('match_id', '!=', $user->id)
+            ->whereNotNull('match_percentage')
+            ->where('match_percentage', '>', 0)
+            ->whereHas('matchedUser', function ($query): void {
+                $query->where('user_type', 'member')
+                    ->where('approved', 1)
+                    ->where('blocked', 0)
+                    ->where('deactivated', 0)
+                    ->whereHas('member', fn ($member) => $member
+                        ->where(fn ($visible) => $visible->where('hide_profile', 0)->orWhereNull('hide_profile')));
+            })
+            ->orderByDesc('match_percentage')
+            ->latest('id')
+            ->paginate(12);
         $confirmations = MatchSuccess::query()->where('user_id', $user->id)->where('status','got_match')->pluck('matched_user_id')->map(fn ($id) => (int) $id)->all();
         // A mutual confirmation requires both members to independently report the match.
         $mutualConfirmations = MatchSuccess::query()->where('matched_user_id', $user->id)
