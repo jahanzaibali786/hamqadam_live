@@ -73,11 +73,6 @@
                         </div>
                     @endif
                 @endif
-            @else
-                <div class="mt-2">
-                    <a href="{{ route('member_profile', Auth::user()->id) }}"
-                        class="btn btn-block btn-sm btn-soft-primary">{{ translate('Public Profile') }}</a>
-                </div>
             @endif
         </div>
 
@@ -206,6 +201,12 @@
                         <a href="{{ route('profile_settings') }}" class="aiz-side-nav-link">
                             <i class="las la-user aiz-side-nav-icon"></i>
                             <span class="aiz-side-nav-text">{{ translate('My Profile') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('member_profile', Auth::user()->id) }}" class="aiz-side-nav-link {{ areActiveRoutes(['member_profile']) }}">
+                            <i class="las la-id-card aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Public Profile') }}</span>
                         </a>
                     </li>
                     <li class="aiz-side-nav-item">
