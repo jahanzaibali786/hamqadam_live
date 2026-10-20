@@ -37,7 +37,8 @@ final class RequestEventObserver implements ShouldHandleEventsAfterCommit
         if (! $model->wasChanged(['status', 'assigned_user_id', 'reviewed_at'])) return;
         $event = $this->describe($model);
         if (! $event) return;
-        $state = (string) ($model->getAttribute('status') ?? 'updated');
+        $statusValue = $model->getAttribute('status');
+        $state = $statusValue instanceof \BackedEnum ? (string)$statusValue->value : (string)($statusValue ?? 'updated');
         app(RequestBellNotifier::class)->updated(
             $event['type'],(int)$model->getKey(),auth()->id(),
             $event['owner'],
