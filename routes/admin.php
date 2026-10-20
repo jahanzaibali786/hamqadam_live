@@ -375,6 +375,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::post('/roles/add_permission', [RoleController::class, 'add_permission'])->name('roles.permission');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications');
+    Route::get('/matchmaking-api-logs', [\App\Http\Controllers\Admin\MatchmakingLogController::class, 'index'])->name('admin.matchmaking_logs.index');
+    Route::get('/matchmaking-api-logs/{id}', [\App\Http\Controllers\Admin\MatchmakingLogController::class, 'show'])->whereNumber('id')->name('admin.matchmaking_logs.show');
     Route::get('/notification-delivery-audit', [\App\Http\Controllers\Admin\NotificationAuditController::class, 'index'])->name('admin.notification_audit.index');
 
     Route::resource('addons', AddonController::class);
