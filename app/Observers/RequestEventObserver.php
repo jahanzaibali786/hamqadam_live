@@ -89,7 +89,7 @@ final class RequestEventObserver implements ShouldHandleEventsAfterCommit
             return ['type'=>'photo_view_request','label'=>'profile photo access request',
                 'actor'=>(int)$model->requested_by,'owner'=>(int)$model->user_id,
                 'admin'=>$this->url('admin.client.scope.profiles',[], '/admin/notifications'),
-                'member'=>$this->url('member_profile',['id'=>(int)$model->requested_by],'/dashboard')];
+                'member'=>$this->url('profile-picture-view-request.index',[],'/dashboard')];
         }
         if ($model instanceof ExpressInterest) {
             return ['type'=>'interest_request','label'=>'interest request',
