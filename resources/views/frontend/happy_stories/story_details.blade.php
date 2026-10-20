@@ -2,6 +2,7 @@
 @section('meta_title', $happy_story->title.' | Hamqadam Stories')
 @section('meta_description', \Illuminate\Support\Str::limit(strip_tags((string)$happy_story->details),155))
 @section('content')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-stories-v2.css') }}?v=2">
 @php
   $photos = array_values(array_filter(array_map('trim',explode(',',(string)$happy_story->photos))));
   $owner = $happy_story->user;
