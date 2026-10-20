@@ -14,7 +14,8 @@ class SupportTicketController extends Controller
     public function index()
     {
         $ready = Schema::hasTable('support_tickets');
-        $tickets = $ready ? SupportTicket::with('replies')->latest()->paginate(20) : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
+        $ticketId = request()->integer('ticket_id');
+        $tickets = $ready ? SupportTicket::with('replies')->when($ticketId > 0, fn ($query) => $query->whereKey($ticketId))->latest()->paginate(20)->withQueryString() : new \Illuminate\Pagination\LengthAwarePaginator([], 0, 20);
         return view('admin.support_tickets.dashboard', compact('tickets', 'ready'));
     }
 
