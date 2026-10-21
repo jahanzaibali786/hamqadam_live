@@ -51,7 +51,21 @@ class ProfileSearchService
             $this->applyPartnerPreferenceScope($query, $viewer);
         }
 
+        $advancedKeys = ['height_min','height_max','income_min','income_max','compatibility_min',
+            'exclude_viewed','mutual_match','lifestyle','caste_id','sub_caste_id','sect_id'];
+        foreach ($advancedKeys as $key) {
+            if (in_array($key, ['exclude_viewed','mutual_match'], true) &&
+                ! filter_var($filters[$key] ?? false, FILTER_VALIDATE_BOOLEAN)) continue;
+            if (isset($filters[$key]) && $filters[$key] !== '' && $filters[$key] !== null && $filters[$key] !== false) {
+                abort_unless(app(\App\Services\ClientScope\PremiumEntitlementService::class)->has($viewer,'advanced_filters'),
+                    403, 'Advanced filters require an active premium plan.');
+                break;
+            }
+        }
         $this->applyFilters($query, $viewer, $filters);
+        if (\Illuminate\Support\Facades\Schema::hasTable('member_profile_boosts')) {
+            $query->orderByRaw('CASE WHEN EXISTS (SELECT 1 FROM member_profile_boosts boost WHERE boost.user_id = users.id AND boost.ends_at > ?) THEN 1 ELSE 0 END DESC', [now()]);
+        }
         $this->applySorting($query, $viewer, $filters);
 
         $results = $query->paginate((int) ($filters['per_page'] ?? 20));
@@ -191,7 +205,7 @@ class ProfileSearchService
                 }
 
                 if (! empty($filters['sect_id'])) {
-                    $spiritual->where('sub_caste_id', $filters['sect_id']);
+                    $spiritual->where('sect_main_id', $filters['sect_id']);
                 }
 
                 if (! empty($filters['caste_id'])) {
@@ -295,12 +309,20 @@ class ProfileSearchService
         }
 
         if (! empty($filters['mutual_match'])) {
-            $query->whereHas('received_proposals', function ($proposal) use ($viewer) {
-                $proposal->where('interested_by', $viewer->id)
-                    ->where('status', ProposalStatus::Accepted->value);
-            })->whereHas('sent_proposals', function ($proposal) use ($viewer) {
-                $proposal->where('user_id', $viewer->id)
-                    ->where('status', ProposalStatus::Accepted->value);
+            // An accepted interest from either direction is sufficient; requiring
+            // two reciprocal rows makes normal mutually-accepted proposals vanish.
+            $query->whereExists(function ($q) use ($viewer) {
+                $q->selectRaw('1')->from('express_interests as accepted_interest')
+                    ->where('accepted_interest.status', ProposalStatus::Accepted->value)
+                    ->where(function ($pair) use ($viewer) {
+                        $pair->where(function ($direction) use ($viewer) {
+                            $direction->where('accepted_interest.interested_by', $viewer->id)
+                                ->whereColumn('accepted_interest.user_id','users.id');
+                        })->orWhere(function ($direction) use ($viewer) {
+                            $direction->where('accepted_interest.user_id', $viewer->id)
+                                ->whereColumn('accepted_interest.interested_by','users.id');
+                        });
+                    });
             });
         }
     }

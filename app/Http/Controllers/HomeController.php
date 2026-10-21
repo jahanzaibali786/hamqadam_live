@@ -257,12 +257,33 @@ class HomeController extends Controller
 
     public function story_details($id)
     {
-        $happy_story = HappyStory::findOrFail($id);
+        // Old numeric links remain usable, but immediately redirect to the
+        // canonical encrypted story URL; only published stories are public.
+        if (ctype_digit((string) $id)) {
+            $story = HappyStory::query()->where('approved', 1)->findOrFail((int) $id);
+            return redirect()->route('story_details', \App\Support\StoryPublicId::encode((int) $story->id), 301);
+        }
+        $storyId = \App\Support\StoryPublicId::decode((string) $id);
+        abort_unless($storyId !== null, 404);
+        $happy_story = HappyStory::query()->where('approved', 1)->with('user')->findOrFail($storyId);
         return view('frontend.happy_stories.story_details', compact('happy_story'));
     }
 
     public function member_listing(Request $request)
     {
+        $premiumKeys = ['caste_id','sub_caste_id','min_height','max_height','mutual_match'];
+        foreach ($premiumKeys as $filterName) {
+            if ($request->filled($filterName) && (string) $request->input($filterName) !== '0') {
+                abort_unless(app(\App\Services\ClientScope\PremiumEntitlementService::class)
+                    ->has($request->user(), 'advanced_filters'), 403,
+                    'Advanced filters require an active premium plan.');
+                break;
+            }
+        }
+        if (\Illuminate\Support\Facades\Schema::hasTable('analytics_events')) {
+            app(\App\Services\ClientScope\EventRecorder::class)
+                ->record($request, 'discovery_opened', 'discovery');
+        }
         $age_from       = ($request->age_from != null) ? $request->age_from : null;
         $age_to         = ($request->age_to != null) ? $request->age_to : null;
         $member_code    = ($request->member_code != null) ? $request->member_code : null;
@@ -279,6 +300,10 @@ class HomeController extends Controller
         $max_height     = ($request->max_height != null) ? $request->max_height : null;
         $member_type    = ($request->member_type != null) ? $request->member_type : 0;
         $gender         = ($request->gender != null) ? $request->gender : null;
+        $recently_active = $request->boolean('recently_active');
+        $online_now = $request->boolean('online_now');
+        $new_profiles = $request->boolean('new_profiles');
+        $mutual_match = $request->boolean('mutual_match');
 
 
         $users = User::with([
@@ -293,11 +318,16 @@ class HomeController extends Controller
                     $query->where('user_id', Auth::user()->id);
                 },
             ])
+            ->orderByRaw('CASE WHEN EXISTS (SELECT 1 FROM member_profile_boosts boost WHERE boost.user_id = users.id AND boost.ends_at > ?) THEN 1 ELSE 0 END DESC', [now()])
             ->orderBy('created_at', 'desc')
             ->where('user_type', 'member')
             ->where('id', '!=', Auth::user()->id)
             ->where('blocked', 0)
-            ->where('deactivated', 0);
+            ->where('deactivated', 0)
+            ->whereHas('member', fn ($m) => $m->where(fn ($q) => $q->where('hide_profile', 0)->orWhereNull('hide_profile')))
+            ->whereDoesntHave('profile_privacy_setting', fn ($p) => $p->where('invisible_mode', true))
+            ->whereNotIn('users.id', \App\Models\HiddenProfileUser::query()
+                ->where('hidden_from_user_id', $request->user()->id)->select('user_id'));
 
         // Gender Check
         if ($gender) {
@@ -332,17 +362,13 @@ class HomeController extends Controller
             $age = $age_from + 1;
             $start = date('Y-m-d', strtotime("- $age years"));
             $user_ids = Member::where('birthday', '<=', $start)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users = $users->WhereIn('id', $user_ids);
-            }
+            $users = $users->whereIn('id', $user_ids);
         }
         if (!empty($age_to)) {
             $age = $age_to + 1;
             $end = date('Y-m-d', strtotime("- $age years +1 day"));
             $user_ids = Member::where('birthday', '>=', $end)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users = $users->WhereIn('id', $user_ids);
-            }
+            $users = $users->whereIn('id', $user_ids);
         }
 
         // Search by Member Code
@@ -353,9 +379,7 @@ class HomeController extends Controller
         // Sort by Matital Status
         if ($matital_status != null) {
             $user_ids = Member::where('marital_status_id', $matital_status)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users = $users->WhereIn('id', $user_ids);
-            }
+            $users = $users->whereIn('id', $user_ids);
         }
 
         // Sort By religion
@@ -370,7 +394,7 @@ class HomeController extends Controller
             $users = $users->WhereIn('id', $user_ids);
         }
         // Profession
-        elseif (!empty($profession)) {
+        if (!empty($profession)) {
             $user_ids = Career::where('designation', 'like', '%' . $profession . '%')->pluck('user_id')->toArray();
             $users = $users->WhereIn('id', $user_ids);
         }
@@ -393,26 +417,36 @@ class HomeController extends Controller
 
         if ($mother_tongue != null && $motherTongueColumn) {
             $user_ids = Member::where($motherTongueColumn, $mother_tongue)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users = $users->WhereIn('id', $user_ids);
-            }
+            $users = $users->whereIn('id', $user_ids);
         }
         // Sort by Height
         if (!empty($min_height)) {
             $user_ids = PhysicalAttribute::where('height', '>=', $min_height)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users = $users->WhereIn('id', $user_ids);
-            }
+            $users = $users->whereIn('id', $user_ids);
         }
         if (!empty($max_height)) {
             $user_ids = PhysicalAttribute::where('height', '<=', $max_height)->pluck('user_id')->toArray();
-            if (count($user_ids) > 0) {
-                $users = $users->WhereIn('id', $user_ids);
-            }
+            $users = $users->whereIn('id', $user_ids);
         }
 
-        $users = $users->paginate(10);
-        return view('frontend.member.member_listing.index', compact('users', 'age_from', 'age_to', 'member_code', 'matital_status', 'religion_id', 'caste_id', 'sub_caste_id', 'mother_tongue', 'profession', 'country_id', 'state_id', 'city_id', 'min_height', 'max_height', 'member_type', 'gender'));
+        if ($recently_active) $users->where('last_active_at','>=',now()->subDays(30));
+        if ($online_now) $users->where('last_active_at','>=',now()->subMinutes(15));
+        if ($new_profiles) $users->where('users.created_at','>=',now()->subDays(14));
+        if ($mutual_match) {
+            $viewerId = (int) $request->user()->id;
+            $users->whereExists(function ($q) use ($viewerId) {
+                $q->selectRaw('1')->from('express_interests as ei')->where('ei.status', 1)
+                    ->where(function ($pair) use ($viewerId) {
+                        $pair->where(function ($dir) use ($viewerId) {
+                            $dir->where('ei.interested_by',$viewerId)->whereColumn('ei.user_id','users.id');
+                        })->orWhere(function ($dir) use ($viewerId) {
+                            $dir->where('ei.user_id',$viewerId)->whereColumn('ei.interested_by','users.id');
+                        });
+                    });
+            });
+        }
+        $users = $users->paginate(10)->withQueryString();
+        return view('frontend.member.member_listing.index', compact('users', 'age_from', 'age_to', 'member_code', 'matital_status', 'religion_id', 'caste_id', 'sub_caste_id', 'mother_tongue', 'profession', 'country_id', 'state_id', 'city_id', 'min_height', 'max_height', 'member_type', 'gender', 'recently_active', 'online_now', 'new_profiles', 'mutual_match'));
     }
 
     public function profile_edit(Request $request)

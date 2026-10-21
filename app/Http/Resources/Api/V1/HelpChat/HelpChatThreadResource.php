@@ -16,6 +16,7 @@ class HelpChatThreadResource extends JsonResource
         return [
             'id' => (int) $this->id,
             'status' => (string) $this->status,
+            'preferred_language' => $this->preferred_language ?: 'en',
             'is_closed' => $this->status === \App\Models\HelpChatThread::STATUS_CLOSED,
             // Ticket lock: the member let the 5-minute response window after the
             // admin's reply lapse. The app renders "Start New chat" instead of

@@ -37,8 +37,8 @@
         </div>
         <div class="d-flex justify-content-around align-items-center align-items-stretch">
             @php
-                $notifications = \App\Models\Notification::latest()->where('notifiable_id',Auth()->user()->id)->take(10)->get();
-                $unseen_notification = \App\Models\Notification::where('notifiable_id',Auth()->user()->id)->where('read_at',null)->count();
+                $notifications = \App\Models\Notification::latest()->where('notifiable_type', \App\Models\User::class)->where('notifiable_id',Auth()->user()->id)->take(10)->get();
+                $unseen_notification = \App\Models\Notification::where('notifiable_type', \App\Models\User::class)->where('notifiable_id',Auth()->user()->id)->where('read_at',null)->count();
             @endphp
 
             <div class="aiz-topbar-item ml-2">
@@ -67,30 +67,21 @@
                                         $notify_by = $notify_data->notify_by ?? null;
                                         $user_data = $notify_by ? \App\Models\User::where('id', $notify_by)->first() : null;
                                     @endphp
-                                    @if(!empty($user_data))
                                     <li class="list-group-item d-flex justify-content-between align-items-start hov-bg-soft-primary">
                                         <a href="{{ route('notification_view', $notification->id) }}" class="media text-inherit">
                                             <span class="avatar avatar-sm mr-3">
-                                                @if(!empty(uploaded_asset($user_data->photo)))
-                                                    <img src="{{ uploaded_asset($user_data->photo) }}">
-                                                @else
-                                                    <img src="{{ static_asset('assets/img/avatar-place.png') }}">
-                                                @endif
+                                                <img src="{{ $user_data && $user_data->photo ? uploaded_asset($user_data->photo) : static_asset('assets/img/avatar-place.png') }}" alt="">
                                             </span>
                                             <div class="media-body">
-                                                <p class="mb-1">{{ $user_data->first_name.' '.$user_data->last_name }}</p>
-                                                <small class="text-muted">
-                                                    {{ $notify_data->message }}
-                                                </small>
+                                                <p class="mb-1 font-weight-bold">{{ $notify_data->title ?? ($user_data ? trim($user_data->first_name.' '.$user_data->last_name) : 'System notification') }}</p>
+                                                <small class="text-muted">{{ $notify_data->message ?? 'Open notification for details.' }}</small>
+                                                <div class="small text-muted">{{ $notification->created_at?->diffForHumans() }}</div>
                                             </div>
                                         </a>
                                         @if($notification->read_at == null)
-                                            <button class="btn p-0">
-                                                <span class="badge badge-md  badge-dot badge-circle badge-primary"></span>
-                                            </button>
+                                        <span class="badge badge-md badge-dot badge-circle badge-primary" aria-label="Unread"></span>
                                         @endif
                                     </li>
-                                    @endif
                                 @endforeach
                             @else
                                 <li class="list-group-item">

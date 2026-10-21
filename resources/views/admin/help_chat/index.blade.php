@@ -30,6 +30,13 @@
                                 <option value="open" {{ $status === 'open' ? 'selected' : '' }}>{{ translate('Open') }}</option>
                                 <option value="closed" {{ $status === 'closed' ? 'selected' : '' }}>{{ translate('Closed') }}</option>
                             </select>
+                            <select name="queue" class="form-control form-control-sm mr-2" aria-label="Support queue">
+                                @foreach(['all'=>'All queues','unassigned'=>'Unassigned','awaiting'=>'Awaiting agent','overdue'=>'Response overdue'] as $value=>$name)
+                                    <option value="{{ $value }}" @selected($queue === $value)>{{ $name }}</option>
+                                @endforeach
+                            </select>
+                            <select name="language" class="form-control form-control-sm mr-2" aria-label="Preferred support language"><option value="">All languages</option>@foreach(['en'=>'English','ur'=>'Urdu','ar'=>'Arabic','hi'=>'Hindi'] as $code=>$label)<option value="{{ $code }}" @selected($language===$code)>{{ $label }}</option>@endforeach</select>
+                            <input type="number" min="1" name="agent_id" class="form-control form-control-sm mr-2" style="max-width:110px" aria-label="Assigned agent ID" placeholder="Agent ID" value="{{ $agentId }}">
                             <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm mr-2"
                                 placeholder="{{ translate('Search member') }}">
                             <button type="submit" class="btn btn-sm btn-primary">{{ translate('Search') }}</button>
@@ -46,6 +53,7 @@
                                 <th data-breakpoints="md">{{ translate('Last message') }}</th>
                                 <th data-breakpoints="md">{{ translate('Last activity') }}</th>
                                 <th>{{ translate('Status') }}</th>
+                                <th>Agent / Response SLA</th><th>Language</th>
                                 <th class="text-right" width="10%">{{ translate('Options') }}</th>
                             </tr>
                         </thead>
@@ -83,6 +91,12 @@
                                             {{ $thread->status === \App\Models\HelpChatThread::STATUS_OPEN ? translate('Open') : translate('Closed') }}
                                         </span>
                                     </td>
+                                    <td>
+                                        <span>{{ $thread->assigned_agent_id ? '#'.$thread->assigned_agent_id : 'Unassigned' }}</span>
+                                        @if($sla->isOverdue($thread))<span class="badge badge-danger">Response overdue</span>
+                                        @elseif($sla->isAwaitingAgent($thread))<span class="badge badge-warning">Awaiting agent</span>@endif
+                                    </td>
+                                    <td>{{ strtoupper($thread->preferred_language ?? 'en') }}</td>
                                     <td class="text-right">
                                         <a href="{{ route('admin.help-chat.show', $thread->id) }}"
                                             class="btn btn-soft-info btn-icon btn-circle btn-sm" title="{{ translate('Open chat') }}">
@@ -97,7 +111,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">
+                                    <td colspan="9" class="text-center text-muted py-4">
                                         {{ translate('No help conversations yet.') }}
                                     </td>
                                 </tr>

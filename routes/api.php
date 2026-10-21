@@ -15,7 +15,7 @@ use App\Http\Controllers\Api\InterestController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\MemberRegistrationVerificationController;
 use App\Http\Controllers\Api\PackageController;
-use App\Http\Controllers\Api\payment\InstamojoController;
+use App\Http\Controllers\Api\Payment\InstamojoController;
 use App\Http\Controllers\Api\Payment\PaymentTypesController;
 use App\Http\Controllers\Api\Payment\PaypalController;
 use App\Http\Controllers\Api\Payment\PaystackController;

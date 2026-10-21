@@ -7,13 +7,23 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Api\MemberRegistrationVerificationController;
+use App\Http\Middleware\EnsureRegistrationEmailVerified;
 use Illuminate\Support\Facades\Route;
+
+// Override the older HomeController handlers, which allow email/phone OR
+// matching and do not bind verified OTP state to the registration session.
+Route::middleware(['guest', 'throttle:10,1'])->group(function () {
+    Route::post('/registration/verification-code-send', [MemberRegistrationVerificationController::class, 'sendRegVerificationCode'])->name('verification_code_send');
+    Route::post('/registration/verification-code-confirmation', [MemberRegistrationVerificationController::class, 'regVerifyCodeConfirmation'])->name('verify_code_confirmation');
+});
 
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisterController::class, 'showRegistrationForm'])
         ->name('register');
 
-    Route::post('register', [RegisterController::class, 'register']);
+    Route::post('register', [RegisterController::class, 'register'])
+        ->middleware(EnsureRegistrationEmailVerified::class);
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');

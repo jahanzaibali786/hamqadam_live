@@ -35,6 +35,18 @@
         </div>
     </div>
 
+    <form method="POST" action="{{ route('admin.help-chat.assign', $thread->id) }}" class="card card-body mb-3">
+        @csrf
+        <div class="row align-items-end">
+            <div class="col-md-8 form-group mb-1">
+                <label for="support-assigned-agent">{{ translate('Assigned support agent (staff user ID)') }}</label>
+                <input id="support-assigned-agent" type="number" min="1" class="form-control" name="assigned_agent_id"
+                    value="{{ old('assigned_agent_id', $thread->assigned_agent_id) }}" placeholder="{{ translate('Unassigned') }}">
+                <small class="text-muted">{{ translate('Leave blank to return this conversation to the unassigned queue.') }}</small>
+            </div>
+            <div class="col-md-4 mb-1"><button class="btn btn-primary btn-block">{{ translate('Save assignment') }}</button></div>
+        </div>
+    </form>
     <div class="row">
         <div class="col-lg-8 mx-auto">
             <div class="card">

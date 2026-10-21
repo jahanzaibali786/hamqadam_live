@@ -21,6 +21,21 @@ class AppServiceProvider extends ServiceProvider
         $this->keepFileBackedStoresWritable();
 
         Schema::defaultStringLength(191);
+        // Request lifecycle notifications are created after DB commit for
+        // both website and mobile API writes. No gateway side effects.
+        foreach ([
+            \App\Models\SupportTicket::class,
+            \App\Models\PaymentRefundRequest::class,
+            \App\Models\HelpChatThread::class,
+            \App\Models\ReportedUser::class,
+            \App\Models\WalletWithdrawRequest::class,
+            \App\Models\ViewProfilePicture::class,
+            \App\Models\ExpressInterest::class,
+        ] as $model) {
+            $model::observe(\App\Observers\RequestEventObserver::class);
+        }
+
+
         Paginator::useBootstrap();
 
         if (function_exists('get_setting')) {

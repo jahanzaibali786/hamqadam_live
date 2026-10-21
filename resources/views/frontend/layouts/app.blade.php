@@ -4,11 +4,17 @@ if (Session::has('locale')) {
 } else {
     $locale = env('DEFAULT_LANGUAGE');
 }
+$locale = $locale ?: env('DEFAULT_LANGUAGE', 'en');
 $lang = \App\Models\Language::where('code', $locale)->first();
+if (! $lang) {
+    $locale = env('DEFAULT_LANGUAGE', 'en');
+    $lang = \App\Models\Language::where('code', $locale)->first();
+}
+\Illuminate\Support\Facades\App::setLocale($locale);
 @endphp
 
 <!DOCTYPE html>
-@if (\App\Models\Language::where('code', Session::get('locale', Config::get('app.locale')))->first()->rtl == 1)
+@if (($lang?->rtl == 1 || in_array($locale, ['ur','ar'],true)))
     <html dir="rtl" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 @else
     <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -63,7 +69,7 @@ $lang = \App\Models\Language::where('code', $locale)->first();
     <link rel="stylesheet" href="{{ static_asset('assets/css/aiz-core.css?v=') }}{{ rand(1000,9999) }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-luxury.css?v=') }}{{ rand(1000,9999) }}">
 
-    @if (\App\Models\Language::where('code', Session::get('locale', Config::get('app.locale')))->first()->rtl == 1)
+    @if (($lang?->rtl == 1 || in_array($locale, ['ur','ar'],true)))
         <link rel="stylesheet" href="{{ static_asset('assets/css/bootstrap-rtl.min.css') }}">
     @endif
 
@@ -167,12 +173,21 @@ $lang = \App\Models\Language::where('code', $locale)->first();
 
 <body class="text-left hq-site hq-route-{{ str_replace('.', '-', Route::currentRouteName() ?? 'page') }}">
 
+    <a href="#hamqadam-main-content" class="hq-skip-link">Skip to main content</a>
+    <style>
+      .hq-skip-link{position:absolute;left:1rem;top:-120px;z-index:999999;padding:.75rem 1rem;background:#fff;color:#153b69;box-shadow:0 3px 10px rgba(0,0,0,.2)}
+      .hq-skip-link:focus{top:1rem;outline:3px solid #155eef}
+      :focus-visible{outline:3px solid #155eef;outline-offset:2px}
+      @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    </style>
     <div
         class="aiz-main-wrapper d-flex flex-column position-relative @if (Route::currentRouteName() != 'home') pt-8 pt-lg-10 @endif bg-white">
 
         @include('frontend.inc.header')
 
+        <div id="hamqadam-main-content" tabindex="-1" style="flex:1">
         @yield('content')
+        </div>
 
         @include('frontend.inc.footer')
     </div>

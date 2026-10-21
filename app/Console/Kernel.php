@@ -7,37 +7,21 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
 {
-    /**
-     * The Artisan commands provided by your application.
-     *
-     * @var array
-     */
-    protected $commands = [
-        //
-    ];
+    protected $commands = [];
 
-    /**
-     * Define the application's command schedule.
-     *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
-     * @return void
-     */
     protected function schedule(Schedule $schedule)
     {
-        // Google Play account-deletion policy: permanently purge accounts
-        // whose 30-day post-deletion window has elapsed.
         $schedule->command('accounts:purge-deleted')->dailyAt('03:10');
+        // Hourly job enforces each user's configured reminder interval and maximum.
+        $schedule->command('notifications:remind-unread --limit=500')->hourly()->withoutOverlapping();
+        $schedule->command('referrals:award-verified --limit=500')->hourly()->withoutOverlapping();
+        $schedule->command('notifications:send-digests --limit=200')->hourly()->withoutOverlapping();
+        $schedule->command('rewards:award-milestones --limit=500')->dailyAt('04:30')->withoutOverlapping();
     }
 
-    /**
-     * Register the commands for the application.
-     *
-     * @return void
-     */
     protected function commands()
     {
         $this->load(__DIR__.'/Commands');
-
         require base_path('routes/console.php');
     }
 }

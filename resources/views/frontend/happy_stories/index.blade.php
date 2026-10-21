@@ -1,67 +1,42 @@
 @extends('frontend.layouts.app')
 @section('content')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-stories-v2.css') }}?v=2">
 <section class="hq-reference-page-hero hq-stories-reference-hero text-center">
     <div class="container">
         <!-- <div class="hq-reference-breadcrumb text-left">{{ translate('Home') }} <span>/</span> {{ translate('Happy Stories') }}</div> -->
         <span class="hq-reference-eyebrow"><i class="las la-heart"></i> {{ translate('Sacred Unions & Auspicious Beginnings') }}</span>
         <h1>{{ translate('Real Happy Stories of Lifetime Companionship')}}</h1>
         <p>{{ translate('Read how thousands of respectful families and couples found their destined match through Hamqadam’s verified, dignified matrimonial sanctuary.') }}</p>
-        <div class="hq-story-stat-row">
-            <span><i class="las la-heart"></i><strong>12,000+</strong> {{ translate('Happy Sacred Marriages') }}</span>
-            <span><i class="las la-certificate"></i><strong>100%</strong> {{ translate('CNIC Verified Profiles') }}</span>
-            <span><i class="las la-shield-alt"></i><strong>99.2%</strong> {{ translate('Family Trust & Respect') }}</span>
-        </div>
-        <div class="hq-story-filter-row">
-            <span class="active">{{ translate('All Stories') }}</span><span>{{ translate('Recent Nikah') }}</span><span>{{ translate('Overseas & Intercity') }}</span><span>{{ translate('Doctors & Engineers') }}</span><span>{{ translate('Organized by Families') }}</span>
-        </div>
+        <p class="mt-3 mb-0"><strong>{{ $happy_stories->total() }}</strong> {{ translate('published community stories') }} · {{ translate('Shared with permission') }}</p>
     </div>
 </section>
 
 <section class="hq-story-page hq-reference-story-page hq-design-section">
     <div class="container">
-        @php($featuredStory = $happy_stories->first())
-        @if($featuredStory)
-            @php($featuredPhotos = array_values(array_filter(explode(',', (string)$featuredStory->photos))))
-            <article class="hq-feature-story">
-                <a class="hq-feature-story-media" href="{{ route('story_details', $featuredStory->id) }}">
-                    <img src="{{ !empty($featuredPhotos[0]) ? uploaded_asset($featuredPhotos[0]) : static_asset('assets/img/placeholder.jpg') }}" alt="{{ $featuredStory->title }}">
-                </a>
-                <div class="hq-feature-story-copy">
-                    <span class="badge badge-soft-success"><i class="las la-certificate mr-1"></i>{{ translate('Both Profiles CNIC Verified') }}</span>
-                    <div class="text-warning mb-2">★★★★★</div>
-                    <blockquote>“{{ \Illuminate\Support\Str::limit(strip_tags((string)$featuredStory->details), 260) }}”</blockquote>
-                    <h3 class="h5 mb-1 text-primary">{{ $featuredStory->title }}</h3>
-                    <p class="text-muted fs-11 mb-3">{{ translate('A verified Hamqadam success story shared with the community.') }}</p>
-                    <a href="{{ route('story_details', $featuredStory->id) }}" class="btn btn-primary btn-sm">{{ translate('Read Full Journey') }} <i class="las la-arrow-right ml-1"></i></a>
-                </div>
-            </article>
-        @endif
-
         <div class="hq-design-section-title text-left mx-0 mb-4">
-            <span class="eyebrow">{{ translate('Destined Companions') }}</span>
-            <h2>{{ translate('Verified Journey Chronicles') }}</h2>
-            <p>{{ translate('Every match is anchored in mutual respect, familial honor, and verified backgrounds across Pakistan and overseas diaspora.') }}</p>
+            <span class="eyebrow">{{ translate('Community Journeys') }}</span>
+            <h2>{{ translate('Real Stories, Real Connections') }}</h2>
+            <p>{{ translate('Read stories shared and approved by our community.') }}</p>
         </div>
-
         <div class="hq-story-grid">
             @foreach ($happy_stories as $happy_story)
-                @if($featuredStory && $happy_story->id === $featuredStory->id) @continue @endif
                 @php($photo = array_values(array_filter(explode(',', (string)$happy_story->photos))))
                 <article class="card hq-story-card shadow-none">
-                    <a href="{{ route('story_details', $happy_story->id) }}" class="text-reset d-block">
-                        <img src="{{ !empty($photo[0]) ? uploaded_asset($photo[0]) : static_asset('assets/img/placeholder.jpg') }}" class="img-fluid" alt="{{ $happy_story->title }}">
+                    <a href="{{ route('story_details', \App\Support\StoryPublicId::encode((int)$happy_story->id)) }}" class="text-reset d-block">
+                        <img src="{{ !empty($photo[0]) ? uploaded_asset($photo[0]) : static_asset('assets/img/placeholder.jpg') }}" class="hq-story-cover" loading="lazy" alt="{{ $happy_story->title }}">
                     </a>
-                    <div class="p-3">
-                        <span class="hq-story-card-badge"><i class="las la-shield-alt"></i> {{ translate('Verified Journey') }}</span>
-                        <h2 class="h5 mt-2 mb-2"><a href="{{ route('story_details', $happy_story->id) }}" class="text-dark">{{ $happy_story->title }}</a></h2>
+                    <div class="hq-story-card-copy p-4">
+                        <span class="hq-story-card-badge"><i class="las la-heart"></i> {{ translate('Community Story') }}</span>
+                        <h2 class="h5 mt-2 mb-2"><a href="{{ route('story_details', \App\Support\StoryPublicId::encode((int)$happy_story->id)) }}" class="text-dark">{{ $happy_story->title }}</a></h2>
                         <p class="text-muted fs-10 mb-3">{{ \Illuminate\Support\Str::limit(strip_tags((string)$happy_story->details), 135) }}</p>
                         <div class="d-flex justify-content-between align-items-center fs-9 text-muted">
-                            <span><i class="las la-calendar mr-1"></i>{{ $happy_story->created_at->format('M Y') }}</span>
-                            <a href="{{ route('story_details', $happy_story->id) }}" class="text-primary fw-600">{{ translate('View Story') }} <i class="las la-arrow-right"></i></a>
+                            <span><i class="las la-calendar mr-1"></i>{{ $happy_story->created_at?->format('M Y') }}</span>
+                            <a href="{{ route('story_details', \App\Support\StoryPublicId::encode((int)$happy_story->id)) }}" class="text-primary fw-600">{{ translate('View Story') }} <i class="las la-arrow-right"></i></a>
                         </div>
                     </div>
                 </article>
             @endforeach
+            @if($happy_stories->isEmpty())<div class="hq-story-empty"><i class="las la-heart"></i><h3>{{ translate('More love stories are on their way') }}</h3><p>{{ translate('Be the first to share an inspiring journey.') }}</p></div>@endif
         </div>
 
         <div class="aiz-pagination aiz-pagination-center mt-4">{{ $happy_stories->appends(request()->input())->links() }}</div>

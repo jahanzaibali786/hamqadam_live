@@ -10,6 +10,13 @@
         <div class="card-body">
             <div class="pb-4">
                 <form action="{{ route('member.listing') }}" method="get">
+                    <div class="form-group mb-3" role="group" aria-label="{{ translate('Activity and match filters') }}">
+                        <label class="d-block"><input type="checkbox" name="recently_active" value="1" @checked(request()->boolean('recently_active'))> {{ translate('Recently active (30 days)') }}</label>
+                        <label class="d-block"><input type="checkbox" name="online_now" value="1" @checked(request()->boolean('online_now'))> {{ translate('Online recently (15 minutes)') }}</label>
+                        <label class="d-block"><input type="checkbox" name="new_profiles" value="1" @checked(request()->boolean('new_profiles'))> {{ translate('New profiles (14 days)') }}</label>
+                        <label class="d-block"><input type="checkbox" name="mutual_match" value="1" @checked(request()->boolean('mutual_match'))> {{ translate('Accepted mutual interests (premium)') }}</label>
+                    </div>
+
                     <div class="row">
                         <div class="col-lg-6">
                             <div class="form-group mb-3">

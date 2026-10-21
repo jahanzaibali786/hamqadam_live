@@ -1,54 +1,65 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers\Api;
 
+use App\Http\Resources\ReferralEarningsResource;
+use App\Http\Resources\ReferralResource;
+use App\Models\RewardTransaction;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Services\Referral\ReferralRewardService;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Api\Controller;
-use App\Http\Resources\ReferralResource;
-use App\Http\Resources\ReferralEarningsResource;
 
+/** Backward-compatible mobile referral endpoints: GET /api/referral-*. */
 class ReferralController extends Controller
 {
-    public function index()
+    public function __construct(private readonly ReferralRewardService $rewards)
     {
-        if (addon_activation('referral_system')) {
-            $referred_users = User::orderBy('id', 'desc')->where('referred_by', auth()->user()->id)->paginate(10);
-            return ReferralResource::collection($referred_users)->additional([
-                    'result' => true
-                ]);
-        }
-        return $this->failure_message('You are not authorized to access!!');
     }
 
-    public function referral_code()
+    public function index(Request $request)
     {
-        if (addon_activation('referral_system')) {
-            $data['referral_code'] = auth()->user()->code;
-            return $this->response_data($data);
-        }
-        return $this->failure_message('You are not authorized to access!!');
+        $user = $request->user();
+        $items = User::where('referred_by', $user->id)->latest()->paginate(15);
+        return ReferralResource::collection($items)->additional([
+            'result' => true,
+            'summary' => $this->rewards->summary($user, true),
+        ]);
     }
 
-    public function referral_earnings()
+    public function referral_code(Request $request)
     {
-        if (addon_activation('referral_system')) {
-            $referral_earnings = Wallet::orderBy('id', 'desc')->where('payment_method', 'reffered_commission')->where('user_id', auth()->user()->id)->paginate(10);
-            return ReferralEarningsResource::collection($referral_earnings)->additional([
-                    'result' => true
-                ]);
-        }
-        return $this->failure_message('You are not authorized to access!!');
+        // Preserve referral_code for old mobile versions; add the shareable link
+        // and explicit eligibility/limits for newer builds.
+        return $this->response_data($this->rewards->summary($request->user(), true));
     }
-    public function referral_check()
+
+    public function referral_earnings(Request $request)
     {
-        $data = array();
-        $auth_user = auth()->user();
-        if (addon_activation('referral_system') && $auth_user->referred_by != null && $auth_user->referral_comission == 0) {
+        $user = $request->user();
+        $commissions = Wallet::where('payment_method', 'reffered_commission')
+            ->where('user_id', $user->id)->latest()->paginate(15);
+        $rewardHistory = RewardTransaction::where('user_id', $user->id)
+            ->where('event_key', ReferralRewardService::EVENT)
+            ->latest()->limit(50)->get(['id','reference_id','coins','created_at']);
+        return ReferralEarningsResource::collection($commissions)->additional([
+            'result' => true,
+            'summary' => $this->rewards->summary($user, true),
+            'coin_reward_history' => $rewardHistory,
+        ]);
+    }
+
+    public function referral_check(Request $request)
+    {
+        $user = $request->user();
+        $data = $this->rewards->summary($user, true);
+        if (addon_activation('referral_system') && $user->referred_by !== null
+            && (int)($user->referral_comission ?? 0) === 0) {
             $data['referral_discount_type'] = get_setting('referral_user_package_purchase_discount_type');
             $data['referral_discount_amount'] = get_setting('referral_user_package_purchase_discount');
         }
-        return empty($data) ? $this->failure_data($data) : $this->response_data($data);
+        return $this->response_data($data);
     }
 }

@@ -139,7 +139,7 @@ class InterestController extends ApiController
         // so `in_array()` — which scans VALUES, not keys — could never find a
         // flag name and rejected Super Like for every member, on every plan.
         // Admin rows may also hold a plain list, so accept both shapes.
-        if ($priority && ! $this->hasFeatureFlag($featureFlags, 'priority_interest')) {
+        if ($priority && ! app(\App\Services\ClientScope\PremiumEntitlementService::class)->has($sender, 'priority_interest')) {
             return $this->error('Priority Interest / Super Like is not included in your current plan.', 403, 'plan_feature_required');
         }
 

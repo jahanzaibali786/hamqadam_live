@@ -169,7 +169,7 @@ class HelpChatService
      * `q` filters by the member's name, code or email — the panel search box.
      * `status` selects open / closed / all.
      */
-    public function adminThreads(string $status = 'all', string $q = '', int $perPage = 20): LengthAwarePaginator
+    public function adminThreads(string $status = 'all', string $q = '', int $perPage = 20, string $queue = 'all', ?int $agentId = null, ?string $language = null): LengthAwarePaginator
     {
         $query = HelpChatThread::with(['user', 'lastMessage'])
             ->orderByDesc('last_message_at')
@@ -177,6 +177,20 @@ class HelpChatService
 
         if (in_array($status, [HelpChatThread::STATUS_OPEN, HelpChatThread::STATUS_CLOSED], true)) {
             $query->where('status', $status);
+        }
+
+        if ($queue === 'unassigned') $query->whereNull('assigned_agent_id');
+        if ($queue === 'overdue') {
+            $query->where('status', HelpChatThread::STATUS_OPEN)
+                ->where('admin_unread_count', '>', 0)
+                ->where('last_message_at', '<=', now()->subMinutes(app(HelpChatSlaService::class)->thresholdMinutes()));
+        }
+        if ($queue === 'awaiting') {
+            $query->where('status', HelpChatThread::STATUS_OPEN)->where('admin_unread_count', '>', 0);
+        }
+        if ($agentId !== null) $query->where('assigned_agent_id', $agentId);
+        if ($language !== null && \Illuminate\Support\Facades\Schema::hasColumn('help_chat_threads', 'preferred_language')) {
+            $query->where('preferred_language', $language);
         }
 
         if ($q !== '') {

@@ -1,55 +1,71 @@
-name: Fast Laravel Deploy via SSH
+name: Deploy Hamqadam to Live
 
 on:
   push:
     branches:
       - main
       - master
-
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hamqadam-live-deploy
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    name: Sync project over SSH
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST || 'hamqadam.com' }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+      DEPLOY_PATH: ${{ secrets.SSH_DEPLOY_PATH || '/home/hamqadam.com/public_html' }}
 
     steps:
+      - name: Checkout revision
+        uses: actions/checkout@v4
 
-      ###########################################################
-      # Checkout Repository
-      ###########################################################
-      - name: Checkout Repository
-        uses: actions/checkout@v5
+      - name: Validate deployable PHP sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          find app routes config database/migrations -type f -name '*.php' -print0 | xargs -0 -n1 php -l >/tmp/php-lint.log
+          tail -n 12 /tmp/php-lint.log
 
-      ###########################################################
-      # Deploy only changed files over SSH.
-      # Required secrets: SSH_PRIVATE_KEY and SSH_USER.
-      # Optional secrets: SSH_HOST, SSH_PORT, SSH_DEPLOY_PATH.
-      ###########################################################
       - name: Start SSH agent
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy via SSH and rsync
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST || 'hamqadam.com' }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
-          DEPLOY_PATH: ${{ secrets.SSH_DEPLOY_PATH || '/home/hamqadam.com/public_html' }}
+      - name: Verify live SSH target
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SSH_USER" || { echo 'SSH_USER secret is required'; exit 1; }
+          mkdir -p "$HOME/.ssh"
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null
+          ssh -T -p "$SSH_PORT" -o BatchMode=yes -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" \
+            "test -d '$DEPLOY_PATH' && test -w '$DEPLOY_PATH' && printf 'SSH target ready: %s\\n' '$DEPLOY_PATH'"
+
+      - name: Sync repository to live
+        shell: bash
         run: |
           set -euo pipefail
 
-          if [ -z "$SSH_USER" ]; then
-            echo "SSH_USER secret is required"
-            exit 1
-          fi
+          # This file is generated only in the runner and is never committed.
+          # It provides a safe browser-visible proof of the deployed revision.
+          printf 'Hamqadam deployment\nCommit: %s\nBranch: %s\nUTC: %s\n' \
+            "$GITHUB_SHA" "$GITHUB_REF_NAME" "$(date -u '+%Y-%m-%d %H:%M:%S')" \
+            > public/deployment-build.txt
 
-          mkdir -p ~/.ssh
-          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "mkdir -p '$DEPLOY_PATH'"
-
-          rsync -az --whole-file --partial --omit-dir-times --no-perms --no-owner --no-group \
-            -e "ssh -p $SSH_PORT" \
+          rsync -az --delete-delay --partial --omit-dir-times \
+            --no-perms --no-owner --no-group --itemize-changes --stats \
+            -e "ssh -T -p $SSH_PORT -o BatchMode=yes -o ConnectTimeout=15" \
             --exclude='.git/' \
             --exclude='.github/' \
             --exclude='.gitignore' \
@@ -62,6 +78,7 @@ jobs:
             --exclude='.freebuff/' \
             --exclude='.devin/' \
             --exclude='_call_bundle/' \
+            --exclude='.deploy-commit' \
             --exclude='storage/logs/' \
             --exclude='storage/framework/cache/' \
             --exclude='storage/framework/sessions/' \
@@ -70,15 +87,17 @@ jobs:
             --exclude='storage/app/' \
             --exclude='bootstrap/cache/*.php' \
             --exclude='public/uploads/' \
-            --exclude='tests/' \
             --exclude='*.zip' \
             --exclude='*.sql' \
             ./ "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/"
 
-          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
-            "cd '$DEPLOY_PATH' && php artisan optimize:clear"
-      ###########################################################
-      # Done
-      ###########################################################
-      - name: Deployment Complete
-        run: echo "✅ Deployment completed successfully."
+      - name: Clear live caches and record deployed revision
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -T -p "$SSH_PORT" -o BatchMode=yes -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" \
+            "cd '$DEPLOY_PATH' && php artisan optimize:clear && printf '%s\\n' '${GITHUB_SHA}' > .deploy-commit && printf 'Live revision: ' && cat .deploy-commit"
+
+      - name: Deployment complete
+        run: echo "Live deployment completed for ${GITHUB_SHA}."

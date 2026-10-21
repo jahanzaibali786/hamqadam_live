@@ -98,7 +98,7 @@ class AuthController extends ApiController
         $otp = $this->authService->requestMobileLoginOtp($request->string('phone')->toString());
 
         $meta = [];
-        if (! app()->environment('production')) {
+        if (app()->environment('local') && config('app.debug')) {
             $meta['debug_otp'] = $otp['code'];
         }
 

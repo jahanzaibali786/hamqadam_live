@@ -10,18 +10,20 @@ use App\Http\Controllers\Api\V1\ApiController;
 use App\Http\Requests\Api\V1\Payment\CheckoutRequest;
 use App\Http\Requests\Api\V1\Payment\CouponValidationRequest;
 use App\Http\Requests\Api\V1\Payment\PaymentHistoryRequest;
-use App\Http\Requests\Api\V1\Payment\PaymentWebhookRequest;
 use App\Http\Resources\Api\V1\Payment\PackageUsageResource;
 use App\Http\Resources\Api\V1\Payment\PaymentResource;
 use App\Http\Resources\Api\V1\Payment\PlanResource;
 use App\Services\Api\V1\Payment\PaymentService;
+use App\Services\Api\V1\Payment\WalletGatewayAdapter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PaymentController extends ApiController
 {
-    public function __construct(private readonly PaymentService $payments)
-    {
+    public function __construct(
+        private readonly PaymentService $payments,
+        private readonly WalletGatewayAdapter $wallets
+    ) {
     }
 
     public function plans(): JsonResponse
@@ -34,7 +36,6 @@ class PaymentController extends ApiController
         $user = $request->user();
         $member = $user->member;
         $package = $this->payments->current($user);
-
         return $this->success([
             'current_package' => $package ? new PlanResource($package) : null,
             'package_validity' => $member?->package_validity ? \Carbon\Carbon::parse($member->package_validity)->toDateString() : null,
@@ -53,7 +54,8 @@ class PaymentController extends ApiController
     public function gateways(Request $request): JsonResponse
     {
         $gateways = $this->payments->gateways();
-
+        // Wallets are kept out of the mobile product list until the payment
+        // portal or inquiry settings needed for their specific API are complete.
         return $this->success([
             'gateways' => $gateways,
             'summary' => [
@@ -64,12 +66,10 @@ class PaymentController extends ApiController
         ], 'Payment gateways fetched successfully.');
     }
 
-    /** GET /payments/coins/pricing — admin-configured per-coin charge + limits. */
     public function coinPricing(Request $request): JsonResponse
     {
         $unit = custom_coin_unit_price();
         $currency = \App\Models\Currency::find(get_setting('system_default_currency'))->code ?? 'PKR';
-
         return $this->success([
             'unit_price' => $unit,
             'currency' => strtoupper($currency),
@@ -80,10 +80,7 @@ class PaymentController extends ApiController
 
     public function gateway(Request $request, int $gateway): JsonResponse
     {
-        return $this->success(
-            $this->payments->gatewayDetails(\App\Enums\PaymentGateway::fromId($gateway)),
-            'Payment gateway fetched successfully.'
-        );
+        return $this->success($this->payments->gatewayDetails(PaymentGateway::fromId($gateway)), 'Payment gateway fetched successfully.');
     }
 
     public function package(Request $request, int $package): JsonResponse
@@ -94,7 +91,6 @@ class PaymentController extends ApiController
     public function usage(Request $request): JsonResponse
     {
         $items = $this->payments->usage($request->user(), ['per_page' => $request->integer('per_page', 20), 'feature' => $request->string('feature')->toString()]);
-
         return PackageUsageResource::collection($items)->additional([
             'success' => true,
             'summary' => [
@@ -108,9 +104,11 @@ class PaymentController extends ApiController
     public function checkout(CheckoutRequest $request): JsonResponse
     {
         $checkout = $this->payments->checkout($request->user(), $request->validated());
-
+        if ($checkout['gateway'] === PaymentGateway::JazzCash->value && $checkout['payment']->payment_status !== 'Paid') {
+            $checkout['checkout'] = $this->wallets->jazzcashCheckout($checkout['payment']);
+        }
         return $this->success([
-            'payment' => new PaymentResource($checkout['payment']),
+            'payment' => new PaymentResource($checkout['payment']->fresh()),
             'gateway' => $checkout['gateway'],
             'gateway_id' => $checkout['gateway_id'],
             'checkout' => $checkout['checkout'],
@@ -121,18 +119,29 @@ class PaymentController extends ApiController
     public function checkoutStatus(Request $request, int $payment): JsonResponse
     {
         $status = $this->payments->checkoutStatus($request->user(), $payment, $request->string('checkout_token')->toString() ?: null);
-
         return $this->success([
             'payment' => new PaymentResource($status['payment']),
             'checkout' => $status['checkout'],
         ], 'Checkout status fetched successfully.');
     }
 
+    public function retry(Request $request, int $payment): JsonResponse
+    {
+        $result = $this->payments->retryCheckout($request->user(), $payment);
+        if ($result['gateway'] === PaymentGateway::JazzCash->value && $result['payment']->payment_status !== 'Paid') {
+            $result['checkout'] = $this->wallets->jazzcashCheckout($result['payment']);
+        }
+        return $this->success([
+            'payment' => new PaymentResource($result['payment']->fresh()),
+            'checkout' => $result['checkout'],
+            'security' => $result['security'],
+        ], 'New checkout created for retry.', 201);
+    }
+
     public function history(PaymentHistoryRequest $request): JsonResponse
     {
-        return PaymentResource::collection(
-            $this->payments->history($request->user(), $request->validated())
-        )->additional(['success' => true])->response();
+        return PaymentResource::collection($this->payments->history($request->user(), $request->validated()))
+            ->additional(['success' => true])->response();
     }
 
     public function invoice(Request $request, int $payment): JsonResponse
@@ -142,50 +151,37 @@ class PaymentController extends ApiController
 
     public function validateCoupon(CouponValidationRequest $request): JsonResponse
     {
-        return $this->success($this->payments->validateCoupon(
-            $request->validated('code'),
-            (int) $request->validated('package_id')
-        ));
+        return $this->success($this->payments->validateCoupon($request->validated('code'), (int) $request->validated('package_id'), $request->user()));
     }
 
     public function stripeWebhook(Request $request): JsonResponse
     {
-        // Signature-verified inside the service: the raw body and the
-        // `Stripe-Signature` header are what Stripe actually signs, so the
-        // typed request validation must not run first.
         $payment = $this->payments->processStripeWebhook($request);
-
-        return $this->success(
-            $payment ? new PaymentResource($payment) : null,
-            $payment ? 'Stripe webhook processed.' : 'Stripe event ignored.'
-        );
+        return $this->success($payment ? new PaymentResource($payment) : null, $payment ? 'Stripe webhook processed.' : 'Stripe event ignored.');
     }
 
-    public function easypaisaWebhook(PaymentWebhookRequest $request): JsonResponse
+    public function easypaisaWebhook(Request $request): JsonResponse
     {
         $this->assertWalletWebhookEnabled('easypaisa');
-
+        // Browser/callback fields only identify an order. Status is independently
+        // obtained from the authenticated merchant-to-provider inquiry API.
+        $event = $this->wallets->verifyEasypaisa($request);
         return $this->success(
-            new PaymentResource($this->payments->processWebhook(PaymentGateway::EasyPaisa, $request->validated())),
-            'EasyPaisa webhook processed.'
+            new PaymentResource($this->payments->processWebhook(PaymentGateway::EasyPaisa, $event)),
+            'Easypaisa payment verified and processed.'
         );
     }
 
-    public function jazzcashWebhook(PaymentWebhookRequest $request): JsonResponse
+    public function jazzcashWebhook(Request $request): JsonResponse
     {
         $this->assertWalletWebhookEnabled('jazzcash');
-
+        $event = $this->wallets->verifyJazzcash($request);
         return $this->success(
-            new PaymentResource($this->payments->processWebhook(PaymentGateway::JazzCash, $request->validated())),
-            'JazzCash webhook processed.'
+            new PaymentResource($this->payments->processWebhook(PaymentGateway::JazzCash, $event)),
+            'JazzCash signed payment event processed.'
         );
     }
 
-    /**
-     * Wallet webhooks are unsigned: refuse them outright unless the wallet is
-     * actually switched on, so a disabled gateway can never be used to flip a
-     * payment to Paid. They never fire in the app's card-only flow today.
-     */
     private function assertWalletWebhookEnabled(string $gateway): void
     {
         if (get_setting($gateway . '_payment_activation') != 1) {

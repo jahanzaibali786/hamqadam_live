@@ -37,6 +37,12 @@
                 </li>
 
                 <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.matchmaking_logs.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.matchmaking_logs.index','admin.matchmaking_logs.show']) }}">
+                        <i class="las la-file-code aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('AI Matchmaking API Logs') }}</span>
+                    </a>
+                </li>
+                <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
                         <i class="las la-tasks aiz-side-nav-icon"></i>
                         <span class="aiz-side-nav-text">{{ translate('MVP Operations') }}</span>
@@ -320,6 +326,29 @@
                 </li>
                 @endcan
 
+                @can('show_package_payments')
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.payment_refunds.index') }}" class="aiz-side-nav-link">
+                        <i class="las la-file-invoice-dollar aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Refund Requests') }}</span>
+                    </a>
+                </li>
+                @endcan
+                @can('show_package_payments')
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.payment_audit.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.payment_audit.index']) }}">
+                        <i class="las la-chart-bar aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Payment Reconciliation') }}</span>
+                    </a>
+                </li>
+                @endcan
+                {{-- Recorded notification deliveries; does not imply gateway-confirmed receipt. --}}
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.notification_audit.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.notification_audit.index']) }}">
+                        <i class="las la-bell aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Notification Delivery Audit') }}</span>
+                    </a>
+                </li>
                 <!-- Earnings -->
                 @can('show_package_payments')
                 <li class="aiz-side-nav-item ">
@@ -369,6 +398,21 @@
                         <i class="las la-chart-line aiz-side-nav-icon"></i>
                         <span class="aiz-side-nav-text">{{ translate('Completion & Analytics') }}</span>
                     </a>
+                </li>
+
+                {{-- Client scope feature navigation: existing named, protected admin routes. --}}
+                <li class="aiz-side-nav-item">
+                    <a href="javascript:void(0);" class="aiz-side-nav-link">
+                        <i class="las la-tasks aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">{{ translate('Client Features & Reporting') }}</span>
+                        <span class="aiz-side-nav-arrow"></span>
+                    </a>
+                    <ul class="aiz-side-nav-list level-2">
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.client.scope.dashboard') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Analytics, Rewards & Sponsored Ads') }}</span></a></li>
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.client.scope.profiles') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Advanced Profile Search') }}</span></a></li>
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.client.scope.outcomes.index') }}" class="aiz-side-nav-link"><span class="aiz-side-nav-text">{{ translate('Got Match Outcome Reviews') }}</span></a></li>
+                        {{-- Support ticket management is in Customer Support. --}}
+                    </ul>
                 </li>
 
                 {{-- Happy Stories --}}
@@ -447,6 +491,12 @@
                             </a>
                         </li>
                         @endcan
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('support-tickets.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['support-tickets.index']) }}">
+                                <i class="las la-ticket-alt aiz-side-nav-icon"></i>
+                                <span class="aiz-side-nav-text">{{ translate('Support Ticket Management') }}</span>
+                            </a>
+                        </li>
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('admin.help-chat.index') }}"
                                 class="aiz-side-nav-link {{ areActiveRoutes(['admin.help-chat.index', 'admin.help-chat.show']) }}">
@@ -885,6 +935,8 @@
     </div><!-- .aiz-sidebar -->
     <div class="aiz-sidebar-overlay"></div>
 </div><!-- .aiz-sidebar -->
+
+
 
 
 

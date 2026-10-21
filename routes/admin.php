@@ -112,6 +112,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::post('/{id}/reply', 'reply')->whereNumber('id')->name('reply');
         Route::get('/{id}/message-html', 'messageHtml')->whereNumber('id')->name('message_html');
         Route::post('/{id}/status', 'updateStatus')->whereNumber('id')->name('status');
+        Route::post('/{id}/assign', 'assign')->whereNumber('id')->name('assign');
         Route::get('/{id}/destroy', 'destroy')->whereNumber('id')->name('destroy');
     });
 
@@ -176,6 +177,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('/payment-coupons', PaymentCouponController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // package Payments
+    Route::get('/payment-audit', [\App\Http\Controllers\Admin\PaymentAuditController::class, 'index'])->middleware('permission:show_package_payments')->name('admin.payment_audit.index');
+    Route::get('/payment-refunds', [\App\Http\Controllers\Admin\PaymentRefundController::class, 'index'])->name('admin.payment_refunds.index');
+    Route::post('/payment-refunds/{refund}/review', [\App\Http\Controllers\Admin\PaymentRefundController::class, 'review'])->middleware('permission:show_package_payments')->name('admin.payment_refunds.review');
+    Route::post('/payment-refunds/{refund}/execute', [\App\Http\Controllers\Admin\PaymentRefundController::class, 'execute'])->middleware('permission:show_package_payments')->name('admin.payment_refunds.execute');
     Route::resource('package-payments', PackagePaymentController::class);
     Route::controller(PackagePaymentController::class)->group(function () {
         Route::get('/manual-payment-accept/{id}', 'manual_payment_accept')->name('manual_payment_accept');
@@ -324,6 +329,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('/additional-attributes', AdditionalAttributeController::class);
     Route::post('/additional-attributes/update', [AdditionalAttributeController::class, 'update'])->name('additional-attributes.update');
 
+    Route::get('/languages/batch/{language}/export', [\App\Http\Controllers\Admin\TranslationBatchController::class, 'export'])
+        ->middleware('permission:translate_languages')->name('languages.batch.export');
+    Route::post('/languages/batch/import', [\App\Http\Controllers\Admin\TranslationBatchController::class, 'import'])
+        ->middleware('permission:translate_languages')->name('languages.batch.import');
     Route::resource('/languages', LanguageController::class);
 
     // Currency settings
@@ -366,6 +375,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::post('/roles/add_permission', [RoleController::class, 'add_permission'])->name('roles.permission');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications');
+    Route::get('/matchmaking-api-logs', [\App\Http\Controllers\Admin\MatchmakingLogController::class, 'index'])->name('admin.matchmaking_logs.index');
+    Route::get('/matchmaking-api-logs/{id}', [\App\Http\Controllers\Admin\MatchmakingLogController::class, 'show'])->whereNumber('id')->name('admin.matchmaking_logs.show');
+    Route::get('/notification-delivery-audit', [\App\Http\Controllers\Admin\NotificationAuditController::class, 'index'])->name('admin.notification_audit.index');
 
     Route::resource('addons', AddonController::class);
     Route::post('/addons/activation', [AddonController::class, 'activation'])->name('addons.activation');

@@ -29,7 +29,7 @@
     }
 @endphp
 
-<div class="aiz-user-sidenav-wrap pt-4 sticky-top c-scrollbar-light position-relative z-1 shadow-none">
+<div class="aiz-user-sidenav-wrap hq-member-scroll-shell pt-4 sticky-top c-scrollbar-light position-relative z-1 shadow-none">
     <div class="absolute-top-left d-xl-none">
         <button class="btn btn-sm p-2" data-toggle="class-toggle" data-target=".aiz-mobile-side-nav"
             data-same=".mobile-side-nav-thumb">
@@ -73,15 +73,10 @@
                         </div>
                     @endif
                 @endif
-            @else
-                <div class="mt-2">
-                    <a href="{{ route('member_profile', Auth::user()->id) }}"
-                        class="btn btn-block btn-sm btn-soft-primary">{{ translate('Public Profile') }}</a>
-                </div>
             @endif
         </div>
 
-        <div class="sidemnenu mb-3">
+        <div class="sidemnenu hq-member-side-scroll mb-3" id="hq-member-side-scroll" tabindex="0" role="region" aria-label="Member dashboard navigation">
             <ul class="aiz-side-nav-list" data-toggle="aiz-side-menu">
 
                 @if ($isDedicatedGuardian)
@@ -206,6 +201,12 @@
                         <a href="{{ route('profile_settings') }}" class="aiz-side-nav-link">
                             <i class="las la-user aiz-side-nav-icon"></i>
                             <span class="aiz-side-nav-text">{{ translate('My Profile') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('member_profile', Auth::user()->id) }}" class="aiz-side-nav-link {{ areActiveRoutes(['member_profile']) }}">
+                            <i class="las la-id-card aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Public Profile') }}</span>
                         </a>
                     </li>
                     <li class="aiz-side-nav-item">
@@ -379,11 +380,55 @@
                             </li>
                         </ul>
                     </li>
+                    {{-- Client-requested member features, visible in the member dashboard. --}}
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('client.scope.portal') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.portal', 'client.scope.got-match']) }}">
+                            <i class="las la-heart aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('My Matches & Got Match') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('client.scope.notifications') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.notifications']) }}">
+                            <i class="las la-bell aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Notification Preferences & History') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('client.scope.support') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.support']) }}">
+                            <i class="las la-headset aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Support Tickets & Ratings') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('client.scope.satisfaction') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.satisfaction']) }}">
+                            <i class="las la-star aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Rate Hamqadam (NPS)') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('blog') }}" class="aiz-side-nav-link">
+                            <i class="las la-book-open aiz-side-nav-icon"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Articles & Marriage Advice') }}</span>
+                        </a>
+                    </li>
+                    {{-- Dedicated referral & refund destinations use the regular member panel layout. --}}
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('member.referrals.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.referrals.index']) }}" @if(request()->routeIs('member.referrals.index')) aria-current="page" @endif>
+                            <i class="las la-user-plus aiz-side-nav-icon" aria-hidden="true"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Refer Friends & Rewards') }}</span>
+                        </a>
+                    </li>
+                    <li class="aiz-side-nav-item">
+                        <a href="{{ route('member.payment_refunds.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.payment_refunds.index', 'member.payment_refunds.store']) }}" @if(request()->routeIs('member.payment_refunds.index')) aria-current="page" @endif>
+                            <i class="las la-file-invoice-dollar aiz-side-nav-icon" aria-hidden="true"></i>
+                            <span class="aiz-side-nav-text">{{ translate('Payments & Refunds') }}</span>
+                        </a>
+                    </li>
                     @if (addon_activation('referral_system'))
                         <li class="aiz-side-nav-item">
                             <a href="javascript:void(0);" class="aiz-side-nav-link">
                                 <i class="las la-shopping-basket aiz-side-nav-icon"></i>
-                                <span class="aiz-side-nav-text">{{ translate('Referral System') }}</span>
+                                <span class="aiz-side-nav-text">{{ translate('Legacy Referral Wallet') }}</span>
                                 @if (env('DEMO_MODE') == 'On')
                                     <span class="badge badge-inline badge-danger">{{ translate('Addon') }}</span>
                                 @endif

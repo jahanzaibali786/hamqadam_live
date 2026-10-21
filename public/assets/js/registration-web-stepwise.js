@@ -994,7 +994,7 @@
             container.innerHTML = html;
         }
 
-        function showStep(stepNumber) {
+        function showStep(stepNumber, scrollToForm = true) {
             current = Math.max(1, Math.min(total, stepNumber));
             steps.forEach(function (step) {
                 step.classList.toggle('d-none', Number(step.dataset.registrationStep) !== current);
@@ -1013,7 +1013,11 @@
             refreshSelects();
             toggleConditionalFields();
             if (current === 18) syncEmailFields();
-            window.scrollTo({ top: flow.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' });
+            // Initial render must not pull visitors away from the homepage hero.
+            // Scroll only when the user changes the registration step.
+            if (scrollToForm) {
+                window.scrollTo({ top: flow.getBoundingClientRect().top + window.pageYOffset - 90, behavior: 'smooth' });
+            }
         }
 
         if (prev) prev.addEventListener('click', function () { showStep(current - 1); });
@@ -1079,6 +1083,6 @@
         setupEducationDropdowns();
         setupReligionSectDropdowns();
         
-        showStep(1);
+        showStep(1, false);
     });
 })();

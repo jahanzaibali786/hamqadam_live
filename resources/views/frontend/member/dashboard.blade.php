@@ -1,6 +1,6 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
-    @php
+    <?php
         $user = Auth::user();
         $col  = 4;
         $profile_picture_privacy = get_setting('profile_picture_privacy');
@@ -12,10 +12,17 @@
         elseif($gallery_image_privacy == 'only_me') {
             $col++;
         }
-    @endphp
-        @php
+    ?>
+        <?php
         $badges = app(\App\Services\BadgeService::class)->payload($user);
-    @endphp
+    ?>
+    <?php if (app(\App\Services\ClientScope\PremiumEntitlementService::class)->has($user, 'profile_boost')): ?>
+      <?php $boostStatus = app(\App\Services\ClientScope\ProfileBoostService::class)->current($user); ?>
+      <section class="alert alert-info"><h2 class="h6">{{ translate('Boost your profile') }}</h2>
+      <p>{{ $boostStatus['active'] ? translate('Your profile is currently boosted.') : translate('Appear above regular discovery results for 24 hours, once every seven days.') }}</p>
+      <?php if (!($boostStatus['active'])): ?><form method="POST" action="{{ route('member.profile_boost.activate') }}">@csrf<button class="btn btn-primary btn-sm">{{ translate('Activate premium boost') }}</button></form><?php endif; ?>
+      </section>
+    <?php endif; ?>
     <div class="row gutters-5 mb-4">
         <div class="col-md-6 mb-2">
             <div class="bg-white border rounded p-3 h-100 d-flex align-items-center">
@@ -33,9 +40,9 @@
                         <span class="ml-1">({{ $badges['trust']['current_streak'] ?? 0 }}/{{ $badges['trust']['target_streak'] ?? 7 }} {{ translate('days') }})</span>
                     </div>
                     <div class="d-flex align-items-center mt-1" aria-label="{{ translate('Login streak') }}">
-                        @for($fire = 1; $fire <= ($badges['trust']['target_streak'] ?? 7); $fire++)
+                        <?php for ($fire = 1; $fire <= ($badges['trust']['target_streak'] ?? 7); $fire++): ?>
                             <i class="las la-fire mr-1 {{ $fire <= ($badges['trust']['current_streak'] ?? 0) ? 'text-danger' : 'text-muted opacity-50' }}" title="{{ $fire <= ($badges['trust']['current_streak'] ?? 0) ? translate('Completed streak day') : translate('Streak day not completed') }}"></i>
-                        @endfor
+                        <?php endfor; ?>
                     </div>
                 </div>
             </div>
@@ -56,7 +63,7 @@
     {{-- blocks on the model, so this is the recovery path: model was down,   --}}
     {{-- no usable photo on file, or the result came back MANUAL_REVIEW.      --}}
     {{-- ------------------------------------------------------------------ --}}
-    @php
+    <?php
         $aiStatus = $user->member?->ai_verification_status ?? 'not_started';
         $aiRecommendation = $user->member?->ai_verification_recommendation;
         $aiAttempts = (int) ($user->member?->ai_verification_attempts ?? 0);
@@ -69,9 +76,9 @@
             'pending'       => ['alert-info',    'la-spinner',             translate('Identity verification is running in the background.')],
             default         => ['alert-secondary','la-id-card',            translate('Your identity is not verified yet.')],
         };
-    @endphp
+    ?>
 
-    @php
+    <?php
         // Keep the dashboard renderable for legacy members or incomplete verification records.
         $aiStatus = $aiStatus ?? 'not_started';
         $aiRecommendation = $aiRecommendation ?? null;
@@ -82,8 +89,8 @@
             'la-id-card',
             translate('Your identity is not verified yet.'),
         ];
-    @endphp
-    @if(!($aiVerified ?? false))
+    ?>
+    <?php if (!($aiVerified ?? false)): ?>
         <div class="alert {{ $aiMeta[0] }} d-flex flex-wrap align-items-center justify-content-between">
             <div class="mr-3">
                 <strong>
@@ -91,24 +98,24 @@
                     {{ translate('AI Identity Verification') }}
                 </strong>
                 <span class="d-block fs-13">{{ $aiMeta[2] }}</span>
-                @if($aiAttempts > 0)
+                <?php if ($aiAttempts > 0): ?>
                     <span class="d-block fs-12 opacity-70">
                         {{ translate('Attempts') }}: {{ $aiAttempts }}
-                        @if($aiRecommendation) &middot; {{ translate('Last result') }}: {{ $aiRecommendation }} @endif
-                        @if($user->member?->ai_verification_last_attempt_at)
+                        <?php if ($aiRecommendation): ?> &middot; {{ translate('Last result') }}: {{ $aiRecommendation }} <?php endif; ?>
+                        <?php if ($user->member?->ai_verification_last_attempt_at): ?>
                             &middot; {{ $user->member->ai_verification_last_attempt_at->diffForHumans() }}
-                        @endif
+                        <?php endif; ?>
                     </span>
-                @endif
+                <?php endif; ?>
             </div>
             <div class="mt-2 mt-md-0 d-flex align-items-center">
-                @if(in_array($aiStatus, ['not_started', 'manual_review']))
+                <?php if (in_array($aiStatus, ['not_started', 'manual_review'])): ?>
                     <a href="{{ route('member.verification') }}" class="btn btn-sm btn-outline-primary mr-2">
                         {{ translate('Upload CNIC & Selfie') }}
                     </a>
-                @else
+                <?php else: ?>
                     <span class="badge badge-inline badge-warning mr-2">{{ translate('Verification in progress') }}</span>
-                @endif
+                <?php endif; ?>
                 <form action="{{ route('member.ai_verification.run') }}" method="POST" class="d-inline">
                     @csrf
                     <button type="submit" class="btn btn-sm btn-primary">
@@ -118,7 +125,7 @@
                 </form>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 
     <div class="row gutters-5 mb-4">
         <div class="col-md-3 mb-3">
@@ -143,11 +150,11 @@
                 <div class="h5 fw-600 mb-1">{{ $user->member?->package?->name ?? translate('No active package') }}</div>
                 <div class="fs-12 opacity-70">
                     {{ translate('Package expiry') }}:
-                    @if($user->member?->package_validity && package_validity($user->id))
+                    <?php if ($user->member?->package_validity && package_validity($user->id)): ?>
                         {{ $user->member->package_validity }}
-                    @else
+                    <?php else: ?>
                         <span class="text-danger">{{ translate('Expired') }}</span>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -190,7 +197,7 @@
                 <div class="opacity-50 text-center">{{ translate('Remaining') }} <br> {{ translate('Gallery Image Upload') }}</div>
             </div>
         </div>
-        @if($profile_picture_privacy == 'only_me')
+        <?php if ($profile_picture_privacy == 'only_me'): ?>
         <div class="col mx-auto mb-3" >
             <div class="bg-light rounded overflow-hidden text-center p-3">
                 <i class="las la-user-circle la-2x mb-3 text-primary-grad"></i>
@@ -198,8 +205,8 @@
                 <div class="opacity-50 ">{{ translate('Remaining') }} <br> {{ translate('Profile Picture View') }}</div>
             </div>
         </div>
-        @endif
-        @if($gallery_image_privacy == 'only_me')
+        <?php endif; ?>
+        <?php if ($gallery_image_privacy == 'only_me'): ?>
         <div class="col mx-auto mb-3" >
             <div class="bg-light rounded overflow-hidden text-center p-3">
                 <i class="las la-images la-2x mb-3 text-primary-grad"></i>
@@ -207,7 +214,7 @@
                 <div class="opacity-50 text-center">{{ translate('Remaining') }} <br> {{ translate('Gallery Images View') }}</div>
             </div>
         </div>
-        @endif
+        <?php endif; ?>
     </div>
 
     <div class="row gutters-5">
@@ -216,7 +223,7 @@
                 <div class="card-header">
                     <h2 class="fs-16 mb-0">{{  translate('Current package') }}</h2>
                 </div>
-                @if ($user->member->current_package_id != null)
+                <?php if ($user->member->current_package_id != null): ?>
                     <div class="card-body">
                         <div class="text-center mb-4 mt-3">
                             <img class="mw-100 mx-auto mb-4" src="{{ uploaded_asset($user->member->package->image) }}" height="130">
@@ -239,48 +246,48 @@
                                 <i class="las la-check text-success mr-2"></i>
                                 {{ $user->member->package->profile_viewers_view }} {{ translate('Profile Viewer View') }}
                             </li>
-                            @if($profile_picture_privacy == 'only_me')
+                            <?php if ($profile_picture_privacy == 'only_me'): ?>
                                 <li class="list-group-item py-2">
                                     <i class="las la-check text-success mr-2"></i>
                                     {{ $user->member->package->profile_image_view }} {{ translate('Profile Image View') }}
                                 </li>
-                            @endif
-                            @if($gallery_image_privacy == 'only_me')
+                            <?php endif; ?>
+                            <?php if ($gallery_image_privacy == 'only_me'): ?>
                                 <li class="list-group-item py-2">
                                     <i class="las la-check text-success mr-2"></i>
                                     {{ $user->member->package->gallery_image_view }} {{ translate('Gallery Image View') }}
                                 </li>
-                            @endif
+                            <?php endif; ?>
                             <li class="list-group-item py-2 text-line-through">
-                                @if( $user->member->package->auto_profile_match == 0 )
+                                <?php if ( $user->member->package->auto_profile_match == 0 ): ?>
                                     <i class="las la-times text-danger mr-2"></i>
                                     <del class="opacity-60">{{ translate('Show Auto Profile Match') }}</del>
-                                @else
+                                <?php else: ?>
                                     <i class="las la-check text-success mr-2"></i>
                                     {{ translate('Show Auto Profile Match') }}
-                                @endif
+                                <?php endif; ?>
                             </li>
                             <li class="list-group-item py-2 text-line-through">
-                                @if( $user->member->package->auto_horoscope_profile_match == 0 )
+                                <?php if ( $user->member->package->auto_horoscope_profile_match == 0 ): ?>
                                     <i class="las la-times text-danger mr-2"></i>
                                     <del class="opacity-60">{{ translate('Show Auto Horoscope Profile Match') }}</del>
-                                @else
+                                <?php else: ?>
                                     <i class="las la-check text-success mr-2"></i>
                                     {{ translate('Show Auto Horoscope Profile Match') }}
-                                @endif
+                                <?php endif; ?>
                             </li>
                         </ul>
                         <h4 class="fs-18 mb-3">
                         {{ translate('Package expiry date') }}:
-                        @if(package_validity($user->id))
+                        <?php if (package_validity($user->id)): ?>
                             {{ $user->member->package_validity }}
-                        @else
+                        <?php else: ?>
                             <span class="text-danger">{{translate('Expired')}}</span>
-                        @endif
+                        <?php endif; ?>
                         </h4>
                         <a href="{{ route('packages') }}" class="btn btn-success d-inline-block">{{ translate('Upgrade Package') }}</a>
 
-                        @if($recommendedPackage)
+                        <?php if ($recommendedPackage): ?>
                             <div class="alert alert-primary mt-4 mb-0 text-left">
                                 <div class="fw-700 mb-1">{{ translate('Recommended Next Package') }}: {{ $recommendedPackage->name }}</div>
                                 <div class="fs-13 opacity-80 mb-2">
@@ -290,9 +297,9 @@
                                     {{ translate('View Recommended Package') }}
                                 </a>
                             </div>
-                        @endif
+                        <?php endif; ?>
                     </div>
-                @else
+                <?php else: ?>
                     <div class="card mb-0 p-5 h-20 d-flex align-items-center justify-content-center">
                             {{ translate('No Package Available') }} 
                             <div class="mt-2">
@@ -300,292 +307,89 @@
                                     class="btn btn-sm btn-primary">{{ translate('Purchase a Package') }}</a>
                             </div>    
                     </div>   
-                @endif    
+                <?php endif; ?>    
             </div>
         </div>
         <div class="col-md-6">
-            @if(get_setting('member_verification') && $user->approved == 0)
+            <?php if (get_setting('member_verification') && $user->approved == 0): ?>
                 <div class="card mb-0 p-5 h-15 d-flex align-items-center justify-content-center mb-2">
-                    @if (in_array($user->member?->ai_verification_status ?? 'not_started', ['pending', 'submitted', 'under_review', 'processing']))
+                    <?php if (in_array($user->member?->ai_verification_status ?? 'not_started', ['pending', 'submitted', 'under_review', 'processing'])): ?>
                         <div class="my-n4 py-1 text-center">
                             <img src="{{ static_asset('assets/img/non_verified.png') }}" alt=""
                                 class="w-xxl-130px w-90px d-block">
                             <span class="badge badge-inline badge-warning">{{ translate('Verification in progress') }}</span>
                         </div>
-                    @elseif ($user->approved == 0)
+                    <?php elseif ($user->approved == 0): ?>
                         <div class="my-n4 py-1 text-center">
                             <img src="{{ static_asset('assets/img/non_verified.png') }}" alt=""
                                 class="w-xxl-130px w-90px d-block">
                             <a href="{{ route('member.verification') }}"
                                 class="btn btn-sm btn-primary">{{ translate('Verify Now') }}</a>
                         </div>
-                    @else
+                    <?php else: ?>
                         <div class="my-2 py-1">
                             <img src="{{ static_asset('assets/img/verified.png') }}" alt="" width="">
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
-            @endif
+            <?php endif; ?>
             
-            @if (Auth::user()->member->current_package_id != null)
-                <div class="card">
-                    @php
-                        $canRefresh = true;
-                        if(Auth::user()->match_refresh_updated_at){
-                            $nextRefresh = \Carbon\Carbon::parse(Auth::user()->match_refresh_updated_at)->addMinutes(30);
-                            if($nextRefresh->isFuture()){
-                                $canRefresh = false;
-                            }
-                        }
-                    @endphp
+            {{-- Phase 6A: shallow, balanced Blade structures to avoid the legacy nested conditional parser failure. --}}
+            <?php if ($user->member?->current_package_id): ?>
+                <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
-
-                        <div class="d-flex align-items-center">
-
-                            <h2 class="fs-16 mb-0 mr-2">
-                                {{ translate('Matched profile') }}
-                            </h2>
-
-                            @if (Auth::user()->member->auto_profile_match == 1)
-                                {{-- Refresh Button --}}
-                                @if($canRefresh)
-                                    <a href="{{ route('match.refresh') }}"
-                                    class="btn btn-soft-primary btn-icon btn-circle btn-sm"
-                                    title="{{ translate('Refresh') }}">
-                                        <i class="las la-sync"></i>
-                                    </a>
-                                @else
-                                    <button class="btn btn-soft-secondary btn-icon btn-circle btn-sm"
-                                            disabled
-                                            title="{{ translate('You can refresh after 30 minutes') }}">
-                                        <i class="las la-sync"></i>
-                                    </button>
-                                @endif
-                            @endif
-
-                        </div>
-
-                        {{-- Arrow Icon --}}
-                        <a href="{{ route('my_matched_profiles') }}" class="text-dark">
-                            <i class="las la-arrow-right fs-18"></i>
-                        </a>
-
+                        <h2 class="fs-16 mb-0">{{ translate('Matched profile') }}</h2>
+                        <a href="{{ route('my_matched_profiles') }}" aria-label="{{ translate('View all matches') }}" class="text-dark"><i class="las la-arrow-right"></i></a>
                     </div>
                     <div class="card-body">
-                        @if(Auth::user()->member->auto_profile_match == 1)
-                        <div class="scrolling-horoscope-partner-match">
-                            @forelse ($similar_profiles->shuffle() as $similar_profile)
-                            @if($similar_profile->user != null)
-                                <a href="{{ route('member_profile', $similar_profile->match_id) }}" class="text-reset border rounded row no-gutters align-items-center mb-3">
-                                    <div class="col-auto w-100px">
-                                    @php
-                                        $avatar_image = $similar_profile->user->member->gender == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png';
-                                        $profile_picture_show = show_profile_picture($similar_profile->user);
-                                    @endphp
-                                    <img
-                                        @if ($profile_picture_show)
-                                        src="{{ uploaded_asset($similar_profile->user->photo) }}"
-                                        @else
-                                        src="{{ static_asset($avatar_image) }}"
-                                        @endif
-                                        onerror="this.onerror=null;this.src='{{ static_asset($avatar_image) }}';"
-                                        class="img-fit w-100 size-100px"
-                                    >
-                                    </div>
-                                    <div class="col">
-                                    <div class="p-3">
-                                        <h5 class="fs-16 text-body text-truncate">{{ $similar_profile->user->first_name.' '.$similar_profile->user->last_name }}</h5>
-                                        <div class="fs-12 text-truncate-3">
-                                            <span class="mr-1 d-inline-block">
-                                                @if(!empty($similar_profile->user->member->birthday))
-                                                {{ \Carbon\Carbon::parse($similar_profile->user->member->birthday)->age }} {{ translate('yrs') }},
-                                                @endif
-                                            </span>
-                                            <span class="mr-1 d-inline-block">
-                                                @if(!empty($similar_profile->user->physical_attributes->height))
-                                                {{ $similar_profile->user->physical_attributes->height }} {{ translate('Feet') }},
-                                                @endif
-                                            </span>
-                                            <span class="mr-1 d-inline-block">
-                                                @if(!empty($similar_profile->user->member->marital_status->name))
-                                                {{ $similar_profile->user->member->marital_status->name }},
-                                                @endif
-                                            </span>
-                                            <span class="mr-1 d-inline-block">
-                                                {{ !empty($similar_profile->user->spiritual_backgrounds->religion->name) ? $similar_profile->user->spiritual_backgrounds->religion->name.', ' : "" }}
-                                            </span>
-                                            <span class="mr-1 d-inline-block">
-                                                {{ !empty($similar_profile->user->spiritual_backgrounds->caste->name) ? $similar_profile->user->spiritual_backgrounds->caste->name.', ' : "" }}
-                                            </span>
-                                            <span class="mr-1 d-inline-block">
-                                                <td class="py-1">{{ !empty($similar_profile->user->spiritual_backgrounds->sub_caste->name) ? $similar_profile->user->spiritual_backgrounds->sub_caste->name : "" }}</td>
-                                            </span>
+                        <?php if ($user->member?->auto_profile_match): ?>
+                            <?php $profileSuggestions = $similar_profiles ?? collect(); ?>
+                            <?php $__hamqadam_forelse_1 = false; foreach ($profileSuggestions as $suggestion): $__hamqadam_forelse_1 = true; ?>
+                                <?php $candidate = $suggestion->user; ?>
+                                <?php if ($candidate): ?>
+                                    <?php $fallbackAvatar = $candidate->member?->gender == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png'; ?>
+                                    <a href="{{ route('member_profile', $suggestion->match_id) }}" class="text-reset border rounded row no-gutters align-items-center mb-3">
+                                        <div class="col-auto"><img src="{{ show_profile_picture($candidate) && $candidate->photo ? uploaded_asset($candidate->photo) : static_asset($fallbackAvatar) }}" class="img-fit size-100px" alt="{{ $candidate->first_name }} {{ $candidate->last_name }}" loading="lazy"></div>
+                                        <div class="col p-3">
+                                            <h3 class="h6 text-truncate">{{ $candidate->first_name }} {{ $candidate->last_name }}</h3>
+                                            <span class="small text-muted">{{ $candidate->member?->birthday ? \Carbon\Carbon::parse($candidate->member->birthday)->age.' '.translate('yrs') : '' }}</span>
                                         </div>
-                                    </div>
-                                    </div>
-                                </a>
-                            @endif
-                            @empty
-                                @php
-                                    $expectation = Auth::user()->partner_expectations;
-
-                                    $expectation_filled = $expectation &&
-                                                        !empty($expectation->residence_country_id) &&
-                                                        !empty($expectation->weight) &&
-                                                        !empty($expectation->marital_status_id) &&
-                                                        !empty($expectation->religion) &&
-                                                        !empty($expectation->language_id) &&
-                                                        !empty($expectation->education) &&
-                                                        !empty($expectation->profession) &&
-                                                        !empty($expectation->smoking_acceptable) &&
-                                                        !empty($expectation->drinking_acceptable) &&
-                                                        !empty($expectation->diet) &&
-                                                        !empty($expectation->preferred_state_id) &&
-                                                        !empty($expectation->preferred_country_id) &&
-                                                        !empty($expectation->family_value_id) &&
-                                                        !empty($expectation->height);
-                                @endphp
-
-                                @if(!$expectation_filled)
-                                    <div class="alert alert-info">
-                                        {{ translate('Update your partner expectation for auto match making') }}
-                                    </div>
-                                @else
-                                    <div class="alert alert-warning">
-                                        {{ translate('No matched profile found') }}
-                                    </div>
-                                @endif
-                            @endforelse
-                        </div>
-                        @else
-                            <div class="alert alert-info">{{  translate('Upgrade your package for auto match making') }}</div>
-                        @endif
+                                    </a>
+                                <?php endif; ?>
+                            <?php endforeach; if (!$__hamqadam_forelse_1): ?>
+                                <p class="alert alert-info mb-0">{{ translate('No matched profile found. Complete your partner preferences to improve matches.') }}</p>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <p class="alert alert-info mb-0">{{ translate('Upgrade your package for auto match making') }}</p>
+                        <?php endif; ?>
                     </div>
                 </div>
-
-                <div class="card">
-                    @php
-                        $canHoroscopeRefresh = true;
-                        if(Auth::user()->refresh_updated_at){
-                            $nextRefresh = \Carbon\Carbon::parse(Auth::user()->refresh_updated_at)->addMinutes(30);
-                            if($nextRefresh->isFuture()){
-                                $canHoroscopeRefresh = false;
-                            }
-                        }
-                    @endphp
+                <div class="card mb-3">
                     <div class="card-header d-flex justify-content-between align-items-center">
-
-                        <div class="d-flex align-items-center">
-
-                            <h2 class="fs-16 mb-0 mr-2">
-                                {{ translate('Horoscope Matched profile') }}
-                            </h2>
-
-                            @if (Auth::user()->member->auto_horoscope_profile_match == 1)
-                                {{-- Refresh Button --}}
-                                @if($canHoroscopeRefresh)
-                                    <a href="{{ route('horoscope.match.refresh') }}"
-                                    class="btn btn-soft-primary btn-icon btn-circle btn-sm"
-                                    title="{{ translate('Refresh') }}">
-                                        <i class="las la-sync"></i>
-                                    </a>
-                                @else
-                                    <button class="btn btn-soft-secondary btn-circle btn-icon btn-sm"
-                                            disabled
-                                            title="{{ translate('You can refresh after 30 minutes') }}">
-                                        <i class="las la-sync"></i>
-                                    </button>
-                                @endif
-                            @endif
-
-                        </div>
-
-                        {{-- Arrow Icon --}}
-                        <a href="{{ route('horoscope_matched_profiles') }}" class="text-dark">
-                            <i class="las la-arrow-right fs-18"></i>
-                        </a>
-
+                        <h2 class="fs-16 mb-0">{{ translate('Horoscope Matched profile') }}</h2>
+                        <a href="{{ route('horoscope_matched_profiles') }}" aria-label="{{ translate('View horoscope matches') }}" class="text-dark"><i class="las la-arrow-right"></i></a>
                     </div>
                     <div class="card-body">
-                        @if(Auth::user()->member->auto_horoscope_profile_match == 1)
-                        <div class="scrolling-horoscope-partner-match">
-                            @forelse ($similar_horoscope_profiles->shuffle() as $similar_horoscope_profile)
-                            @if($similar_horoscope_profile->user != null)
-                                <a href="{{ route('member_profile', $similar_horoscope_profile->match_id) }}" class="text-reset border rounded row no-gutters align-items-center mb-3">
-                                    <div class="col-auto w-100px">
-                                    @php
-                                        $avatar_image = $similar_horoscope_profile->user->member->gender == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png';
-                                        $profile_picture_show = show_profile_picture($similar_horoscope_profile->user);
-                                    @endphp
-                                    <img
-                                        @if ($profile_picture_show)
-                                        src="{{ uploaded_asset($similar_horoscope_profile->user->photo) }}"
-                                        @else
-                                        src="{{ static_asset($avatar_image) }}"
-                                        @endif
-                                        onerror="this.onerror=null;this.src='{{ static_asset($avatar_image) }}';"
-                                        class="img-fit w-100 size-100px"
-                                    >
-                                    </div>
-                                    <div class="col">
-                                    <div class="p-3">
-                                        <h5 class="fs-16 text-body text-truncate">{{ $similar_horoscope_profile->user->first_name.' '.$similar_horoscope_profile->user->last_name }}</h5>
-                                        <div class="fs-12 text-truncate-3">
-                                            <span class="mr-1 d-inline-block">
-                                                @if(!empty($similar_horoscope_profile->user->member->birthday))
-                                                {{ \Carbon\Carbon::parse($similar_horoscope_profile->user->member->birthday)->age }} {{ translate('yrs') }},
-                                                @endif
-                                            </span>
-                                            <span class="mr-1 d-inline-block">
-                                                @if(!empty($similar_horoscope_profile->user->physical_attributes->height))
-                                                {{ $similar_horoscope_profile->user->physical_attributes->height }} {{ translate('Feet') }},
-                                                @endif
-                                            </span>
-                                            <span class="mr-1 d-inline-block">
-                                                @if(!empty($similar_horoscope_profile->user->member->marital_status->name))
-                                                {{ $similar_horoscope_profile->user->member->marital_status->name }},
-                                                @endif
-                                            </span>
-                                            <span class="mr-1 d-inline-block">
-                                                {{ !empty($similar_horoscope_profile->user->spiritual_backgrounds->religion->name) ? $similar_horoscope_profile->user->spiritual_backgrounds->religion->name.', ' : "" }}
-                                            </span>
-                                            <span class="mr-1 d-inline-block">
-                                                {{ !empty($similar_horoscope_profile->user->spiritual_backgrounds->caste->name) ? $similar_horoscope_profile->user->spiritual_backgrounds->caste->name.', ' : "" }}
-                                            </span>
-                                            <span class="mr-1 d-inline-block">
-                                                <td class="py-1">{{ !empty($similar_horoscope_profile->user->spiritual_backgrounds->sub_caste->name) ? $similar_horoscope_profile->user->spiritual_backgrounds->sub_caste->name : "" }}</td>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    </div>
-                                </a>
-                            @endif
-                            @empty
-                                @php
-                                    $astrologies = Auth::user()->astrologies;
-                                    $horoscope_filled = !empty($astrologies->moon_sign) 
-                                                        && !empty($astrologies->nadi) 
-                                                        && !empty($astrologies->manglik) 
-                                                        && !empty($astrologies->gana) 
-                                                        && !empty($astrologies->time_of_birth);
-                                @endphp
-                                @if(!$horoscope_filled)
-                                    <div class="alert alert-info">
-                                        {{ translate('Update your astronomic & horoscope info for auto horoscope match making') }}
-                                    </div>
-                                @else
-                                    <div class="alert alert-warning">
-                                        {{ translate('No matched horoscope profile found') }}
-                                    </div>
-                                @endif
-                            @endforelse
-                        </div>
-                        @else
-                            <div class="alert alert-info">{{  translate('Upgrade your package for auto horoscope match making') }}</div>
-                        @endif
+                        <?php if ($user->member?->auto_horoscope_profile_match): ?>
+                            <?php $horoscopeSuggestions = $similar_horoscope_profiles ?? collect(); ?>
+                            <?php $__hamqadam_forelse_2 = false; foreach ($horoscopeSuggestions as $suggestion): $__hamqadam_forelse_2 = true; ?>
+                                <?php $candidate = $suggestion->user; ?>
+                                <?php if ($candidate): ?>
+                                    <?php $fallbackAvatar = $candidate->member?->gender == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png'; ?>
+                                    <a href="{{ route('member_profile', $suggestion->match_id) }}" class="text-reset border rounded row no-gutters align-items-center mb-3">
+                                        <div class="col-auto"><img src="{{ show_profile_picture($candidate) && $candidate->photo ? uploaded_asset($candidate->photo) : static_asset($fallbackAvatar) }}" class="img-fit size-100px" alt="{{ $candidate->first_name }} {{ $candidate->last_name }}" loading="lazy"></div>
+                                        <div class="col p-3"><h3 class="h6 text-truncate">{{ $candidate->first_name }} {{ $candidate->last_name }}</h3></div>
+                                    </a>
+                                <?php endif; ?>
+                            <?php endforeach; if (!$__hamqadam_forelse_2): ?>
+                                <p class="alert alert-info mb-0">{{ translate('No matched horoscope profile found. Complete horoscope information to improve results.') }}</p>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <p class="alert alert-info mb-0">{{ translate('Upgrade your package for auto horoscope match making') }}</p>
+                        <?php endif; ?>
                     </div>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 

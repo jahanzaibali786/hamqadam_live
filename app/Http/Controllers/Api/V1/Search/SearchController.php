@@ -28,6 +28,9 @@ class SearchController extends ApiController
     public function profiles(ProfileSearchRequest $request): JsonResponse
     {
         $page = $this->profiles->search($request->user(), $request->validated());
+        if (\Illuminate\Support\Facades\Schema::hasTable('analytics_events')) {
+            \App\Models\AnalyticsEvent::create(['user_id' => $request->user()->id, 'event_name' => 'search_performed', 'feature_key' => 'discovery', 'source' => 'api_v1', 'occurred_at' => now()]);
+        }
 
         $this->attachAiScores($request->user(), $page);
 
