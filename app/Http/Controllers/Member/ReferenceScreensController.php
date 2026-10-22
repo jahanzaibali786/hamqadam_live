@@ -153,10 +153,32 @@ final class ReferenceScreensController extends Controller
         return view('frontend.member.reference.blogs', compact('blogs', 'search'));
     }
 
-    public function stories(): View
+    public function stories(Request $request): View
     {
-        $stories = HappyStory::query()->where('approved', 1)->latest()->paginate(9);
-        return view('frontend.member.reference.stories', compact('stories'));
+        $data = $request->validate([
+            'type' => ['nullable', 'in:marriage,engagement'],
+            'city' => ['nullable', 'string', 'max:80'],
+            'profession' => ['nullable', 'string', 'max:80'],
+            'period' => ['nullable', 'in:all,year,6months'],
+        ]);
+        $base = HappyStory::query()->where('approved', 1);
+        $totalStories = (clone $base)->count();
+        $stories = $base
+            ->when(isset($data['type']), function ($q) use ($data) {
+                $term = $data['type'] === 'marriage' ? 'marri' : 'engag';
+                $q->where(fn($x) => $x->where('title', 'like', '%'.$term.'%')
+                    ->orWhere('details', 'like', '%'.$term.'%'));
+            })
+            ->when(filled($data['city'] ?? null), fn($q) => $q->whereHas('user.addresses',
+                fn($x) => $x->whereHas('city', fn($city) =>
+                    $city->where('name', 'like', '%'.addcslashes($data['city'], '%_\\\\').'%'))))
+            ->when(filled($data['profession'] ?? null), fn($q) => $q->whereHas('user.member',
+                fn($x) => $x->where('job_title', 'like', '%'.addcslashes($data['profession'], '%_\\\\').'%')))
+            ->when(($data['period'] ?? 'all') === 'year', fn($q) => $q->where('created_at', '>=', now()->subYear()))
+            ->when(($data['period'] ?? 'all') === '6months', fn($q) => $q->where('created_at', '>=', now()->subMonths(6)))
+            ->with(['user.member', 'user.addresses.city'])
+            ->latest()->paginate(6)->withQueryString();
+        return view('frontend.member.reference.stories', compact('stories', 'totalStories'));
     }
 
     public function home(Request $request): View
