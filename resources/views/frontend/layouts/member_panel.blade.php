@@ -1,19 +1,43 @@
 @extends('frontend.layouts.app')
+@section('member_dashboard_shell', '1')
 @section('content')
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-sidebar-scroll.css') }}?v=4">
-<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-suite.css') }}?v=1">
-<section class="hq-member-panel-page hq-member-sticky-layout py-5">
-    <div class="container">
-        <div class="hq-member-panel-viewport">
-            @include('frontend.member.partials.accessibility_tools')
-            <div class="d-flex align-items-start hq-member-panel-columns">
-                @include('frontend.member.sidebar')
-                <div class="aiz-user-panel hq-member-main-content">
-                    @yield('panel_content')
-                </div>
-            </div>
-        </div>
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-suite.css') }}?v=3">
+@php
+    $memberShellUser = auth()->user();
+    $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
+@endphp
+<div class="hm-member-app">
+  <header class="hm-member-topbar">
+    <a class="hm-member-topbar-brand" href="{{ route('dashboard') }}" aria-label="Hamqadam Dashboard"><span class="hm-member-heart"><i class="las la-heart"></i></span><span>Hamqadam<small>Risthon ki duniya</small></span></a>
+    <form action="{{ route('member.listing') }}" method="GET" role="search" class="hm-member-topbar-search">
+      <label for="hm-member-search" class="sr-only">Search member code</label>
+      <i class="las la-search"></i>
+      <input id="hm-member-search" type="search" name="member_code" placeholder="Search profiles by member ID" value="{{ request('member_code') }}">
+      <button type="submit" aria-label="Search"><i class="las la-arrow-right"></i></button>
+    </form>
+    <nav class="hm-member-topbar-actions" aria-label="Member shortcuts">
+      <a href="{{ route('my_shortlists') }}" title="Shortlist" aria-label="My shortlist"><i class="las la-heart"></i></a>
+      <a href="{{ route('all.messages') }}" title="Messages" aria-label="Messages"><i class="las la-comment-dots"></i></a>
+      <a href="{{ route('frontend.notifications') }}" title="Notifications" aria-label="Notifications"><i class="las la-bell"></i></a>
+      <a class="hm-member-account" href="{{ route('profile_settings') }}">
+        <img src="{{ $memberShellAvatar }}" alt="My profile photo">
+        <span>{{ $memberShellUser?->first_name }} {{ $memberShellUser?->last_name }}</span>
+        <i class="las la-angle-down"></i>
+      </a>
+    </nav>
+  </header>
+  <section class="hq-member-panel-page hq-member-sticky-layout hm-member-stage">
+    <div class="hm-member-app-layout">
+      <aside class="hm-sidebar-column" aria-label="Account navigation">
+        @include('frontend.member.sidebar')
+      </aside>
+      <main class="aiz-user-panel hq-member-main-content hm-member-workspace" id="hm-member-workspace">
+        @include('frontend.member.partials.accessibility_tools')
+        @yield('panel_content')
+      </main>
     </div>
-</section>
+  </section>
+</div>
 <script src="{{ static_asset('assets/js/hamqadam-member-sidebar-scroll.js') }}?v=4" defer></script>
 @endsection
