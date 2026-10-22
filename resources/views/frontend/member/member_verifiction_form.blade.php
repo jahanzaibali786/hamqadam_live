@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+    <div class="hm-ref-page hm-verification-reference" data-hm-screen="verification">
+    <div class="hm-ref-panel"><div class="hm-ref-panel-body d-flex align-items-center" style="gap:16px"><span class="hm-ref-stat-icon"><i class="las la-shield-alt"></i></span><div><h2 class="h5 mb-1">Verify Your Identity</h2><p class="text-muted mb-0">Only submit accurate details using your own documents. Verification status is reviewed by the team.</p></div></div></div>
     <div class="aiz-titlebar mt-2 mb-4">
       <div class="row align-items-center">
         <div class="col-md-6">
@@ -94,5 +96,5 @@
                 </div>
             </div>
         </div>
-    </form>
+    </form></div>
 @endsection
