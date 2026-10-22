@@ -101,9 +101,9 @@
             </div>
         </div>
     </div>
+</div></div>
 @endsection
 
-</div></div>
 @section('modal')
     @include('modals.package_update_alert_modal')
 
