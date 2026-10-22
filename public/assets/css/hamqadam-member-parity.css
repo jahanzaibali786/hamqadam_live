@@ -144,3 +144,20 @@
 .hm-parity-meeting-safety{padding-left:22px;color:#766b79;line-height:2.3;font-size:11px}.hm-parity-meeting-safety li::marker{color:#e82c79}
 @media(max-width:820px){.hm-parity-meeting-progress{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:500px){.hm-parity-meeting-types,.hm-parity-meeting-fields{grid-template-columns:1fr}.hm-parity-meeting-types label>span{min-height:95px}.hm-parity-meeting-confirm{flex-direction:column;align-items:stretch}}
+
+
+/* Verification center reference */
+.hm-parity-verification-steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:17px;background:white;border:1px solid #f1e5eb;border-radius:12px;gap:9px;margin-bottom:15px}
+.hm-parity-verification-steps>div{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;color:#7b6d7d}
+.hm-parity-verification-steps span{display:grid;place-items:center;width:36px;height:36px;border:1px solid #ebdde6;background:#fff9fc;border-radius:50%;color:#de3177}
+.hm-parity-verification-steps b{font-size:11px}.hm-parity-verification-steps small{font-size:10px}
+.hm-parity-verification-layout{display:grid;grid-template-columns:minmax(0,2fr) minmax(240px,.72fr);gap:15px;align-items:start}
+.hm-parity-verification-layout main{min-width:0}
+.hm-parity-verification-layout main>.hm-ref-panel{border-radius:12px}
+.hm-parity-verification-layout main>.aiz-titlebar{display:none}
+.hm-parity-verification-layout main>form>.card{border-radius:12px;overflow:hidden;border:1px solid #f0e3eb}
+.hm-parity-verification-layout main>form .card-body{padding:24px}
+.hm-parity-verification-aside .hm-ref-panel{background:white}
+.hm-parity-verification-aside .hm-ref-panel-body p{color:#665c69;font-size:11px;line-height:1.8;margin:8px 0}
+@media(max-width:960px){.hm-parity-verification-layout{grid-template-columns:1fr}.hm-parity-verification-aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}}
+@media(max-width:570px){.hm-parity-verification-steps{grid-template-columns:repeat(3,minmax(0,1fr))}.hm-parity-verification-aside{grid-template-columns:1fr}}
