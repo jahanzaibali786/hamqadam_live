@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-reference-final.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-parity.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-sidebar-viewport-fix.css') }}?v=2">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-wallet-match-2026.css') }}?v=1">
 @php
     $memberShellUser = auth()->user();
     $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
