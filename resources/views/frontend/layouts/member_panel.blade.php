@@ -3,6 +3,7 @@
 @section('content')
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-sidebar-scroll.css') }}?v=4">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-suite.css') }}?v=3">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-reference-v2.css') }}?v=1">
 @php
     $memberShellUser = auth()->user();
     $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
