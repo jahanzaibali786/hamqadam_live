@@ -12,6 +12,7 @@ Route::middleware(['auth','member','verified'])->prefix('member/reference')->nam
     Route::get('/assistant', [ReferenceScreensController::class,'assistant'])->name('assistant');
     Route::post('/assistant', [ReferenceScreensController::class,'assistantAction'])->middleware('throttle:10,1')->name('assistant.run');
     Route::get('/blogs', [ReferenceScreensController::class,'blogs'])->name('blogs');
+    Route::get('/blogs/{slug}', [ReferenceScreensController::class,'blogDetail'])->name('blog.details');
     Route::get('/stories', [ReferenceScreensController::class,'stories'])->name('stories');
     Route::get('/settings', [ReferenceScreensController::class,'settings'])->name('settings');
 });
