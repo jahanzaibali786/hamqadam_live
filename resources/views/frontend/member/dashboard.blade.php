@@ -1,67 +1,49 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
 @php
- $currentUser=auth()->user();
- $member=$currentUser->member;
- $completion=max(0,min(100,(int)($member?->profile_completion_percentage??0)));
- $suggestions=collect($similar_profiles??[])->filter(fn($match)=>($match->match_percentage??0)>0 && $match->user)->sortByDesc('match_percentage')->take(4);
+ $me=auth()->user();$member=$me->member;$pct=max(0,min(100,(int)($member?->profile_completion_percentage??0)));
+ $top=$dashboardTopMatch;$best=$top?->matchedUser;$bestScore=$top?max(0,min(100,round($top->match_percentage))):0;
+ $avatar=$me->photo?uploaded_asset($me->photo):static_asset('assets/img/avatar-place.png');
+ $verified=app(\App\Services\BadgeService::class)->isVerified($member);
+ $myAddress=$me->addresses?->firstWhere('type','present');
 @endphp
-<div class="hm-home-2026">
- <div class="hm-home-grid">
-  <div class="hm-home-main">
-   <nav class="hm-home-quicktabs" aria-label="Match shortcuts">
-    <a class="is-active" href="{{ route('interest_requests') }}"><i class="las la-user-friends"></i> Proposals for You</a>
-    <a href="{{ route('my_matched_profiles') }}"><i class="las la-magic"></i> AI Matches</a>
-    <a href="{{ route('my_interests.index') }}"><i class="las la-heart"></i> My Interests</a>
-    <a href="{{ route('profile-viewers.index') }}"><i class="las la-eye"></i> Viewed Me</a>
-    <a href="{{ route('my_shortlists') }}"><i class="las la-users"></i> My Connections</a>
-   </nav>
-   <section class="hm-home-hero" aria-label="Discover meaningful proposals">
-    <div class="hm-home-hero-copy"><small><i class="las la-magic"></i> AI Matches</small><h1>Thoughtful proposals <em>for your journey</em></h1><p>Explore compatible members based on your preferences and verified profile information.</p></div>
-    <div class="hm-home-hero-image"><img src="{{ static_asset('assets/img/member-reference-couple.svg') }}" alt="Hamqadam meaningful relationships illustration"></div>
-   </section>
-   <form class="hm-home-search" action="{{ route('member.listing') }}" method="GET" role="search">
-    <i class="las la-search" aria-hidden="true"></i>
-    <label class="sr-only" for="hm-home-member-code">Find members by ID</label>
-    <input id="hm-home-member-code" name="member_code" placeholder="Search members by ID or open advanced discovery..." type="search">
-    <button type="submit" aria-label="Search members"><i class="las la-sliders-h"></i></button>
-   </form>
-   <section class="hm-home-results"><div class="hm-home-section-head"><div><h2>Recommended for You</h2><p>Based on your partner preferences</p></div><a href="{{ route('my_matched_profiles') }}">View All <i class="las la-arrow-right"></i></a></div>
-    <div class="hm-home-cards">
-     @forelse($suggestions as $match)
-     @php
-      $candidate=$match->user; $candidateMember=$candidate->member;
-      $fallback=($candidateMember?->gender??1)==1?'assets/img/avatar-place.png':'assets/img/female-avatar-place.png';
-      $photo=show_profile_picture($candidate)&&$candidate->photo?uploaded_asset($candidate->photo):static_asset($fallback);
-      $name=trim($candidate->first_name.' '.$candidate->last_name);
-      $canView=get_setting('full_profile_show_according_to_membership')!=1 || \App\Models\ProfileViewer::where('user_id',$candidate->id)->where('viewed_by',$currentUser->id)->exists() || (package_validity($currentUser->id)&&(int)get_remaining_package_value($currentUser->id,'remaining_profile_viewer_view')>0);
-     @endphp
-     <article class="hm-home-card">
-      <div class="hm-home-card-photo"><img src="{{ $photo }}" alt="{{ $name }}" loading="lazy" onerror="this.onerror=null;this.src='{{ static_asset($fallback) }}'"><span class="hm-home-card-score"><i class="las la-heart"></i> {{ round($match->match_percentage) }}% Match</span></div>
-      <div class="hm-home-card-body"><h3>{{ $name }}@if($candidateMember?->birthday), {{ \Carbon\Carbon::parse($candidateMember->birthday)->age }}@endif</h3>
-      <p><i class="las la-briefcase"></i> {{ $candidateMember?->job_title ?: 'Hamqadam Member' }}</p>
-      <p><i class="las la-id-card"></i> {{ $candidate->code }}</p>
-      <a href="{{ $canView?route('member_profile',$candidate->id):route('packages') }}">{{ $canView?'View Profile':'Upgrade to View' }}</a></div>
-     </article>
-     @empty
-      <div class="hm-home-empty"><h3>No matching profiles yet</h3><p>Complete your preferences to discover more compatible members.</p><a href="{{ route('profile_settings') }}">Update Your Preferences</a></div>
-     @endforelse
-    </div>
-   </section>
+<div class="hm-ref26 hm-dash26">
+ <header class="hm-dash26-welcome"><div><h1>Welcome back, <span>{{ $me->first_name }}!</span> 👋</h1><p>Let's find meaningful connections for your future.</p></div><div class="hm-dash26-quote"><i class="las la-quote-left"></i><strong>Every person has a story.<br>Find yours.</strong><img src="{{ static_asset('assets/img/member-reference-couple.svg') }}" alt=""></div></header>
+ <div class="hm-dash26-upper">
+  <div class="hm-dash26-left">
+   <div class="hm-dash26-stats">
+    <a href="{{ route('member.verification') }}"><i class="las la-check-circle green"></i><span>Profile Status<strong>{{ $verified?'Verified':'Pending' }}</strong><small>Identity verification</small></span></a>
+    <a href="{{ route('wallet.index') }}"><i class="las la-coins gold"></i><span>Coin Balance<strong>{{ number_format((int)($member?->remaining_interest??0)) }}</strong><small>View Usage</small></span></a>
+    <a href="{{ route('member.reference.packages') }}"><i class="las la-crown pink"></i><span>Current Package<strong>{{ $member?->package?->name??'Free' }}</strong><small>Upgrade Now</small></span></a>
+    <a href="{{ route('profile-viewers.index') }}"><i class="las la-eye purple"></i><span>Profile Views<strong>{{ number_format($dashboardViewerCount) }}</strong><small>This month</small></span></a>
+    <a href="{{ route('my_matched_profiles') }}"><i class="las la-heart pink"></i><span>Matches<strong>{{ number_format($dashboardMatchCount) }}</strong><small>AI suggested</small></span></a>
+   </div>
+   <section class="hm-ref26-card hm-dash26-recommend"><div class="hm-ref26-section-head"><h2>Recommended Matches For You</h2><a href="{{ route('my_matched_profiles') }}">View All</a></div><div class="hm-dash26-profiles">
+    @forelse($dashboardMatches as $match)
+    @php
+     $person=$match->matchedUser;$related=$person->member;$fallback=static_asset(($related?->gender??1)==1?'assets/img/avatar-place.png':'assets/img/female-avatar-place.png');
+     $photo=$person->photo&&show_profile_picture($person)?uploaded_asset($person->photo):$fallback;
+     $loc=$person->addresses->firstWhere('type','present');
+     $already=\App\Models\ProfileViewer::where('user_id',$person->id)->where('viewed_by',$me->id)->exists();
+     $canView=get_setting('full_profile_show_according_to_membership')!=1||$already||(package_validity($me->id)&&(int)get_remaining_package_value($me->id,'remaining_profile_viewer_view')>0);
+    @endphp
+    <article class="hm-dash26-person"><a href="{{ $canView?route('member_profile',$person->id):route('packages') }}" class="hm-dash26-photo"><img src="{{ $photo }}" onerror="this.onerror=null;this.src='{{ $fallback }}'" loading="lazy" alt="{{ $person->first_name }} profile">
+     <span class="hm-dash26-heart"><i class="las la-heart"></i></span></a>
+     <strong>{{ $person->first_name }}@if($related?->birthday), {{ \Carbon\Carbon::parse($related->birthday)->age }}@endif</strong>
+     <small>{{ $loc?->city?->name??'Location not provided' }}</small><p><i class="las la-briefcase"></i> {{ $related?->job_title??'Profession not provided' }}</p><div><b><i class="las la-heart"></i> {{ round($match->match_percentage) }}% Match</b><a href="{{ $canView?route('member_profile',$person->id):route('packages') }}" aria-label="View {{ $person->first_name }} profile"><i class="las la-ellipsis-v"></i></a></div>
+    </article>
+    @empty <p class="hm-ref26-empty">No compatible profiles are available yet. <a href="{{ route('profile_settings') }}">Update your preferences</a>.</p>@endforelse
+   </div></section>
   </div>
-  <aside class="hm-home-rail">
-   <section><div class="hm-home-progress-title"><h2>Profile Completion</h2><strong>{{ $completion }}%</strong></div><div class="hm-home-progress-track"><b style="width:{{ $completion }}%"></b></div>
-    <div class="hm-home-check"><i class="las {{ $member?->birthday?'la-check-circle':'la-circle' }}"></i> Basic Information</div>
-    <div class="hm-home-check"><i class="las {{ $currentUser->photo?'la-check-circle':'la-circle' }}"></i> Photos</div>
-    <div class="hm-home-check"><i class="las {{ $member?->job_title?'la-check-circle':'la-circle' }}"></i> Education &amp; Profession</div>
-    <div class="hm-home-check"><i class="las {{ $currentUser->partner_expectations?'la-check-circle':'la-circle' }}"></i> Partner Preferences</div>
-    <div class="hm-home-check"><i class="las {{ $member?->ai_verification_status==='approved'?'la-check-circle':'la-circle' }}"></i> Verification</div>
-    <a class="hm-home-rail-cta" href="{{ route('profile_settings') }}">Complete Your Profile <i class="las la-arrow-right"></i></a>
-   </section>
-   <section class="hm-home-ai"><i class="las la-robot"></i><h2>Hamqadam AI Assistant</h2><p>Get guidance, profile tips and help along your matchmaking journey.</p><a class="hm-home-rail-cta" href="{{ route('member.reference.assistant') }}">Ask Hamqadam AI <i class="las la-arrow-right"></i></a></section>
-   <section><h2>Quick Actions</h2><div class="hm-home-rail-list"><a href="{{ route('profile_settings') }}"><i class="las la-edit"></i>Edit Profile</a><a href="{{ route('my_interests.index') }}"><i class="las la-heart"></i>My Interests</a><a href="{{ route('interest_requests') }}"><i class="las la-comment-dots"></i>My Proposals</a><a href="{{ route('my_ignored_list') }}"><i class="las la-ban"></i>Blocked Users</a><a href="{{ route('member.reference.settings') }}"><i class="las la-cog"></i>Account Settings</a></div></section>
-   <section class="hm-home-safe"><h2><i class="las la-shield-alt"></i> Your Safety Matters</h2><p>We are committed to a safe, respectful and authentic community.</p><a href="{{ route('client.scope.support') }}">Learn About Safety and Support <i class="las la-arrow-right"></i></a></section>
-  </aside>
+  <aside class="hm-ref26-card hm-dash26-profile"><img class="hm-dash26-avatar" src="{{ $avatar }}" alt="My profile"><h2>{{ $me->first_name }} {{ $me->last_name }} @if($verified)<span>✓ Verified</span>@endif</h2><p>{{ $member?->birthday?\Carbon\Carbon::parse($member->birthday)->age.' years · ':'' }}{{ $myAddress?->city?->name??'Location not provided' }}</p><p><i class="las la-briefcase"></i> {{ $member?->job_title??'Profession not provided' }}</p><a class="hm-ref26-primary" href="{{ route('profile_settings') }}"><i class="las la-edit"></i> Edit Profile</a><div class="hm-dash26-completion"><b>Profile Completion <span>{{ $pct }}%</span></b><div class="hm-ref26-track"><i style="width:{{ $pct }}%"></i></div><div class="hm-dash26-checks">@foreach([['Basic Information',filled($member?->birthday)],['Photos',filled($me->photo)],['Family Details',filled($member?->family_bio)],['Lifestyle Preferences',filled($member?->hobbies)],['Education & Career',filled($member?->job_title)],['Verification',$verified]] as $row)<span><i class="las {{ $row[1]?'la-check-circle':'la-circle' }}"></i>{{ $row[0] }}</span>@endforeach</div></div></aside>
+ </div>
+ <div class="hm-dash26-bottom">
+  <section class="hm-ref26-card"><div class="hm-ref26-section-head"><h2>Recent Activity</h2><a href="{{ route('frontend.notifications') }}">View All <i class="las la-angle-right"></i></a></div>@forelse($dashboardActivity as $notification)<div class="hm-dash26-activity"><i class="las la-bell"></i><div><strong>{{ \Illuminate\Support\Str::limit((string)data_get($notification->data,'message',data_get($notification->data,'title','Account update')),85) }}</strong><small>{{ $notification->created_at?->diffForHumans() }}</small></div></div>@empty<p class="hm-ref26-empty">No recent account activity.</p>@endforelse</section>
+  <section class="hm-ref26-card"><div class="hm-ref26-section-head"><h2>Your Compatibility Insights</h2><a href="{{ route('client.scope.portal') }}">See Details</a></div>@if($top)<div class="hm-dash26-compat"><div><div class="hm-dash26-ring" style="--progress:{{ $bestScore }}"><strong>{{ $bestScore }}%</strong></div><b>{{ $bestScore>=80?'High':'Potential' }} Compatibility</b><p>{{ \Illuminate\Support\Str::limit((string)($top->compatibility_explanation?:'Matching based on your preferences'),95) }}</p></div><ul>@forelse(array_slice((array)($top->compatibility_reasons??[]),0,5) as $reason)<li><i class="las la-check"></i> {{ is_string($reason)?\Illuminate\Support\Str::limit($reason,55):'Shared preference' }}</li>@empty<li>Review your shared preferences.</li>@endforelse</ul></div><a class="hm-ref26-primary" href="{{ route('client.scope.portal') }}">View Full Compatibility</a>@else<p class="hm-ref26-empty">Complete your preferences to view compatibility.</p>@endif</section>
+  <section class="hm-ref26-card"><div class="hm-ref26-section-head"><h2>Quick Actions</h2></div><div class="hm-dash26-actions">@foreach([['Search Profiles','member.listing','la-search'],['Send Interest','my_matched_profiles','la-heart'],['Messages','all.messages','la-comment-dots'],['Shortlist','my_shortlists','la-bookmark'],['Profile Boost','member.reference.packages','la-rocket'],['Buy Coins','custom_coins.form','la-coins'],['My Packages','member.reference.packages','la-crown'],['Earn Coins','member.referrals.index','la-gift'],['Help & Support','client.scope.support','la-headset']] as $a)<a href="{{ route($a[1]) }}"><i class="las {{ $a[2] }}"></i><span>{{ $a[0] }}</span></a>@endforeach</div></section>
+  <section class="hm-ref26-card"><div class="hm-ref26-section-head"><h2>Happy Stories</h2><a href="{{ route('member.reference.stories') }}">View All</a></div>@forelse($dashboardStories as $story)@php($photos=array_values(array_filter(explode(',',(string)$story->photos))))<a class="hm-dash26-story" href="{{ route('story_details',\App\Support\StoryPublicId::encode((int)$story->id)) }}"><img src="{{ count($photos)?uploaded_asset($photos[0]):static_asset('assets/img/placeholder.jpg') }}" alt=""><div><p>{{ \Illuminate\Support\Str::limit(strip_tags((string)$story->details),135) }}</p><b>{{ $story->title }}</b></div></a>@empty<p class="hm-ref26-empty">No approved stories yet.</p>@endforelse</section>
+  <section class="hm-ref26-card"><div class="hm-ref26-section-head"><h2>Latest Blogs &amp; Articles</h2><a href="{{ route('blog') }}">View All</a></div><div class="hm-dash26-blogs">@forelse($dashboardBlogs as $blog)<a href="{{ route('blog_details',$blog->slug) }}"><img src="{{ $blog->banner?uploaded_asset($blog->banner):static_asset('assets/img/default-blog.png') }}" alt=""><b>{{ $blog->title }}</b></a>@empty<p class="hm-ref26-empty">No published articles yet.</p>@endforelse</div></section>
+  <section class="hm-ref26-card hm-dash26-upgrade"><i class="las la-crown"></i><div><h2>Upgrade to Premium</h2><p>Unlock more matches, advanced filters and premium features.</p><a class="hm-ref26-primary" href="{{ route('member.reference.packages') }}">View Plans <i class="las la-arrow-right"></i></a></div></section>
  </div>
 </div>
 @endsection
