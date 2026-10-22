@@ -38,10 +38,10 @@
   <aside class="hm-match-quick"><h2>Quick Actions</h2>
    @if($interestSent)<span><i class="las la-heart"></i>{{ $accepted?'Interest Accepted':'Interest Sent' }}</span>@elseif($interestReceived)<a href="{{ route('interest_requests') }}"><i class="las la-heart"></i>Respond to Interest</a>@else<button type="button" onclick="hmMatchInterest({{ $person->id }})"><i class="las la-heart"></i>Send Interest</button>@endif
    <a href="{{ route('all.messages') }}"><i class="las la-comment-dots"></i>Messaging</a>
-   @if($shortlisted)<span><i class="las la-bookmark"></i>Already Shortlisted</span>@elseif($accepted)<button type="button" onclick="hmMatchShortlist({{ $person->id }})"><i class="las la-bookmark"></i>Add to Shortlist</button>@else<span title="Shortlisting is available after mutual interest"><i class="las la-bookmark"></i>Shortlist after acceptance</span>@endif
+   @if($shortlisted)<span><i class="las la-bookmark"></i>Already Shortlisted</span>@elseif($accepted)<a href="{{ route('member_profile',$person->id) }}"><i class="las la-bookmark"></i>Open Profile to Shortlist</a>@else<span title="Shortlisting is available after mutual interest"><i class="las la-bookmark"></i>Shortlist after acceptance</span>@endif
    <button type="button" id="hm-match-share"><i class="las la-share-alt"></i>Share Profile</button>
-   @if(!$reported)<button type="button" onclick="hmMatchReport({{ $person->id }})"><i class="las la-flag"></i>Report Profile</button>@else<span><i class="las la-flag"></i>Reported</span>@endif
-   <button type="button" onclick="hmMatchIgnore({{ $person->id }})"><i class="las la-ban"></i>Block / Ignore User</button>
+   @if(!$reported)<a href="{{ route('member_profile',$person->id) }}"><i class="las la-flag"></i>Open Profile to Report</a>@else<span><i class="las la-flag"></i>Reported</span>@endif
+   <a href="{{ route('member_profile',$person->id) }}"><i class="las la-ban"></i>Open Profile to Block</a>
   </aside>
  </div>
  <nav class="hm-match-tabs" aria-label="Compatibility analysis">
@@ -92,8 +92,5 @@ function hmMatchInterest(id){
  }).catch(()=>{if(btn)btn.disabled=false;alert('Could not process your interest. Please try again.');});
  @endif
 }
-function hmMatchShortlist(id){@if($person) const btn=document.getElementById('shortlist_a_id_'+id); if(btn)btn.click();else location.assign(@json(route('member_profile',$person->id))); @endif}
-function hmMatchReport(id){@if($person)location.assign(@json(route('member_profile',$person->id)));@endif}
-function hmMatchIgnore(id){@if($person)location.assign(@json(route('member_profile',$person->id)));@endif}
 </script>
 @endsection
