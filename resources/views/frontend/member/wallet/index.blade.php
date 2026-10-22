@@ -19,8 +19,8 @@
     <div class="hm-2026-main">
       <div class="hm-wallet-stats">
         <article class="hm-wallet-stat"><i class="las la-coins"></i><span>Current Coin Balance</span><strong>{{ number_format($coins) }} Coins</strong><small>Coins available in your account</small><a class="hm-pink-button" href="{{ route('custom_coins.form') }}">Buy Coins <i class="las la-arrow-right"></i></a></article>
-        <article class="hm-wallet-stat"><i class="las la-eye"></i><span>Profile View Balance</span><strong>{{ number_format($views) }} Views</strong><small>Remaining profile-detail views</small><a class="hm-pink-button" href="{{ route('packages') }}">Upgrade Plan <i class="las la-arrow-right"></i></a></article>
-        <article class="hm-wallet-stat"><i class="las la-gem"></i><span>Current Package</span><strong>{{ $package?->name ?? 'Free' }}</strong><small>Expires: {{ $member?->package_validity ? \Carbon\Carbon::parse($member->package_validity)->format('d M Y') : 'Not available' }}</small><a class="hm-pink-button" href="{{ route('packages') }}">View Plans <i class="las la-arrow-right"></i></a></article>
+        <article class="hm-wallet-stat"><i class="las la-eye"></i><span>Profile View Balance</span><strong>{{ number_format($views) }} Views</strong><small>Remaining profile-detail views</small><a class="hm-pink-button" href="{{ route('member.reference.packages') }}">Upgrade Plan <i class="las la-arrow-right"></i></a></article>
+        <article class="hm-wallet-stat"><i class="las la-gem"></i><span>Current Package</span><strong>{{ $package?->name ?? 'Free' }}</strong><small>Expires: {{ $member?->package_validity ? \Carbon\Carbon::parse($member->package_validity)->format('d M Y') : 'Not available' }}</small><a class="hm-pink-button" href="{{ route('member.reference.packages') }}">View Plans <i class="las la-arrow-right"></i></a></article>
       </div>
       <section class="hm-wallet-panel" id="hm-wallet-purchase">
         <nav class="hm-wallet-tabs" aria-label="Wallet sections">
@@ -54,7 +54,7 @@
       </section>
     </div>
     <aside class="hm-2026-aside">
-      <section class="hm-wallet-aside-card"><h2>Quick Actions</h2><a href="{{ route('custom_coins.form') }}"><i class="las la-shopping-cart"></i>Buy Coins</a><a href="{{ route('package_purchase_history') }}"><i class="las la-file-invoice"></i>View Payment History</a><a href="{{ route('package_usage_history') }}"><i class="las la-sync"></i>Coin Usage History</a><a href="{{ route('packages') }}"><i class="las la-gem"></i>Upgrade Package</a></section>
+      <section class="hm-wallet-aside-card"><h2>Quick Actions</h2><a href="{{ route('custom_coins.form') }}"><i class="las la-shopping-cart"></i>Buy Coins</a><a href="{{ route('package_purchase_history') }}"><i class="las la-file-invoice"></i>View Payment History</a><a href="{{ route('package_usage_history') }}"><i class="las la-sync"></i>Coin Usage History</a><a href="{{ route('member.reference.packages') }}"><i class="las la-gem"></i>Upgrade Package</a></section>
       <section class="hm-wallet-aside-card"><h2>Recent Transactions</h2>
       @forelse($recentPayments as $payment)
         @php $recentCoins=\App\Services\Api\V1\Payment\CustomCoinService::payloadOf($payment); @endphp
