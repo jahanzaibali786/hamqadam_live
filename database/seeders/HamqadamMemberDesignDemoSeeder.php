@@ -96,6 +96,7 @@ final class HamqadamMemberDesignDemoSeeder extends Seeder
                 }
             }
         });
+        $this->call(HamqadamMemberDesignActivitySeeder::class);
         $this->command?->info('QA member dashboard fixture: demo.member.design@hamqadam.test');
         $this->command?->warn('No login password is published; use a locally reset test credential in staging only. No real payment, verification-provider, or marriage outcome was fabricated.');
     }
