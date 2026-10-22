@@ -3,6 +3,9 @@ use App\Http\Controllers\Member\ReferenceScreensController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth','member','verified'])->prefix('member/reference')->name('member.reference.')->group(function (): void {
+    Route::get('/home', [ReferenceScreensController::class,'home'])->name('home');
+    Route::post('/settings/privacy', [ReferenceScreensController::class,'savePrivacy'])->name('settings.privacy');
+    Route::post('/settings/notifications', [ReferenceScreensController::class,'saveNotificationSummary'])->name('settings.notifications');
     Route::get('/meetings', [ReferenceScreensController::class,'meetings'])->name('meetings');
     Route::post('/meetings', [ReferenceScreensController::class,'storeMeeting'])->middleware('throttle:5,1')->name('meetings.store');
     Route::get('/packages', [ReferenceScreensController::class,'packages'])->name('packages');
