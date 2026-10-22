@@ -229,14 +229,26 @@ class ProfileMatchController extends Controller
     if (count($ignored_by_ids) > 0) {
       $matchedProfiles = $matchedProfiles->whereNotIn('match_id', $ignored_by_ids);
     }
+    $filter = request()->validate(['search'=>['nullable','string','max:80'],'min_age'=>['nullable','integer','between:18,90'],'max_age'=>['nullable','integer','between:18,90'],'verified'=>['nullable','boolean'],'tab'=>['nullable','in:all,high,new,recent']]);
     $matchedProfiles = $matchedProfiles
+      ->whereHas('matchedUser',fn($q)=>$q->where('approved',1)->where('blocked',0)->where('deactivated',0)
+        ->whereHas('member',fn($m)=>$m->where(fn($x)=>$x->where('hide_profile',0)->orWhereNull('hide_profile'))))
+      ->when(($filter['tab']??'all')==='high',fn($q)=>$q->where('match_percentage','>=',80))
+      ->when(($filter['tab']??'all')==='new',fn($q)=>$q->where('created_at','>=',now()->subDays(30)))
+      ->when(($filter['tab']??'all')==='recent',fn($q)=>$q->whereHas('matchedUser',fn($u)=>$u->where('last_active_at','>=',now()->subDays(7))))
+      ->when(filled($filter['search']??null),fn($q)=>$q->whereHas('matchedUser',fn($u)=>$u->where(fn($x)=>$x->where('first_name','like','%'.$filter['search'].'%')->orWhere('last_name','like','%'.$filter['search'].'%'))))
+      ->when(!empty($filter['verified']),fn($q)=>$q->whereHas('matchedUser.member',fn($m)=>$m->where(fn($x)=>$x->where('verification_status','verified')->orWhere('ai_verification_status','approved'))))
+      ->when(isset($filter['min_age']),fn($q)=>$q->whereHas('matchedUser.member',fn($m)=>$m->whereDate('birthday','<=',now()->subYears((int)$filter['min_age'])->format('Y-m-d'))))
+      ->when(isset($filter['max_age']),fn($q)=>$q->whereHas('matchedUser.member',fn($m)=>$m->whereDate('birthday','>=',now()->subYears((int)$filter['max_age']+1)->addDay()->format('Y-m-d'))))
       ->with([
         'matchedUser.member',
         'matchedUser.spiritual_backgrounds.religion',
         'matchedUser.addresses.country',
+        'matchedUser.addresses.city',
+        'matchedUser.education',
       ])
       ->orderBy('match_percentage', 'desc')
-      ->paginate(10);
+      ->paginate(8)->withQueryString();
 
     return view('frontend.member.matched_profiles', compact('matchedProfiles'));
   }
