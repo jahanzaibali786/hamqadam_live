@@ -1,0 +1,4 @@
+@extends('frontend.layouts.member_panel')
+@section('panel_content')
+<div class="hm-blog-26"><div class="hm-blog-heading"><div><h1>{{ $blog->title }}</h1><p>{{ $blog->category?->category_name??'Hamqadam Editorial' }} · {{ $blog->created_at?->format('d M Y') }}</p></div><a href="{{ route('member.reference.blogs') }}">← All Articles</a></div><article class="hm-blog-panel"><img style="width:100%;max-height:380px;object-fit:cover;border-radius:12px;margin-bottom:22px" src="{{ $blog->banner?uploaded_asset($blog->banner):static_asset('assets/img/default-blog.png') }}" alt="{{ $blog->title }}"><div class="hm-blog-body">{!! \Illuminate\Support\Str::of($blog->description)->stripTags('<p><h2><h3><h4><ul><ol><li><b><strong><em><i><blockquote><a>') !!}</div></article></div>
+@endsection
