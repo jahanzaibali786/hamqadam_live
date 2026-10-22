@@ -14,5 +14,6 @@ Route::middleware(['auth','member','verified'])->prefix('member/reference')->nam
     Route::get('/blogs', [ReferenceScreensController::class,'blogs'])->name('blogs');
     Route::get('/blogs/{slug}', [ReferenceScreensController::class,'blogDetail'])->name('blog.details');
     Route::get('/stories', [ReferenceScreensController::class,'stories'])->name('stories');
+    Route::get('/stories/{token}', [ReferenceScreensController::class,'storyDetail'])->name('story.details');
     Route::get('/settings', [ReferenceScreensController::class,'settings'])->name('settings');
 });
