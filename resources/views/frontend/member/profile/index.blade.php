@@ -13,6 +13,13 @@
 <button type="button" class="hm-profile-ref-tab" role="tab" data-group="preferences" aria-selected="false">Partner Preferences</button>
 <button type="button" class="hm-profile-ref-tab" role="tab" data-group="security" aria-selected="false">Account & Security</button>
 </div>
+<div class="hm-profile-parity-grid">
+<nav class="hm-profile-parity-steps" aria-label="Profile completion steps">
+@foreach([['About Me','Basic Information'],['Personal Details','Religion, Caste, Family'],['Education & Career','Professional Life'],['Lifestyle','Habits & Preferences'],['Family Details','About Your Family'],['Photos & Media','Add Photos & Videos'],['Preferences','Partner Expectations'],['Verification','Identity & Selfie'],['Review & Submit','Check & Publish']] as $step)
+<button type="button" class="hm-profile-parity-step" data-step="{{ $loop->index }}" aria-current="{{ $loop->first?'step':'false' }}"><span>{{ $loop->iteration }}</span><div><b>{{ $step[0] }}</b><small>{{ $step[1] }}</small></div></button>
+@endforeach
+</nav>
+<div class="hm-profile-parity-center">
 <div id="hm-profile-ref-content">
 
 @include('frontend.member.partials.design_header', ['title' => "My Profile", 'subtitle' => "Tell your story and keep your details up to date.", 'icon' => "la-user"])
@@ -179,9 +186,20 @@
       @include('frontend.member.profile.additional_attributes')
     @endif
 
+</div>
+<div class="hm-profile-parity-bottom"><button type="button" class="hm-profile-step-back btn btn-outline-primary">← Back</button><button type="button" class="hm-profile-step-next btn btn-primary">Save &amp; Continue →</button></div>
+</div>
+<aside class="hm-profile-parity-side">
+<section class="hm-profile-parity-preview"><div class="hm-profile-parity-aside-header"><b><i class="las la-eye"></i> Profile Preview</b><a href="{{ route('member_profile',$member->id) }}">View Public Profile</a></div>
+<img src="{{ $member->photo?uploaded_asset($member->photo):static_asset('assets/img/avatar-place.png') }}" alt="Your profile" loading="lazy">
+<h3>{{ $member->first_name }} {{ $member->last_name }}</h3><p>{{ \Illuminate\Support\Str::limit((string)($member->member?->introduction??'Complete your introduction to tell your story.'),140) }}</p>
+</section>
+<section class="hm-profile-parity-tips"><h3>💡 Profile Tips</h3><p>✓ Add a clear profile photo</p><p>✓ Write a meaningful bio</p><p>✓ Complete all profile steps</p><p>✓ Verify your identity</p><p>✓ Update partner preferences</p></section>
+</aside>
+</div>
+</div>
 @endsection
 
-</div></div>
 @section('modal')
     @include('modals.create_edit_modal')
     @include('modals.delete_modal')
@@ -606,32 +624,38 @@ document.addEventListener('DOMContentLoaded', function () {
  if (!root) return;
  const content=root.querySelector('#hm-profile-ref-content');
  const cards=[...content.children].filter(el=>el.classList.contains('card'));
- const categories={
-  overview:['introduction','basic information','registration details','present address','physical attributes'],
-  education:['education','career'],
-  lifestyle:['language','hobbies','personal attitude','residency','spiritual','social','family','life style'],
-  preferences:['partner','preference','expectation'],
-  security:['email','password','privacy','verification','document','deactivate']
+ const mapping=[
+ ['introduction','basic information'],
+ ['registration details','present address','physical attributes','spiritual background'],
+ ['education','career'],['language','hobbies','attitude','residency','lifestyle'],
+ ['family information','permanent address'],['gallery','photos'],
+ ['partner','expectation'],['email','verification'],['additional attributes']
+ ];
+ const steps=[...root.querySelectorAll('.hm-profile-parity-step')];
+ const footerBack=root.querySelector('.hm-profile-step-back'),footerNext=root.querySelector('.hm-profile-step-next');
+ cards.forEach(card=>{
+  const title=(card.querySelector('.card-header')?.textContent||'').toLowerCase().trim();
+  let index=mapping.findIndex(words=>words.some(term=>title.includes(term)));
+  if(index<0)index=1;
+  card.dataset.profileStep=String(index);
+ });
+ const display=(n)=>{
+   const selected=Math.max(0,Math.min(mapping.length-1,n));
+   cards.forEach(card=>{card.hidden=Number(card.dataset.profileStep)!==selected;});
+   steps.forEach((step,i)=>{step.classList.toggle('selected',i===selected);step.setAttribute('aria-current',i===selected?'step':'false');});
+   footerBack.disabled=selected===0;footerNext.textContent=selected===steps.length-1?'Review Complete':'Save & Continue →';
+   root.dataset.currentStep=String(selected);
  };
- for(const card of cards){
-  const h=card.querySelector('.card-header h5,.card-header h2,.card-header h4');
-  const text=(h?.textContent||'').trim().toLowerCase();
-  let group='overview';
-  for(const [name,words] of Object.entries(categories)){
-   if(words.some(w=>text.includes(w))){group=name;break;}
-  }
-  card.classList.add('hm-profile-ref-section');
-  card.dataset.group=group;
- }
- const tabs=[...root.querySelectorAll('.hm-profile-ref-tab')];
- const activate=(name)=>{
-  tabs.forEach(t=>{let selected=t.dataset.group===name;t.setAttribute('aria-selected',String(selected));t.tabIndex=selected?0:-1;});
-  cards.forEach(card=>card.classList.toggle('is-visible',card.dataset.group===name));
-  try{history.replaceState(null,'',location.pathname+'#profile-'+name)}catch(e){}
- };
- tabs.forEach(t=>t.addEventListener('click',()=>activate(t.dataset.group)));
- const initial=location.hash.startsWith('#profile-')?location.hash.slice(9):'overview';
- activate(tabs.some(t=>t.dataset.group===initial)?initial:'overview');
+ steps.forEach((step,i)=>step.addEventListener('click',()=>display(i)));
+ footerBack.addEventListener('click',()=>display(Number(root.dataset.currentStep||0)-1));
+ footerNext.addEventListener('click',()=>{
+  const index=Number(root.dataset.currentStep||0);
+  const visible=cards.filter(card=>Number(card.dataset.profileStep)===index);
+  const dirty=visible.find(card=>[...card.querySelectorAll('input,select,textarea')].some(el=>el.dataset.initialValue!==undefined&&el.dataset.initialValue!==el.value));
+  if(dirty){dirty.querySelector('button[type=submit]')?.focus();dirty.querySelector('button[type=submit]')?.scrollIntoView({block:'nearest'});return;}
+  display(index+1);
+ });
+ display(0);
 });
 </script>
 @endsection
