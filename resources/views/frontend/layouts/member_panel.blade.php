@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-parity.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-sidebar-viewport-fix.css') }}?v=2">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-wallet-match-2026.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-topnav-home.css') }}?v=1">
 @php
     $memberShellUser = auth()->user();
     $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
@@ -35,6 +36,27 @@
       </a>
     </nav>
   </header>
+  @php
+    // Primary navigation for every authenticated member screen.
+    $primaryMemberNavigation = [
+      ['label' => 'Home', 'route' => 'dashboard', 'active' => request()->routeIs('dashboard')],
+      ['label' => 'Active Members', 'route' => 'member.listing', 'active' => request()->routeIs('member.listing')],
+      ['label' => 'Premium Plans', 'route' => 'member.reference.packages', 'active' => request()->routeIs('member.reference.packages', 'packages')],
+      ['label' => 'Happy Stories', 'route' => 'member.reference.stories', 'active' => request()->routeIs('member.reference.stories', 'happy_story.member', 'happy_stories', 'story_details')],
+      ['label' => 'Help & Support', 'route' => 'client.scope.support', 'active' => request()->routeIs('client.scope.support', 'client.scope.support.*')],
+    ];
+  @endphp
+  <nav class="hm-member-primary-nav" aria-label="Main member navigation">
+    <div class="hm-member-primary-nav-inner">
+      @foreach($primaryMemberNavigation as $item)
+        <a href="{{ route($item['route']) }}"
+           class="hm-member-primary-link {{ $item['active'] ? 'is-active' : '' }}"
+           @if($item['active']) aria-current="page" @endif>
+          {{ $item['label'] }}
+        </a>
+      @endforeach
+    </div>
+  </nav>
   <section class="hq-member-panel-page hq-member-sticky-layout hm-member-stage">
     <div class="hm-member-app-layout">
       <aside class="hm-sidebar-column" id="hm-member-sidebar" aria-label="Account navigation">
