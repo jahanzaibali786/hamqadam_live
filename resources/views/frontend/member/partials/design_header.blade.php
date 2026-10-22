@@ -1,4 +1,6 @@
-@props(['title'=>'Member Workspace','subtitle'=>'Manage your Hamqadam journey.','icon'=>'la-heart','kicker'=>'Member Sanctuary'])
+@php
+$title=$title??'Member Workspace'; $subtitle=$subtitle??'Manage your Hamqadam journey.'; $icon=$icon??'la-heart'; $kicker=$kicker??'Member Sanctuary';
+@endphp
 <div class="hm-subpage-header">
   <div class="hm-subpage-title">
     <span class="hm-eyebrow">{{ $kicker }}</span>
