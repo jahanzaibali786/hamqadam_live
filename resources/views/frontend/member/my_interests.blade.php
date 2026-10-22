@@ -2,7 +2,10 @@
 @section('panel_content')
 @include('frontend.member.partials.design_header', ['title' => "My Interests", 'subtitle' => "Review your sent proposals and meaningful connections.", 'icon' => "la-heart"])
 
-    <div class="card">
+    <div class="hm-ref-page hm-proposals-reference" data-hm-screen="sent-proposals">
+    <div class="hm-ref-panel"><div class="hm-ref-panel-body d-flex flex-wrap align-items-center justify-content-between" style="gap:12px">
+    <div><span class="hm-ref-kicker">My sent requests</span><h2 class="h5 mb-0">Sent Interests &amp; Proposals</h2></div><a class="hm-ref-button secondary" href="{{ route('interest_requests') }}">Received Requests <i class="las la-arrow-right"></i></a></div></div>
+    <div class="card hm-ref-panel">
         <div class="card-header">
             <h5 class="mb-0 h6">{{ translate('My Interests') }}</h5>
             <a href="{{ route('interest_requests') }}"
