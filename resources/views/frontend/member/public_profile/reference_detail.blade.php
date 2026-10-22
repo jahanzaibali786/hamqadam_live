@@ -22,6 +22,12 @@
  $profileView = \App\Models\ProfileViewer::where('user_id',$user->id)->count();
  $education = get_setting('member_education_section') == 'on' ? \App\Models\Education::where('user_id',$user->id)->orderByDesc('is_highest_degree')->first() : null;
  $career = get_setting('member_career_section') == 'on' ? \App\Models\Career::where('user_id',$user->id)->orderByDesc('present')->first() : null;
+ $galleryPrivacy = get_setting('gallery_image_privacy');
+ $galleryAllowed = $ownProfile || ($galleryPrivacy !== 'only_me' && ($galleryPrivacy !== 'premium_members' || (int) Auth::user()->membership !== 1));
+ if (!$galleryAllowed && $galleryPrivacy === 'only_me' && !$ownProfile) {
+   $galleryAllowed = \App\Models\ViewGalleryImage::where('user_id',$user->id)->where('requested_by',Auth::id())->where('status',1)->exists();
+ }
+ $galleryImages = $galleryAllowed ? \App\Models\GalleryImage::where('user_id',$user->id)->latest()->limit(4)->get() : collect();
 @endphp
 <div class="hm-detail">
  <div class="hm-detail-back"><a href="{{ url()->previous() }}"><i class="las la-arrow-left"></i> Back to Search Results</a><span>Member ID: {{ $user->code }}</span></div>
@@ -39,7 +45,10 @@
  <div class="hm-detail-photo"><img src="{{ $photo }}" alt="{{ $name }}" onerror="this.onerror=null;this.src='{{ $placeholder }}'">
  @unless($photoAllowed)<div class="hm-detail-photo-private"><i class="las la-lock"></i> Photo private</div>@endunless
  </div>
- <div class="hm-detail-thumbnails"><span><img src="{{ $photo }}" alt="Profile picture"></span><span class="hm-detail-thumbnails-note">Gallery access respects member privacy settings</span></div>
+ <div class="hm-detail-thumbnails"><span><img src="{{ $photo }}" alt="Profile picture"></span>
+ @foreach($galleryImages as $galleryImage)<span><img src="{{ uploaded_asset($galleryImage->image) }}" loading="lazy" alt="Member gallery photo"></span>@endforeach
+ @if($galleryImages->isEmpty())<span class="hm-detail-thumbnails-note">{{ $galleryAllowed ? 'No additional photos available' : 'Private gallery — request access below' }}</span>@endif
+ </div>
  <article class="hm-detail-panel"><h2><i class="las la-id-card"></i> Basic Information</h2>
  <dl><dt>Age</dt><dd>{{ $age ? $age.' Years' : 'Not specified' }}</dd><dt>Gender</dt><dd>{{ $member?->gender==1?'Male':($member?->gender==2?'Female':'Not specified') }}</dd><dt>Marital Status</dt><dd>{{ $member?->marital_status?->name ?? 'Not specified' }}</dd><dt>City</dt><dd>{{ $city ?: 'Not specified' }}</dd><dt>Country</dt><dd>{{ $country ?: 'Not specified' }}</dd><dt>Religion</dt><dd>{{ $user->spiritual_backgrounds?->religion?->name ?? 'Not specified' }}</dd></dl></article>
  </section>
