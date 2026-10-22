@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-dashboard-referral-reference.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-settings-verification-home.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-four-reference.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-unified-header-blog.css') }}?v=1">
 @php
     $memberShellUser = auth()->user();
     $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
@@ -22,12 +23,32 @@
   <header class="hm-member-topbar">
     <button type="button" class="hm-member-mobile-menu" aria-controls="hm-member-sidebar" aria-expanded="false" aria-label="Open dashboard navigation"><i class="las la-bars"></i></button>
     <a class="hm-member-topbar-brand" href="{{ route('dashboard') }}" aria-label="Hamqadam Dashboard"><span class="hm-member-heart"><i class="las la-heart"></i></span><span>Hamqadam<small>Risthon ki duniya</small></span></a>
-    <form action="{{ route('member.listing') }}" method="GET" role="search" class="hm-member-topbar-search">
-      <label for="hm-member-search" class="sr-only">Search member code</label>
-      <i class="las la-search"></i>
-      <input id="hm-member-search" type="search" name="member_code" placeholder="Search profiles by member ID" value="{{ request('member_code') }}">
-      <button type="submit" aria-label="Search"><i class="las la-arrow-right"></i></button>
-    </form>
+    @php
+      $primaryMemberNavigation = [
+        ['label' => 'Home', 'route' => 'member.reference.home', 'active' => request()->routeIs('member.reference.home')],
+        ['label' => 'Active Members', 'route' => 'member.listing', 'active' => request()->routeIs('member.listing')],
+        ['label' => 'Premium Plans', 'route' => 'member.reference.packages', 'active' => request()->routeIs('member.reference.packages','packages')],
+        ['label' => 'Happy Stories', 'route' => 'member.reference.stories', 'active' => request()->routeIs('member.reference.stories','member.reference.story.details')],
+        ['label' => 'Help & Support', 'route' => 'client.scope.support', 'active' => request()->routeIs('client.scope.support','client.scope.support.*')],
+      ];
+    @endphp
+    <nav class="hm-integrated-nav" aria-label="Main member navigation">
+      @foreach($primaryMemberNavigation as $item)
+        <a href="{{ route($item['route']) }}" class="hm-integrated-link {{ $item['active'] ? 'is-active' : '' }}" @if($item['active']) aria-current="page" @endif>{{ $item['label'] }}</a>
+      @endforeach
+    </nav>
+    <div class="hm-integrated-search">
+      <button id="hm-integrated-search-open" class="hm-integrated-search-trigger" type="button" aria-label="Open member search" aria-controls="hm-integrated-search-panel" aria-expanded="false"><i class="las la-search"></i></button>
+      <div class="hm-integrated-search-panel" id="hm-integrated-search-panel" hidden>
+        <form action="{{ route('member.listing') }}" method="GET" role="search" class="hm-integrated-search-form">
+          <label class="sr-only" for="hm-integrated-search-input">Search members by member code</label>
+          <i class="las la-search" aria-hidden="true"></i>
+          <input id="hm-integrated-search-input" type="search" name="member_code" autocomplete="off" placeholder="Search members by ID..." value="{{ request('member_code') }}">
+          <button class="hm-integrated-search-submit" type="submit" aria-label="Search members"><i class="las la-arrow-right"></i></button>
+        </form>
+        <button id="hm-integrated-search-close" type="button" class="hm-integrated-search-close" aria-label="Close member search"><i class="las la-times"></i></button>
+      </div>
+    </div>
     <nav class="hm-member-topbar-actions" aria-label="Member shortcuts">
       <a href="{{ route('my_shortlists') }}" title="Shortlist" aria-label="My shortlist"><i class="las la-heart"></i></a>
       <a href="{{ route('all.messages') }}" title="Messages" aria-label="Messages"><i class="las la-comment-dots"></i></a>
@@ -39,27 +60,6 @@
       </a>
     </nav>
   </header>
-  @php
-    // Primary navigation for every authenticated member screen.
-    $primaryMemberNavigation = [
-      ['label' => 'Home', 'route' => 'member.reference.home', 'active' => request()->routeIs('member.reference.home')],
-      ['label' => 'Active Members', 'route' => 'member.listing', 'active' => request()->routeIs('member.listing')],
-      ['label' => 'Premium Plans', 'route' => 'member.reference.packages', 'active' => request()->routeIs('member.reference.packages', 'packages')],
-      ['label' => 'Happy Stories', 'route' => 'member.reference.stories', 'active' => request()->routeIs('member.reference.stories', 'happy_story.member', 'happy_stories', 'story_details')],
-      ['label' => 'Help & Support', 'route' => 'client.scope.support', 'active' => request()->routeIs('client.scope.support', 'client.scope.support.*')],
-    ];
-  @endphp
-  <nav class="hm-member-primary-nav" aria-label="Main member navigation">
-    <div class="hm-member-primary-nav-inner">
-      @foreach($primaryMemberNavigation as $item)
-        <a href="{{ route($item['route']) }}"
-           class="hm-member-primary-link {{ $item['active'] ? 'is-active' : '' }}"
-           @if($item['active']) aria-current="page" @endif>
-          {{ $item['label'] }}
-        </a>
-      @endforeach
-    </div>
-  </nav>
   <section class="hq-member-panel-page hq-member-sticky-layout hm-member-stage">
     <div class="hm-member-app-layout">
       <aside class="hm-sidebar-column" id="hm-member-sidebar" aria-label="Account navigation">
@@ -83,6 +83,24 @@
   overlay?.addEventListener('click',close);
   document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
   root.querySelectorAll('.hm-sidebar-column a[href]').forEach(link=>link.addEventListener('click',close));
+  const openSearch=root.querySelector('#hm-integrated-search-open');
+  const searchPanel=root.querySelector('#hm-integrated-search-panel');
+  const closeSearch=root.querySelector('#hm-integrated-search-close');
+  const searchField=root.querySelector('#hm-integrated-search-input');
+  function toggleSearch(visible) {
+    if(!searchPanel||!openSearch)return;
+    searchPanel.hidden=!visible;
+    root.classList.toggle('hm-search-open',visible);
+    openSearch.setAttribute('aria-expanded',String(visible));
+    if(visible)searchField?.focus();else openSearch.focus();
+  }
+  openSearch?.addEventListener('click',()=>toggleSearch(true));
+  closeSearch?.addEventListener('click',()=>toggleSearch(false));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&searchPanel&&!searchPanel.hidden)toggleSearch(false);});
+  document.addEventListener('pointerdown',e=>{
+    if(searchPanel&&!searchPanel.hidden&&!root.querySelector('.hm-integrated-search')?.contains(e.target)) toggleSearch(false);
+  });
+
 })();
 </script>
 @endsection
