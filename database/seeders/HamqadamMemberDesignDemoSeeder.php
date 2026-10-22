@@ -85,16 +85,26 @@ final class HamqadamMemberDesignDemoSeeder extends Seeder
             if(Schema::hasTable('notifications')){
                 foreach(['Welcome to your refreshed Hamqadam dashboard','Your demo compatible matches are ready','Complete your profile to improve your visibility'] as $i=>$notice){
                     $key= 'hm-member-design-'.$owner.'-'.$i;
-                    {
-                        $payload=['title'=>'Hamqadam Demo','message'=>$notice,'fixture_key'=>$key,'type'=>'design_demo'];
-                        if(!DB::table('notifications')->where('notifiable_id',$owner)->where('data','like','%'.$key.'%')->exists())
-                            DB::table('notifications')->insert($this->tableRow('notifications',[
-                              'id'=>(string)Str::uuid(),'type'=>'database',
-                              'notifiable_type'=>\App\Models\User::class,
-                              'notifiable_id'=>$owner,'data'=>json_encode($payload),
-                              'read_at'=>null,'created_at'=>now()->subHours(4-$i),'updated_at'=>now(),
-                            ]));
+                    $payload = ['title'=>'Hamqadam Demo','message'=>$notice,'fixture_key'=>$key,'type'=>'design_demo'];
+                    if (DB::table('notifications')->where('notifiable_type', \App\Models\User::class)
+                        ->where('notifiable_id', $owner)->where('data', 'like', '%'.$key.'%')->exists()) {
+                        continue;
                     }
+                    // Some older Hamqadam databases use an auto-incrementing
+                    // numeric ID, while the current Laravel migration uses UUID.
+                    // Never insert a UUID into a numeric column.
+                    $columnType = strtolower(Schema::getColumnType('notifications', 'id'));
+                    $isNumeric = str_contains($columnType, 'int') || $columnType === 'serial';
+                    $row = [
+                        'type'=>'database',
+                        'notifiable_type'=>\App\Models\User::class,
+                        'notifiable_id'=>$owner,'data'=>json_encode($payload),
+                        'read_at'=>null,'created_at'=>now()->subHours(4-$i),'updated_at'=>now(),
+                    ];
+                    if (!$isNumeric) {
+                        $row['id'] = (string) Str::uuid();
+                    }
+                    DB::table('notifications')->insert($this->tableRow('notifications', $row));
                 }
             }
         });
