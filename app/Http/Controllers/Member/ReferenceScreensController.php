@@ -142,15 +142,35 @@ final class ReferenceScreensController extends Controller
         return redirect()->route('member.reference.assistant')->with('result_id', (int) $result->id);
     }
 
+    public function blogDetail(string $slug): View
+    {
+        $blog = Blog::active()->with('category')->where('slug', $slug)->firstOrFail();
+        return view('frontend.member.reference.blog_details', compact('blog'));
+    }
+
     public function blogs(Request $request): View
     {
         $search = trim((string) $request->query('search', ''));
-        $blogs = Blog::active()
-            ->when($search !== '', fn ($q) => $q->where('title', 'like', '%'.addcslashes($search, '%_\\').'%'))
-            ->with('category')
-            ->latest()->paginate(9)->withQueryString();
+        $category = trim((string) $request->query('category', ''));
+        $categories = \App\Models\BlogCategory::query()->orderBy('category_name')->get();
+        $query = Blog::active()->with('category')
+            ->when($search !== '', fn ($q) => $q->where(fn ($nested) =>
+                $nested->where('title', 'like', '%'.addcslashes($search, '%_\\').'%')
+                    ->orWhere('short_description', 'like', '%'.addcslashes($search, '%_\\').'%')))
+            ->when($category !== '', fn ($q) => $q->whereHas('category',
+                fn ($cat) => $cat->where('slug', $category)));
+        $featured = ($search === '' && $category === '') ? Blog::active()->with('category')->latest()->first() : null;
+        $popular = Blog::active()->latest()->limit(5)->get();
+        $blogs = $query->latest()->paginate(6)->withQueryString();
+        return view('frontend.member.reference.blogs', compact('blogs', 'search', 'category', 'categories', 'featured', 'popular'));
+    }
 
-        return view('frontend.member.reference.blogs', compact('blogs', 'search'));
+    public function storyDetail(string $token): View
+    {
+        $id = StoryPublicId::decode($token);
+        abort_unless($id, 404);
+        $story = HappyStory::query()->where('approved', 1)->findOrFail($id);
+        return view('frontend.member.reference.story_details', compact('story'));
     }
 
     public function stories(Request $request): View
@@ -192,8 +212,8 @@ final class ReferenceScreensController extends Controller
                 ->where('approved', 1)->where('blocked', 0)->where('deactivated', 0)
                 ->whereHas('member', fn ($m) => $m->where(fn ($v) =>
                     $v->where('hide_profile', 0)->orWhereNull('hide_profile'))))
-            ->with(['matchedUser.member', 'matchedUser.addresses.city'])
-            ->orderByDesc('match_percentage')->limit(8)->get();
+            ->with(['matchedUser.member', 'matchedUser.addresses.city', 'matchedUser.education'])
+            ->orderByDesc('match_percentage')->limit(4)->get();
 
         $completion = max(0, min(100, (int) ($viewer->member?->profile_completion_percentage ?? 0)));
 
