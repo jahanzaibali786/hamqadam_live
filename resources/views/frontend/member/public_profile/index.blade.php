@@ -1,5 +1,8 @@
-@extends('frontend.layouts.app')
-@section('content')
+@extends('frontend.layouts.member_panel')
+@section('panel_content')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-detail.css') }}?v=1">
+@include('frontend.member.public_profile.reference_detail')
+<div class="hm-public-legacy-profile" id="hm-public-legacy-profile">
     <section class="pt-6 bg-primary-grad text-white">
         <div class="container">
             <div class="row">
@@ -2182,6 +2185,7 @@
             </div>
         </div>
     </section>
+</div>
 @endsection
 
 @section('modal')
