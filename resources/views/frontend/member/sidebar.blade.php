@@ -463,16 +463,31 @@
                 @endif
             </ul>
         </div>
-        <div class="mb-3 px-3">
-            <a href="javascript:void(0);" class="btn btn-block btn-primary" href="{{ route('user.logout') }}"
-                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                <i class="las la-sign-out-alt"></i>
-                <span>{{ translate('Logout') }}</span>
-
-                <form id="logout-form" action="{{ route('user.logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-            </a>
+        @unless($isDedicatedGuardian)
+        @php
+          $promo = match(true) {
+            request()->routeIs('profile_settings') => ['Complete your profile. Get better matches.', 'Complete Now', 'profile_settings'],
+            request()->routeIs('member.verification','member.reference.verification') => ['Verified profiles build stronger trust.', 'Get Verified Now', 'member.verification'],
+            request()->routeIs('member.reference.assistant','member.v1_dashboard') => ['Let AI guide you to meaningful connections.', 'Explore AI Tools', 'member.reference.assistant'],
+            request()->routeIs('member.reference.blogs') => ['Knowledge today. Better relationships tomorrow.', 'Explore Blogs', 'member.reference.blogs'],
+            request()->routeIs('member.reference.stories','happy_story.member') => ['Real people. Real stories. Real happiness.', 'Share Your Story', 'happy_story.member'],
+            request()->routeIs('frontend.notifications') => ['Stay updated. Never miss a meaningful connection.', 'View Plans', 'member.reference.packages'],
+            request()->routeIs('member.reference.meetings') => ['Take the next step with confidence.', 'View Plans', 'member.reference.packages'],
+            request()->routeIs('my_shortlists') => ['Your next chapter could be here.', 'Explore Matches', 'member.listing'],
+            default => ['Find your story. Choose forever.', 'View Premium Plans', 'member.reference.packages'],
+          };
+        @endphp
+        <div class="hm-member-context-promo">
+          <img src="{{ static_asset('assets/img/member-reference-couple.svg') }}" alt="" loading="lazy">
+          <p>{{ $promo[0] }}</p>
+          <a href="{{ route($promo[2]) }}" class="hm-member-promo-cta">{{ $promo[1] }} <i class="las la-arrow-right"></i></a>
+        </div>
+        @endunless
+        <div class="hm-member-sidebar-logout mb-3 px-3">
+            <form action="{{ route('user.logout') }}" method="POST">
+              @csrf
+              <button type="submit" class="btn btn-block btn-primary"><i class="las la-sign-out-alt"></i> {{ translate('Logout') }}</button>
+            </form>
         </div>
     </div>
 </div>

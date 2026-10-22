@@ -2,7 +2,7 @@
 @section('panel_content')
 @php
 $user=auth()->user(); $member=$user->member;
-$matches=collect($similar_profiles??[])->filter(fn($m)=>($m->match_percentage??0)>0&&$m->user)->take(3);
+$matches=collect($similar_profiles??[])->filter(fn($m)=>($m->match_percentage??0)>0&&$m->user)->take(6);
 $progress=max(0,min(100,(int)($member?->profile_completion_percentage??0)));
 $avatar=$user->photo?uploaded_asset($user->photo):static_asset('assets/img/avatar-place.png');
 $coins=(int)($member?->remaining_interest??0);
@@ -20,11 +20,12 @@ $package=$member?->package;
       <a class="hm-pink" href="{{ route('member.listing') }}"><i class="las la-search"></i> Find Matches</a>
     </nav>
   </div>
-  <div class="hm-kpis">
-    <a href="{{ route('my_matched_profiles') }}" class="hm-kpi text-decoration-none"><div><small>Compatible Matches</small><div class="num">{{ count($similar_profiles??[]) }}</div><small>Explore suggestions</small></div><span class="hm-icon"><i class="las la-user-friends"></i></span></a>
-    <a href="{{ route('interest_requests') }}" class="hm-kpi text-decoration-none"><div><small>Interest Requests</small><div class="num">{{ \App\Models\ExpressInterest::query()->where('user_id',$user->id)->count() }}</div><small>Received proposals</small></div><span class="hm-icon"><i class="las la-heart"></i></span></a>
-    <a href="{{ route('my_shortlists') }}" class="hm-kpi text-decoration-none"><div><small>Shortlisted Members</small><div class="num">{{ \App\Models\Shortlist::query()->where('shortlisted_by',$user->id)->count() }}</div><small>People you saved</small></div><span class="hm-icon"><i class="las la-bookmark"></i></span></a>
-    <a href="{{ route('wallet.index') }}" class="hm-kpi text-decoration-none"><div><small>Coin Balance</small><div class="num">{{ number_format($coins) }}</div><small>Available to connect</small></div><span class="hm-icon"><i class="las la-coins"></i></span></a>
+  <div class="hm-kpis hm-parity-dashboard-kpis">
+    <a href="{{ route('member.verification') }}" class="hm-kpi text-decoration-none"><div><small>Profile Status</small><div class="num" style="font-size:20px">{{ $user->approved?'Approved':'Pending' }}</div><small>Account review</small></div><span class="hm-icon"><i class="las la-check-circle"></i></span></a>
+    <a href="{{ route('wallet.index') }}" class="hm-kpi text-decoration-none"><div><small>Coin Balance</small><div class="num">{{ number_format($coins) }}</div><small>View usage and wallet</small></div><span class="hm-icon"><i class="las la-coins"></i></span></a>
+    <a href="{{ route('member.reference.packages') }}" class="hm-kpi text-decoration-none"><div><small>Current Package</small><div class="num" style="font-size:20px">{{ $package?->name??'Free' }}</div><small>Explore plans</small></div><span class="hm-icon"><i class="las la-crown"></i></span></a>
+    <a href="{{ route('profile-viewers.index') }}" class="hm-kpi text-decoration-none"><div><small>Profile Views Available</small><div class="num">{{ number_format($views) }}</div><small>Remaining entitlement</small></div><span class="hm-icon"><i class="las la-eye"></i></span></a>
+    <a href="{{ route('my_matched_profiles') }}" class="hm-kpi text-decoration-none"><div><small>Suggested Matches</small><div class="num">{{ count($similar_profiles??[]) }}</div><small>Compatibility discovery</small></div><span class="hm-icon"><i class="las la-heart"></i></span></a>
   </div>
   <div class="hm-columns">
     <div>

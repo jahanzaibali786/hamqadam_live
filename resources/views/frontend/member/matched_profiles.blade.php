@@ -8,6 +8,7 @@ $canRefresh=!auth()->user()->match_refresh_updated_at || \Carbon\Carbon::parse(a
     @if($canRefresh)<a href="{{ route('match.refresh') }}" class="btn btn-outline-primary"><i class="las la-sync mr-1"></i> Refresh Matches</a>
     @else <button type="button" class="btn btn-outline-secondary" disabled title="Available 30 minutes after your last refresh"><i class="las la-clock mr-1"></i> Refresh on cooldown</button>@endif
   </div>
+  <div class="hm-parity-listing-layout"><main>
   <div class="hm-card">
     <div class="hm-card-header"><h2>Recommended For You</h2><span class="badge badge-soft-primary">{{ $matchedProfiles->total() }} profiles</span></div>
     <div class="hm-card-body">
@@ -38,6 +39,11 @@ $canRefresh=!auth()->user()->match_refresh_updated_at || \Carbon\Carbon::parse(a
       </div>
     </div><div class="p-3">{{ $matchedProfiles->links() }}</div>
   </div>
+</main><aside class="hm-parity-listing-aside">
+<section class="hm-card"><header class="hm-card-header"><h2>Match Insights</h2></header><div class="hm-card-body"><div class="hm-parity-listing-insight"><i class="las la-heart"></i><strong>{{ $matchedProfiles->total() }}</strong><span>Matching Profiles</span></div><p class="small text-muted mt-3 mb-0">These profiles are based on your current account and preferences, not demonstration values.</p></div></section>
+<section class="hm-card"><header class="hm-card-header"><h2>Discovery Options</h2></header><div class="hm-card-body"><p class="small text-muted">Use advanced discovery to refine age, location, education and partner preferences.</p><a class="btn btn-primary btn-block" href="{{ route('member.listing') }}">Browse Advanced Search</a><a class="btn btn-outline-primary btn-block mt-2" href="{{ route('profile_settings') }}">Update Preferences</a></div></section>
+<section class="hm-ref-help"><i class="las la-shield-alt"></i><b>Safe Connections</b><p>Use the existing profile viewer to keep account entitlements and access permissions intact.</p></section>
+</aside></div>
 </div>
 @endsection
 

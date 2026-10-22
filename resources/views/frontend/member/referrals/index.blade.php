@@ -4,7 +4,7 @@
 
 <div class="hm-ref-page hm-referral-reference" data-hm-screen="referrals">
 <header class="hm-ref-header"><div><span class="hm-ref-kicker">Community rewards</span><h1 class="hm-ref-heading">Refer Friends &amp; Earn Coins</h1><p class="hm-ref-lead">Invite trusted friends and track eligible rewards.</p></div><a href="{{ route('wallet.index') }}" class="hm-ref-button secondary"><i class="las la-wallet"></i> My Wallet</a></header>
-<div class="container-fluid py-2">
+<div class="hm-parity-referral-layout"><main><div class="container-fluid py-2">
     <h1 class="h3 mb-3">{{ translate('Refer Friends & Earn Coins') }}</h1>
     @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
     <div class="row mb-3 hm-referral-summary">
@@ -50,7 +50,19 @@
         @foreach($commissions as $commission)<tr><td>{{ $commission->created_at?->format('d M Y') }}</td><td>{{ $commission->amount ?? $commission->balance ?? '-' }}</td></tr>@endforeach
       </tbody></table></div></div></div>
     @endif
-</div></div>
+</div></main>
+<aside>
+<section class="hm-ref-panel"><div class="hm-ref-panel-head"><h2><i class="las la-coins"></i> Your Earnings</h2></div>
+<div class="hm-ref-panel-body"><div class="hm-parity-referral-earned"><small>Total Earned</small><strong>{{ number_format((int)$summary['coins_earned']) }} Coins</strong></div>
+<div class="d-flex justify-content-between small mt-3"><span>Referred Members</span><b>{{ (int)$summary['total_referrals'] }}</b></div><div class="d-flex justify-content-between small mt-2"><span>Rewarded</span><b>{{ (int)$summary['rewarded_referrals'] }}</b></div></div></section>
+<section class="hm-ref-panel"><div class="hm-ref-panel-head"><h2>How It Works</h2></div><div class="hm-ref-panel-body hm-parity-referral-steps">
+<div><b>1</b><span><strong>Share Your Link</strong><small>Invite your friends and family to join.</small></span></div>
+<div><b>2</b><span><strong>They Sign Up</strong><small>Your friend registers with your link.</small></span></div>
+<div><b>3</b><span><strong>Eligibility Review</strong><small>Referral requirements are checked.</small></span></div>
+<div><b>4</b><span><strong>Earn Coins</strong><small>Coins are issued only when the rule permits.</small></span></div>
+</div></section>
+<section class="hm-ref-help"><i class="las la-gift"></i><h2>Invite More Friends</h2><p>Every eligible invite helps grow the community.</p><a href="#referral-share-url" class="btn btn-primary btn-block">Invite Now →</a></section>
+</aside></div></div>
 @endsection
 @section('script')
 <script>

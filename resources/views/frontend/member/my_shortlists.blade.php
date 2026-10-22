@@ -2,6 +2,7 @@
 @section('panel_content')
 <div class="hm-dashboard hm-listing-page">
   <div class="hm-top"><div><div class="hm-eyebrow">Profiles you saved</div><h1 class="hm-heading"><i class="las la-bookmark text-primary"></i> My Shortlist</h1><p class="hm-subtitle">Keep your favorite member profiles in one place and connect at the right time.</p></div><a href="{{ route('member.listing') }}" class="btn btn-primary"><i class="las la-user-plus mr-1"></i> Find More Matches</a></div>
+  <div class="hm-parity-listing-layout"><main>
   <div class="hm-card mb-4">
     <div class="hm-card-header"><h2>All Shortlisted Profiles <span class="badge badge-soft-primary">{{ $shortlists->total() }}</span></h2><span class="hm-subtitle">Manage your shortlist</span></div>
     <div class="hm-card-body">
@@ -40,6 +41,11 @@
     </div>
     <div class="p-3">{{ $shortlists->links() }}</div>
   </div>
+</main><aside class="hm-parity-listing-aside">
+<section class="hm-card"><header class="hm-card-header"><h2>Shortlist Overview</h2></header><div class="hm-card-body"><div class="hm-parity-listing-insight"><i class="las la-heart"></i><strong>{{ $shortlists->total() }}</strong><span>Saved Profiles</span></div><p class="small text-muted mt-3 mb-0">These profiles are based on your current account and preferences, not demonstration values.</p></div></section>
+<section class="hm-card"><header class="hm-card-header"><h2>Discovery Options</h2></header><div class="hm-card-body"><p class="small text-muted">Use advanced discovery to refine age, location, education and partner preferences.</p><a class="btn btn-primary btn-block" href="{{ route('member.listing') }}">Discover More Members</a><a class="btn btn-outline-primary btn-block mt-2" href="{{ route('profile_settings') }}">Update Preferences</a></div></section>
+<section class="hm-ref-help"><i class="las la-shield-alt"></i><b>Safe Connections</b><p>Use the existing profile viewer to keep account entitlements and access permissions intact.</p></section>
+</aside></div>
 </div>
 @endsection
 

@@ -7,7 +7,7 @@
       <div class="hm-ref-stat"><span class="hm-ref-stat-icon"><i class="las la-envelope"></i></span><div><small>Unread This Page</small><strong>{{ $notifications->getCollection()->whereNull('read_at')->count() }}</strong></div></div>
       <div class="hm-ref-stat"><span class="hm-ref-stat-icon"><i class="las la-check-circle"></i></span><div><small>Read This Page</small><strong>{{ $notifications->getCollection()->whereNotNull('read_at')->count() }}</strong></div></div>
       <a class="hm-ref-stat text-decoration-none" href="{{ route('client.scope.notifications') }}"><span class="hm-ref-stat-icon"><i class="las la-sliders-h"></i></span><div><small>Preferences</small><strong style="font-size:16px">Manage</strong></div></a>
-      </div><div class="card hm-ref-panel">
+      </div><div class="hm-parity-notifications-layout"><main><div class="card hm-ref-panel">
         <div class="card-header row gutters-5">
             <div class="col text-center text-md-left">
                 <h5 class="mb-md-0 h6">{{ translate('Notifications') }}</h5>
@@ -92,5 +92,21 @@
                 {{ $notifications->links() }}
             </div>
         </div>
+    </div></main>
+    <aside>
+      <section class="hm-ref-panel"><div class="hm-ref-panel-head"><h2><i class="las la-sliders-h"></i> Notification Filters</h2></div>
+      <div class="hm-ref-panel-body"><p class="small text-muted">View important notifications and open the connected member features.</p>
+       <div class="hm-ref-side-links">
+         <a href="{{ route('frontend.notifications') }}"><i class="las la-bell"></i> All Notifications</a>
+         <a href="{{ route('my_matched_profiles') }}"><i class="las la-heart"></i> Matches</a>
+         <a href="{{ route('interest_requests') }}"><i class="las la-envelope"></i> Interests</a>
+         <a href="{{ route('all.messages') }}"><i class="las la-comments"></i> Messages</a>
+       </div></div></section>
+      <section class="hm-ref-panel"><div class="hm-ref-panel-head"><h2><i class="las la-cog"></i> Notification Settings</h2></div>
+      <div class="hm-ref-panel-body"><p class="small text-muted">Control your email, push and quiet-hour preferences using the existing settings page.</p>
+       <a class="btn btn-primary btn-block" href="{{ route('client.scope.notifications') }}">Open Preferences →</a></div></section>
+      <section class="hm-ref-help"><i class="las la-gem"></i><b>Keep Every Connection</b><p>Discover the available membership features and notification benefits.</p>
+      <a class="btn btn-primary btn-block mt-2" href="{{ route('member.reference.packages') }}">View Plans →</a></section>
+    </aside>
     </div></div>
 @endsection
