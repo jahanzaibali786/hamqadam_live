@@ -1,5 +1,5 @@
-@extends('frontend.layouts.app')
-@section('content')
+@extends('frontend.layouts.member_panel')
+@section('panel_content')
     <section class="hq-reference-page-hero hq-discovery-reference-hero">
         <div class="container">
             <!-- <div class="hq-reference-breadcrumb">{{ translate('Home') }} <span>/</span> {{ translate('Active Members Discovery') }}</div> -->
