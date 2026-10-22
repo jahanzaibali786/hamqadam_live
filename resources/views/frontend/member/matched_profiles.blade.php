@@ -1,52 +1,11 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
-@php
-$canRefresh=!auth()->user()->match_refresh_updated_at || \Carbon\Carbon::parse(auth()->user()->match_refresh_updated_at)->addMinutes(30)->isPast();
-@endphp
-<div class="hm-dashboard hm-listing-page">
-  <div class="hm-top"><div><div class="hm-eyebrow">Smart discovery</div><h1 class="hm-heading"><i class="las la-heart text-primary"></i> Matched Profiles</h1><p class="hm-subtitle">Explore people who align with your partner preferences.</p></div>
-    @if($canRefresh)<a href="{{ route('match.refresh') }}" class="btn btn-outline-primary"><i class="las la-sync mr-1"></i> Refresh Matches</a>
-    @else <button type="button" class="btn btn-outline-secondary" disabled title="Available 30 minutes after your last refresh"><i class="las la-clock mr-1"></i> Refresh on cooldown</button>@endif
-  </div>
-  <div class="hm-parity-listing-layout"><main>
-  <div class="hm-card">
-    <div class="hm-card-header"><h2>Recommended For You</h2><span class="badge badge-soft-primary">{{ $matchedProfiles->total() }} profiles</span></div>
-    <div class="hm-card-body">
-      <div class="hm-profiles-grid">
-        @forelse($matchedProfiles as $matchedProfile)
-          @php
-            $person=$matchedProfile->matchedUser?:$matchedProfile->user;
-            if(!$person || (float)$matchedProfile->match_percentage<=0) continue;
-            $member=$person->member;
-            $allowed=!(get_setting('full_profile_show_according_to_membership')==1&&auth()->user()->membership==1);
-            $link=$allowed?route('member_profile',$person->id):'javascript:void(0);';
-            $fallback=($member?->gender??1)==1?'assets/img/avatar-place.png':'assets/img/female-avatar-place.png';
-            $avatar=show_profile_picture($person)&&$person->photo?uploaded_asset($person->photo):static_asset($fallback);
-          @endphp
-          <article class="hm-profile-tile">
-            <div class="hm-profile-cover"><a href="{{ $link }}" @unless($allowed) onclick="package_update_alert()" @endunless><img src="{{ $avatar }}" loading="lazy" alt="{{ $person->first_name }} {{ $person->last_name }}"></a><span class="hm-profile-match">{{ round($matchedProfile->match_percentage) }}% Match</span></div>
-            <div class="hm-profile-body">
-              <h2><a href="{{ $link }}" @unless($allowed) onclick="package_update_alert()" @endunless>{{ $person->first_name }} {{ $person->last_name }}</a></h2>
-              <div class="hm-profile-location">@if($member?->birthday){{ \Carbon\Carbon::parse($member->birthday)->age }} yrs · @endif{{ $member?->job_title?:'Hamqadam Member' }}</div>
-              <div class="hm-profile-info">{{ \Illuminate\Support\Str::limit((string)($matchedProfile->compatibility_explanation?:'Matches your partner preferences'),88) }}</div>
-              <div class="hm-progress"><span style="width:{{ min(100,max(0,$matchedProfile->match_percentage)) }}%"></span></div>
-              <div class="hm-profile-tile-actions mt-3"><a href="{{ $link }}" @unless($allowed) onclick="package_update_alert()" @endunless class="btn btn-primary btn-sm">View Profile</a><button type="button" onclick="express_interest({{ $person->id }})" id="interest_a_id_{{ $person->id }}" class="btn btn-outline-primary btn-sm" aria-label="Express interest in {{ $person->first_name }}"><i class="las la-heart"></i></button></div>
-            </div>
-          </article>
-        @empty
-          <div class="hm-empty"><h3 class="h5">No matches found yet</h3><p>Complete your preferences or explore the member directory.</p><a href="{{ route('member.listing') }}" class="btn btn-primary btn-sm">Explore Members</a></div>
-        @endforelse
-      </div>
-    </div><div class="p-3">{{ $matchedProfiles->links() }}</div>
-  </div>
-</main><aside class="hm-parity-listing-aside">
-<section class="hm-card"><header class="hm-card-header"><h2>Match Insights</h2></header><div class="hm-card-body"><div class="hm-parity-listing-insight"><i class="las la-heart"></i><strong>{{ $matchedProfiles->total() }}</strong><span>Matching Profiles</span></div><p class="small text-muted mt-3 mb-0">These profiles are based on your current account and preferences, not demonstration values.</p></div></section>
-<section class="hm-card"><header class="hm-card-header"><h2>Discovery Options</h2></header><div class="hm-card-body"><p class="small text-muted">Use advanced discovery to refine age, location, education and partner preferences.</p><a class="btn btn-primary btn-block" href="{{ route('member.listing') }}">Browse Advanced Search</a><a class="btn btn-outline-primary btn-block mt-2" href="{{ route('profile_settings') }}">Update Preferences</a></div></section>
-<section class="hm-ref-help"><i class="las la-shield-alt"></i><b>Safe Connections</b><p>Use the existing profile viewer to keep account entitlements and access permissions intact.</p></section>
-</aside></div>
-</div>
+<div class="hm-four"><header class="hm-four-head"><div><h1><i class="las la-user-friends"></i> Matched Profiles</h1><p>People who are a great match based on your profile and preferences.</p></div><aside>Better matches lead to brighter futures.</aside></header>
+<div class="hm-four-layout"><main>
+<nav class="hm-four-tabs"><a class="{{ !request('tab')||request('tab')==='all'?'active':'' }}" href="{{ route('my_matched_profiles') }}">All Matches ({{ $matchedProfiles->total() }})</a><a class="{{ request('tab')==='high'?'active':'' }}" href="{{ route('my_matched_profiles',['tab'=>'high']) }}">High Compatibility</a><a class="{{ request('tab')==='new'?'active':'' }}" href="{{ route('my_matched_profiles',['tab'=>'new']) }}">New Matches</a><a class="{{ request('tab')==='recent'?'active':'' }}" href="{{ route('my_matched_profiles',['tab'=>'recent']) }}">Recently Active</a></nav>
+<div class="hm-four-matches">@forelse($matchedProfiles as $match)@php($person=$match->matchedUser)@if($person)@php($member=$person->member)@php($fallback=static_asset(($member?->gender??1)==1?'assets/img/avatar-place.png':'assets/img/female-avatar-place.png'))@php($allowed=get_setting('full_profile_show_according_to_membership')!=1||auth()->user()->membership!=1)<article class="hm-four-profile"><div class="hm-four-photo"><img src="{{ $person->photo&&show_profile_picture($person)?uploaded_asset($person->photo):$fallback }}" alt="{{ $person->first_name }}" loading="lazy" onerror="this.onerror=null;this.src='{{ $fallback }}'"><b>♥ {{ round($match->match_percentage) }}% Match</b></div><div><h2>{{ $person->first_name }} {{ $person->last_name }}@if($member?->birthday), {{ \Carbon\Carbon::parse($member->birthday)->age }}@endif</h2><p><i class="las la-map-marker"></i> {{ $person->addresses->firstWhere('type','present')?->city?->name??'Location not provided' }}</p><p><i class="las la-briefcase"></i> {{ $member?->job_title??'Profession not provided' }}</p><p><i class="las la-graduation-cap"></i> {{ $person->education->last()?->degree?:'Education not provided' }}</p><div class="hm-four-actions"><a href="{{ $allowed?route('member_profile',$person->id):route('packages') }}">View Profile</a><button type="button" id="interest_a_id_{{ $person->id }}" onclick="express_interest({{ $person->id }})" title="Send Interest"><i class="las la-heart"></i></button></div></div></article>@endif@empty<p class="hm-four-empty">No compatible profiles match these filters.</p>@endforelse</div>{{ $matchedProfiles->links() }}</main>
+<aside><section class="hm-four-panel"><h2>Match Insights</h2><div class="hm-four-insight">♥ <strong>{{ $matchedProfiles->total() }}</strong><small>Matching profiles in current filter</small></div><a href="{{ route('client.scope.portal') }}">View Compatibility Analysis →</a></section><section class="hm-four-panel"><h2>Filters</h2><form action="{{ route('my_matched_profiles') }}" method="GET"><input type="hidden" name="tab" value="{{ request('tab','all') }}"><label>Search Matches<input name="search" placeholder="Name" value="{{ request('search') }}"></label><label>Minimum Age<input type="number" name="min_age" min="18" max="90" value="{{ request('min_age',20) }}"></label><label>Maximum Age<input type="number" name="max_age" min="18" max="90" value="{{ request('max_age',35) }}"></label><label class="hm-four-check"><input type="checkbox" name="verified" value="1" @checked(request('verified'))> Verified Profiles Only</label><button>Apply Filters</button></form></section><section class="hm-four-promo"><a href="{{ route('member.reference.packages') }}">Upgrade to Premium →</a></section></aside></div></div>
 @endsection
-
 @section('modal')
   @include('modals.confirm_modal')
   @include('modals.package_update_alert_modal')
