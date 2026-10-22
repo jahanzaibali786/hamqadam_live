@@ -41,7 +41,7 @@ final class HamqadamMemberDesignDemoSeeder extends Seeder
                 if($old&&$old->user_type!=='member') throw new \RuntimeException("Fixture email conflict: {$email}");
                 if(!$old){
                     $row=$this->tableRow('users',[
-                        'first_name'=>$first,'last_name'=>$last,'email'=>$email,
+                        'name'=>$first.' '.$last,'first_name'=>$first,'last_name'=>$last,'email'=>$email,
                         'user_type'=>'member','password'=>Hash::make(Str::random(40)),
                         'approved'=>1,'blocked'=>0,'deactivated'=>0,'membership'=>1,
                         'email_verified_at'=>now(),'created_at'=>now(),'updated_at'=>now(),
