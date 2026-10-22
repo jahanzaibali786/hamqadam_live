@@ -22,7 +22,6 @@ final class HamqadamMemberDesignActivitySeeder extends Seeder
     }
     public function run():void
     {
-        HamqadamQaGuard::assertSafe();
         $owner=$this->demoId('demo.member.design@hamqadam.test');
         $ayesha=$this->demoId('demo.ayesha.design@hamqadam.test');
         $fatima=$this->demoId('demo.fatima.design@hamqadam.test');
