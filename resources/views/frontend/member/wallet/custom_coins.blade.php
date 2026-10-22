@@ -45,7 +45,7 @@
                                             <label class="col-md-3 col-form-label">{{ translate('Coins') }}<span
                                                     class="text-danger"> *</span></label>
                                             <div class="col-md-9">
-                                                <input type="number" name="coins" id="coins" min="1" step="1"
+                                                <input type="number" name="coins" id="coins" min="1" step="1" value="{{ request()->integer('coins') > 0 ? min(1000000, request()->integer('coins')) : '' }}"
                                                     class="form-control" inputmode="numeric"
                                                     placeholder="{{ translate('e.g. 100') }}" required>
                                                 <small class="text-muted">{{ translate('Whole numbers only — no decimals.') }}</small>
@@ -280,6 +280,7 @@
             }
         }
         $('#coins').on('input change', updateTotal);
+        updateTotal();
 
         $(".online_payment").click(function() {
             $('.manual_payment_description').addClass('d-none');
