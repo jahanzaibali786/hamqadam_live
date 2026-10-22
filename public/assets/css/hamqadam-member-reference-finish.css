@@ -1,0 +1,24 @@
+
+/* Reference-specific finishing details (original routes and data preserved). */
+.hm-wallet-reference .hm-ref-coin-choices{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.hm-wallet-reference .hm-ref-coin-option{border:1px solid #f0dfe8;border-radius:12px;padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;color:#443549!important;text-decoration:none!important;background:#fff}
+.hm-ref-coin-option>i{font-size:26px;color:#e82e78}.hm-ref-coin-option strong{font-size:14px}
+.hm-ref-coin-option span{font-size:10px;color:#897888}.hm-ref-coin-option b{color:#e72e75;font-size:11px}
+.hm-ref-side-links{display:grid;gap:9px}.hm-ref-side-links a{padding:13px 15px;border:1px solid #f1e6eb;background:#fff9fb;border-radius:9px;color:#63475e;text-decoration:none;font-weight:650;font-size:12px}
+.hm-ref-side-links i{color:#e73179;font-size:18px;margin-right:8px}
+.hm-wallet-reference .hm-ref-history>.card{border:0!important;box-shadow:none!important;margin:0!important}
+.hm-wallet-reference .hm-ref-history .card-header{display:none}
+.hm-referral-reference .hm-referral-summary>.col-md-4 .card{border:1px solid #f2e2eb;border-radius:13px;min-height:120px}
+.hm-referral-reference .hm-referral-summary .h2{font-size:30px;color:#e62a77}
+.hm-referral-reference .hm-referral-invite:first-of-type .card-body{background:linear-gradient(120deg,#fff1f7,#fff);padding:27px}
+.hm-referral-reference .hm-referral-invite input[readonly]{background:white}
+.hm-referral-reference .table-responsive{border-radius:10px}
+.hm-notifications-reference .list-group-item{padding:18px 16px;border-bottom:1px solid #f5e9ef;border-top:0}
+.hm-notifications-reference .list-group-item:hover{background:#fff7fa}
+.hm-notifications-reference .avatar img{border-radius:50%}
+.hm-verification-reference form>.card{border-radius:15px}
+.hm-verification-reference form .row{align-items:start;padding:6px 0}
+.hm-usage-reference .row.gutters-5>div>div{border-radius:13px!important;border-color:#f0e4ec!important}
+.hm-usage-reference .aiz-table thead{background:#fff4f9}
+@media(max-width:1250px){.hm-wallet-reference .hm-ref-coin-choices{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:500px){.hm-wallet-reference .hm-ref-coin-choices{grid-template-columns:1fr}}
