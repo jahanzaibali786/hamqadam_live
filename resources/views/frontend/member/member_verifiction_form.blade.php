@@ -9,7 +9,7 @@
  $hasSelfie=$docs->contains(fn($d)=>in_array($d->type?->value??'', ['selfie','face'],true));
  $hasDocuments=$docs->contains(fn($d)=>in_array($d->type?->value??'', ['cnic_front','cnic_back'],true))||$submitted;
  $stages=[['CNIC Verification',$hasDocuments?'Completed':'Pending'],['Selfie Verification',$hasSelfie?'Submitted':'Pending'],['Profile Photos',$user->photo?'Available':'Pending'],['Admin Review',$requestStatus==='under_review'?'In Progress':($requestStatus==='approved'?'Completed':'Pending')],['Verified',$approved?'Completed':'Not Completed']];
- $fields=json_decode((string)get_setting('verification_form'),'false')??[];
+ $fields=json_decode((string)get_setting('verification_form'))??[];
 @endphp
 <div class="hm-next hm-verify-next">
 <header class="hm-next-head"><div class="hm-next-heading"><i class="las la-shield-alt"></i><div><h1>Verification Center</h1><p>Get verified to build trust and get more genuine matches.</p></div></div><div class="hm-next-quote">A verified profile<br>creates real connections.</div></header>
