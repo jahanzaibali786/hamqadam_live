@@ -1,0 +1,59 @@
+/* Member Design System · October 2026 references */
+:root{--hm-pink:#ed2977;--hm-wine:#a91550;--hm-light:#fff1f6;--hm-border:#f1e4ea;--hm-ink:#302934;--hm-muted:#837683}
+.hq-member-panel-page{background:#fbf8fb!important}
+.hq-member-panel-page .hq-member-main-content{min-width:0}
+.hq-member-panel-page .aiz-user-sidenav{background:white;border:1px solid #efe6ed;border-radius:14px!important;box-shadow:0 6px 22px rgba(70,33,61,.04)}
+.hq-member-panel-page .aiz-user-sidenav .aiz-side-nav-link{color:#65596b;border-radius:10px;margin:2px 12px;padding:10px 12px}
+.hq-member-panel-page .aiz-user-sidenav .aiz-side-nav-link.active,.hq-member-panel-page .aiz-user-sidenav .hq-current-nav-item{background:var(--hm-light)!important;color:var(--hm-pink)!important;font-weight:700}
+.hq-member-panel-page .aiz-user-sidenav .aiz-side-nav-icon{color:#918495}
+.hq-member-panel-page .aiz-user-sidenav .aiz-side-nav-link.active .aiz-side-nav-icon{color:var(--hm-pink)}
+.hq-member-panel-page .card:not(.hq-legacy){border:1px solid var(--hm-border);box-shadow:0 4px 24px rgba(65,33,52,.035);border-radius:15px;overflow:hidden}
+.hq-member-panel-page .card-header{background:#fff;border-bottom:1px solid #f2e9ed}
+.hq-member-panel-page .btn-primary{background:var(--hm-pink);border-color:var(--hm-pink);color:#fff}
+.hq-member-panel-page .btn-outline-primary{color:var(--hm-pink);border-color:var(--hm-pink)}
+.hq-member-panel-page .btn-outline-primary:hover{background:var(--hm-pink);color:#fff}
+.hq-member-panel-page .form-control{border-color:#e8dee6;border-radius:9px}
+.hq-member-panel-page .badge-soft-primary{color:#a91550;background:#fff0f5}
+.hm-dashboard{color:var(--hm-ink);font-size:14px}
+.hm-dashboard a{color:var(--hm-pink)}.hm-dashboard a.btn-primary{color:#fff}
+.hm-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+.hm-eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--hm-pink);text-transform:uppercase}
+.hm-heading{font-family:Georgia,serif;color:#42283a;font-size:clamp(27px,2.5vw,37px);font-weight:700;margin:4px 0 5px}
+.hm-subtitle{color:var(--hm-muted);font-size:13px;margin:0}
+.hm-quick{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.hm-quick a{border:1px solid #e8dbe2;color:#625468;background:white;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:600;text-decoration:none}
+.hm-quick a.hm-pink{background:var(--hm-pink);border-color:var(--hm-pink);color:white}
+.hm-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}
+.hm-kpi{background:#fff;border:1px solid #f0e5ed;border-radius:15px;min-height:135px;padding:23px;display:flex;align-items:flex-start;justify-content:space-between;box-shadow:0 6px 26px rgba(96,35,68,.04)}
+.hm-kpi .num{font-size:clamp(22px,2.4vw,33px);font-weight:800;color:#3a2e3a;line-height:1.2;margin:7px 0}
+.hm-kpi small{color:#8e8492;font-size:12px}.hm-kpi .hm-icon{width:43px;height:43px;border-radius:12px;display:grid;place-items:center;background:#fff0f6;color:var(--hm-pink);font-size:21px}
+.hm-columns{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(260px,.95fr);gap:20px;align-items:start}
+.hm-card{background:#fff;border:1px solid #eee4eb;border-radius:15px;overflow:hidden;margin-bottom:20px;box-shadow:0 5px 24px rgba(74,35,63,.04)}
+.hm-card-header{padding:20px 23px;border-bottom:1px solid #f2e7ef;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.hm-card-header h2{margin:0;font-size:16px;font-weight:750;color:#362b39}.hm-card-body{padding:22px}
+.hm-card-header a{font-size:12px;font-weight:650}
+.hm-profile-overview{display:flex;align-items:center;gap:19px;flex-wrap:wrap}
+.hm-avatar{width:90px;height:90px;object-fit:cover;border-radius:50%;border:4px solid #ffedf4}
+.hm-progress{height:7px;background:#f4e8ee;border-radius:10px;overflow:hidden;flex:1;min-width:90px}
+.hm-progress span{display:block;height:100%;background:linear-gradient(90deg,#ed2977,#bc396f);border-radius:10px}
+.hm-progress-row{display:flex;gap:14px;align-items:center;margin-top:15px}
+.hm-progress-row strong{color:var(--hm-pink)}
+.hm-match-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.hm-match{border:1px solid #f1e4ea;border-radius:13px;overflow:hidden;background:white}
+.hm-match>img{width:100%;height:166px;object-fit:cover;display:block;background:#ffeff5}
+.hm-match-info{padding:12px}.hm-match-info strong{display:block;color:#362d36;font-size:13px}.hm-match-info small{display:block;color:#8c7c8b;font-size:11px;margin-top:4px}
+.hm-match-score{display:inline-flex;color:#b11d57;background:#ffedf5;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:700;margin-top:9px}
+.hm-match .btn{border-radius:8px;font-size:11px;margin-top:10px;padding:7px 9px}
+.hm-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.hm-action{display:flex;align-items:center;gap:11px;border:1px solid #f1e4ea;padding:13px;border-radius:10px;color:#554454;text-decoration:none!important}
+.hm-action i{color:var(--hm-pink);font-size:23px}.hm-action b{font-size:12px}.hm-action span{font-size:10px;color:#958899;display:block}
+.hm-activity{list-style:none;padding:0;margin:0}.hm-activity li{display:flex;gap:11px;border-bottom:1px solid #f4edf1;padding:12px 0;color:#655a65;font-size:12px}
+.hm-activity li:last-child{border:0}.hm-activity i{color:var(--hm-pink);font-size:19px}
+.hm-plan{background:linear-gradient(128deg,#b82160,#ed4389);color:white;padding:25px;border-radius:13px}
+.hm-plan strong{font-size:18px}.hm-plan p{color:#ffe8f1;font-size:12px;margin:12px 0}.hm-plan a{background:white;color:#a51c53;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;display:inline-block}
+.hm-empty{background:#fff8fb;border:1px dashed #e7b7cd;border-radius:11px;text-align:center;padding:24px;color:#887784}
+.hm-security{display:flex;gap:12px;align-items:center;color:#756b78;font-size:12px}
+.hm-security i{color:#24a27b;font-size:25px}
+@media(max-width:1199px){.hm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.hm-columns{grid-template-columns:1fr}.hm-match-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.hm-kpis{grid-template-columns:1fr}.hm-match-list{grid-template-columns:1fr}.hm-actions{grid-template-columns:1fr}.hm-kpi{min-height:95px}.hm-match>img{height:220px}}
