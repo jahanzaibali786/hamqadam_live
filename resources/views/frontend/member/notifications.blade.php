@@ -2,7 +2,12 @@
 @section('panel_content')
 @include('frontend.member.partials.design_header', ['title' => "Notifications", 'subtitle' => "Stay informed about your matching journey.", 'icon' => "la-bell"])
 
-    <div class="card">
+    <div class="hm-ref-page hm-notifications-reference" data-hm-screen="notifications"><div class="hm-ref-stats">
+      <div class="hm-ref-stat"><span class="hm-ref-stat-icon"><i class="las la-bell"></i></span><div><small>Total Notifications</small><strong>{{ $notifications->total() }}</strong></div></div>
+      <div class="hm-ref-stat"><span class="hm-ref-stat-icon"><i class="las la-envelope"></i></span><div><small>Unread This Page</small><strong>{{ $notifications->getCollection()->whereNull('read_at')->count() }}</strong></div></div>
+      <div class="hm-ref-stat"><span class="hm-ref-stat-icon"><i class="las la-check-circle"></i></span><div><small>Read This Page</small><strong>{{ $notifications->getCollection()->whereNotNull('read_at')->count() }}</strong></div></div>
+      <a class="hm-ref-stat text-decoration-none" href="{{ route('client.scope.notifications') }}"><span class="hm-ref-stat-icon"><i class="las la-sliders-h"></i></span><div><small>Preferences</small><strong style="font-size:16px">Manage</strong></div></a>
+      </div><div class="card hm-ref-panel">
         <div class="card-header row gutters-5">
             <div class="col text-center text-md-left">
                 <h5 class="mb-md-0 h6">{{ translate('Notifications') }}</h5>
@@ -87,5 +92,5 @@
                 {{ $notifications->links() }}
             </div>
         </div>
-    </div>
+    </div></div>
 @endsection
