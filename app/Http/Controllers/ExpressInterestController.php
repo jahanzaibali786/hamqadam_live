@@ -40,45 +40,44 @@ class ExpressInterestController extends Controller
      */
     public function index()
     {
-        $effectiveUserId = $this->getEffectiveUserId();
-        $interests = DB::table('express_interests')
-            ->orderBy('id', 'desc')
-            ->where('interested_by', $effectiveUserId)
-            ->join('users', 'express_interests.user_id', '=', 'users.id')
-            ->select('express_interests.id')
-            ->distinct()
-            ->paginate(10);
-
-        return view('frontend.member.my_interests', compact('interests'));
+        $id=$this->getEffectiveUserId();
+        $tab=request('tab','received');
+        if(!in_array($tab,['received','sent','accepted','rejected'],true))$tab='received';
+        $counts=[
+            'received'=>ExpressInterest::where('user_id',$id)->where('status',0)->count(),
+            'sent'=>ExpressInterest::where('interested_by',$id)->count(),
+            'accepted'=>ExpressInterest::where(fn($q)=>$q->where('user_id',$id)->orWhere('interested_by',$id))->where('status',1)->count(),
+            'rejected'=>ExpressInterest::where(fn($q)=>$q->where('user_id',$id)->orWhere('interested_by',$id))->where('status',2)->count(),
+        ];
+        $interests=ExpressInterest::query()->with(['sender.member','recipient.member','sender.addresses.city','recipient.addresses.city'])
+          ->when($tab==='received',fn($q)=>$q->where('user_id',$id)->where('status',0))
+          ->when($tab==='sent',fn($q)=>$q->where('interested_by',$id))
+          ->when($tab==='accepted',fn($q)=>$q->where(fn($x)=>$x->where('user_id',$id)->orWhere('interested_by',$id))->where('status',1))
+          ->when($tab==='rejected',fn($q)=>$q->where(fn($x)=>$x->where('user_id',$id)->orWhere('interested_by',$id))->where('status',2))
+          ->latest()->paginate(6)->withQueryString();
+        return view('frontend.member.my_interests',compact('interests','counts','tab'));
     }
 
     public function interest_requests()
     {
-        $effectiveUserId = $this->getEffectiveUserId();
-        $status = request('status');
-        $statusMap = [
-            'pending' => 0,
-            'accepted' => 1,
-            'rejected' => 2,
-            'withdrawn' => 3,
-            'cancelled' => 4,
-            'expired' => 5,
+        $id=$this->getEffectiveUserId();
+        $tab=request('tab','received');
+        if(!in_array($tab,['received','sent','accepted','declined','in_progress'],true))$tab='received';
+        $counts=[
+          'received'=>ExpressInterest::where('user_id',$id)->where('status',0)->count(),
+          'sent'=>ExpressInterest::where('interested_by',$id)->count(),
+          'accepted'=>ExpressInterest::where(fn($q)=>$q->where('user_id',$id)->orWhere('interested_by',$id))->where('status',1)->count(),
+          'declined'=>ExpressInterest::where(fn($q)=>$q->where('user_id',$id)->orWhere('interested_by',$id))->where('status',2)->count(),
+          'in_progress'=>ExpressInterest::where(fn($q)=>$q->where('user_id',$id)->orWhere('interested_by',$id))->where('status',1)->whereHas('meetings')->count(),
         ];
-
-        $interests = ExpressInterest::with('sender.member')
-            ->where('user_id', $effectiveUserId)
-            ->when(isset($statusMap[$status]), fn ($query) => $query->where('status', $statusMap[$status]))
-            ->latest()
-            ->paginate(10)
-            ->appends(['status' => $status]);
-
-        if (request()->ajax() || request()->boolean('partial')) {
-            return response()->json([
-                'html' => view('frontend.member.partials.interest_requests_table', compact('interests'))->render(),
-            ]);
-        }
-
-        return view('frontend.member.interest_requests', compact('interests'));
+        $interests=ExpressInterest::query()->with(['sender.member','recipient.member','sender.addresses.city','recipient.addresses.city'])
+          ->when($tab==='received',fn($q)=>$q->where('user_id',$id)->where('status',0))
+          ->when($tab==='sent',fn($q)=>$q->where('interested_by',$id))
+          ->when($tab==='accepted',fn($q)=>$q->where(fn($x)=>$x->where('user_id',$id)->orWhere('interested_by',$id))->where('status',1))
+          ->when($tab==='declined',fn($q)=>$q->where(fn($x)=>$x->where('user_id',$id)->orWhere('interested_by',$id))->where('status',2))
+          ->when($tab==='in_progress',fn($q)=>$q->where(fn($x)=>$x->where('user_id',$id)->orWhere('interested_by',$id))->where('status',1)->whereHas('meetings'))
+          ->latest()->paginate(6)->withQueryString();
+        return view('frontend.member.interest_requests',compact('interests','counts','tab'));
     }
 
     /**

@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-topnav-home.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-dashboard-referral-reference.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-settings-verification-home.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-four-reference.css') }}?v=1">
 @php
     $memberShellUser = auth()->user();
     $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
