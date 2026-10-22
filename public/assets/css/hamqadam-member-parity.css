@@ -50,7 +50,7 @@
 }
 .hm-member-app .hm-reference-heading::after,.hm-member-app .hm-ref-header::after,.hm-member-app .hm-subpage-header::after,.hm-member-app .hm-top::after{
  content:"";position:absolute;right:0;top:0;width:min(270px,36%);height:88px;border-radius:13px;
- background:#ffeaf2 url('/public/assets/img/member-reference-couple.svg') center 39% / cover no-repeat;pointer-events:none;
+ background:#ffeaf2 var(--hm-promo-art) center 39% / cover no-repeat;pointer-events:none;
 }
 .hm-member-app .hm-reference-heading h1,.hm-member-app .hm-ref-header h1{font-family:system-ui,sans-serif;font-size:clamp(23px,2.35vw,33px);font-weight:800;color:#182547}
 .hm-member-app .hm-ref-panel,.hm-member-app .hm-ref-white,.hm-member-app .hm-card{border:1px solid #f2e8ee;box-shadow:0 5px 24px rgba(64,29,54,.035)}
