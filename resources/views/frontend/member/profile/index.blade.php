@@ -1,5 +1,20 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-reference-v2.css') }}?v=1">
+<div class="hm-profile-ref">
+<div class="hm-profile-ref-hero">
+ <img class="hm-profile-ref-avatar" src="{{ $member->photo ? uploaded_asset($member->photo) : static_asset('assets/img/avatar-place.png') }}" alt="Profile photo">
+ <div><div class="hm-eyebrow">Profile Management</div><h2>{{ $member->first_name }} {{ $member->last_name }}</h2><div class="hm-profile-ref-meta">Manage your introduction, personal details, family, education, career and partner preferences.</div><a href="{{ route('member_profile', $member->id) }}" class="btn btn-outline-primary btn-sm mt-2">View Public Profile</a></div>
+</div>
+<div class="hm-profile-ref-tabs" role="tablist" aria-label="Profile information sections">
+<button type="button" class="hm-profile-ref-tab" role="tab" data-group="overview" aria-selected="true">Personal Details</button>
+<button type="button" class="hm-profile-ref-tab" role="tab" data-group="education" aria-selected="false">Education & Career</button>
+<button type="button" class="hm-profile-ref-tab" role="tab" data-group="lifestyle" aria-selected="false">Lifestyle & Background</button>
+<button type="button" class="hm-profile-ref-tab" role="tab" data-group="preferences" aria-selected="false">Partner Preferences</button>
+<button type="button" class="hm-profile-ref-tab" role="tab" data-group="security" aria-selected="false">Account & Security</button>
+</div>
+<div id="hm-profile-ref-content">
+
 @include('frontend.member.partials.design_header', ['title' => "My Profile", 'subtitle' => "Tell your story and keep your details up to date.", 'icon' => "la-user"])
 
     <div class="card">
@@ -166,6 +181,7 @@
 
 @endsection
 
+</div></div>
 @section('modal')
     @include('modals.create_edit_modal')
     @include('modals.delete_modal')
@@ -583,5 +599,39 @@
             initDatepicker(maxDate);
         });
     });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+ const root=document.querySelector('.hm-profile-ref');
+ if (!root) return;
+ const content=root.querySelector('#hm-profile-ref-content');
+ const cards=[...content.children].filter(el=>el.classList.contains('card'));
+ const categories={
+  overview:['introduction','basic information','registration details','present address','physical attributes'],
+  education:['education','career'],
+  lifestyle:['language','hobbies','personal attitude','residency','spiritual','social','family','life style'],
+  preferences:['partner','preference','expectation'],
+  security:['email','password','privacy','verification','document','deactivate']
+ };
+ for(const card of cards){
+  const h=card.querySelector('.card-header h5,.card-header h2,.card-header h4');
+  const text=(h?.textContent||'').trim().toLowerCase();
+  let group='overview';
+  for(const [name,words] of Object.entries(categories)){
+   if(words.some(w=>text.includes(w))){group=name;break;}
+  }
+  card.classList.add('hm-profile-ref-section');
+  card.dataset.group=group;
+ }
+ const tabs=[...root.querySelectorAll('.hm-profile-ref-tab')];
+ const activate=(name)=>{
+  tabs.forEach(t=>{let selected=t.dataset.group===name;t.setAttribute('aria-selected',String(selected));t.tabIndex=selected?0:-1;});
+  cards.forEach(card=>card.classList.toggle('is-visible',card.dataset.group===name));
+  try{history.replaceState(null,'',location.pathname+'#profile-'+name)}catch(e){}
+ };
+ tabs.forEach(t=>t.addEventListener('click',()=>activate(t.dataset.group)));
+ const initial=location.hash.startsWith('#profile-')?location.hash.slice(9):'overview';
+ activate(tabs.some(t=>t.dataset.group===initial)?initial:'overview');
+});
 </script>
 @endsection
