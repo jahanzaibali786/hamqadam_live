@@ -512,6 +512,7 @@ require __DIR__.'/referral.php';
     return back()->with('success', 'Your profile boost is active for 24 hours.');
 })->middleware('throttle:3,1')->name('member.profile_boost.activate');
 require __DIR__.'/hamqadam_step3.php';
+require __DIR__.'/member_reference.php';
 // Support routes are deployed separately on some older FTP mirrors. Do not
 // take down the entire application when that optional file is temporarily absent.
 $supportRoutesFile = __DIR__.'/support_tickets.php';

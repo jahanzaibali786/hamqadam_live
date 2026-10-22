@@ -380,6 +380,13 @@
                             </li>
                         </ul>
                     </li>
+                    {{-- Full member reference tools, connected to real feature routes. --}}
+                    <li class="aiz-side-nav-item"><a href="{{ route('member.reference.meetings') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.reference.meetings']) }}"><i class="las la-calendar-check aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Meeting Scheduling</span></a></li>
+                    <li class="aiz-side-nav-item"><a href="{{ route('member.reference.packages') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.reference.packages']) }}"><i class="las la-gem aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Membership Plans</span></a></li>
+                    <li class="aiz-side-nav-item"><a href="{{ route('member.reference.assistant') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.reference.assistant']) }}"><i class="las la-robot aiz-side-nav-icon"></i><span class="aiz-side-nav-text">AI Assistant Tools</span></a></li>
+                    <li class="aiz-side-nav-item"><a href="{{ route('member.reference.blogs') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.reference.blogs']) }}"><i class="las la-book-open aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Blogs &amp; Insights</span></a></li>
+                    <li class="aiz-side-nav-item"><a href="{{ route('member.reference.stories') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.reference.stories']) }}"><i class="las la-heart aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Community Stories</span></a></li>
+                    <li class="aiz-side-nav-item"><a href="{{ route('member.reference.settings') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.reference.settings']) }}"><i class="las la-cog aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Settings &amp; Privacy</span></a></li>
                     {{-- Client-requested member features, visible in the member dashboard. --}}
                     <li class="aiz-side-nav-item">
                         <a href="{{ route('client.scope.portal') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.portal', 'client.scope.got-match']) }}">
