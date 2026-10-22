@@ -142,6 +142,12 @@ final class ReferenceScreensController extends Controller
         return redirect()->route('member.reference.assistant')->with('result_id', (int) $result->id);
     }
 
+    public function blogDetail(string $slug): View
+    {
+        $blog = Blog::active()->with('category')->where('slug', $slug)->firstOrFail();
+        return view('frontend.member.reference.blog_details', compact('blog'));
+    }
+
     public function blogs(Request $request): View
     {
         $search = trim((string) $request->query('search', ''));
