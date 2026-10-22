@@ -1,0 +1,21 @@
+/* Sidebar viewport fix: grid rows prevent the promo from crushing the menu. */
+.hm-member-app .hm-sidebar-column{min-height:0!important;overflow:hidden!important}
+.hm-member-app .hm-sidebar-column .hq-member-scroll-shell{display:flex!important;flex-direction:column!important;height:100%!important;min-height:0!important;max-height:100%!important;overflow:hidden!important;padding:0!important}
+.hm-member-app .hm-sidebar-column .aiz-user-sidenav{display:grid!important;grid-template-rows:minmax(0,1fr) auto auto!important;height:100%!important;min-height:0!important;max-height:100%!important;overflow:hidden!important;border-radius:0!important}
+.hm-member-app .hm-sidebar-column .hm-regular-nav .aiz-user-sidenav>.px-4.text-center.mb-3{display:none!important}
+.hm-member-app .hm-sidebar-column #hq-member-side-scroll{grid-row:1;align-self:stretch!important;height:100%!important;min-height:0!important;max-height:100%!important;flex:none!important;overflow-y:auto!important;overflow-x:hidden!important;margin:0!important;padding:10px 0 15px!important;scrollbar-width:thin;overscroll-behavior:contain}
+.hm-member-app .hm-sidebar-column .hm-member-context-promo{grid-row:2;align-self:end!important;margin:0 12px 0!important;padding:7px 9px 9px!important;flex:none!important;max-height:164px;overflow:hidden}
+.hm-member-app .hm-sidebar-column .hm-member-context-promo img{height:60px!important;width:100%;object-fit:contain}
+.hm-member-app .hm-sidebar-column .hm-member-context-promo p{margin:4px 0 7px!important;font-size:11px;line-height:1.3}
+.hm-member-app .hm-sidebar-column .hm-member-sidebar-logout{grid-row:3;margin:0!important;padding:8px 12px 12px!important;align-self:stretch!important}
+.hm-member-app .hm-sidebar-column .hm-member-sidebar-logout button{margin:0!important}
+.hm-member-app .hm-sidebar-column .aiz-side-nav-list{padding:0;margin:0}
+.hm-member-app .hm-sidebar-column .aiz-side-nav-link{display:flex;align-items:center;gap:8px}
+.hm-member-app .hm-sidebar-column .aiz-side-nav-text{flex:1;min-width:0}
+.hm-member-app .hm-sidebar-column .hm-member-extras summary{list-style:none;cursor:pointer}
+.hm-member-app .hm-sidebar-column .hm-member-extras summary::-webkit-details-marker{display:none}
+.hm-member-app .hm-sidebar-column .hm-member-extra-list{list-style:none;padding:0;margin:0}
+.hm-member-app .hm-sidebar-column .hm-member-extra-list .aiz-side-nav-link{padding-left:20px}
+@media (max-height:530px){.hm-member-app .hm-sidebar-column .hm-member-context-promo{display:none!important}}
+@media (min-width:1200px){.hm-member-app .hm-sidebar-column{height:100%!important;max-height:100%!important}.hm-member-app .hm-sidebar-column .hq-member-scroll-shell{top:0!important;position:relative!important}}
+@media (max-width:1199.98px){.hm-member-app .hm-sidebar-column{height:100dvh!important}.hm-member-app .hm-sidebar-column .aiz-user-sidenav{height:100%!important}}
