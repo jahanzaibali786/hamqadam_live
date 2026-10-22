@@ -149,3 +149,16 @@
  .hm-member-app .hm-member-workspace{padding:19px 12px}
  .hm-member-app .aiz-user-panel{padding-left:12px!important}
 }
+
+
+.hm-member-mobile-menu{display:none;border:0;background:#fff0f5;color:#b72360;height:37px;width:38px;border-radius:9px;font-size:21px;align-items:center;justify-content:center}
+.hm-member-overlay{display:none}
+@media(max-width:1199.98px){
+ .hm-member-mobile-menu{display:flex}
+ .hm-member-app .hm-sidebar-column{display:flex;position:fixed;top:0;left:0;height:100dvh;width:min(290px,84vw);flex-basis:auto;z-index:1101;transform:translateX(-102%);box-shadow:12px 0 42px rgba(50,17,39,.15);transition:transform .24s ease}
+ .hm-member-app.hm-nav-open .hm-sidebar-column{transform:translateX(0)}
+ .hm-member-app.hm-nav-open .hm-member-overlay{display:block;position:fixed;inset:0;z-index:1099;background:rgba(30,20,38,.55);border:0;width:100%;height:100%}
+ .hm-member-app .hm-sidebar-column .hq-member-scroll-shell{display:flex!important}
+ .hm-member-app .hm-sidebar-column .aiz-user-sidenav{display:flex}
+}
+@media(prefers-reduced-motion:reduce){.hm-member-app .hm-sidebar-column{transition:none}}
