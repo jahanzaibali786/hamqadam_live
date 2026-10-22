@@ -2,15 +2,17 @@
 @section('panel_content')
 @include('frontend.member.partials.design_header', ['title' => "Referral Program", 'subtitle' => "Invite friends and track eligible rewards.", 'icon' => "la-users"])
 
-<div class="container-fluid py-3">
+<div class="hm-ref-page hm-referral-reference" data-hm-screen="referrals">
+<header class="hm-ref-header"><div><span class="hm-ref-kicker">Community rewards</span><h1 class="hm-ref-heading">Refer Friends &amp; Earn Coins</h1><p class="hm-ref-lead">Invite trusted friends and track eligible rewards.</p></div><a href="{{ route('wallet.index') }}" class="hm-ref-button secondary"><i class="las la-wallet"></i> My Wallet</a></header>
+<div class="container-fluid py-2">
     <h1 class="h3 mb-3">{{ translate('Refer Friends & Earn Coins') }}</h1>
     @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    <div class="row mb-3">
+    <div class="row mb-3 hm-referral-summary">
         <div class="col-md-4 mb-2"><div class="card h-100"><div class="card-body"><div class="text-muted">{{ translate('Referred members') }}</div><div class="h2">{{ $summary['total_referrals'] }}</div></div></div></div>
         <div class="col-md-4 mb-2"><div class="card h-100"><div class="card-body"><div class="text-muted">{{ translate('Rewarded referrals') }}</div><div class="h2">{{ $summary['rewarded_referrals'] }}</div></div></div></div>
         <div class="col-md-4 mb-2"><div class="card h-100"><div class="card-body"><div class="text-muted">{{ translate('Coins earned') }}</div><div class="h2">{{ $summary['coins_earned'] }}</div></div></div></div>
     </div>
-    <div class="card mb-4"><div class="card-body">
+    <div class="card mb-4 hm-referral-invite"><div class="card-body">
         <h2 class="h5">{{ translate('Invite with your referral link') }}</h2>
         <p>{{ translate('Earn coins when a referred member completes registration, verifies their email and meets the reward eligibility rules.') }}</p>
         <label for="referral-code">{{ translate('Your referral code') }}</label>
@@ -48,7 +50,7 @@
         @foreach($commissions as $commission)<tr><td>{{ $commission->created_at?->format('d M Y') }}</td><td>{{ $commission->amount ?? $commission->balance ?? '-' }}</td></tr>@endforeach
       </tbody></table></div></div></div>
     @endif
-</div>
+</div></div>
 @endsection
 @section('script')
 <script>
