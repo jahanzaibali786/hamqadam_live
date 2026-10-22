@@ -3,7 +3,7 @@
  $name = trim($user->first_name.' '.$user->last_name);
  $member = $user->member;
  $age = $member?->birthday ? \Carbon\Carbon::parse($member->birthday)->age : null;
- $city = $user->address?->city?->name ?? $user->present_address?->city?->name ?? '';
+ $city = '';
  $address = \App\Models\Address::where('user_id',$user->id)->where('type','present')->with(['city','country'])->first();
  $city = $address?->city?->name ?? $city;
  $country = $address?->country?->name ?? '';
@@ -42,7 +42,7 @@
  <dl><dt>Age</dt><dd>{{ $age ? $age.' Years' : 'Not specified' }}</dd><dt>Gender</dt><dd>{{ $member?->gender==1?'Male':($member?->gender==2?'Female':'Not specified') }}</dd><dt>Marital Status</dt><dd>{{ $member?->marital_status?->name ?? 'Not specified' }}</dd><dt>City</dt><dd>{{ $city ?: 'Not specified' }}</dd><dt>Country</dt><dd>{{ $country ?: 'Not specified' }}</dd><dt>Religion</dt><dd>{{ $user->spiritual_backgrounds?->religion?->name ?? 'Not specified' }}</dd></dl></article>
  </section>
  <section class="hm-detail-center">
- <div class="hm-detail-identity"><div><h2>{{ $name }} @if($verified)<span class="hm-detail-verified"><i class="las la-check-circle"></i> Verified</span>@endif</h2><p>{{ $age ? $age.' Years · ' : '' }}{{ trim($city.', '.$country,' ,') }}</p><p><i class="las la-briefcase"></i> {{ $user->career?->designation ?? 'Member' }} &nbsp; <i class="las la-map-marker"></i> {{ $city }}</p></div>
+ <div class="hm-detail-identity"><div><h2>{{ $name }} @if($verified)<span class="hm-detail-verified"><i class="las la-check-circle"></i> Verified</span>@endif</h2><p>{{ $age ? $age.' Years · ' : '' }}{{ trim($city.', '.$country,' ,') }}</p><p><i class="las la-briefcase"></i> Member &nbsp; <i class="las la-map-marker"></i> {{ $city }}</p></div>
  @if($score !== null)<a href="{{ route('client.scope.portal') }}" class="hm-detail-score"><strong>{{ $score }}%</strong><span>Compatibility Match</span></a>@endif
  </div>
  <div class="hm-detail-actionbar">
@@ -63,7 +63,7 @@
  <article class="hm-detail-panel"><h2><i class="las la-leaf"></i> Lifestyle</h2><p>{{ $user->lifestyle?->diet ?? 'Lifestyle information' }}</p></article>
  <article class="hm-detail-panel"><h2><i class="las la-map-marker"></i> Location</h2><p>{{ trim($city.', '.$country,' ,') ?: 'Not specified' }}</p></article>
  </div>
- <details class="hm-detail-more"><summary>View complete profile information, gallery and preferences</summary><div class="hm-detail-original"></div></details>
+ <button type="button" class="hm-detail-show-complete" onclick="document.getElementById('hm-public-legacy-profile')?.classList.toggle('hm-legacy-open');this.textContent=this.textContent.includes('View')?'Hide complete details':'View complete profile information, gallery and preferences'">View complete profile information, gallery and preferences</button>
  </section>
  <aside class="hm-detail-right">
  <article class="hm-detail-panel"><h2>Quick Actions</h2>
