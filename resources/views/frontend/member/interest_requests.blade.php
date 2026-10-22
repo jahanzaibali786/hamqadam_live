@@ -2,7 +2,8 @@
 @section('panel_content')
 @include('frontend.member.partials.design_header', ['title' => "Interest Requests", 'subtitle' => "Review and respond to connection requests.", 'icon' => "la-heart"])
 
-    <div class="card">
+    <div class="hm-ref-page hm-incoming-reference" data-hm-screen="interest-requests">
+    <div class="hm-ref-panel"><div class="hm-ref-panel-body"><span class="hm-ref-kicker">New connections</span><h2 class="h5 mb-2">Received Interests</h2><p class="small text-muted mb-0">Review each request before accepting or declining. Your privacy settings remain unchanged.</p></div></div><div class="card hm-ref-panel">
         <div class="card-header">
             <h5 class="mb-0 h6">{{ translate('Interest Requests') }}</h5>
         </div>
@@ -26,7 +27,8 @@
                 @include('frontend.member.partials.interest_requests_table', ['interests' => $interests])
             </div>
         </div>
-    </div>
+    </div></div>
+</div>
 @endsection
 @section('modal')
     {{-- Interest Accept modal --}}
