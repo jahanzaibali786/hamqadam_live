@@ -11,6 +11,9 @@ use App\Models\Blog;
 use App\Models\ExpressInterest;
 use App\Models\FamilyGuardianLink;
 use App\Models\HappyStory;
+use App\Models\ProfileMatch;
+use App\Models\ProfilePrivacySetting;
+use App\Models\NotificationPreference;
 use App\Models\Package;
 use App\Models\ProposalEvent;
 use App\Models\ProposalMeeting;
@@ -156,9 +159,80 @@ final class ReferenceScreensController extends Controller
         return view('frontend.member.reference.stories', compact('stories'));
     }
 
+    public function home(Request $request): View
+    {
+        $viewer = $request->user();
+        $recommended = ProfileMatch::query()
+            ->where('user_id', $viewer->id)
+            ->where('match_id', '!=', $viewer->id)
+            ->where('match_percentage', '>', 0)
+            ->whereHas('matchedUser', fn ($q) => $q->where('user_type', 'member')
+                ->where('approved', 1)->where('blocked', 0)->where('deactivated', 0)
+                ->whereHas('member', fn ($m) => $m->where(fn ($v) =>
+                    $v->where('hide_profile', 0)->orWhereNull('hide_profile'))))
+            ->with(['matchedUser.member', 'matchedUser.addresses.city'])
+            ->orderByDesc('match_percentage')->limit(8)->get();
+
+        $completion = max(0, min(100, (int) ($viewer->member?->profile_completion_percentage ?? 0)));
+
+        return view('frontend.member.reference.home', compact('recommended', 'completion'));
+    }
+
     public function settings(Request $request): View
     {
-        $member = $request->user()->member;
-        return view('frontend.member.reference.settings', compact('member'));
+        $user = $request->user();
+        $member = $user->member;
+        $privacy = ProfilePrivacySetting::firstOrNew(['user_id' => $user->id]);
+        $notifications = NotificationPreference::firstOrNew(['user_id' => $user->id]);
+        $address = $user->addresses()->where('type', 'present')->with('city','country')->first();
+        return view('frontend.member.reference.settings',
+            compact('member', 'privacy', 'notifications', 'address'));
+    }
+
+    public function savePrivacy(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $request->validate([
+            'hide_profile' => ['nullable', 'boolean'],
+            'show_photo' => ['nullable', 'boolean'],
+            'show_location' => ['nullable', 'boolean'],
+            'allow_profile_view_notifications' => ['nullable', 'boolean'],
+            'do_not_disturb' => ['nullable', 'boolean'],
+        ]);
+        DB::transaction(function () use ($request, $user): void {
+            ProfilePrivacySetting::query()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'show_photo' => $request->boolean('show_photo'),
+                    'show_location' => $request->boolean('show_location'),
+                    'allow_profile_view_notifications' => $request->boolean('allow_profile_view_notifications'),
+                    'do_not_disturb' => $request->boolean('do_not_disturb'),
+                ]
+            );
+            if ($user->member) {
+                $user->member->update(['hide_profile' => $request->boolean('hide_profile')]);
+            }
+        });
+        return redirect()->route('member.reference.settings', ['section' => 'privacy'])
+            ->with('success', 'Your profile privacy preferences have been saved.');
+    }
+
+    public function saveNotificationSummary(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'push_enabled' => ['nullable','boolean'],
+            'email_enabled' => ['nullable','boolean'],
+            'engagement_enabled' => ['nullable','boolean'],
+        ]);
+        NotificationPreference::query()->updateOrCreate(
+            ['user_id' => $request->user()->id],
+            [
+                'push_enabled' => $request->boolean('push_enabled'),
+                'email_enabled' => $request->boolean('email_enabled'),
+                'engagement_enabled' => $request->boolean('engagement_enabled'),
+            ]
+        );
+        return redirect()->route('member.reference.settings', ['section' => 'notifications'])
+            ->with('success', 'Notification preferences saved.');
     }
 }

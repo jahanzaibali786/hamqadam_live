@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-wallet-match-2026.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-topnav-home.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-dashboard-referral-reference.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-settings-verification-home.css') }}?v=1">
 @php
     $memberShellUser = auth()->user();
     $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
@@ -40,7 +41,7 @@
   @php
     // Primary navigation for every authenticated member screen.
     $primaryMemberNavigation = [
-      ['label' => 'Home', 'route' => 'dashboard', 'active' => request()->routeIs('dashboard')],
+      ['label' => 'Home', 'route' => 'member.reference.home', 'active' => request()->routeIs('member.reference.home')],
       ['label' => 'Active Members', 'route' => 'member.listing', 'active' => request()->routeIs('member.listing')],
       ['label' => 'Premium Plans', 'route' => 'member.reference.packages', 'active' => request()->routeIs('member.reference.packages', 'packages')],
       ['label' => 'Happy Stories', 'route' => 'member.reference.stories', 'active' => request()->routeIs('member.reference.stories', 'happy_story.member', 'happy_stories', 'story_details')],
