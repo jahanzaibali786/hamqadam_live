@@ -4,6 +4,7 @@
         $visibleUsages = $usages->take(5);
         $hiddenUsages = $usages->slice(5);
     @endphp
+    <div class="hm-ref-page hm-usage-reference" data-hm-screen="usage-history">
     <div class="aiz-titlebar mt-2 mb-4">
         <div class="row align-items-center">
             <div class="col-md-6">
@@ -118,5 +119,5 @@
                 }
             });
         });
-    </script>
+    </script></div>
 @endsection
