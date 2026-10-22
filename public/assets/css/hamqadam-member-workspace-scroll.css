@@ -1,0 +1,15 @@
+/* Dashboard desktop: viewport-bound application with independent scroll panes. */
+@media(min-width:1200px){
+ html:has(.hm-member-app),body:has(.hm-member-app){height:100%;overflow:hidden!important}
+ body:has(.hm-member-app) .aiz-main-wrapper{height:100dvh!important;min-height:0!important;overflow:hidden!important}
+ .hm-member-app{height:100dvh!important;min-height:0!important;display:flex;flex-direction:column;overflow:hidden!important}
+ .hm-member-app .hm-member-topbar{height:69px;min-height:69px;flex:0 0 69px;position:relative}
+ .hm-member-app .hm-member-stage{flex:1 1 auto;min-height:0!important;height:auto!important;overflow:hidden!important}
+ .hm-member-app .hm-member-app-layout{height:100%!important;min-height:0!important;align-items:stretch!important;overflow:hidden!important}
+ .hm-member-app .hm-sidebar-column{position:relative!important;top:auto!important;flex:0 0 210px;height:100%!important;max-height:100%!important;min-height:0!important;overflow:hidden!important}
+ .hm-member-app .hm-sidebar-column .hq-member-scroll-shell{height:100%!important;max-height:100%!important;min-height:0!important;overflow:hidden!important}
+ .hm-member-app .hm-sidebar-column .aiz-user-sidenav{height:100%!important;max-height:100%!important;min-height:0!important;overflow:hidden!important}
+ .hm-member-app .hm-sidebar-column .hq-member-side-scroll{flex:1 1 0%!important;min-height:0!important;height:auto!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain}
+ .hm-member-app .hm-member-workspace{flex:1 1 0%!important;min-width:0!important;height:100%!important;min-height:0!important;max-height:100%!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain;scrollbar-width:thin}
+}
+@media(max-width:1199.98px){.hm-member-app .hm-sidebar-column .hq-member-side-scroll{overflow-y:auto!important}}
