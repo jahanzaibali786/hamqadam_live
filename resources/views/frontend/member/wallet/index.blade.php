@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "My Wallet", 'subtitle' => "Manage coins, packages and payment history.", 'icon' => "la-wallet"])
+
     @php
         $coinBalance = (int) (Auth::user()->member?->remaining_interest ?? 0);
     @endphp

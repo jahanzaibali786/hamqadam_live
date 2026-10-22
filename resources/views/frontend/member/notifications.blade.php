@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "Notifications", 'subtitle' => "Stay informed about your matching journey.", 'icon' => "la-bell"])
+
     <div class="card">
         <div class="card-header row gutters-5">
             <div class="col text-center text-md-left">

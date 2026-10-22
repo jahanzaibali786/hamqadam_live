@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "Profile Viewers", 'subtitle' => "See who viewed your profile and who you visited.", 'icon' => "la-eye"])
+
 @php
     $user = auth()->user();
     $remainingFullProfileViews = (int) get_remaining_package_value($user->id, 'remaining_profile_viewer_view');

@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "Referral Program", 'subtitle' => "Invite friends and track eligible rewards.", 'icon' => "la-users"])
+
 <div class="container-fluid py-3">
     <h1 class="h3 mb-3">{{ translate('Refer Friends & Earn Coins') }}</h1>
     @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif

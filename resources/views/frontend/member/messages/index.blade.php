@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "Messages", 'subtitle' => "Continue respectful conversations with your matches.", 'icon' => "la-comment-dots"])
+
 <style>
     .dropdown-toggle::after{
         display:none !important;

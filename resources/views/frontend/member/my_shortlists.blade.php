@@ -1,128 +1,46 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0 h6">{{ translate('My Shortlists') }}</h5>
-        </div>
-        <div class="card-body">
-            <table class="table aiz-table mb-0">
-              <thead>
-                  <tr>
-                      <th>#</th>
-                      <th>{{translate('Image')}}</th>
-                      <th>{{translate('Name')}}</th>
-                      <th data-breakpoints="lg">{{translate('Age')}}</th>
-                      @if(get_setting('member_spiritual_and_social_background_section') == 'on')
-                        <th data-breakpoints="lg">{{translate('Religion')}}</th>
-                      @endif
-                      @if(get_setting('member_present_address_section') == 'on')
-                        <th data-breakpoints="lg">{{translate('Location')}}</th>
-                      @endif
-                      @if(get_setting('member_language_section') == 'on')
-                        <th data-breakpoints="lg">{{translate('Mother  Tongue')}}</th>
-                      @endif
-                      <th class="text-right" data-breakpoints="lg">{{translate('Options')}}</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  @foreach ($shortlists as $key => $shortlist)
-                      @if($shortlist->user != null)
-                      <tr id="shortlisted_member_{{ $shortlist->user_id }}">
-                          <td>{{ ($key+1) + ($shortlists->currentPage() - 1)*$shortlists->perPage() }}</td>
-                          <td>
-                            <a
-                              @if(get_setting('full_profile_show_according_to_membership') == 1 && Auth::user()->membership == 1)
-                                  href="javascript:void(0);" onclick="package_update_alert()"
-                              @else
-                                  href="{{ route('member_profile', $shortlist->user_id) }}"
-                              @endif
-                              class="text-reset c-pointer"
-                            >
-                                @if(uploaded_asset($shortlist->user->photo) != null)
-                                    <img class="img-md" src="{{ uploaded_asset($shortlist->user->photo) }}" height="45px"  alt="{{translate('photo')}}">
-                                @else
-                                    <img class="img-md" src="{{ static_asset('assets/img/avatar-place.png') }}" height="45px"  alt="{{translate('photo')}}">
-                                @endif
-                            </a>
-                          </td>
-                          <td>
-                              <a
-                                @if(get_setting('full_profile_show_according_to_membership') == 1 && Auth::user()->membership == 1)
-                                    href="javascript:void(0);" onclick="package_update_alert()"
-                                @else
-                                    href="{{ route('member_profile', $shortlist->user_id) }}"
-                                @endif
-                                class="text-reset c-pointer"
-                              >
-                                {{ $shortlist->user->first_name.' '.$shortlist->user->last_name }}
-                            </a>
-                          </td>
-                          <td>{{ \Carbon\Carbon::parse($shortlist->user->member->birthday)->age }}</td>
-                          @if(get_setting('member_spiritual_and_social_background_section') == 'on')
-                          <td>
-                            @if(!empty($shortlist->user->spiritual_backgrounds->religion_id))
-                                {{ $shortlist->user->spiritual_backgrounds->religion->name }}
-                            @endif
-                          </td>
-                          @endif
-                          @if(get_setting('member_present_address_section') == 'on')
-                          <td>
-                            @php
-                                $present_address = \App\Models\Address::where('type','present')->where('user_id', $shortlist->user_id)->first();
-                            @endphp
-                            @if(!empty($present_address->country_id))
-                                {{ $present_address->country->name }}
-                            @endif
-                          </td>
-                          @endif
-                          @if(get_setting('member_language_section') == 'on')
-                          <td>
-                            @if($shortlist->user->member->mothere_tongue != null)
-                                {{ \App\Models\MemberLanguage::where('id',$shortlist->user->member->mothere_tongue)->first()->name }}
-                            @endif
-                          </td>
-                          @endif
-                          <td class="text-right">
-                              @php
-                                $expressed_interest = \App\Models\ExpressInterest::where('user_id', $shortlist->user_id)->where('interested_by',Auth::user()->id)->first();
-                                $received_expressed_interest = \App\Models\ExpressInterest::where('user_id', Auth::user()->id)
-                                                                ->where('interested_by', $shortlist->user_id)
-                                                                ->first();
-                              @endphp
-                              @if(empty($expressed_interest) && empty($received_expressed_interest))
-                                <a href="javascript:void(0);" onclick="express_interest({{ $shortlist->user_id }})" id="interest_a_id_{{$shortlist->user_id}}" class="btn btn-soft-primary btn-icon btn-circle btn-sm" title="{{ translate('Express Interest') }}">
-                                    <i class="las la-heart"></i>
-                                </a>
-                              @elseif($received_expressed_interest)
-                                @if($received_expressed_interest->status == 0)
-                                  <a href="{{ route('interest_requests') }}" class="btn btn-soft-success btn-icon btn-circle btn-sm" title="{{ translate('Response to Interest') }}">
-                                    <i class="las la-heart"></i>
-                                  </a>
-                                @else
-                                  <a href="javascript:void(0);" class="btn btn-soft-success btn-icon btn-circle btn-sm" title="{{ translate('You Accepted Interest of This Member') }}">
-                                    <i class="las la-heart"></i>
-                                  </a>
-                                @endif
-                              @else
-                                <a href="javascript:void(0);" class="btn btn-soft-success btn-icon btn-circle btn-sm" title="{{ translate('Interest Expressed') }}">
-                                    <i class="las la-heart"></i>
-                                </a>
-                              @endif
-                              <a onclick="remove_shortlist({{ $shortlist->user_id }})" class="btn btn-soft-danger btn-icon btn-circle btn-sm" title="{{ translate('Remove') }}">
-                                  <i class="las la-trash-alt"></i>
-                              </a>
-                          </td>
-                      </tr>
-                    @endif
-
-                  @endforeach
-              </tbody>
-            </table>
-            <div class="aiz-pagination">
-                {{ $shortlists->links() }}
+<div class="hm-dashboard hm-listing-page">
+  <div class="hm-top"><div><div class="hm-eyebrow">Profiles you saved</div><h1 class="hm-heading"><i class="las la-bookmark text-primary"></i> My Shortlist</h1><p class="hm-subtitle">Keep your favorite member profiles in one place and connect at the right time.</p></div><a href="{{ route('member.listing') }}" class="btn btn-primary"><i class="las la-user-plus mr-1"></i> Find More Matches</a></div>
+  <div class="hm-card mb-4">
+    <div class="hm-card-header"><h2>All Shortlisted Profiles <span class="badge badge-soft-primary">{{ $shortlists->total() }}</span></h2><span class="hm-subtitle">Manage your shortlist</span></div>
+    <div class="hm-card-body">
+      <div class="hm-profiles-grid">
+        @forelse($shortlists as $shortlist)
+          @php
+           $person=$shortlist->user;
+           if(!$person) continue;
+           $profile=$person->member;
+           $avatar=$person->photo && show_profile_picture($person) ? uploaded_asset($person->photo) : static_asset(($profile?->gender??1)==1?'assets/img/avatar-place.png':'assets/img/female-avatar-place.png');
+           $score=\App\Models\ProfileMatch::query()->where('user_id',auth()->id())->where('match_id',$person->id)->value('match_percentage');
+           $allowed=!(get_setting('full_profile_show_according_to_membership')==1 && auth()->user()->membership==1);
+           $link=$allowed?route('member_profile',$person->id):'javascript:void(0);';
+          @endphp
+          <article class="hm-profile-tile" id="shortlisted_member_{{ $shortlist->user_id }}">
+            <div class="hm-profile-cover">
+              <a href="{{ $link }}" @unless($allowed) onclick="package_update_alert()" @endunless><img src="{{ $avatar }}" loading="lazy" alt="{{ $person->first_name }} {{ $person->last_name }}"></a>
+              <span class="hm-profile-heart"><i class="las la-heart"></i></span>
+              @if($score>0)<span class="hm-profile-match">{{ round($score) }}% match</span>@endif
             </div>
-        </div>
+            <div class="hm-profile-body">
+              <h2><a href="{{ $link }}" @unless($allowed) onclick="package_update_alert()" @endunless>{{ $person->first_name }} {{ $person->last_name }}</a></h2>
+              <div class="hm-profile-location">@if($profile?->birthday){{ \Carbon\Carbon::parse($profile->birthday)->age }} yrs · @endif{{ $profile?->job_title ?: 'Hamqadam member' }}</div>
+              <div class="hm-profile-info"><i class="las la-user-check"></i> {{ $person->approved?'Profile approved':'Profile under review' }}</div>
+              <div class="hm-profile-tile-actions">
+                <a href="{{ $link }}" @unless($allowed) onclick="package_update_alert()" @endunless class="btn btn-primary btn-sm">View Profile</a>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="remove_shortlist({{ $shortlist->user_id }})" title="Remove from shortlist" aria-label="Remove {{ $person->first_name }} from shortlist"><i class="las la-trash-alt"></i></button>
+              </div>
+              <div class="mt-2"><button type="button" onclick="express_interest({{ $shortlist->user_id }})" id="interest_a_id_{{ $shortlist->user_id }}" class="btn btn-soft-primary btn-sm btn-block"><i class="las la-heart mr-1"></i> Express Interest</button></div>
+            </div>
+          </article>
+        @empty
+          <div class="hm-empty"><i class="las la-bookmark" style="font-size:38px;color:#e3317c"></i><h3 class="h5 mt-2">Your shortlist is empty</h3><p>Discover compatible members and save profiles you like.</p><a href="{{ route('member.listing') }}" class="btn btn-primary">Explore Members</a></div>
+        @endforelse
+      </div>
     </div>
+    <div class="p-3">{{ $shortlists->links() }}</div>
+  </div>
+</div>
 @endsection
 
 @section('modal')

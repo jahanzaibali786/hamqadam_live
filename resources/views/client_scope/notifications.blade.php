@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "Notification Preferences", 'subtitle' => "Manage delivery preferences and activity.", 'icon' => "la-bell"])
+
 <main class="container py-5" style="max-width:900px"><h1 class="h3">Notification Preferences &amp; History</h1>
 @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
 @if($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
