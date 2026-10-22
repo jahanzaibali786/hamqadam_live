@@ -161,3 +161,19 @@
 .hm-parity-verification-aside .hm-ref-panel-body p{color:#665c69;font-size:11px;line-height:1.8;margin:8px 0}
 @media(max-width:960px){.hm-parity-verification-layout{grid-template-columns:1fr}.hm-parity-verification-aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}}
 @media(max-width:570px){.hm-parity-verification-steps{grid-template-columns:repeat(3,minmax(0,1fr))}.hm-parity-verification-aside{grid-template-columns:1fr}}
+
+
+/* Dashboard reference density */
+.hm-parity-dashboard-kpis{grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.hm-parity-dashboard-kpis .hm-kpi{padding:14px 10px;min-height:99px;flex-direction:row-reverse;gap:8px;justify-content:flex-end;align-items:center}
+.hm-parity-dashboard-kpis .hm-kpi .hm-icon{width:37px;height:37px;font-size:20px;flex:none}
+.hm-parity-dashboard-kpis .hm-kpi .num{font-size:21px;margin:3px 0}
+.hm-dashboard .hm-match-list{grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.hm-dashboard .hm-match{border-radius:10px}.hm-dashboard .hm-match>img{height:120px}
+.hm-dashboard .hm-match-info{padding:9px}.hm-dashboard .hm-match-info strong{font-size:11px}
+.hm-dashboard .hm-match-info small{font-size:10px;line-height:1.5}
+.hm-dashboard .hm-match-info .hm-match-score{font-size:10px;margin-top:6px}
+.hm-dashboard .hm-match-info .btn{padding:6px 4px;font-size:10px}
+@media(max-width:1450px){.hm-dashboard .hm-match-list{grid-template-columns:repeat(3,minmax(0,1fr))}.hm-parity-dashboard-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:680px){.hm-dashboard .hm-match-list,.hm-parity-dashboard-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:430px){.hm-dashboard .hm-match-list,.hm-parity-dashboard-kpis{grid-template-columns:1fr}}
