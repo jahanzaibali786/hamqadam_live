@@ -238,7 +238,33 @@ class HomeController extends Controller
             $similar_profiles = $similar_profiles->get();
             $similar_horoscope_profiles = $similar_horoscope_profiles->get();
 
-            return view('frontend.member.dashboard', compact('similar_profiles', 'similar_horoscope_profiles'));
+            // Screenshot-aligned member dashboard: every figure and card is backed
+            // by actual eligible matches, published content, and account records.
+            $dashboardMatchQuery = ProfileMatch::query()
+                ->where('user_id', $user->id)
+                ->where('match_id', '!=', $user->id)
+                ->where('match_percentage', '>', 0)
+                ->whereHas('matchedUser', fn ($q) => $q->where('user_type', 'member')
+                    ->where('approved', 1)->where('blocked', 0)->where('deactivated', 0)
+                    ->whereHas('member', fn ($m) => $m->where(fn ($v) => $v
+                        ->where('hide_profile', 0)->orWhereNull('hide_profile'))));
+            $dashboardMatchCount = (clone $dashboardMatchQuery)->count();
+            $dashboardMatches = $dashboardMatchQuery
+                ->with(['matchedUser.member', 'matchedUser.addresses.city',
+                    'matchedUser.career', 'matchedUser.education'])
+                ->orderByDesc('match_percentage')->limit(6)->get();
+            $dashboardTopMatch = $dashboardMatches->first();
+            $dashboardViewerCount = ProfileViewer::where('user_id', $user->id)
+                ->where('created_at', '>=', now()->startOfMonth())->count();
+            $dashboardActivity = $user->notifications()->latest()->limit(4)->get();
+            $dashboardStories = HappyStory::where('approved', 1)->latest()->limit(2)->get();
+            $dashboardBlogs = \App\Models\Blog::active()->latest()->limit(2)->get();
+
+            return view('frontend.member.dashboard', compact(
+                'similar_profiles', 'similar_horoscope_profiles', 'dashboardMatches',
+                'dashboardMatchCount', 'dashboardTopMatch', 'dashboardViewerCount',
+                'dashboardActivity', 'dashboardStories', 'dashboardBlogs'
+            ));
         } else {
             abort(404);
         }
