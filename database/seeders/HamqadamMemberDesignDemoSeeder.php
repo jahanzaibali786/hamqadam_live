@@ -83,7 +83,7 @@ final class HamqadamMemberDesignDemoSeeder extends Seeder
             if(Schema::hasTable('notifications')){
                 foreach(['Welcome to your refreshed Hamqadam dashboard','Your demo compatible matches are ready','Complete your profile to improve your visibility'] as $i=>$notice){
                     $key= 'hm-member-design-'.$owner.'-'.$i;
-                    if(!DB::table('notifications')->where('id',Str::uuid()->toString())->exists()){
+                    {
                         $payload=['title'=>'Hamqadam Demo','message'=>$notice,'fixture_key'=>$key,'type'=>'design_demo'];
                         if(!DB::table('notifications')->where('notifiable_id',$owner)->where('data','like','%'.$key.'%')->exists())
                             DB::table('notifications')->insert($this->tableRow('notifications',[
