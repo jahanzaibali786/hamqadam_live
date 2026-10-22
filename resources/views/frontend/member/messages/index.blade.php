@@ -7,7 +7,7 @@
         display:none !important;
     }
 </style>
-    <div class="aiz-chat">
+    <div class="hm-ref-page hm-messages-reference" data-hm-screen="messages"><div class="hm-ref-msg-shell"><div class="aiz-chat">
         <div class="row no-gutters">
             <div class="col-lg-4">
                 <div class="chat-user-list-wrap z-1035">
@@ -103,6 +103,7 @@
     </div>
 @endsection
 
+</div></div>
 @section('modal')
     @include('modals.package_update_alert_modal')
 
