@@ -371,16 +371,20 @@ class MemberController extends Controller
     public function verification_form()
     {
         $user = auth()->user();
-        if ($user->verification_info == null) {
-            return view('frontend.member.member_verifiction_form', compact('user'));
-        } else {
-            flash(translate('Sorry! You have sent verification request already.'))->error();
-            return back();
-        }
+        $verificationRequest = ProfileVerificationRequest::where('user_id', $user->id)
+            ->with('documents')->latest('id')->first();
+        $verificationAttempts = AiVerificationAttempt::where('user_id', $user->id)
+            ->latest('id')->limit(5)->get();
+        return view('frontend.member.member_verifiction_form',
+            compact('user', 'verificationRequest', 'verificationAttempts'));
     }
 
     public function verification_info_store(Request $request)
     {
+        if (auth()->user()->verification_info !== null) {
+            return redirect()->route('member.verification')
+                ->withErrors(['verification' => 'A verification request has already been submitted.']);
+        }
         $data = array();
         $i = 0;
         foreach (json_decode(Setting::where('type', 'verification_form')->first()->value) as $key => $element) {
