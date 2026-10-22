@@ -102,3 +102,50 @@
 .hm-listing-page .hm-empty{grid-column:1/-1}
 @media(max-width:1199px){.hm-profiles-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.hm-profiles-grid{grid-template-columns:1fr}.hm-profile-cover{height:220px}}
+
+
+/* Full member-app chrome used by all 20 reference routes. */
+.hm-member-app{background:#fffafd;min-height:100dvh;color:#392e3c}
+.hm-member-topbar{height:69px;position:sticky;top:0;z-index:1030;display:flex;gap:20px;align-items:center;justify-content:space-between;padding:10px 26px;background:rgba(255,252,254,.98);border-bottom:1px solid #f2e6ed;backdrop-filter:blur(14px)}
+.hm-member-topbar-brand{width:195px;flex-shrink:0;display:flex;align-items:center;gap:9px;color:#e22f77!important;font-family:Georgia,serif;font-size:25px;font-weight:700;text-decoration:none!important;line-height:1}
+.hm-member-topbar-brand small{display:block;font:600 9px system-ui,Arial,sans-serif;color:#a94c79;margin-top:5px}
+.hm-member-heart{display:grid;place-items:center;color:#e22c75;font-size:31px;width:33px;height:38px}
+.hm-member-topbar-search{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #eae0e8;border-radius:10px;max-width:650px;flex:1;padding:0 14px;height:44px}
+.hm-member-topbar-search>i{font-size:20px;color:#988d9b}
+.hm-member-topbar-search input{border:0;outline:0;flex:1;min-width:0;background:transparent;color:#4e4050;font-size:13px}
+.hm-member-topbar-search button{border:0;background:none;color:#df377b;cursor:pointer}
+.hm-member-topbar-actions{display:flex;gap:16px;align-items:center}
+.hm-member-topbar-actions>a:not(.hm-member-account){color:#e4327b!important;font-size:24px;text-decoration:none;padding:5px}
+.hm-member-account{display:flex;align-items:center;gap:10px;text-decoration:none!important;color:#372f3e!important;font-size:12px;font-weight:700}
+.hm-member-account img{width:38px;height:38px;object-fit:cover;border-radius:50%;border:2px solid #fde0ec}
+.hm-member-account i{color:#978a99}
+.hm-member-stage{padding:0!important;background:#fffafd!important}
+.hm-member-app-layout{display:flex;align-items:flex-start;gap:0;width:100%;max-width:none;margin:0 auto}
+.hm-member-app .hm-sidebar-column{position:sticky;top:69px;flex:0 0 210px;width:210px;height:calc(100dvh - 69px);min-height:0;display:flex;flex-direction:column;background:#fff;border-right:1px solid #f1e6ed;overflow:hidden;z-index:4}
+.hm-member-app .hm-sidebar-column .hq-member-scroll-shell{top:0!important;position:relative!important;display:flex!important;flex-direction:column;height:100%!important;max-height:100%!important;min-height:0!important;width:100%;padding:5px 0!important;background:transparent;overflow:hidden}
+.hm-member-app .hm-sidebar-column .aiz-user-sidenav{display:flex;flex-direction:column;height:100%;max-height:none;min-height:0;overflow:hidden;background:transparent;border:0;border-radius:0!important;box-shadow:none}
+.hm-member-app .hm-sidebar-column .hm-regular-nav .aiz-user-sidenav>.px-4.text-center.mb-3{display:none}
+.hm-member-app .hm-sidebar-column .hq-member-side-scroll{overflow-y:auto!important;overflow-x:hidden;min-height:0;flex:1 1 0%;scrollbar-width:thin}
+.hm-member-app .hm-sidebar-column .hq-member-side-scroll .aiz-side-nav-link{padding:11px 13px;margin:2px 9px;border-radius:9px;font-size:12px;white-space:normal}
+.hm-member-app .hm-sidebar-column .hq-member-side-scroll .aiz-side-nav-icon{font-size:17px;min-width:24px}
+.hm-member-app .hm-sidebar-column .aiz-user-sidenav .btn-primary{border-radius:10px!important;margin:8px;background:#ed2977!important;border-color:#ed2977!important}
+.hm-member-app .hm-member-workspace{flex:1 1 0%;width:auto;min-width:0;min-height:calc(100dvh - 69px);padding:31px 30px 55px;overflow:visible!important}
+.hm-member-app .hm-member-workspace .hm-dashboard{max-width:1500px;margin:0 auto}
+.hm-member-app .hm-member-workspace .container-fluid{max-width:100%}
+.hm-member-app .aiz-user-panel{padding-left:30px!important}
+@media(max-width:1199.98px){
+ .hm-member-app .hm-sidebar-column{display:none}
+ .hm-member-app .hm-member-workspace{padding:24px 18px}
+ .hm-member-app .aiz-user-panel{padding-left:18px!important}
+ .hm-member-topbar-brand{width:auto;font-size:21px}
+ .hm-member-topbar-actions{gap:10px}
+}
+@media(max-width:680px){
+ .hm-member-topbar{height:auto;min-height:64px;gap:7px;padding:8px 12px;flex-wrap:wrap}
+ .hm-member-topbar-brand{font-size:20px}
+ .hm-member-topbar-search{order:3;flex:0 0 100%;max-width:none;height:38px}
+ .hm-member-account span,.hm-member-account>i{display:none}
+ .hm-member-topbar-actions>a:not(.hm-member-account){font-size:19px}
+ .hm-member-app .hm-member-workspace{padding:19px 12px}
+ .hm-member-app .aiz-user-panel{padding-left:12px!important}
+}
