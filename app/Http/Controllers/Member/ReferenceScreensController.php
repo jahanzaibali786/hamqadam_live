@@ -145,12 +145,18 @@ final class ReferenceScreensController extends Controller
     public function blogs(Request $request): View
     {
         $search = trim((string) $request->query('search', ''));
-        $blogs = Blog::active()
-            ->when($search !== '', fn ($q) => $q->where('title', 'like', '%'.addcslashes($search, '%_\\').'%'))
-            ->with('category')
-            ->latest()->paginate(9)->withQueryString();
-
-        return view('frontend.member.reference.blogs', compact('blogs', 'search'));
+        $category = trim((string) $request->query('category', ''));
+        $categories = \App\Models\BlogCategory::query()->orderBy('category_name')->get();
+        $query = Blog::active()->with('category')
+            ->when($search !== '', fn ($q) => $q->where(fn ($nested) =>
+                $nested->where('title', 'like', '%'.addcslashes($search, '%_\\').'%')
+                    ->orWhere('short_description', 'like', '%'.addcslashes($search, '%_\\').'%')))
+            ->when($category !== '', fn ($q) => $q->whereHas('category',
+                fn ($cat) => $cat->where('slug', $category)));
+        $featured = ($search === '' && $category === '') ? Blog::active()->with('category')->latest()->first() : null;
+        $popular = Blog::active()->latest()->limit(5)->get();
+        $blogs = $query->latest()->paginate(6)->withQueryString();
+        return view('frontend.member.reference.blogs', compact('blogs', 'search', 'category', 'categories', 'featured', 'popular'));
     }
 
     public function stories(Request $request): View
