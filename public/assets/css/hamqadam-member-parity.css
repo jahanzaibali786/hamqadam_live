@@ -230,3 +230,27 @@
 .hm-parity-chat-guide i{color:#e72b77;font-size:20px}.hm-parity-chat-guide p{color:#837788;font-size:11px;line-height:1.7}
 @media(max-width:1199px){.hm-chat-profile-rail{margin-top:15px;border:0}.hm-messages-reference #single_chat{flex:0 0 60%;max-width:60%}.hm-messages-reference .chat-user-list-wrap{max-width:100%}}
 @media(max-width:991px){.hm-messages-reference #single_chat{flex:0 0 100%;max-width:100%}.hm-chat-profile-rail{display:none}}
+
+
+/* Notifications reference: content plus settings rail */
+.hm-parity-notifications-layout{display:grid;grid-template-columns:minmax(0,2.4fr) minmax(245px,.88fr);gap:16px}
+.hm-parity-notifications-layout main{min-width:0}.hm-parity-notifications-layout .hm-ref-panel{margin-bottom:14px}
+.hm-parity-notifications-layout .hm-ref-panel-head h2{font-size:14px}
+.hm-parity-notifications-layout .list-group-item{border-radius:10px;margin-bottom:5px}
+.hm-parity-notifications-layout .list-group-item:has(.badge-dot){background:#fff8fb}
+.hm-parity-notifications-layout .hm-ref-side-links a{display:block;border-bottom:1px solid #f2e7ed;padding:12px 0;color:#5e4b5e;font-size:12px;text-decoration:none}
+.hm-parity-notifications-layout .hm-ref-side-links i{color:#e32b75;margin-right:10px;font-size:16px}
+.hm-parity-referral-layout{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(250px,.85fr);gap:16px;align-items:start}
+.hm-parity-referral-layout main{min-width:0}
+.hm-parity-referral-layout .hm-ref-panel{margin-bottom:14px}
+.hm-parity-referral-layout .container-fluid{padding:0!important}
+.hm-parity-referral-layout .container-fluid>h1{display:none}
+.hm-parity-referral-layout aside .hm-ref-panel-head h2{font-size:14px}
+.hm-parity-referral-earned{padding:15px;border-radius:10px;background:#fff1f7}
+.hm-parity-referral-earned small,.hm-parity-referral-earned strong{display:block}.hm-parity-referral-earned small{font-size:11px;color:#8d778a}
+.hm-parity-referral-earned strong{font-size:22px;color:#29334d}
+.hm-parity-referral-steps>div{display:flex;gap:12px;align-items:start;padding:11px 0}
+.hm-parity-referral-steps>div>b{background:#e82e78;color:white;border-radius:50%;height:25px;width:25px;display:grid;place-items:center;flex:none}
+.hm-parity-referral-steps strong,.hm-parity-referral-steps small{display:block;font-size:11px}.hm-parity-referral-steps small{color:#8c7a8d;line-height:1.5}
+@media(max-width:1050px){.hm-parity-notifications-layout,.hm-parity-referral-layout{grid-template-columns:1fr}.hm-parity-notifications-layout>aside,.hm-parity-referral-layout>aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+@media(max-width:650px){.hm-parity-notifications-layout>aside,.hm-parity-referral-layout>aside{grid-template-columns:1fr}}
