@@ -9,6 +9,7 @@
 @endphp
 <div class="hm-member-app">
   <header class="hm-member-topbar">
+    <button type="button" class="hm-member-mobile-menu" aria-controls="hm-member-sidebar" aria-expanded="false" aria-label="Open dashboard navigation"><i class="las la-bars"></i></button>
     <a class="hm-member-topbar-brand" href="{{ route('dashboard') }}" aria-label="Hamqadam Dashboard"><span class="hm-member-heart"><i class="las la-heart"></i></span><span>Hamqadam<small>Risthon ki duniya</small></span></a>
     <form action="{{ route('member.listing') }}" method="GET" role="search" class="hm-member-topbar-search">
       <label for="hm-member-search" class="sr-only">Search member code</label>
@@ -29,9 +30,10 @@
   </header>
   <section class="hq-member-panel-page hq-member-sticky-layout hm-member-stage">
     <div class="hm-member-app-layout">
-      <aside class="hm-sidebar-column" aria-label="Account navigation">
+      <aside class="hm-sidebar-column" id="hm-member-sidebar" aria-label="Account navigation">
         @include('frontend.member.sidebar')
       </aside>
+      <button type="button" class="hm-member-overlay" aria-label="Close dashboard navigation"></button>
       <main class="aiz-user-panel hq-member-main-content hm-member-workspace" id="hm-member-workspace">
         @include('frontend.member.partials.accessibility_tools')
         @yield('panel_content')
@@ -40,4 +42,15 @@
   </section>
 </div>
 <script src="{{ static_asset('assets/js/hamqadam-member-sidebar-scroll.js') }}?v=4" defer></script>
+<script>
+(function () {
+  const root=document.querySelector('.hm-member-app'),toggle=root?.querySelector('.hm-member-mobile-menu'),overlay=root?.querySelector('.hm-member-overlay');
+  if(!root||!toggle)return;
+  const close=()=>{root.classList.remove('hm-nav-open');toggle.setAttribute('aria-expanded','false');};
+  toggle.addEventListener('click',()=>{const opened=root.classList.toggle('hm-nav-open');toggle.setAttribute('aria-expanded',String(opened));});
+  overlay?.addEventListener('click',close);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+  root.querySelectorAll('.hm-sidebar-column a[href]').forEach(link=>link.addEventListener('click',close));
+})();
+</script>
 @endsection
