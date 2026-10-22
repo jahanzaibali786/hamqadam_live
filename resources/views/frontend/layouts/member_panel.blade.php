@@ -1,6 +1,7 @@
 @extends('frontend.layouts.app')
 @section('content')
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-sidebar-scroll.css') }}?v=4">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-suite.css') }}?v=1">
 <section class="hq-member-panel-page hq-member-sticky-layout py-5">
     <div class="container">
         <div class="hq-member-panel-viewport">
