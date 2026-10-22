@@ -181,15 +181,19 @@ if (! $lang) {
       @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
     </style>
     <div
-        class="aiz-main-wrapper d-flex flex-column position-relative @if (Route::currentRouteName() != 'home') pt-8 pt-lg-10 @endif bg-white">
+        class="aiz-main-wrapper d-flex flex-column position-relative @if (Route::currentRouteName() != 'home' && !\Illuminate\Support\Facades\View::hasSection('member_dashboard_shell')) pt-8 pt-lg-10 @endif bg-white">
 
-        @include('frontend.inc.header')
+        @unless(\Illuminate\Support\Facades\View::hasSection('member_dashboard_shell'))
+            @include('frontend.inc.header')
+        @endunless
 
         <div id="hamqadam-main-content" tabindex="-1" style="flex:1">
         @yield('content')
         </div>
 
-        @include('frontend.inc.footer')
+        @unless(\Illuminate\Support\Facades\View::hasSection('member_dashboard_shell'))
+            @include('frontend.inc.footer')
+        @endunless
     </div>
 
     @if (get_setting('show_cookies_agreement') == 'on')
