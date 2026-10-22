@@ -23,6 +23,7 @@
                                 $current_user = Auth::user()->id;
                             @endphp
                             @if ($single_chat_thread->receiver != null && $single_chat_thread->sender != null)
+                              @php($user_to_show = $current_user == $single_chat_thread->sender->id ? 'receiver' : 'sender')
                               <a href="javascript:void(0)" class="chat-user-item p-3 d-block text-inherit" data-member-name="{{ $single_chat_thread->$user_to_show->first_name.' '.$single_chat_thread->$user_to_show->last_name }}" data-member-url="{{ route('member_profile', $single_chat_thread->$user_to_show->id) }}" data-thread-id="{{ $single_chat_thread->id }}" data-url="{{ route('chat_view', $single_chat_thread->id) }}" data-refresh="{{ route('chat_refresh', $single_chat_thread->id) }}" onclick="loadChats(this)">
                                   @if($current_user == $single_chat_thread->sender->id)
                                     @php $user_to_show = 'receiver';  @endphp
