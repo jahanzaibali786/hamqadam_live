@@ -1,6 +1,8 @@
 @extends('frontend.layouts.member_panel')
 
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "AI Dashboard", 'subtitle' => "Review compatibility, verification and matching insights.", 'icon' => "la-robot"])
+
     <div class="aiz-titlebar mt-2 mb-4">
         <div class="row align-items-center">
             <div class="col">
