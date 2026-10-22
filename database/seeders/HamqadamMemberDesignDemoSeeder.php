@@ -74,11 +74,16 @@ final class HamqadamMemberDesignDemoSeeder extends Seeder
                     ]));
                 }
             }
-            if(Schema::hasTable('shortlists')&&!DB::table('shortlists')->where('shortlisted_by',$owner)->exists()){
-                DB::table('shortlists')->insert($this->tableRow('shortlists',[
-                    'user_id'=>$ids['demo.ayesha.design@hamqadam.test'],
-                    'shortlisted_by'=>$owner,'created_at'=>now(),'updated_at'=>now(),
-                ]));
+            if(Schema::hasTable('shortlists')){
+                foreach(array_slice($actors,1) as [$email]){
+                    $candidate=$ids[$email];
+                    if(!DB::table('shortlists')->where('shortlisted_by',$owner)->where('user_id',$candidate)->exists()){
+                        DB::table('shortlists')->insert($this->tableRow('shortlists',[
+                            'user_id'=>$candidate,'shortlisted_by'=>$owner,
+                            'created_at'=>now()->subDays(2),'updated_at'=>now(),
+                        ]));
+                    }
+                }
             }
             if(Schema::hasTable('notifications')){
                 foreach(['Welcome to your refreshed Hamqadam dashboard','Your demo compatible matches are ready','Complete your profile to improve your visibility'] as $i=>$notice){
