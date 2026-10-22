@@ -6,10 +6,12 @@
 ## Implemented in this PR
 - Main member dashboard rebuild using live `users`, `members`, match, interest, shortlist and notification data.
 - Reference-aligned color palette: pink #ED2977, burgundy #A91550, pale pink #FFF1F6, white cards, responsive KPI and match grids.
-- Shared styling of existing member routes/forms, profile editing, referrals, wallet, conversations, client scope pages and account controls. Existing transaction/navigation behavior retained.
+- Dedicated member app shell (compact search topbar, avatar and quick links, mobile drawer, scrollable sticky sidebar and normal page content scrolling). Public website pages keep their original header/footer.
+- Shortlist and Matched Profiles rebuilt into responsive reference-style image cards without deleting the original shortlist/match actions.
+- Shared headings and styling across member profile, interests, notifications, messages, wallet, referrals, family/guardian, AI Dashboard, support and billing routes. Existing transaction/navigation behavior retained.
 - Member match cards link to the existing `member_profile` flow, which owns profile entitlement/charging behavior.
 - Existing sticky member sidebar remains independent of main document scroll; no new fixed main scrollbar.
-- Opt-in guard-protected QA demo fixture seeder.
+- Opt-in guard-protected QA demo fixture seeder. One command creates isolated QA users, matching profiles, shortlist entries, synthetic proposals, chat messages, a sample story and notifications, and links an existing Gold plan to the synthetic member (no payment transaction).
 
 ## How to run the demo SAFELY
 **Never run on production.** Back up and configure a separate *staging* installation and DB; APP_ENV must be `staging` or `local` (and not share the live database).
@@ -26,4 +28,4 @@ Notice: `approved` is set **only for isolated QA users** to allow manual navigat
 Check dashboard at 1440px, 1280px, 768px and 375px. Check existing member profile, wallet, messages, interests, shortlist, guardian mode, referrals, stories, notifications and support for consistent design while preserving their forms. Inspect mobile viewport and independent sticky-sidebar scroll. Verify match profile-click charging using a QA account with test entitlements.
 
 ## Known gaps / further UI validation
-The 20 supplied images cover distinct product screens. The complete pixel-by-pixel parity of all 20 separate screens is **not claimed** by this patch. The dashboard is substantially rebuilt; other panels inherit the shared design styling but preserve their original Blade structures for business continuity. Exact photograph assets shown in the reference JPEGs are not available separately, so demo cards use privacy-respecting site avatar placeholders unless genuine permitted QA photos are uploaded. Full browser visual diff, seed run against your staging migration and multi-device QA remain required before merge.
+The 20 supplied images cover distinct product screens. The complete pixel-by-pixel parity of all 20 separate screens is **not claimed** by this patch. The dashboard is substantially rebuilt; other panels inherit the shared design styling but preserve their original Blade structures for business continuity. Exact photograph assets shown in the reference JPEGs are not available separately, so demo cards use privacy-respecting site avatar placeholders unless genuine permitted QA photos are uploaded. The QA-seeded Gold plan is for visualization only; the seeder does **not** make a paid subscription or gateway receipt. Full browser visual diff, seed run against your staging migration and multi-device QA remain required before merge.
