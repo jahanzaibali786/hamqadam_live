@@ -57,3 +57,32 @@
 @media(max-width:1199px){.hm-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.hm-columns{grid-template-columns:1fr}.hm-match-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.hm-kpis{grid-template-columns:1fr}.hm-match-list{grid-template-columns:1fr}.hm-actions{grid-template-columns:1fr}.hm-kpi{min-height:95px}.hm-match>img{height:220px}}
+
+
+/* Existing member workflows: apply the reference system without replacing their functional controls. */
+.hq-member-panel-page .aiz-user-panel>.card,.hq-member-panel-page .aiz-user-panel>.container-fluid>.card,.hq-member-panel-page .aiz-user-panel>.container>.card{margin-bottom:22px}
+.hq-member-panel-page .aiz-user-panel .aiz-titlebar h1,
+.hq-member-panel-page .aiz-user-panel >h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(26px,2.5vw,36px);font-weight:700;color:#42283a}
+.hq-member-panel-page .aiz-user-panel .card-header h2,
+.hq-member-panel-page .aiz-user-panel .card-header h5{font-size:15px;font-weight:750;color:#463042;letter-spacing:-.015em}
+.hq-member-panel-page .aiz-user-panel .card-body{padding:22px}
+.hq-member-panel-page .aiz-user-panel .table{color:#57495a}
+.hq-member-panel-page .aiz-user-panel .table thead{background:#fff5f9}
+.hq-member-panel-page .aiz-user-panel .table thead th{color:#766879;font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #f1e4e9}
+.hq-member-panel-page .aiz-user-panel .table tbody td{vertical-align:middle;border-top-color:#f5edf1}
+.hq-member-panel-page .aiz-user-panel .table-responsive{border-radius:11px}
+.hq-member-panel-page .aiz-user-panel .badge{border-radius:8px}
+.hq-member-panel-page .aiz-user-panel input[type='checkbox']{accent-color:#e83378}
+.hq-member-panel-page .aiz-user-panel .nav-tabs{border-bottom-color:#f0e3ea}
+.hq-member-panel-page .aiz-user-panel .nav-tabs .nav-link.active{color:#e12b73;border-bottom:2px solid #e12b73}
+.hq-member-panel-page .aiz-user-panel .btn{border-radius:9px}
+.hq-member-panel-page .aiz-user-panel .btn-soft-primary{background:#fff0f6;color:#ad1f58}
+.hq-member-panel-page .aiz-user-panel .btn-soft-primary:hover{background:#fce2ed}
+.hq-member-panel-page .aiz-user-panel .form-control:focus{border-color:#eb75a6;box-shadow:0 0 0 3px rgba(237,41,119,.1)}
+.hq-member-panel-page .aiz-user-panel .alert-info{background:#fff2f7;color:#81526a;border-color:#f3cfe0}
+.hq-member-panel-page .aiz-user-panel .alert-success{background:#eafaf4;border-color:#c5f2e1}
+.hq-member-panel-page .aiz-user-panel .progress-bar{background:#ed2977}
+.hq-member-panel-page .aiz-user-panel .bg-grad-1{background:linear-gradient(135deg,#ec3986,#ae2f73)}
+.hq-member-panel-page .aiz-user-panel .aiz-chat{border:1px solid #f0e2e9;border-radius:15px;overflow:hidden;background:white}
+.hq-member-panel-page .aiz-user-panel .chat-user-list-header{color:#463141;background:#fff7fa!important}
+@media(max-width:575px){.hq-member-panel-page .aiz-user-panel .card-body{padding:15px}.hq-member-panel-page .aiz-user-panel .card-header{padding:15px}.hq-member-panel-page .hm-dashboard .hm-heading{font-size:26px}}
