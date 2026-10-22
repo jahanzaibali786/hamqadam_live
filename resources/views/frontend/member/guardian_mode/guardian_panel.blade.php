@@ -1,6 +1,8 @@
 @extends('frontend.layouts.member_panel')
 
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "Guardian Dashboard", 'subtitle' => "Review the family profiles you help manage.", 'icon' => "la-user-shield"])
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h1 class="fs-22 fw-700 mb-1 text-primary">{{ translate('Guardian Dashboard') }}</h1>
