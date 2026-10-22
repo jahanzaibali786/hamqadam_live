@@ -78,6 +78,7 @@
             </div>
         </div>
     </div>
+</div>
 @endsection
 
   {{-- Interest Reject Modal --}}
