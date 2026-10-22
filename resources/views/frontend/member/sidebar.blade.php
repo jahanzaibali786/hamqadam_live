@@ -189,13 +189,21 @@
                       $memberNav = [
                         ['dashboard','Dashboard','la-home'],
                         ['profile_settings','My Profile','la-user'],
+                        ['__public_profile__','Public Profile','la-id-card'],
                         ['my_interests.index','My Interest','la-heart'],
                         ['my_shortlists','Shortlist','la-bookmark'],
                         ['all.messages','Messaging','la-comment-dots'],
-                        ['interest_requests','Proposals','la-ring'],
-                        ['client.scope.portal','Why This Match','la-magic'],
+                      ];
+                      if(auth()->user()->member?->auto_profile_match == 1) $memberNav[] = ['my_matched_profiles','Matched Profiles','la-user-friends'];
+                      $memberNav[] = ['interest_requests','Proposals','la-ring'];
+                      $memberNav[] = ['client.scope.portal','Why This Match','la-magic'];
+                      if(auth()->user()->member?->auto_horoscope_profile_match == 1) $memberNav[] = ['horoscope_matched_profiles','Horoscope Match','la-moon'];
+                      $memberNav = array_merge($memberNav, [
                         ['member.listing','Advanced Search','la-search'],
                         ['profile-viewers.index','Profile Viewers','la-eye'],
+                      ]);
+                      if(get_setting('wallet_system')) $memberNav[] = ['wallet.index','My Wallet','la-wallet'];
+                      $memberNav = array_merge($memberNav, [
                         ['member.reference.packages','Packages & Plans','la-crown'],
                         ['member.referrals.index','Referral Program','la-user-plus'],
                         ['member.reference.stories','Happy Stories','la-heart'],
@@ -205,12 +213,8 @@
                         ['member.reference.meetings','Meeting Scheduling','la-calendar-alt'],
                         ['member.reference.assistant','AI Assistant','la-robot'],
                         ['frontend.notifications','Notifications','la-bell'],
-                        ['member.reference.settings','Settings','la-cog']
-                      ];
-                      array_splice($memberNav, 2, 0, [['__public_profile__','Public Profile','la-id-card']]);
-                      if(auth()->user()->member?->auto_profile_match == 1) array_splice($memberNav, 5, 0, [['my_matched_profiles','Matched Profiles','la-user-friends']]);
-                      if(auth()->user()->member?->auto_horoscope_profile_match == 1) array_splice($memberNav, 8, 0, [['horoscope_matched_profiles','Horoscope Match','la-moon']]);
-                      if(get_setting('wallet_system')) array_splice($memberNav, 11, 0, [['wallet.index','My Wallet','la-wallet']]);
+                        ['member.reference.settings','Settings','la-cog'],
+                      ]);
                       $extraMenu = [
                         ['member.v1_dashboard','AI Dashboard','la-brain'],
                         ['guardian_mode.index','Guardian Mode','la-users'],
@@ -225,7 +229,6 @@
                         ['client.scope.satisfaction','Rate Hamqadam','la-star'],
                         ['member.change_password','Change Password','la-key'],
                       ];
-                      $extraActive = collect($extraMenu)->contains(fn($item) => request()->routeIs($item[0]));
                     @endphp
 
                     @foreach($memberNav as $navItem)
@@ -245,32 +248,31 @@
                         </a>
                       </li>
                     @endforeach
-                    <li class="aiz-side-nav-item hm-member-extra-wrap">
-                      <details class="hm-member-extras" @if($extraActive) open @endif>
-                        <summary class="aiz-side-nav-link">
-                          <i class="las la-ellipsis-h aiz-side-nav-icon" aria-hidden="true"></i>
-                          <span class="aiz-side-nav-text">More Features</span>
-                          <i class="las la-angle-down ml-auto" aria-hidden="true"></i>
-                        </summary>
-                        <ul class="hm-member-extra-list">
-                          @foreach($extraMenu as $navItem)
-                            <li class="aiz-side-nav-item">
-                              <a href="{{ route($navItem[0]) }}" class="aiz-side-nav-link {{ request()->routeIs($navItem[0])?'active':'' }}"
-                                @if(request()->routeIs($navItem[0])) aria-current="page" @endif>
-                                <i class="las {{ $navItem[2] }} aiz-side-nav-icon" aria-hidden="true"></i>
-                                <span class="aiz-side-nav-text">{{ $navItem[1] }}</span>
-                              </a>
-                            </li>
-                          @endforeach
-                          @if (get_setting('profile_picture_privacy') == 'only_me')
-                          <li class="aiz-side-nav-item"><a href="{{ route('profile-picture-view-request.index') }}" class="aiz-side-nav-link"><i class="las la-image aiz-side-nav-icon"></i> Picture View Requests</a></li>
-                          @endif
-                          @if (get_setting('gallery_image_privacy') == 'only_me')
-                          <li class="aiz-side-nav-item"><a href="{{ route('gallery-image-view-request.index') }}" class="aiz-side-nav-link"><i class="las la-images aiz-side-nav-icon"></i> Gallery View Requests</a></li>
-                          @endif
-                        </ul>
-                      </details>
-                    </li>
+                    {{-- Every permitted feature is visible as a normal navigation link; no hidden "More Features" accordion. --}}
+                    @foreach($extraMenu as $navItem)
+                      <li class="aiz-side-nav-item">
+                        <a href="{{ route($navItem[0]) }}"
+                           class="aiz-side-nav-link {{ request()->routeIs($navItem[0])?'active':'' }}"
+                           @if(request()->routeIs($navItem[0])) aria-current="page" @endif>
+                          <i class="las {{ $navItem[2] }} aiz-side-nav-icon" aria-hidden="true"></i>
+                          <span class="aiz-side-nav-text">{{ $navItem[1] }}</span>
+                        </a>
+                      </li>
+                    @endforeach
+                    @if (get_setting('profile_picture_privacy') == 'only_me')
+                      <li class="aiz-side-nav-item">
+                        <a href="{{ route('profile-picture-view-request.index') }}" class="aiz-side-nav-link {{ request()->routeIs('profile-picture-view-request.*')?'active':'' }}">
+                          <i class="las la-image aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Picture View Requests</span>
+                        </a>
+                      </li>
+                    @endif
+                    @if (get_setting('gallery_image_privacy') == 'only_me')
+                      <li class="aiz-side-nav-item">
+                        <a href="{{ route('gallery-image-view-request.index') }}" class="aiz-side-nav-link {{ request()->routeIs('gallery-image-view-request.*')?'active':'' }}">
+                          <i class="las la-images aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Gallery View Requests</span>
+                        </a>
+                      </li>
+                    @endif
                 @endif
             </ul>
         </div>
