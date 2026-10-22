@@ -23,7 +23,7 @@
                                 $current_user = Auth::user()->id;
                             @endphp
                             @if ($single_chat_thread->receiver != null && $single_chat_thread->sender != null)
-                              <a href="javascript:void(0)" class="chat-user-item p-3 d-block text-inherit" data-thread-id="{{ $single_chat_thread->id }}" data-url="{{ route('chat_view', $single_chat_thread->id) }}" data-refresh="{{ route('chat_refresh', $single_chat_thread->id) }}" onclick="loadChats(this)">
+                              <a href="javascript:void(0)" class="chat-user-item p-3 d-block text-inherit" data-member-name="{{ $single_chat_thread->$user_to_show->first_name.' '.$single_chat_thread->$user_to_show->last_name }}" data-member-url="{{ route('member_profile', $single_chat_thread->$user_to_show->id) }}" data-thread-id="{{ $single_chat_thread->id }}" data-url="{{ route('chat_view', $single_chat_thread->id) }}" data-refresh="{{ route('chat_refresh', $single_chat_thread->id) }}" onclick="loadChats(this)">
                                   @if($current_user == $single_chat_thread->sender->id)
                                     @php $user_to_show = 'receiver';  @endphp
                                   @else
@@ -83,7 +83,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-8" id="single_chat">
+            <div class="col-lg-5" id="single_chat">
                 <div class="chat-box-wrap h-100">
                     <div class="attached-top bg-white border-bottom chat-header d-flex justify-content-between align-items-center p-3 shadow-sm">
                         <div class="media">
@@ -99,11 +99,35 @@
                     </div>
                 </div>
             </div>
+            <aside class="col-lg-3 hm-chat-profile-rail" aria-label="Conversation member details">
+              <div class="hm-parity-chat-member">
+                <h2>Profile Details</h2><div id="hm-chat-member-placeholder" class="text-muted small">Select a conversation to view member details.</div>
+                <div id="hm-chat-member-selected" hidden>
+                  <img id="hm-chat-member-photo" src="{{ static_asset('assets/img/avatar-place.png') }}" alt="">
+                  <h3 id="hm-chat-member-name"></h3>
+                  <a id="hm-chat-member-view" class="btn btn-primary btn-block" href="{{ route('member.listing') }}">View Full Profile</a>
+                </div>
+              </div>
+              <div class="hm-parity-chat-guide"><h2><i class="las la-shield-alt"></i> Messaging Safety</h2><p>Respect privacy. Report inappropriate messages and do not share sensitive personal details.</p></div>
+            </aside>
         </div>
     </div>
 </div></div>
 @endsection
 
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+ const rail=document.querySelector('.hm-chat-profile-rail');if(!rail)return;
+ document.querySelectorAll('.chat-user-item[data-member-url]').forEach(item=>item.addEventListener('click',()=>{
+  const name=rail.querySelector('#hm-chat-member-name'),photo=rail.querySelector('#hm-chat-member-photo'),link=rail.querySelector('#hm-chat-member-view');
+  name.textContent=item.dataset.memberName||'Member';
+  const avatar=item.querySelector('img');if(avatar)photo.src=avatar.src;
+  link.href=item.dataset.memberUrl;
+  rail.querySelector('#hm-chat-member-placeholder').hidden=true;
+  rail.querySelector('#hm-chat-member-selected').hidden=false;
+ }));
+});
+</script>
 @section('modal')
     @include('modals.package_update_alert_modal')
 
