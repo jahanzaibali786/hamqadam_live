@@ -42,3 +42,23 @@
 @media(max-width:1150px){.hm-profile-parity-grid{grid-template-columns:200px minmax(0,1fr)}.hm-profile-parity-side{grid-column:2}}
 @media(max-width:750px){.hm-profile-parity-grid{grid-template-columns:1fr}.hm-profile-parity-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.hm-profile-parity-step{padding:8px 5px}.hm-profile-parity-step small{display:none}.hm-profile-parity-side{grid-column:auto}}
 @media(max-width:450px){.hm-profile-parity-steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Reference hero/banner component for content screens, reusable without fake figures. */
+.hm-member-app .hm-reference-heading,.hm-member-app .hm-ref-header,.hm-member-app .hm-subpage-header,.hm-member-app .hm-top{
+  position:relative;min-height:90px;padding:13px 285px 13px 10px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:21px;
+}
+.hm-member-app .hm-reference-heading::after,.hm-member-app .hm-ref-header::after,.hm-member-app .hm-subpage-header::after,.hm-member-app .hm-top::after{
+ content:"";position:absolute;right:0;top:0;width:min(270px,36%);height:88px;border-radius:13px;
+ background:#ffeaf2 url('/public/assets/img/member-reference-couple.svg') center 39% / cover no-repeat;pointer-events:none;
+}
+.hm-member-app .hm-reference-heading h1,.hm-member-app .hm-ref-header h1{font-family:system-ui,sans-serif;font-size:clamp(23px,2.35vw,33px);font-weight:800;color:#182547}
+.hm-member-app .hm-ref-panel,.hm-member-app .hm-ref-white,.hm-member-app .hm-card{border:1px solid #f2e8ee;box-shadow:0 5px 24px rgba(64,29,54,.035)}
+.hm-member-app .hm-ref-articles{gap:14px}
+.hm-member-app .hm-ref-article{border-radius:11px;transition:box-shadow .15s ease}
+.hm-member-app .hm-ref-article:hover{box-shadow:0 9px 23px rgba(103,38,75,.12)}
+.hm-member-app .hm-ref-article>a:first-child{height:160px}
+.hm-member-app .hm-ref-plan.is-current{background:#fff2f7}
+.hm-member-app .hm-ref-plan .hm-ref-cta{border-radius:7px;background:linear-gradient(110deg,#ff1f7b,#dd1769)}
+@media(max-width:1090px){.hm-member-app .hm-reference-heading,.hm-member-app .hm-ref-header,.hm-member-app .hm-subpage-header,.hm-member-app .hm-top{padding-right:185px}.hm-member-app .hm-reference-heading::after,.hm-member-app .hm-ref-header::after,.hm-member-app .hm-subpage-header::after,.hm-member-app .hm-top::after{width:180px}}
+@media(max-width:700px){.hm-member-app .hm-reference-heading,.hm-member-app .hm-ref-header,.hm-member-app .hm-subpage-header,.hm-member-app .hm-top{padding:12px 0 95px;min-height:0}.hm-member-app .hm-reference-heading::after,.hm-member-app .hm-ref-header::after,.hm-member-app .hm-subpage-header::after,.hm-member-app .hm-top::after{top:auto;bottom:0;width:100%;height:79px;background-size:auto 180px}}
