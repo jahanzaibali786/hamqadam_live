@@ -165,6 +165,14 @@ final class ReferenceScreensController extends Controller
         return view('frontend.member.reference.blogs', compact('blogs', 'search', 'category', 'categories', 'featured', 'popular'));
     }
 
+    public function storyDetail(string $token): View
+    {
+        $id = StoryPublicId::decode($token);
+        abort_unless($id, 404);
+        $story = HappyStory::query()->where('approved', 1)->findOrFail($id);
+        return view('frontend.member.reference.story_details', compact('story'));
+    }
+
     public function stories(Request $request): View
     {
         $data = $request->validate([
