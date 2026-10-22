@@ -218,3 +218,15 @@
 .hm-parity-settings-links i{color:#e62b79;font-size:17px}
 @media(max-width:1050px){.hm-parity-settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hm-parity-settings-account{grid-column:span 2}}
 @media(max-width:650px){.hm-parity-settings-grid{grid-template-columns:1fr}.hm-parity-settings-account{grid-column:auto}.hm-parity-settings-fields{grid-template-columns:1fr}}
+
+
+/* Messaging profile rail */
+.hm-messages-reference .hm-ref-msg-shell>.aiz-chat>.row{min-height:530px}
+.hm-chat-profile-rail{background:#fffafd;border-left:1px solid #f0e5ec;padding:16px!important}
+.hm-parity-chat-member,.hm-parity-chat-guide{border:1px solid #f0e5ec;border-radius:12px;background:#fff;padding:15px;margin-bottom:15px}
+.hm-chat-profile-rail h2{font-size:13px;font-weight:800;color:#243250;margin-bottom:14px}
+.hm-parity-chat-member img{height:92px;width:92px;border-radius:50%;object-fit:cover;display:block;margin:10px auto 14px}
+.hm-parity-chat-member h3{text-align:center;font-size:15px;color:#2b3550;font-weight:800;margin-bottom:15px}
+.hm-parity-chat-guide i{color:#e72b77;font-size:20px}.hm-parity-chat-guide p{color:#837788;font-size:11px;line-height:1.7}
+@media(max-width:1199px){.hm-chat-profile-rail{margin-top:15px;border:0}.hm-messages-reference #single_chat{flex:0 0 60%;max-width:60%}.hm-messages-reference .chat-user-list-wrap{max-width:100%}}
+@media(max-width:991px){.hm-messages-reference #single_chat{flex:0 0 100%;max-width:100%}.hm-chat-profile-rail{display:none}}
