@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "My Profile", 'subtitle' => "Tell your story and keep your details up to date.", 'icon' => "la-user"])
+
     <div class="card">
         <div class="card-header">
             <h5 class="mb-0 h6">{{translate('Introduction')}}</h5>
