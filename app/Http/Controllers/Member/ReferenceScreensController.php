@@ -212,8 +212,8 @@ final class ReferenceScreensController extends Controller
                 ->where('approved', 1)->where('blocked', 0)->where('deactivated', 0)
                 ->whereHas('member', fn ($m) => $m->where(fn ($v) =>
                     $v->where('hide_profile', 0)->orWhereNull('hide_profile'))))
-            ->with(['matchedUser.member', 'matchedUser.addresses.city'])
-            ->orderByDesc('match_percentage')->limit(8)->get();
+            ->with(['matchedUser.member', 'matchedUser.addresses.city', 'matchedUser.education'])
+            ->orderByDesc('match_percentage')->limit(4)->get();
 
         $completion = max(0, min(100, (int) ($viewer->member?->profile_completion_percentage ?? 0)));
 
