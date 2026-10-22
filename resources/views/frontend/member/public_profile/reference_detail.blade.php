@@ -20,6 +20,8 @@
  $reported = !$ownProfile && \App\Models\ReportedUser::where('user_id',$user->id)->where('reported_by',Auth::id())->exists();
  $intro = $user->introduction?->introduction ?? $member?->introduction ?? '';
  $profileView = \App\Models\ProfileViewer::where('user_id',$user->id)->count();
+ $education = get_setting('member_education_section') == 'on' ? \App\Models\Education::where('user_id',$user->id)->orderByDesc('is_highest_degree')->first() : null;
+ $career = get_setting('member_career_section') == 'on' ? \App\Models\Career::where('user_id',$user->id)->orderByDesc('present')->first() : null;
 @endphp
 <div class="hm-detail">
  <div class="hm-detail-back"><a href="{{ url()->previous() }}"><i class="las la-arrow-left"></i> Back to Search Results</a><span>Member ID: {{ $user->code }}</span></div>
@@ -58,9 +60,9 @@
  <blockquote class="hm-detail-quote">“{{ \Illuminate\Support\Str::limit(strip_tags((string)$intro),180) ?: 'A meaningful connection begins with respect, kindness and trust.' }}”</blockquote>
  <article class="hm-detail-panel"><h2><i class="las la-user"></i> About Me</h2><p>{{ strip_tags((string)$intro) ?: 'No introduction has been provided yet.' }}</p></article>
  <div class="hm-detail-panels-two">
- <article class="hm-detail-panel"><h2><i class="las la-graduation-cap"></i> Education &amp; Career</h2><p>Education and professional details are available in the complete profile sections below.</p></article>
- <article class="hm-detail-panel"><h2><i class="las la-users"></i> Family Details</h2><p>Family information is shown according to the member's saved preferences and profile permissions.</p></article>
- <article class="hm-detail-panel"><h2><i class="las la-leaf"></i> Lifestyle</h2><p>{{ $user->lifestyle?->diet ?? 'Lifestyle information' }}</p></article>
+ <article class="hm-detail-panel"><h2><i class="las la-graduation-cap"></i> Education &amp; Career</h2><dl><dt>Degree</dt><dd>{{ $education?->degree ?: 'Not specified' }}</dd><dt>Institution</dt><dd>{{ $education?->institution ?: 'Not specified' }}</dd><dt>Profession</dt><dd>{{ $career?->designation ?: 'Not specified' }}</dd><dt>Organization</dt><dd>{{ $career?->company ?: 'Not specified' }}</dd></dl></article>
+ <article class="hm-detail-panel"><h2><i class="las la-users"></i> Family Details</h2><p>View family details in the complete profile section below, where member visibility settings still apply.</p></article>
+ <article class="hm-detail-panel"><h2><i class="las la-leaf"></i> Lifestyle</h2><dl><dt>Diet</dt><dd>{{ $user->lifestyles?->diet ?? 'Not specified' }}</dd><dt>Smoking</dt><dd>{{ $user->lifestyles?->smoke ?? 'Not specified' }}</dd><dt>Drinking</dt><dd>{{ $user->lifestyles?->drink ?? 'Not specified' }}</dd></dl></article>
  <article class="hm-detail-panel"><h2><i class="las la-map-marker"></i> Location</h2><p>{{ trim($city.', '.$country,' ,') ?: 'Not specified' }}</p></article>
  </div>
  <button type="button" class="hm-detail-show-complete" onclick="document.getElementById('hm-public-legacy-profile')?.classList.toggle('hm-legacy-open');this.textContent=this.textContent.includes('View')?'Hide complete details':'View complete profile information, gallery and preferences'">View complete profile information, gallery and preferences</button>
