@@ -55,7 +55,7 @@ class ExpressInterestController extends Controller
           ->when($tab==='accepted',fn($q)=>$q->where(fn($x)=>$x->where('user_id',$id)->orWhere('interested_by',$id))->where('status',1))
           ->when($tab==='rejected',fn($q)=>$q->where(fn($x)=>$x->where('user_id',$id)->orWhere('interested_by',$id))->where('status',2))
           ->latest()->paginate(6)->withQueryString();
-        return view('frontend.member.my_interests',compact('interests','counts','tab'));
+        return view('frontend.member.my_interests',compact('interests','counts','tab'))->with('subjectUserId', $id);
     }
 
     public function interest_requests()
@@ -77,7 +77,7 @@ class ExpressInterestController extends Controller
           ->when($tab==='declined',fn($q)=>$q->where(fn($x)=>$x->where('user_id',$id)->orWhere('interested_by',$id))->where('status',2))
           ->when($tab==='in_progress',fn($q)=>$q->where(fn($x)=>$x->where('user_id',$id)->orWhere('interested_by',$id))->where('status',1)->whereHas('meetings'))
           ->latest()->paginate(6)->withQueryString();
-        return view('frontend.member.interest_requests',compact('interests','counts','tab'));
+        return view('frontend.member.interest_requests',compact('interests','counts','tab'))->with('subjectUserId', $id);
     }
 
     /**
