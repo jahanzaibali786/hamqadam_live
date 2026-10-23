@@ -426,6 +426,11 @@
                 </li>
                 @endcan
 
+                @can('edit_pages')
+                <li class="aiz-side-nav-item"><a href="{{ route('website.public_editorial.edit','blogs') }}" class="aiz-side-nav-link"><i class="las la-newspaper aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Blog Page Design</span></a></li>
+                <li class="aiz-side-nav-item"><a href="{{ route('website.public_editorial.edit','stories') }}" class="aiz-side-nav-link"><i class="las la-heart aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Success Stories Design</span></a></li>
+                @endcan
+
                 <!--Blog System-->
                 @if (auth()->user()->can('show_blog_categories') ||
                 auth()->user()->can('show_blogs'))
