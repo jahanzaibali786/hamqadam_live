@@ -736,6 +736,11 @@
                             </a>
                         </li>
                         @endcan
+                        @can('edit_pages')
+                        @foreach(['about'=>'About Us','team'=>'Our Team','privacy'=>'Privacy Policy','terms'=>'Terms & Conditions'] as $hqKey=>$hqLabel)
+                        <li class="aiz-side-nav-item"><a class="aiz-side-nav-link" href="{{ route('website.editorial.edit',$hqKey) }}"><span class="aiz-side-nav-text">{{ $hqLabel }}</span></a></li>
+                        @endforeach
+                        @endcan
                         @can('show_all_pages')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('custom-pages.index') }}"
