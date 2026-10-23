@@ -1,32 +1,5 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0 h6">{{ translate('Add New Image to Gallery') }}</h5>
-        </div>
-        <div class="card-body">
-          <form action="{{ route('gallery-image.store') }}" method="POST">
-                @csrf
-                <div class="form-group row">
-                    <label class="col-md-2 col-form-label" for="signinSrEmail">{{translate('Image')}}</label>
-                    <div class="col-md-9">
-                        <div class="input-group" data-toggle="aizuploader" data-type="image">
-                            <div class="input-group-prepend">
-                                <div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse')}}</div>
-                            </div>
-                            <div class="form-control file-amount">{{ translate('Choose File') }}</div>
-                            <input type="hidden" name="gallery_image" class="selected-files" required>
-                        </div>
-                        <div class="file-preview box sm">
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group row text-right">
-                    <div class="col-md-11">
-                        <button type="submit" class="btn btn-primary">{{translate('Confirm')}}</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+<div class="hm-gallery-v2"><header class="hm-gallery-head"><div><span class="hm-gallery-icon"><i class="las la-camera"></i></span><div><h1>Add Gallery Photo</h1><p>Upload a clear, appropriate photo to your member gallery.</p></div></div><a href="{{ route('gallery-image.index') }}">← Back to Gallery</a></header>
+<section class="hm-gallery-panel hm-gallery-upload"><h2>Upload a Photo</h2><p>Choose your image using the existing secure Hamqadam uploader.</p><form action="{{ route('gallery-image.store') }}" method="POST">@csrf<div class="hm-gallery-drop" data-toggle="aizuploader" data-type="image"><i class="las la-cloud-upload-alt"></i><strong>Choose Image</strong><span class="file-amount">Select a photo</span><input type="hidden" name="gallery_image" class="selected-files" required></div><div class="file-preview box sm"></div><p class="hm-gallery-hint">Gallery uploads use your remaining package quota and follow existing image privacy rules.</p><button class="hm-pink-action" type="submit"><i class="las la-check"></i> Save Photo</button></form></section></div>
 @endsection
