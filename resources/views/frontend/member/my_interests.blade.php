@@ -1,7 +1,55 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
-<div class="hm-four"><header class="hm-four-head"><div><h1><i class="las la-heart"></i> My Interests</h1><p>Manage your interest requests and stay connected with genuine profiles.</p></div><aside>A small interest today can lead to a beautiful tomorrow.</aside></header><div class="hm-four-layout"><main><nav class="hm-four-tabs">@foreach([['received','Received'],['sent','Sent'],['accepted','Accepted'],['rejected','Rejected']] as $t)<a class="{{ $tab===$t[0]?'active':'' }}" href="{{ route('my_interests.index',['tab'=>$t[0]]) }}">{{ $t[1] }} ({{ $counts[$t[0]] }})</a>@endforeach</nav>
-<div class="hm-four-rows">@forelse($interests as $interest)@php($person=$interest->interested_by===auth()->id()?$interest->recipient:$interest->sender)@if($person)@php($fallback=static_asset(($person->member?->gender??1)==1?'assets/img/avatar-place.png':'assets/img/female-avatar-place.png'))@php($state=$interest->status instanceof \BackedEnum?$interest->status->value:(int)$interest->status)<article class="hm-four-request"><img src="{{ $person->photo&&show_profile_picture($person)?uploaded_asset($person->photo):$fallback }}" alt="" onerror="this.onerror=null;this.src='{{ $fallback }}'"><div><h2>{{ $person->first_name }} {{ $person->last_name }}</h2><p>{{ $person->member?->birthday?\Carbon\Carbon::parse($person->member->birthday)->age.' years · ':'' }}{{ $person->addresses->firstWhere('type','present')?->city?->name??'Location unavailable' }}</p><small>{{ $person->member?->job_title??'Member' }}</small></div><blockquote>{{ $interest->initial_note?:'Interest expressed through Hamqadam.' }}</blockquote><div class="hm-four-request-actions"><small>{{ $interest->created_at?->diffForHumans() }}</small>@if($state===0 && $interest->user_id===auth()->id())<button onclick="accept_interest({{ $interest->id }})">✓ Accept</button><button class="outlined" onclick="reject_interest({{ $interest->id }})">✕ Decline</button>@else<span class="hm-four-state">{{ $interest->status instanceof \App\Enums\ProposalStatus?ucfirst($interest->status->label()):'Pending' }}</span>@endif<a href="{{ route('member_profile',$person->id) }}">View Profile →</a></div></article>@endif@empty<p class="hm-four-empty">No interests in this category.</p>@endforelse</div>{{ $interests->links() }}</main><aside><section class="hm-four-panel"><h2>Interest Overview</h2><div class="hm-four-metrics">@foreach($counts as $key=>$value)<span><b>{{ $value }}</b><small>{{ ucfirst($key) }}</small></span>@endforeach</div></section><section class="hm-four-panel"><h2>Manage Interests</h2><p>Filter received, sent, accepted, and rejected requests using the tabs.</p><a href="{{ route('member.listing') }}">Explore Members →</a></section><section class="hm-four-promo"><a href="{{ route('member.reference.packages') }}">View Premium Plans →</a></section></aside></div></div>
+<div class="hm-four">
+  <header class="hm-four-head"><div><h1>My Interests</h1><p>Manage your interest requests and genuine connections.</p></div></header>
+  <div class="hm-four-layout"><main>
+  <nav class="hm-four-tabs">
+  @foreach ([['received','Received'],['sent','Sent'],['accepted','Accepted'],['rejected','Rejected']] as $item)
+    <a class="{{ $tab === $item[0] ? 'active' : '' }}" href="{{ route('my_interests.index', ['tab' => $item[0]]) }}">{{ $item[1] }} ({{ $counts[$item[0]] ?? 0 }})</a>
+  @endforeach
+  </nav>
+  <div class="hm-four-rows">
+  @forelse ($interests as $interest)
+    @php
+      $isSender = (int) $interest->interested_by === (int) $subjectUserId;
+      $person = $isSender ? $interest->recipient : $interest->sender;
+      $state = $interest->status instanceof \BackedEnum ? (int)$interest->status->value : (int)$interest->status;
+    @endphp
+    @if ($person)
+      @php
+        $fallback = static_asset(($person->member?->gender ?? 1) == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png');
+        $photo = $person->photo && show_profile_picture($person) ? uploaded_asset($person->photo) : $fallback;
+        $city = $person->addresses->firstWhere('type','present')?->city?->name ?? 'Location unavailable';
+      @endphp
+      <article class="hm-four-request">
+        <img src="{{ $photo }}" alt="{{ $person->first_name }}" onerror="this.onerror=null;this.src='{{ $fallback }}'">
+        <div><h2>{{ $person->first_name }} {{ $person->last_name }}</h2><p>{{ $city }}</p><small>{{ $person->member?->job_title ?? 'Member' }}</small></div>
+        <blockquote>{{ $interest->initial_note ?: 'Interest sent through Hamqadam.' }}</blockquote>
+        <div class="hm-four-request-actions">
+          <small>{{ $interest->created_at?->diffForHumans() }}</small>
+          <a class="hm-four-primary" href="{{ route('member_profile', $person->id) }}">View Details</a>
+          @if ($state === 0 && (int)$interest->user_id === (int)$subjectUserId)
+            <button type="button" onclick="accept_interest({{ $interest->id }})">Accept</button>
+            <button type="button" class="outlined" onclick="reject_interest({{ $interest->id }})">Decline</button>
+          @else
+            <span class="hm-four-state">{{ $state === 1 ? 'Accepted' : ($state === 2 ? 'Declined' : 'Pending') }}</span>
+          @endif
+        </div>
+      </article>
+    @endif
+  @empty
+    <p class="hm-four-empty">No my interests in this category.</p>
+  @endforelse
+  </div>
+  {{ $interests->links() }}
+  </main>
+  <aside><section class="hm-four-panel"><h2>My Interests Overview</h2><div class="hm-four-metrics">
+  @foreach ($counts as $key => $value)
+    <span><b>{{ $value }}</b><small>{{ ucfirst(str_replace('_',' ',$key)) }}</small></span>
+  @endforeach
+  </div></section><section class="hm-four-promo"><a href="{{ route('member.reference.packages') }}">View Premium Plans</a></section></aside>
+  </div>
+</div>
 @endsection
 @section('modal')
 <div class="modal fade interest_accept_modal"><div class="modal-dialog modal-sm"><div class="modal-content p-3"><h4>Accept Interest?</h4><form method="POST" action="{{ route('accept_interest') }}">@csrf<input type="hidden" id="interest_accept_id" name="interest_id"><button type="submit" class="btn btn-primary">Confirm</button></form></div></div></div>
