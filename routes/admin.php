@@ -345,6 +345,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::get('/website/login-page', [\App\Http\Controllers\Admin\LoginPageSettingsController::class, 'edit'])->middleware('permission:appearances')->name('website.login_page');
     Route::post('/website/login-page', [\App\Http\Controllers\Admin\LoginPageSettingsController::class, 'update'])->middleware('permission:appearances')->name('website.login_page.update');
 
+    Route::get('/website/editorial/{page}', [\App\Http\Controllers\HamqadamEditorialController::class,'edit'])->whereIn('page', ['about','team','privacy','terms'])->middleware('permission:edit_pages')->name('website.editorial.edit');
+    Route::post('/website/editorial/{page}', [\App\Http\Controllers\HamqadamEditorialController::class,'update'])->whereIn('page', ['about','team','privacy','terms'])->middleware('permission:edit_pages')->name('website.editorial.update');
+
     // website setting
     Route::group(['prefix' => 'website'], function () {
         Route::controller(SettingController::class)->group(function () {
