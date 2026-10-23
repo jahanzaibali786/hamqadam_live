@@ -44,7 +44,11 @@ class OtpService
             // An undelivered email code must never be reported as successfully sent.
             // The email helper returns false instead of throwing when the mailer fails.
             $sender = strtolower(trim((string) config('mail.from.address', '')));
-            if (app()->environment('production') && (! str_ends_with($sender, '@hamqadam.com')
+            // Fail closed only when production cannot actually deliver: no
+            // sender, or a mailer that only logs. The sender domain is not
+            // forced to @hamqadam.com — that domain has no SPF/DKIM, so Gmail
+            // drops mail sent from it, while the Gmail SMTP account delivers.
+            if (app()->environment('production') && (! filter_var($sender, FILTER_VALIDATE_EMAIL)
                 || in_array(config('mail.default'), ['log', 'array'], true))) {
                 $otp->delete();
                 throw new ApiException('Official Hamqadam OTP email sender is not configured.', 503, 'otp_mail_not_configured');
