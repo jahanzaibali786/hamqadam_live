@@ -239,41 +239,19 @@
                             @endif
                         </a>
                     </div>
-                    <ul
-                        class="mb-0 pl-0 ml-lg-auto d-lg-flex align-items-stretch justify-content-center justify-content-lg-start mobile-hor-swipe">
-                        <li class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes(['home'],'bg-primary-grad') }}">
-                            <a class="nav-link text-uppercase fw-700 fs-15 d-flex align-items-center bg-white py-2"
-                                href="{{ route('home') }}">
-                                <span class="text-primary-grad mb-n1">{{ translate('Home') }}</span>
-                            </a>
-                        </li>
-                        <li
-                            class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes(['member.listing'],'bg-primary-grad') }}">
-                            <a class="nav-link text-uppercase fw-700 fs-15 d-flex align-items-center bg-white py-2"
-                                href="{{ route('member.listing') }}">
-                                <span class="text-primary-grad mb-n1">{{ translate('Active Members') }}</span>
-                            </a>
-                        </li>
-                        <li class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes(['packages'],'bg-primary-grad') }}">
-                            <a class="nav-link text-uppercase fw-700 fs-15 d-flex align-items-center bg-white py-2"
-                                href="{{ route('packages') }}">
-                                <span class="text-primary-grad mb-n1">{{ translate('Premium Plans') }}</span>
-                            </a>
-                        </li>
-                        <li
-                            class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes(['happy_stories'],'bg-primary-grad') }}">
-                            <a class="nav-link text-uppercase fw-700 fs-15 d-flex align-items-center bg-white py-2"
-                                href="{{ route('happy_stories') }}">
-                                <span class="text-primary-grad mb-n1">{{ translate('Happy Stories') }}</span>
-                            </a>
-                        </li>
-                        <li
-                            class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes(['contact_us'],'bg-primary-grad') }}">
-                            <a class="nav-link text-uppercase fw-700 fs-15 d-flex align-items-center bg-white py-2"
-                                href="{{ route('contact_us') }}">
-                                <span class="text-primary-grad mb-n1">{{ translate('Ticket') }}</span>
-                            </a>
-                        </li>
+                    <ul class="mb-0 pl-0 ml-lg-auto d-lg-flex align-items-stretch justify-content-center justify-content-lg-start mobile-hor-swipe">
+                        @foreach ([
+                            ['route' => 'editorial.about', 'label' => 'About Us'],
+                            ['route' => 'editorial.team', 'label' => 'Our Team'],
+                            ['route' => 'happy_stories', 'label' => 'Success Stories'],
+                            ['route' => 'contact_us', 'label' => 'Help & Support'],
+                        ] as $hqNavItem)
+                            <li class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes([$hqNavItem['route']], 'bg-primary-grad') }}">
+                                <a class="nav-link text-uppercase fw-700 fs-15 d-flex align-items-center bg-white py-2" href="{{ route($hqNavItem['route']) }}">
+                                    <span class="text-primary-grad mb-n1">{{ translate($hqNavItem['label']) }}</span>
+                                </a>
+                            </li>
+                        @endforeach
                     </ul>
                 </div>
             </div>
