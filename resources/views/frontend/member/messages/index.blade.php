@@ -776,4 +776,4 @@ document.addEventListener('DOMContentLoaded',()=>{
           $('.package_update_alert_modal').modal('show');
         }
     </script>
-@endsection@endsection
+@endsection
