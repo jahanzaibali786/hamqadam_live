@@ -342,6 +342,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::get('/currency/destroy/{id}', 'destroy')->name('currency.destroy');
     });
 
+    Route::get('/website/login-page', [\App\Http\Controllers\Admin\LoginPageSettingsController::class, 'edit'])->middleware('permission:appearances')->name('website.login_page');
+    Route::post('/website/login-page', [\App\Http\Controllers\Admin\LoginPageSettingsController::class, 'update'])->middleware('permission:appearances')->name('website.login_page.update');
+
     // website setting
     Route::group(['prefix' => 'website'], function () {
         Route::controller(SettingController::class)->group(function () {
