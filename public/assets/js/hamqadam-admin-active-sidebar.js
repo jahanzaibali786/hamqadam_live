@@ -1,7 +1,7 @@
 (function () {
 'use strict';
 function init() {
- const nav=document.querySelector('.aiz-sidebar.left'),menu=document.querySelector('#main-menu');
+ const menu=document.querySelector('#main-menu'), nav=document.querySelector('.aiz-sidebar.left');
  if(!nav||!menu)return;
  const current=(location.pathname.replace(/\/+$/,'')||'/');
  const all=[...menu.querySelectorAll('a.aiz-side-nav-link[href]')];
@@ -13,7 +13,7 @@ function init() {
   if(p.tagName==='UL'&&p.classList.contains('level-2')){p.classList.add('mm-show');p.style.visibility='visible';p.style.height='auto';p.style.display='block';}
   if(p.tagName==='LI')p.classList.add('mm-active');
  }
- const move=()=>{const bounds=nav.getBoundingClientRect(),item=link.getBoundingClientRect();if(item.bottom>bounds.bottom-32||item.top<bounds.top+32)nav.scrollTop+=(item.top+item.height/2)-(bounds.top+bounds.height/2);};
+ const move=()=>{const item=link.getBoundingClientRect();let scroller=link.parentElement;while(scroller&&scroller!==document.body){const css=getComputedStyle(scroller);if(/auto|scroll/.test(css.overflowY)&&scroller.scrollHeight>scroller.clientHeight+4)break;scroller=scroller.parentElement;}scroller=scroller&&scroller!==document.body?scroller:nav;const bounds=scroller.getBoundingClientRect();scroller.scrollTop+=(item.top+item.height/2)-(bounds.top+bounds.height/2);};
  requestAnimationFrame(()=>requestAnimationFrame(move));
  window.addEventListener('load',move,{once:true});
 }
