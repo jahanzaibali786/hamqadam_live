@@ -74,7 +74,7 @@
  <article class="hm-detail-panel"><h2><i class="las la-leaf"></i> Lifestyle</h2><dl><dt>Diet</dt><dd>{{ $user->lifestyles?->diet ?? 'Not specified' }}</dd><dt>Smoking</dt><dd>{{ $user->lifestyles?->smoke ?? 'Not specified' }}</dd><dt>Drinking</dt><dd>{{ $user->lifestyles?->drink ?? 'Not specified' }}</dd></dl></article>
  <article class="hm-detail-panel"><h2><i class="las la-map-marker"></i> Location</h2><p>{{ trim($city.', '.$country,' ,') ?: 'Not specified' }}</p></article>
  </div>
- <button type="button" class="hm-detail-show-complete" onclick="document.getElementById('hm-public-legacy-profile')?.classList.toggle('hm-legacy-open');this.textContent=this.textContent.includes('View')?'Hide complete details':'View complete profile information, gallery and preferences'">View complete profile information, gallery and preferences</button>
+
  </section>
  <aside class="hm-detail-right">
  <article class="hm-detail-panel"><h2>Quick Actions</h2>
@@ -90,4 +90,41 @@
  <article class="hm-detail-panel hm-detail-boost"><h2><i class="las la-rocket"></i> Find Better Matches</h2><p>Explore membership benefits for more meaningful connections.</p><a class="hm-detail-action-primary" href="{{ route('member.reference.packages') }}">View Packages →</a></article>
  <article class="hm-detail-panel"><h2>Member Activity</h2><dl><dt>Joined</dt><dd>{{ $user->created_at?->format('d M Y') }}</dd><dt>Last updated</dt><dd>{{ $user->updated_at?->format('d M Y') }}</dd><dt>Profile views</dt><dd>{{ number_format($profileView) }}</dd></dl></article>
  </aside></div>
+<section class="hm-public-visible-sections" aria-label="Complete member profile information">
+ <header class="hm-public-section-heading"><span><i class="las la-id-card"></i></span><div><h2>More About {{ $ownProfile ? 'Me' : $user->first_name }}</h2><p>Explore the profile information section by section.</p></div></header>
+ <div class="hm-public-feature-grid">
+  <article class="hm-public-feature-card"><div class="hm-public-feature-icon"><i class="las la-users"></i></div><h3>Family &amp; Background</h3>
+   <div class="hm-public-feature-facts"><span>Family Type <b>{{ $member?->family_type ?: 'Not specified' }}</b></span><span>Family Values <b>{{ $member?->family_values ?: 'Not specified' }}</b></span><span>Brothers <b>{{ $user->families?->no_of_brothers ?? 'Not specified' }}</b></span><span>Sisters <b>{{ $user->families?->no_of_sisters ?? 'Not specified' }}</b></span></div>
+   @if(filled($member?->family_bio))<p>{{ $member->family_bio }}</p>@endif
+  </article>
+  <article class="hm-public-feature-card"><div class="hm-public-feature-icon"><i class="las la-heart"></i></div><h3>Personality &amp; Values</h3>
+   <div class="hm-public-feature-facts"><span>Communication <b>{{ $member?->communication_style ?: 'Not specified' }}</b></span><span>Personality <b>{{ $member?->personality_type ?: 'Not specified' }}</b></span><span>Future Goals <b>{{ $member?->future_goals ?: 'Not specified' }}</b></span><span>Life Values <b>{{ $member?->life_values ?: 'Not specified' }}</b></span></div>
+  </article>
+  <article class="hm-public-feature-card"><div class="hm-public-feature-icon"><i class="las la-graduation-cap"></i></div><h3>Education &amp; Career</h3>
+   <div class="hm-public-feature-facts"><span>Education <b>{{ $education?->degree ?: ($member?->education_level ?: 'Not specified') }}</b></span><span>Institution <b>{{ $education?->institution ?: 'Not specified' }}</b></span><span>Career <b>{{ $career?->designation ?: 'Not specified' }}</b></span><span>Company <b>{{ $career?->company ?: 'Not specified' }}</b></span></div>
+  </article>
+  <article class="hm-public-feature-card"><div class="hm-public-feature-icon"><i class="las la-moon"></i></div><h3>Religion &amp; Beliefs</h3>
+   <div class="hm-public-feature-facts"><span>Religion <b>{{ $user->spiritual_backgrounds?->religion?->name ?? 'Not specified' }}</b></span><span>Sect <b>{{ $member?->sectMain?->name ?? 'Not specified' }}</b></span><span>School of Thought <b>{{ $member?->schoolOfThought?->name ?? 'Not specified' }}</b></span><span>Tradition <b>{{ $member?->tradition?->name ?? 'Not specified' }}</b></span></div>
+  </article>
+  <article class="hm-public-feature-card"><div class="hm-public-feature-icon"><i class="las la-map-marked-alt"></i></div><h3>Personal &amp; Location</h3>
+   <div class="hm-public-feature-facts"><span>Age <b>{{ $age ? $age.' years' : 'Not specified' }}</b></span><span>Marital Status <b>{{ $member?->marital_status?->name ?? 'Not specified' }}</b></span><span>City <b>{{ $city ?: 'Not specified' }}</b></span><span>Country <b>{{ $country ?: 'Not specified' }}</b></span></div>
+  </article>
+  <article class="hm-public-feature-card"><div class="hm-public-feature-icon"><i class="las la-leaf"></i></div><h3>Lifestyle &amp; Interests</h3>
+   <div class="hm-public-feature-facts"><span>Diet <b>{{ $user->lifestyles?->diet ?? 'Not specified' }}</b></span><span>Smoking <b>{{ $user->lifestyles?->smoke ?? 'Not specified' }}</b></span><span>Drinking <b>{{ $user->lifestyles?->drink ?? 'Not specified' }}</b></span><span>Hobbies <b>{{ is_array($member?->hobbies) ? implode(', ', $member->hobbies) : ($member?->hobbies ?: 'Not specified') }}</b></span></div>
+  </article>
+  @if(get_setting('member_partner_expectation_section') == 'on')
+  <article class="hm-public-feature-card hm-public-feature-wide"><div class="hm-public-feature-icon"><i class="las la-ring"></i></div><h3>Partner Preferences</h3>
+   @php $expectation = $user->partner_expectations; @endphp
+   <div class="hm-public-feature-facts"><span>Preferred Age <b>{{ $expectation?->preferred_age_min && $expectation?->preferred_age_max ? $expectation->preferred_age_min.'–'.$expectation->preferred_age_max.' years' : 'Not specified' }}</b></span><span>Marital Status <b>{{ $expectation?->marital_status?->name ?? 'Not specified' }}</b></span><span>Education <b>{{ $expectation?->education ?: 'Not specified' }}</b></span><span>Profession <b>{{ $expectation?->profession ?: 'Not specified' }}</b></span></div>
+   @if(filled($expectation?->general))<p>{{ $expectation->general }}</p>@endif
+  </article>
+  @endif
+  <article class="hm-public-feature-card hm-public-feature-wide"><div class="hm-public-feature-icon"><i class="las la-images"></i></div><h3>Photo Gallery</h3>
+   @if($galleryAllowed && $galleryImages->isNotEmpty())
+    <div class="hm-public-gallery-grid">@foreach($galleryImages as $galleryPhoto)<img src="{{ uploaded_asset($galleryPhoto->image) }}" loading="lazy" alt="Member gallery photo">@endforeach</div>
+   @elseif(!$galleryAllowed)<div class="hm-public-private"><i class="las la-lock"></i> Gallery is private. @unless($ownProfile)<button type="button" onclick="gallery_image_view_request({{ $user->id }})">Request access</button>@endunless</div>
+   @else <div class="hm-public-private">No gallery photos uploaded yet.</div>@endif
+  </article>
+ </div>
+</section>
 </div>

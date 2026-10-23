@@ -164,6 +164,12 @@
         </div>
 
     </div>
+    <div class="hm-chat-inbox-actions" aria-label="Conversation shortcuts">
+      <a href="{{ route('member_profile', $chat_thread->$user_to_show->id) }}"><i class="las la-user"></i> View Profile</a>
+      <a href="{{ route('my_interests.index') }}"><i class="las la-heart"></i> My Interests</a>
+      <a href="{{ route('member.reference.meetings') }}"><i class="las la-calendar"></i> Schedule Call</a>
+      <button type="button" onclick="openChatReportModal()"><i class="las la-flag"></i> Report</button>
+    </div>
 
     <div class="chat-list-wrap c-scrollbar-light scroll-to-btm" id="parentDiv">
 

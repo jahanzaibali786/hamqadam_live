@@ -1,18 +1,30 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
-@include('frontend.member.partials.design_header', ['title' => "Messages", 'subtitle' => "Continue respectful conversations with your matches.", 'icon' => "la-comment-dots"])
-
+@php
+    $unreadThreads = $chat_threads->filter(fn($thread) => $thread->chats->contains(fn($msg) => (int)$msg->sender_user_id !== (int)auth()->id() && !$msg->seen))->count();
+    $archivedThreads = $chat_threads->filter(fn($thread) => filled($thread->{$thread->archivedColumnForUserId((int)auth()->id())}))->count();
+@endphp
+<div class="hm-chat-page-header"><div class="hm-chat-heading"><span><i class="las la-comment-dots"></i></span><div><h1>Messaging</h1><p>Connect, communicate and build meaningful relationships.</p></div></div><div class="hm-chat-banner"><i class="las la-paper-plane"></i><strong>A simple conversation<br>can be the start of a beautiful story.</strong><i class="las la-envelope-open-text"></i></div></div>
+<div class="hm-chat-toolbar">
+ <div class="hm-chat-filters" role="tablist" aria-label="Conversation filters">
+ <button type="button" class="is-active" data-chat-filter="all"><i class="las la-comment-dots"></i> All Messages ({{ $chat_threads->count() }})</button>
+ <button type="button" data-chat-filter="unread"><i class="las la-comment-alt"></i> Unread ({{ $unreadThreads }})</button>
+ <button type="button" data-chat-filter="important"><i class="lar la-star"></i> Important</button>
+ <button type="button" data-chat-filter="archived"><i class="las la-archive"></i> Archived ({{ $archivedThreads }})</button>
+ </div>
+ <div class="hm-chat-toolbar-actions"><label><i class="las la-search"></i><input type="search" id="hm-chat-search" placeholder="Search conversations..." aria-label="Search conversations"></label><a href="{{ route('member.listing') }}" class="hm-chat-new"><i class="las la-plus-circle"></i> New Conversation</a></div>
+</div>
 <style>
     .dropdown-toggle::after{
         display:none !important;
     }
 </style>
     <div class="hm-ref-page hm-messages-reference" data-hm-screen="messages"><div class="hm-ref-msg-shell"><div class="aiz-chat">
-        <div class="row no-gutters">
-            <div class="col-lg-4">
+        <div class="row no-gutters hm-chat-reference-grid">
+            <div class="col-lg-4 hm-chat-conversation-column">
                 <div class="chat-user-list-wrap z-1035">
                     <div class="overlay dark c-pointer" data-toggle="class-toggle" data-target=".chat-user-list-wrap" data-same=".aiz-all-chat-toggler"></div>
-                    <div class="chat-user-list-header d-flex justify-content-between align-items-center bg-white border-bottom border-right h6 mb-0">
+                    <div class="chat-user-list-header d-none justify-content-between align-items-center bg-white border-bottom border-right h6 mb-0">
                         <span class="p-2 m-1">{{translate('Members')}}</span>
                         <button class="btn btn-icon d-lg-none" data-toggle="class-toggle" data-target=".chat-user-list-wrap"><i class="las la-times"></i></button>
                     </div>
@@ -26,7 +38,12 @@
                               @php
                                   $user_to_show = $current_user == $single_chat_thread->sender->id ? 'receiver' : 'sender';
                               @endphp
-                              <a href="javascript:void(0)" class="chat-user-item p-3 d-block text-inherit" data-member-name="{{ $single_chat_thread->$user_to_show->first_name.' '.$single_chat_thread->$user_to_show->last_name }}" data-member-url="{{ route('member_profile', $single_chat_thread->$user_to_show->id) }}" data-thread-id="{{ $single_chat_thread->id }}" data-url="{{ route('chat_view', $single_chat_thread->id) }}" data-refresh="{{ route('chat_refresh', $single_chat_thread->id) }}" onclick="loadChats(this)">
+                              <a href="javascript:void(0)" class="chat-user-item p-3 d-block text-inherit" data-chat-unread="{{ $single_chat_thread->chats->where('sender_user_id', '!=', $current_user)->where('seen', 0)->count() }}" data-chat-archived="{{ filled($single_chat_thread->{$single_chat_thread->archivedColumnForUserId((int)$current_user)}) ? '1' : '0' }}" data-member-name="{{ $single_chat_thread->$user_to_show->first_name.' '.$single_chat_thread->$user_to_show->last_name }}" data-member-url="{{ route('member_profile', $single_chat_thread->$user_to_show->id) }}" data-member-meta="{{ $single_chat_thread->$user_to_show->member?->birthday ? \\Carbon\\Carbon::parse($single_chat_thread->$user_to_show->member->birthday)->age.' years' : '' }} · {{ $single_chat_thread->$user_to_show->addresses?->first()?->city?->name ?? '' }}"
+ data-member-career="{{ $single_chat_thread->$user_to_show->career?->first()?->designation ?? '' }}"
+ data-member-sect="{{ $single_chat_thread->$user_to_show->member?->sectMain?->name ?? '' }}"
+ data-member-marital="{{ $single_chat_thread->$user_to_show->member?->marital_status?->name ?? '' }}"
+ data-member-verified="{{ app(\\App\\Services\\BadgeService::class)->isVerified($single_chat_thread->$user_to_show->member) ? '1' : '0' }}"
+ data-match-score="{{ $chatMatchScores[$single_chat_thread->$user_to_show->id] ?? '' }}" data-thread-id="{{ $single_chat_thread->id }}" data-url="{{ route('chat_view', $single_chat_thread->id) }}" data-refresh="{{ route('chat_refresh', $single_chat_thread->id) }}" onclick="loadChats(this)">
                                   @if($current_user == $single_chat_thread->sender->id)
                                     @php $user_to_show = 'receiver';  @endphp
                                   @else
@@ -47,7 +64,7 @@
                                           @endif
                                       </span>
                                       <div class="media-body minw-0">
-                                          <h6 class="mt-0 mb-1 fs-14 text-truncate">{{ $single_chat_thread->$user_to_show->first_name.' '.$single_chat_thread->$user_to_show->last_name }}</h6>
+                                          <h6 class="mt-0 mb-1 fs-14 text-truncate">{{ $single_chat_thread->$user_to_show->first_name.' '.$single_chat_thread->$user_to_show->last_name }} @if(app(\\App\\Services\\BadgeService::class)->isVerified($single_chat_thread->$user_to_show->member)) <span class="hm-chat-verified"><i class="las la-check-circle"></i> Verified</span>@endif</h6>
                                             @php
                                                 $visible_last_chat = $single_chat_thread->chats->filter(function ($chat) use ($current_user, $single_chat_thread) {
                                                     if ((int) $current_user === (int) $single_chat_thread->sender->id) {
@@ -86,7 +103,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-5" id="single_chat">
+            <div class="col-lg-5 hm-chat-center-column" id="single_chat">
                 <div class="chat-box-wrap h-100">
                     <div class="attached-top bg-white border-bottom chat-header d-flex justify-content-between align-items-center p-3 shadow-sm">
                         <div class="media">
@@ -103,34 +120,33 @@
                 </div>
             </div>
             <aside class="col-lg-3 hm-chat-profile-rail" aria-label="Conversation member details">
-              <div class="hm-parity-chat-member">
-                <h2>Profile Details</h2><div id="hm-chat-member-placeholder" class="text-muted small">Select a conversation to view member details.</div>
+              <section class="hm-chat-side-box"><h2>Profile Details</h2>
+                <div id="hm-chat-member-placeholder" class="hm-chat-empty-rail">Select a conversation to view member details.</div>
                 <div id="hm-chat-member-selected" hidden>
-                  <img id="hm-chat-member-photo" src="{{ static_asset('assets/img/avatar-place.png') }}" alt="">
+                  <span class="hm-chat-side-avatar"><img id="hm-chat-member-photo" src="{{ static_asset('assets/img/avatar-place.png') }}" alt=""><i class="las la-circle"></i></span>
                   <h3 id="hm-chat-member-name"></h3>
-                  <a id="hm-chat-member-view" class="btn btn-primary btn-block" href="{{ route('member.listing') }}">View Full Profile</a>
+                  <span id="hm-chat-member-badge" class="hm-chat-verified" hidden><i class="las la-check-circle"></i> Verified</span>
+                  <p id="hm-chat-member-meta"></p>
+                  <div class="hm-chat-member-facts"><span id="hm-chat-member-career"></span><span id="hm-chat-member-sect"></span><span id="hm-chat-member-marital"></span></div>
+                  <a id="hm-chat-member-view" class="hm-chat-new hm-chat-profile-link" href="{{ route('member.listing') }}"><i class="las la-external-link-alt"></i> View Full Profile</a>
                 </div>
-              </div>
-              <div class="hm-parity-chat-guide"><h2><i class="las la-shield-alt"></i> Messaging Safety</h2><p>Respect privacy. Report inappropriate messages and do not share sensitive personal details.</p></div>
+              </section>
+              <section class="hm-chat-side-box" id="hm-chat-compat" hidden><h2>Compatibility</h2>
+                <div class="hm-chat-score-row"><span class="hm-chat-score-ring" id="hm-chat-score">—</span><div><strong id="hm-chat-score-caption">Compatibility</strong><a id="hm-chat-score-link" href="{{ route('client.scope.portal') }}">View Details <i class="las la-arrow-right"></i></a></div></div>
+              </section>
+              <section class="hm-chat-side-box"><h2>Quick Actions</h2><div class="hm-chat-actions">
+                <a id="hm-chat-action-photos" href="{{ route('member.listing') }}"><i class="las la-image"></i> View Photos</a>
+                <button type="button" id="hm-chat-action-share" disabled><i class="las la-share-alt"></i> Share Profile</button>
+                <button type="button" id="hm-chat-action-block" disabled><i class="las la-ban"></i> Block Chat</button>
+                <button type="button" id="hm-chat-action-report" disabled><i class="las la-flag"></i> Report User</button>
+              </div></section>
             </aside>
         </div>
     </div>
 </div></div>
 @endsection
 
-<script>
-document.addEventListener('DOMContentLoaded',()=>{
- const rail=document.querySelector('.hm-chat-profile-rail');if(!rail)return;
- document.querySelectorAll('.chat-user-item[data-member-url]').forEach(item=>item.addEventListener('click',()=>{
-  const name=rail.querySelector('#hm-chat-member-name'),photo=rail.querySelector('#hm-chat-member-photo'),link=rail.querySelector('#hm-chat-member-view');
-  name.textContent=item.dataset.memberName||'Member';
-  const avatar=item.querySelector('img');if(avatar)photo.src=avatar.src;
-  link.href=item.dataset.memberUrl;
-  rail.querySelector('#hm-chat-member-placeholder').hidden=true;
-  rail.querySelector('#hm-chat-member-selected').hidden=false;
- }));
-});
-</script>
+
 @section('modal')
     @include('modals.package_update_alert_modal')
 
@@ -162,6 +178,94 @@ document.addEventListener('DOMContentLoaded',()=>{
 @endsection
 
 @section('script')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const rail = document.querySelector('.hm-chat-profile-rail');
+  if (!rail) return;
+  let activeFilter = 'all';
+  const rows = Array.from(document.querySelectorAll('.chat-user-item[data-member-url]'));
+  const search = document.querySelector('#hm-chat-search');
+  const apply = () => {
+    const term = (search?.value || '').toLowerCase().trim();
+    rows.forEach(row => {
+      const match = (row.dataset.memberName || '').toLowerCase().includes(term);
+      const unread = Number(row.dataset.chatUnread || 0) > 0;
+      const archived = row.dataset.chatArchived === '1';
+      const important = row.dataset.chatImportant === '1';
+      row.hidden = !match || (activeFilter === 'unread' && !unread) || (activeFilter === 'archived' && !archived) || (activeFilter === 'important' && !important) || (activeFilter === 'all' && archived);
+    });
+  };
+  search?.addEventListener('input', apply);
+  document.querySelectorAll('[data-chat-filter]').forEach(button => button.addEventListener('click', () => {
+    activeFilter = button.dataset.chatFilter;
+    document.querySelectorAll('[data-chat-filter]').forEach(b => b.classList.toggle('is-active', b === button));
+    apply();
+  }));
+  const starKey = 'hm-chat-important-{{ (int)auth()->id() }}';
+  let stars = [];
+  try { stars = JSON.parse(localStorage.getItem(starKey) || '[]'); if (!Array.isArray(stars)) stars = []; } catch(e) { stars = []; }
+  rows.forEach(row => {
+    const threadId = String(row.dataset.threadId);
+    row.dataset.chatImportant = stars.includes(threadId) ? '1' : '0';
+    const star = document.createElement('span');
+    star.className = 'hm-chat-star' + (row.dataset.chatImportant === '1' ? ' is-important' : '');
+    star.setAttribute('role','button');
+    star.setAttribute('tabindex','0');
+    star.setAttribute('aria-label','Mark conversation important');
+    star.innerHTML = '<i class="las la-star" aria-hidden="true"></i>';
+    const toggleStar = function(e) {
+      e.preventDefault(); e.stopPropagation();
+      const isImportant = row.dataset.chatImportant !== '1';
+      row.dataset.chatImportant = isImportant ? '1' : '0';
+      star.classList.toggle('is-important',isImportant);
+      star.setAttribute('aria-pressed',String(isImportant));
+      stars = isImportant ? Array.from(new Set(stars.concat([threadId]))) : stars.filter(id=>id!==threadId);
+      try { localStorage.setItem(starKey,JSON.stringify(stars)); } catch(e) {}
+      apply();
+    };
+    star.addEventListener('click',toggleStar);
+    star.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') toggleStar(e); });
+    row.querySelector('.media-body')?.appendChild(star);
+  });
+  rows.forEach(row => row.addEventListener('click', () => {
+    rail.querySelector('#hm-chat-member-name').textContent = row.dataset.memberName || 'Member';
+    const avatar = row.querySelector('img');
+    if (avatar) rail.querySelector('#hm-chat-member-photo').src = avatar.src;
+    const url = row.dataset.memberUrl;
+    rail.querySelector('#hm-chat-member-view').href = url;
+    rail.querySelector('#hm-chat-action-photos').href = url;
+    rail.querySelector('#hm-chat-score-link').href = url;
+    rail.querySelector('#hm-chat-member-meta').textContent = row.dataset.memberMeta || '';
+    rail.querySelector('#hm-chat-member-career').textContent = row.dataset.memberCareer || '';
+    rail.querySelector('#hm-chat-member-sect').textContent = row.dataset.memberSect || '';
+    rail.querySelector('#hm-chat-member-marital').textContent = row.dataset.memberMarital || '';
+    rail.querySelector('#hm-chat-member-badge').hidden = row.dataset.memberVerified !== '1';
+    const score = Number(row.dataset.matchScore);
+    rail.querySelector('#hm-chat-compat').hidden = !Number.isFinite(score) || row.dataset.matchScore === '';
+    if (Number.isFinite(score)) {
+      rail.querySelector('#hm-chat-score').textContent = Math.round(score) + '%';
+      rail.querySelector('#hm-chat-score').style.setProperty('--hm-score', Math.max(0, Math.min(100, score)) + '%');
+      rail.querySelector('#hm-chat-score-caption').textContent = score >= 80 ? 'High Compatibility' : score >= 60 ? 'Good Compatibility' : 'Compatibility Score';
+    }
+    rail.querySelector('#hm-chat-member-placeholder').hidden = true;
+    rail.querySelector('#hm-chat-member-selected').hidden = false;
+    rail.querySelector('#hm-chat-action-share').disabled = false;
+    rail.querySelector('#hm-chat-action-block').disabled = false;
+    rail.querySelector('#hm-chat-action-report').disabled = false;
+  }));
+  document.querySelector('#hm-chat-action-share')?.addEventListener('click', () => {
+    const url = rail.querySelector('#hm-chat-member-view').href;
+    if (navigator.share) navigator.share({url: url}).catch(() => {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(url);
+  });
+  document.querySelector('#hm-chat-action-block')?.addEventListener('click', () => { if (typeof blockChatThread === 'function') blockChatThread(); });
+  document.querySelector('#hm-chat-action-report')?.addEventListener('click', () => { if (typeof openChatReportModal === 'function') openChatReportModal(); });
+  apply();
+  const activeThread = new URLSearchParams(location.search).get('thread');
+  const initial = (activeThread && rows.find(row => row.dataset.threadId === activeThread)) || rows.find(row => row.dataset.chatArchived !== '1');
+  if (initial && typeof loadChats === 'function') initial.click();
+});
+</script>
     <script type="text/javascript">
         function loadChats(el){
             $(".selected-chat").each(function() {
