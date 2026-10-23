@@ -61,6 +61,38 @@ class HamqadamEditorialController extends Controller
         return redirect()->back()->with('success','Page content saved successfully.');
     }
 
+
+    public function consultation(Request $request)
+    {
+        $data = self::content('team');
+        $cities = array_column($data['consult']['cities'], 'value');
+        $advisors = array_column($data['consult']['advisors'], 'value');
+        $valid = $request->validate([
+            'name'=>['required','string','max:120'],
+            'email'=>['required','email','max:200'],
+            'phone'=>['required','string','max:35'],
+            'city'=>['required','string',\Illuminate\Validation\Rule::in($cities)],
+            'advisor'=>['required','string',\Illuminate\Validation\Rule::in($advisors)],
+            'website'=>['nullable','max:0'],
+        ]);
+        $to = (string) get_setting('footer_email');
+        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            return back()->withErrors(['consultation'=>'The consultation desk is not configured yet. Please use the helpline.'])->withInput();
+        }
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                "Advisor consultation request\n\nName: ".$valid['name']."\nEmail: ".$valid['email']."\nPhone: ".$valid['phone']."\nCity: ".$valid['city']."\nAdvisor: ".$valid['advisor'],
+                function ($mail) use ($to,$valid) {
+                    $mail->to($to)->replyTo($valid['email'])->subject('Hamqadam: Advisor Consultation Request');
+                }
+            );
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->withErrors(['consultation'=>'Could not submit right now. Please contact the family support desk directly.'])->withInput();
+        }
+        return back()->with('advisor_request_status','Thank you. Your consultation request was sent to our support desk.');
+    }
+
     private function sanitize(mixed $value, mixed $schema, int $depth): mixed
     {
         if ($depth>14) throw new \InvalidArgumentException('Content nesting is too deep.');
