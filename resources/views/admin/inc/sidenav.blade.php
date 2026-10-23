@@ -488,6 +488,9 @@
                     </a>
                     <ul class="aiz-side-nav-list level-2">
                         @can('show_contact_us_queries')
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.advisor_consultations.index') }}" class="aiz-side-nav-link"><i class="las la-calendar-check aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Advisor Consultations</span></a></li>
+                        @endcan
+                        @can('show_contact_us_queries')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('contact-us.index') }}"
                                 class="aiz-side-nav-link {{ areActiveRoutes(['contact-us.index', 'contact-us.show']) }}">

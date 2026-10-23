@@ -23,9 +23,10 @@
 
             <div>
                 <h4>{{ translate('Discovery') }}</h4>
-                <a href="{{ route('member.listing') }}">{{ translate('Active Profiles') }}</a>
+                <a href="{{ route('home') }}">{{ translate('Home') }}</a>
+                <a href="{{ route('member.listing') }}">{{ translate('Active Members') }}</a>
                 <a href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a>
-                <a href="{{ route('packages') }}">{{ translate('Membership Packages') }}</a>
+                <a href="{{ route('packages') }}">{{ translate('Premium Plans') }}</a>
                 <a href="{{ route('member.listing') }}">{{ translate('Advanced Search') }}</a>
             </div>
 

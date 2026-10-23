@@ -67,30 +67,47 @@ class HamqadamEditorialController extends Controller
         $data = self::content('team');
         $cities = array_column($data['consult']['cities'], 'value');
         $advisors = array_column($data['consult']['advisors'], 'value');
+
         $valid = $request->validate([
-            'name'=>['required','string','max:120'],
-            'email'=>['required','email','max:200'],
-            'phone'=>['required','string','max:35'],
-            'city'=>['required','string',\Illuminate\Validation\Rule::in($cities)],
-            'advisor'=>['required','string',\Illuminate\Validation\Rule::in($advisors)],
-            'website'=>['nullable','max:0'],
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'email', 'max:200'],
+            'phone' => ['required', 'string', 'max:35'],
+            'city' => ['required', 'string', \Illuminate\Validation\Rule::in($cities)],
+            'advisor' => ['required', 'string', \Illuminate\Validation\Rule::in($advisors)],
+            'website' => ['nullable', 'max:0'],
         ]);
-        $to = (string) get_setting('footer_email');
-        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
-            return back()->withErrors(['consultation'=>'The consultation desk is not configured yet. Please use the helpline.'])->withInput();
+
+        $consultation = \App\Models\AdvisorConsultationRequest::create([
+            'name' => $valid['name'],
+            'email' => $valid['email'],
+            'phone' => $valid['phone'],
+            'city' => $valid['city'],
+            'advisor' => $valid['advisor'],
+            'status' => 'new',
+            'notification_status' => 'pending',
+        ]);
+
+        $recipient = (string) get_setting('footer_email');
+        if (filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Advisor consultation request #{$consultation->id}\n\nName: {$valid['name']}\nEmail: {$valid['email']}\nPhone: {$valid['phone']}\nCity: {$valid['city']}\nAdvisor: {$valid['advisor']}",
+                    function ($mail) use ($recipient, $valid) {
+                        $mail->to($recipient)->replyTo($valid['email'])
+                            ->subject('Hamqadam: New Advisor Consultation Request');
+                    }
+                );
+                $consultation->update(['notification_status' => 'sent', 'notification_sent_at' => now()]);
+            } catch (\Throwable $e) {
+                report($e);
+                $consultation->update(['notification_status' => 'failed']);
+            }
+        } else {
+            $consultation->update(['notification_status' => 'not_configured']);
         }
-        try {
-            \Illuminate\Support\Facades\Mail::raw(
-                "Advisor consultation request\n\nName: ".$valid['name']."\nEmail: ".$valid['email']."\nPhone: ".$valid['phone']."\nCity: ".$valid['city']."\nAdvisor: ".$valid['advisor'],
-                function ($mail) use ($to,$valid) {
-                    $mail->to($to)->replyTo($valid['email'])->subject('Hamqadam: Advisor Consultation Request');
-                }
-            );
-        } catch (\Throwable $e) {
-            report($e);
-            return back()->withErrors(['consultation'=>'Could not submit right now. Please contact the family support desk directly.'])->withInput();
-        }
-        return back()->with('advisor_request_status','Thank you. Your consultation request was sent to our support desk.');
+
+        return back()->with('advisor_request_status',
+            'Your consultation request has been received. Our family advisory team will contact you.');
     }
 
     private function sanitize(mixed $value, mixed $schema, int $depth): mixed
