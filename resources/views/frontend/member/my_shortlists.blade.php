@@ -91,7 +91,7 @@
         },
         function (data) {
           if (data == 1) {
-            $("#shortlisted_member_"+id).hide();
+            $("#shortlisted_member_"+id).addClass("hm-sl-removed").hide();
             AIZ.plugins.notify('success', '{{translate('You Have Removed This Member From Shortlist')}}');
           }
           else {
@@ -102,7 +102,7 @@
     }
 
     // Express Interest
-    var package_validity = {{ package_validity(Auth::user()->id) }};
+    var package_validity = @json((bool) package_validity(Auth::user()->id));
 
     function express_interest(id)
     {
@@ -147,5 +147,46 @@
       $('.package_update_alert_modal').modal('show');
     }
 
+</script>
+
+<script>
+(function(){
+ const root=document.getElementById('hm-shortlist'); if(!root) return;
+ const cards=Array.from(root.querySelectorAll('.hm-sl-card'));
+ const grid=root.querySelector('#hm-sl-grid');
+ const input=(id)=>root.querySelector('#'+id);
+ let tab='all',filters=false;
+ const norm=v=>String(v||'').trim().toLowerCase();
+ function apply(){
+   const phrase=norm(input('hm-sl-search').value),sort=input('hm-sl-sort').value;
+   const min=Number(input('hm-sl-min').value)||18,max=Number(input('hm-sl-max').value)||100;
+   const city=norm(input('hm-sl-city').value),edu=norm(input('hm-sl-education').value);
+   const career=norm(input('hm-sl-career').value),online=input('hm-sl-presence').value;
+   let shown=0;
+   cards.sort((a,b)=>{
+     if(sort==='compatibility')return Number(b.dataset.score)-Number(a.dataset.score);
+     if(sort==='age')return Number(a.dataset.age)-Number(b.dataset.age);
+     if(sort==='name')return a.dataset.name.localeCompare(b.dataset.name);
+     return Number(b.dataset.recent)-Number(a.dataset.recent);
+   });
+   cards.forEach(card=>{
+     const age=Number(card.dataset.age),score=Number(card.dataset.score);
+     const eligible=tab!=='online'||card.dataset.online==='1';
+     const recent=tab!=='recent'||Number(card.dataset.recent)>=Math.floor(Date.now()/1000)-30*86400;
+     const high=tab!=='compatibility'||score>=70;
+     const fit=!phrase||[card.dataset.name,card.dataset.city,card.dataset.career].some(x=>x.includes(phrase));
+     const limits=!filters||((age===0||(age>=min&&age<=max))&&(!city||card.dataset.city===city)&&(!career||card.dataset.career.includes(career))&&(!edu||card.dataset.education.includes(edu))&&(!online||card.dataset.online===online));
+     const visible=card.isConnected&&!card.classList.contains('hm-sl-removed')&&eligible&&recent&&high&&fit&&limits;
+     card.hidden=!visible;if(visible)shown++;grid.insertBefore(card,input('hm-sl-add'));
+   });
+   input('hm-sl-no-results').hidden=shown>0;
+ }
+ root.querySelectorAll('[data-sl-tab]').forEach(btn=>btn.addEventListener('click',()=>{tab=btn.dataset.slTab;root.querySelectorAll('[data-sl-tab]').forEach(b=>b.classList.toggle('is-active',b===btn));if(tab==='compatibility')input('hm-sl-sort').value='compatibility';apply();}));
+ input('hm-sl-search').addEventListener('input',apply);
+ input('hm-sl-sort').addEventListener('change',apply);
+ input('hm-sl-apply').addEventListener('click',()=>{filters=true;apply();});
+ function reset(){filters=false;tab='all';input('hm-sl-search').value='';input('hm-sl-sort').value='recent';input('hm-sl-min').value=20;input('hm-sl-max').value=45;input('hm-sl-city').value='';input('hm-sl-education').value='';input('hm-sl-career').value='';input('hm-sl-presence').value='';root.querySelectorAll('[data-sl-tab]').forEach(b=>b.classList.toggle('is-active',b.dataset.slTab==='all'));apply();}
+ input('hm-sl-reset').addEventListener('click',reset);input('hm-sl-clear').addEventListener('click',reset);apply();
+})();
 </script>
 @endsection
