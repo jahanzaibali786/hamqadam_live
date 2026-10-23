@@ -146,6 +146,38 @@
 </div></div>
 @endsection
 
+
+@section('modal')
+    @include('modals.package_update_alert_modal')
+
+    <div class="modal fade" id="chat-report-modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form id="chat-report-form">
+                    @csrf
+                    <input type="hidden" name="chat_thread_id" id="chat-report-thread-id">
+                    <div class="modal-header">
+                        <h5 class="modal-title h6">{{ translate('Report Chat') }}</h5>
+                        <button type="button" class="close" data-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2 text-muted fs-12" id="chat-report-target"></div>
+                        <div class="form-group">
+                            <label>{{ translate('Reason') }}</label>
+                            <textarea class="form-control" name="reason" id="chat-report-reason" rows="4" required placeholder="{{ translate('Tell us why you are reporting this chat') }}"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">{{ translate('Cancel') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ translate('Submit Report') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('script')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const rail = document.querySelector('.hm-chat-profile-rail');
@@ -169,6 +201,32 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('[data-chat-filter]').forEach(b => b.classList.toggle('is-active', b === button));
     apply();
   }));
+  const starKey = 'hm-chat-important-{{ (int)auth()->id() }}';
+  let stars = [];
+  try { stars = JSON.parse(localStorage.getItem(starKey) || '[]'); if (!Array.isArray(stars)) stars = []; } catch(e) { stars = []; }
+  rows.forEach(row => {
+    const threadId = String(row.dataset.threadId);
+    row.dataset.chatImportant = stars.includes(threadId) ? '1' : '0';
+    const star = document.createElement('span');
+    star.className = 'hm-chat-star' + (row.dataset.chatImportant === '1' ? ' is-important' : '');
+    star.setAttribute('role','button');
+    star.setAttribute('tabindex','0');
+    star.setAttribute('aria-label','Mark conversation important');
+    star.innerHTML = '<i class="las la-star" aria-hidden="true"></i>';
+    const toggleStar = function(e) {
+      e.preventDefault(); e.stopPropagation();
+      const isImportant = row.dataset.chatImportant !== '1';
+      row.dataset.chatImportant = isImportant ? '1' : '0';
+      star.classList.toggle('is-important',isImportant);
+      star.setAttribute('aria-pressed',String(isImportant));
+      stars = isImportant ? Array.from(new Set(stars.concat([threadId]))) : stars.filter(id=>id!==threadId);
+      try { localStorage.setItem(starKey,JSON.stringify(stars)); } catch(e) {}
+      apply();
+    };
+    star.addEventListener('click',toggleStar);
+    star.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') toggleStar(e); });
+    row.querySelector('.media-body')?.appendChild(star);
+  });
   rows.forEach(row => row.addEventListener('click', () => {
     rail.querySelector('#hm-chat-member-name').textContent = row.dataset.memberName || 'Member';
     const avatar = row.querySelector('img');
@@ -203,39 +261,11 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#hm-chat-action-block')?.addEventListener('click', () => { if (typeof blockChatThread === 'function') blockChatThread(); });
   document.querySelector('#hm-chat-action-report')?.addEventListener('click', () => { if (typeof openChatReportModal === 'function') openChatReportModal(); });
   apply();
+  const activeThread = new URLSearchParams(location.search).get('thread');
+  const initial = (activeThread && rows.find(row => row.dataset.threadId === activeThread)) || rows.find(row => row.dataset.chatArchived !== '1');
+  if (initial && typeof loadChats === 'function') initial.click();
 });
 </script>
-@section('modal')
-    @include('modals.package_update_alert_modal')
-
-    <div class="modal fade" id="chat-report-modal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <form id="chat-report-form">
-                    @csrf
-                    <input type="hidden" name="chat_thread_id" id="chat-report-thread-id">
-                    <div class="modal-header">
-                        <h5 class="modal-title h6">{{ translate('Report Chat') }}</h5>
-                        <button type="button" class="close" data-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-2 text-muted fs-12" id="chat-report-target"></div>
-                        <div class="form-group">
-                            <label>{{ translate('Reason') }}</label>
-                            <textarea class="form-control" name="reason" id="chat-report-reason" rows="4" required placeholder="{{ translate('Tell us why you are reporting this chat') }}"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-dismiss="modal">{{ translate('Cancel') }}</button>
-                        <button type="submit" class="btn btn-primary">{{ translate('Submit Report') }}</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-@endsection
-
-@section('script')
     <script type="text/javascript">
         function loadChats(el){
             $(".selected-chat").each(function() {
