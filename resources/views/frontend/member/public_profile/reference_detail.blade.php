@@ -103,8 +103,14 @@
   <article class="hm-public-feature-card"><div class="hm-public-feature-icon"><i class="las la-graduation-cap"></i></div><h3>Education &amp; Career</h3>
    <div class="hm-public-feature-facts"><span>Education <b>{{ $education?->degree ?: ($member?->education_level ?: 'Not specified') }}</b></span><span>Institution <b>{{ $education?->institution ?: 'Not specified' }}</b></span><span>Career <b>{{ $career?->designation ?: 'Not specified' }}</b></span><span>Company <b>{{ $career?->company ?: 'Not specified' }}</b></span></div>
   </article>
+  <article class="hm-public-feature-card"><div class="hm-public-feature-icon"><i class="las la-moon"></i></div><h3>Religion &amp; Beliefs</h3>
+   <div class="hm-public-feature-facts"><span>Religion <b>{{ $user->spiritual_backgrounds?->religion?->name ?? 'Not specified' }}</b></span><span>Sect <b>{{ $member?->sectMain?->name ?? 'Not specified' }}</b></span><span>School of Thought <b>{{ $member?->schoolOfThought?->name ?? 'Not specified' }}</b></span><span>Tradition <b>{{ $member?->tradition?->name ?? 'Not specified' }}</b></span></div>
+  </article>
+  <article class="hm-public-feature-card"><div class="hm-public-feature-icon"><i class="las la-map-marked-alt"></i></div><h3>Personal &amp; Location</h3>
+   <div class="hm-public-feature-facts"><span>Age <b>{{ $age ? $age.' years' : 'Not specified' }}</b></span><span>Marital Status <b>{{ $member?->marital_status?->name ?? 'Not specified' }}</b></span><span>City <b>{{ $city ?: 'Not specified' }}</b></span><span>Country <b>{{ $country ?: 'Not specified' }}</b></span></div>
+  </article>
   <article class="hm-public-feature-card"><div class="hm-public-feature-icon"><i class="las la-leaf"></i></div><h3>Lifestyle &amp; Interests</h3>
-   <div class="hm-public-feature-facts"><span>Diet <b>{{ $user->lifestyles?->diet ?? 'Not specified' }}</b></span><span>Smoking <b>{{ $user->lifestyles?->smoke ?? 'Not specified' }}</b></span><span>Drinking <b>{{ $user->lifestyles?->drink ?? 'Not specified' }}</b></span><span>Hobbies <b>{{ $member?->hobbies ?: 'Not specified' }}</b></span></div>
+   <div class="hm-public-feature-facts"><span>Diet <b>{{ $user->lifestyles?->diet ?? 'Not specified' }}</b></span><span>Smoking <b>{{ $user->lifestyles?->smoke ?? 'Not specified' }}</b></span><span>Drinking <b>{{ $user->lifestyles?->drink ?? 'Not specified' }}</b></span><span>Hobbies <b>{{ is_array($member?->hobbies) ? implode(', ', $member->hobbies) : ($member?->hobbies ?: 'Not specified') }}</b></span></div>
   </article>
   @if(get_setting('member_partner_expectation_section') == 'on')
   <article class="hm-public-feature-card hm-public-feature-wide"><div class="hm-public-feature-icon"><i class="las la-ring"></i></div><h3>Partner Preferences</h3>
