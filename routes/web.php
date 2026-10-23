@@ -535,6 +535,8 @@ Route::get('/api-docs', function () {
     ]);
 })->name('api.docs');
 
+Route::post('/our-team/consultation', [\App\Http\Controllers\HamqadamEditorialController::class,'consultation'])->middleware('throttle:3,1')->name('editorial.team.consult');
+
 // Curated CMS-managed editorial pages (before the catch-all slug route)
 Route::get('/about-us', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','about')->name('editorial.about');
 Route::get('/our-team', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','team')->name('editorial.team');
