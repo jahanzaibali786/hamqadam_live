@@ -99,7 +99,7 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/email_change/callback', 'email_change_callback')->name('email_change.callback');
     Route::post('/password/reset/email/submit', 'reset_password_with_code')->name('password.update');
     Route::get('/users/login', 'login')->name('user.login');
-    Route::get('/happy-stories', 'happy_stories')->name('happy_stories');
+    Route::get('/happy-stories', [\App\Http\Controllers\PublicEditorialListingController::class, 'stories'])->name('happy_stories');
     Route::get('/story_details/{id}', 'story_details')->name('story_details');
     Route::get('/users/blocked', 'user_account_blocked')->name('user.blocked');
     Route::post('/registration/verification-code-send', 'sendRegVerificationCode')->name('verification_code_send');
@@ -141,9 +141,13 @@ Route::post('/language', [LanguageController::class, 'changeLanguage'])->name('l
 Route::get('/p/{user}', [ProfileShareController::class, 'show'])->whereNumber('user')->name('profile.share');
 Route::get('/packages', [PackageController::class, 'select_package'])->name('packages');
 
+// Email digest: explicit opt-in, throttle and confirmation.
+Route::post('/blog/subscribe', [\App\Http\Controllers\PublicBlogSubscribeController::class,'subscribe'])->middleware('throttle:5,1')->name('public.blog.subscribe');
+Route::get('/blog/unsubscribe/{token}', [\App\Http\Controllers\PublicBlogSubscribeController::class,'unsubscribe'])->name('public.blog.unsubscribe');
+
 //Blog
 Route::controller(BlogController::class)->group(function () {
-    Route::get('/blog', 'all_blog')->name('blog');
+    Route::get('/blog', [\App\Http\Controllers\PublicEditorialListingController::class, 'blogs'])->name('blog');
     Route::get('/blog/{slug}', 'blog_details')->name('blog.details');
     Route::get('/blog/description/{slug}', 'blog_description')->name('blog.description');
 });

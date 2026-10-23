@@ -1,93 +1,17 @@
 @extends('frontend.layouts.app')
+@section('meta_title',$data['meta_title'])
+@section('meta')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-editorial.css') }}?v=1">
+@endsection
 @section('content')
-<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-stories-v2.css') }}?v=2">
-<section class="hq-reference-page-hero hq-stories-reference-hero text-center">
-    <div class="container">
-        <!-- <div class="hq-reference-breadcrumb text-left">{{ translate('Home') }} <span>/</span> {{ translate('Happy Stories') }}</div> -->
-        <span class="hq-reference-eyebrow"><i class="las la-heart"></i> {{ translate('Sacred Unions & Auspicious Beginnings') }}</span>
-        <h1>{{ translate('Real Happy Stories of Lifetime Companionship')}}</h1>
-        <p>{{ translate('Read how thousands of respectful families and couples found their destined match through Hamqadam’s verified, dignified matrimonial sanctuary.') }}</p>
-        <p class="mt-3 mb-0"><strong>{{ $happy_stories->total() }}</strong> {{ translate('published community stories') }} · {{ translate('Shared with permission') }}</p>
-    </div>
-</section>
-
-<section class="hq-story-page hq-reference-story-page hq-design-section">
-    <div class="container">
-        <div class="hq-design-section-title text-left mx-0 mb-4">
-            <span class="eyebrow">{{ translate('Community Journeys') }}</span>
-            <h2>{{ translate('Real Stories, Real Connections') }}</h2>
-            <p>{{ translate('Read stories shared and approved by our community.') }}</p>
-        </div>
-        <div class="hq-story-grid">
-            @foreach ($happy_stories as $happy_story)
-                @php($photo = array_values(array_filter(explode(',', (string)$happy_story->photos))))
-                <article class="card hq-story-card shadow-none">
-                    <a href="{{ route('story_details', \App\Support\StoryPublicId::encode((int)$happy_story->id)) }}" class="text-reset d-block">
-                        <img src="{{ !empty($photo[0]) ? uploaded_asset($photo[0]) : static_asset('assets/img/placeholder.jpg') }}" class="hq-story-cover" loading="lazy" alt="{{ $happy_story->title }}">
-                    </a>
-                    <div class="hq-story-card-copy p-4">
-                        <span class="hq-story-card-badge"><i class="las la-heart"></i> {{ translate('Community Story') }}</span>
-                        <h2 class="h5 mt-2 mb-2"><a href="{{ route('story_details', \App\Support\StoryPublicId::encode((int)$happy_story->id)) }}" class="text-dark">{{ $happy_story->title }}</a></h2>
-                        <p class="text-muted fs-10 mb-3">{{ \Illuminate\Support\Str::limit(strip_tags((string)$happy_story->details), 135) }}</p>
-                        <div class="d-flex justify-content-between align-items-center fs-9 text-muted">
-                            <span><i class="las la-calendar mr-1"></i>{{ $happy_story->created_at?->format('M Y') }}</span>
-                            <a href="{{ route('story_details', \App\Support\StoryPublicId::encode((int)$happy_story->id)) }}" class="text-primary fw-600">{{ translate('View Story') }} <i class="las la-arrow-right"></i></a>
-                        </div>
-                    </div>
-                </article>
-            @endforeach
-            @if($happy_stories->isEmpty())<div class="hq-story-empty"><i class="las la-heart"></i><h3>{{ translate('More love stories are on their way') }}</h3><p>{{ translate('Be the first to share an inspiring journey.') }}</p></div>@endif
-        </div>
-
-        <div class="aiz-pagination aiz-pagination-center mt-4">{{ $happy_stories->appends(request()->input())->links() }}</div>
-
-        <div class="hq-story-success-cta">
-            <div>
-                <span class="hq-reference-eyebrow"><i class="las la-gift"></i> {{ translate('Auspicious Gift for Newlyweds') }}</span>
-                <h2>{{ translate('Found Your Soulmate on Hamqadam?') }}</h2>
-                <p>{{ translate('Share your wedding journey and inspire millions of hopeful families looking for sincere, vetted alliances.') }}</p>
-                <a href="{{ auth()->check() ? route('happy_story.member') : route('login') }}" class="btn btn-light btn-sm mr-2"><i class="las la-heart mr-1"></i>{{ translate('Submit Your Success Story') }}</a>
-                <a href="{{ route('contact_us') }}" class="btn btn-outline-light btn-sm"><i class="las la-phone mr-1"></i>{{ translate('Dedicated Helpline') }}</a>
-            </div>
-            <div class="hq-story-hamper"><i class="las la-gift fs-30 mb-2"></i><strong class="d-block">{{ translate('Hamqadam Hamper') }}</strong><small>{{ translate('A keepsake for selected verified success stories.') }}</small></div>
-        </div>
-    </div>
-</section>
-
-<section class="hq-design-section">
-    <div class="container">
-        <div class="hq-design-section-title">
-            <span class="eyebrow">{{ translate('Parent & Guardian Guidance') }}</span>
-            <h2>{{ translate("Safeguarding Your Family’s Sacred Journey") }}</h2>
-            <p>{{ translate('Practical advice and sanctuary protocols designed to keep proposals serene, secure, and aligned with cultural traditions.') }}</p>
-        </div>
-        <div class="hq-safety-grid">
-            <div class="hq-safety-card"><i class="las la-shield-alt"></i><h4>{{ translate('Guardian Privacy Shield') }}</h4><p>{{ translate('Control numbers and high-resolution portraits remain shielded until both families explicitly grant mutual consent.') }}</p></div>
-            <div class="hq-safety-card"><i class="las la-door-open"></i><h4>{{ translate('First Meeting Protocols') }}</h4><p>{{ translate('Our elders advise conducting the first discussion through a scheduled family conference call or dignified home visit with clear permissions.') }}</p></div>
-            <div class="hq-safety-card"><i class="las la-id-card"></i><h4>{{ translate('Vetted Identity Verification') }}</h4><p>{{ translate('Hamqadam reviews official verification details before granting the verified member status shown throughout the platform.') }}</p></div>
-        </div>
-        <div class="hq-support-cta mt-4"><div><h3>{{ translate('Have Questions About Family Safety?') }}</h3><p>{{ translate('Our Matrimonial Advisory Board conducts confidential parent consultations.') }}</p></div><div class="hq-support-cta-actions"><a href="{{ route('contact_us') }}" class="btn btn-light">{{ translate('Book Guardian Communication') }}</a></div></div>
-    </div>
-</section>
-@endsection
-
-@section('modal')
-    @include('modals.login_modal')
-    @include('modals.package_update_alert_modal')
-@endsection
-
-@section('script')
-<script type="text/javascript">
-
-	// Login alert
-    function loginModal(){
-        $('#LoginModal').modal();
-    }
-
-    // Package update alert
-    function package_update_alert(){
-      $('.package_update_alert_modal').modal('show');
-    }
-
-</script>
+<div class="hqe hqe-stories">
+<section class="hqe-hero"><div class="hqe-container hqe-center"><span class="hqe-kicker"><i class="las la-heart"></i> {{ $data['hero_badge'] }}</span><h1>{{ $data['hero_title'] }}</h1><p>{{ $data['hero_description'] }}</p><div class="hqe-actions"><a class="hqe-button" href="{{ url($data['hero_primary_link']) }}">{{ $data['hero_primary_text'] }}</a><a class="hqe-button hqe-button-soft" href="{{ auth()->check() ? route('happy_story.member') : route('login') }}">{{ $data['hero_secondary_text'] }}</a></div><div class="hqe-hero-trust"><span>{{ $data['hero_assurance_1'] }}</span><span>{{ $data['hero_assurance_2'] }}</span><span>{{ $data['hero_assurance_3'] }}</span></div></div></section>
+<section class="hqe-journey"><div class="hqe-container"><header class="hqe-center"><span class="hqe-label">{{ $data['journey_badge'] }}</span><h2>{{ $data['journey_title'] }}</h2><p>{{ $data['journey_description'] }}</p></header><div class="hqe-journey-grid">@foreach($data['journey_steps'] as $step)<article><span>{{ str_pad($loop->iteration,2,'0',STR_PAD_LEFT) }}</span><h3>{{ $step['title'] }}</h3><p>{{ $step['description'] }}</p></article>@endforeach</div></div></section>
+<main class="hqe-container">
+@if($featured)<section class="hqe-featured-story"><div class="hqe-section-head"><div><span class="hqe-label">{{ $data['featured_badge'] }}</span><h2>{{ $data['featured_title'] }}</h2></div><small>{{ $data['featured_label'] }}</small></div><div class="hqe-feature-story-shell">@php($photos=array_values(array_filter(explode(',',(string)$featured->photos))))<a class="hqe-feature-story-image" href="{{ route('story_details',\App\Support\StoryPublicId::encode((int)$featured->id)) }}"><img src="{{ !empty($photos[0]) ? (uploaded_asset(trim($photos[0])) ?: static_asset('assets/img/placeholder.jpg')) : static_asset('assets/img/placeholder.jpg') }}" alt="{{ $featured->title }}"></a><div class="hqe-feature-story-text"><span class="hqe-chip">{{ $data['featured_quote_label'] }}</span><small>{{ $featured->created_at?->format('F Y') }}</small><h3>{{ $featured->title }}</h3><blockquote>“{{ \Illuminate\Support\Str::limit(trim(strip_tags((string)$featured->details)),280) }}”</blockquote><div class="hqe-story-meta"><strong>{{ $featured->partner_name }}</strong><span>{{ $featured->created_at?->format('F Y') }}</span></div><a class="hqe-button" href="{{ route('story_details',\App\Support\StoryPublicId::encode((int)$featured->id)) }}">{{ $data['featured_button'] }}</a></div></div></section>@endif
+<section class="hqe-stories-list"><div class="hqe-section-head"><div><span class="hqe-label">{{ $data['stories_badge'] }}</span><h2>{{ $data['stories_title'] }}</h2></div><p>{{ $data['stories_description'] }}</p></div><div class="hqe-stories-grid">@forelse($happy_stories as $story)@php($photos=array_values(array_filter(explode(',',(string)$story->photos))))<article class="hqe-story-card"><a href="{{ route('story_details',\App\Support\StoryPublicId::encode((int)$story->id)) }}"><img src="{{ !empty($photos[0]) ? (uploaded_asset(trim($photos[0])) ?: static_asset('assets/img/placeholder.jpg')) : static_asset('assets/img/placeholder.jpg') }}" alt="{{ $story->title }}" loading="lazy"></a><div><small>{{ $story->created_at?->format('M Y') }}</small><h3><a href="{{ route('story_details',\App\Support\StoryPublicId::encode((int)$story->id)) }}">{{ $story->title }}</a></h3><p>“{{ \Illuminate\Support\Str::limit(trim(strip_tags((string)$story->details)),155) }}”</p><a class="hqe-story-link" href="{{ route('story_details',\App\Support\StoryPublicId::encode((int)$story->id)) }}">{{ $data['story_card_button'] }} <i class="las la-arrow-right"></i></a></div></article>@empty<div class="hqe-empty"><h3>{{ $data['stories_empty_title'] }}</h3><p>{{ $data['stories_empty_description'] }}</p></div>@endforelse</div><div class="hqe-pagination">{{ $happy_stories->links() }}</div></section>
+<section class="hqe-trust"><div><span class="hqe-label">{{ $data['trust_badge'] }}</span><h2>{{ $data['trust_title'] }}</h2><p>{{ $data['trust_description'] }}</p>@foreach($data['trust_items'] as $item)<article><span><i class="las la-{{ $item['icon'] }}"></i></span><div><h3>{{ $item['title'] }}</h3><p>{{ $item['description'] }}</p></div></article>@endforeach</div><aside><div class="hqe-trust-ring"><span><i class="las la-heart"></i></span></div><h3>{{ $data['trust_metric_value'] }}</h3><p>{{ $data['trust_metric_label'] }}</p><small>{{ $data['trust_metric_footer'] }}</small></aside></section>
+<section class="hqe-share"><div><span class="hqe-kicker">{{ $data['share_badge'] }}</span><h2>{{ $data['share_title'] }}</h2><p>{{ $data['share_description'] }}</p></div><div><a class="hqe-button hqe-button-white" href="{{ auth()->check() ? route('happy_story.member') : route('login') }}">{{ $data['share_button'] }}</a><small>{{ $data['share_privacy_note'] }}</small></div></section>
+<section class="hqe-final-cta hqe-center"><span class="hqe-kicker">{{ $data['cta_badge'] }}</span><h2>{{ $data['cta_title'] }}</h2><p>{{ $data['cta_description'] }}</p><div class="hqe-actions"><a class="hqe-button" href="{{ url($data['cta_primary_link']) }}">{{ $data['cta_primary_text'] }}</a><a class="hqe-button hqe-button-soft" href="{{ url($data['cta_secondary_link']) }}">{{ $data['cta_secondary_text'] }}</a></div><small>{{ $data['cta_assurance'] }}</small></section>
+</main></div>
 @endsection

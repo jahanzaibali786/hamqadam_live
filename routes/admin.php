@@ -199,6 +199,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::resource('/happy-story', HappyStoryController::class);
     Route::post('/happy-story/update-story-status',[HappyStoryController::class, 'approval_status'])->name('happy_story_approval.status');
 
+    Route::get('/website/public-content/{page}', [\App\Http\Controllers\Admin\PublicEditorialSettingsController::class, 'edit'])->whereIn('page', ['blogs','stories'])->middleware('permission:edit_pages')->name('website.public_editorial.edit');
+    Route::post('/website/public-content/{page}', [\App\Http\Controllers\Admin\PublicEditorialSettingsController::class, 'update'])->whereIn('page', ['blogs','stories'])->middleware('permission:edit_pages')->name('website.public_editorial.update');
+
     //Blog Section
     Route::resource('blog-category', BlogCategoryController::class)->except(['destroy']);
     Route::get('/blog-category/destroy/{id}', [BlogCategoryController::class, 'destroy'])->name('blog-category.destroy');
