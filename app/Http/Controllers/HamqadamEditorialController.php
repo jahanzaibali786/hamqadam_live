@@ -113,7 +113,23 @@ class HamqadamEditorialController extends Controller
             if (!array_is_list($value) || count($value)>40) throw new \InvalidArgumentException('Invalid or oversized repeatable section.');
             $template = $schema[0] ?? null;
             if ($template === null) return [];
-            return array_map(fn($item)=>$this->sanitize($item,$template,$depth+1),$value);
+            // Policy clauses contain different editable components. Select the
+            // closest allowed template so sections survive saving/reordering.
+            return array_map(function ($item) use ($schema, $template, $depth) {
+                if (is_array($item) && !array_is_list($item) && is_array($template)) {
+                    $best = $template;
+                    $score = -1;
+                    foreach ($schema as $candidate) {
+                        if (!is_array($candidate) || array_is_list($candidate)) continue;
+                        $matching = count(array_intersect(array_keys($candidate),array_keys($item)));
+                        $missing = count(array_diff(array_keys($item),array_keys($candidate)));
+                        $rank = $matching * 3 - $missing * 8;
+                        if ($rank > $score) { $score = $rank; $best = $candidate; }
+                    }
+                    return $this->sanitize($item, $best, $depth+1);
+                }
+                return $this->sanitize($item,$template,$depth+1);
+            },$value);
         }
         $clean=[];
         foreach ($schema as $key=>$child) $clean[$key]=$this->sanitize($value[$key]??$child,$child,$depth+1);
