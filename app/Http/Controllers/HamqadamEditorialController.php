@@ -29,7 +29,7 @@ class HamqadamEditorialController extends Controller
     public function show(string $page)
     {
         $data = self::content($page);
-        return view('frontend.editorial.'.$page, ['data'=>$data,'pageKey'=>$page]);
+        return view('frontend.editorial.base', ['data'=>$data,'pageKey'=>$page]);
     }
 
     public function edit(string $page)
