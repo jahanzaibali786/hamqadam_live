@@ -11,7 +11,8 @@ class BlogCategoryController extends Controller
     public function __construct()
     {
         $this->middleware(['permission:show_blog_categories'])->only('index');
-        $this->middleware(['permission:edit_blog_category'])->only('edit');
+        $this->middleware(['permission:add_blog_category'])->only('store');
+        $this->middleware(['permission:edit_blog_category'])->only(['edit', 'update']);
         $this->middleware(['permission:delete_blog_category'])->only('destroy');
     }
 

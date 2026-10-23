@@ -25,7 +25,7 @@
 <div class="hm-member-app" style="--hm-promo-art:url('{{ static_asset('assets/img/member-reference-couple.svg') }}')">
   <header class="hm-member-topbar">
     <button type="button" class="hm-member-mobile-menu" aria-controls="hm-member-sidebar" aria-expanded="false" aria-label="Open dashboard navigation"><i class="las la-bars"></i></button>
-    <a class="hm-member-topbar-brand" href="{{ route('dashboard') }}" aria-label="Hamqadam Dashboard"><span class="hm-member-heart hm-member-heart-pair"><img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}" alt="" aria-hidden="true"></span><span>Hamqadam<small>Risthon ki duniya</small></span></a>
+    <a class="hm-member-topbar-brand" href="{{ route('dashboard') }}" aria-label="Hamqadam Dashboard"><span class="hm-member-heart hm-member-heart-pair"><img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true"></span><span>Hamqadam<small>Risthon ki duniya</small></span></a>
     @php
       $primaryMemberNavigation = [
         ['label' => 'Home', 'route' => 'member.reference.home', 'active' => request()->routeIs('member.reference.home')],

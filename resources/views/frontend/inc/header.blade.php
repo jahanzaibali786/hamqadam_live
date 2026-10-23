@@ -6,13 +6,15 @@
     <header class="hq-reference-navbar">
         <div class="container hq-reference-navbar-inner">
             <a href="{{ route('home') }}" class="hq-reference-brand">
-                <span class="hq-reference-brand-mark"><i class="las la-heart"></i></span>
+                <span class="hq-reference-brand-mark"><img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true"></span>
                 <span><strong>{{ get_setting('website_name') ?: 'Hamqadam' }}</strong><small>{{ translate('Matrimonial Sanctuary') }}</small></span>
             </a>
             <nav class="hq-reference-menu d-none d-lg-flex">
+                <a class="{{ areActiveRoutes(['home'], 'is-active') }}" href="{{ route('home') }}">{{ translate('Home') }}</a>
                 <a class="{{ areActiveRoutes(['editorial.about'], 'is-active') }}" href="{{ route('editorial.about') }}">{{ translate('About Us') }}</a>
                 <a class="{{ areActiveRoutes(['editorial.team'], 'is-active') }}" href="{{ route('editorial.team') }}">{{ translate('Our Team') }}</a>
                 <a class="{{ areActiveRoutes(['happy_stories'], 'is-active') }}" href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a>
+                <a class="{{ areActiveRoutes(['blog', 'blog.details', 'blog.description'], 'is-active') }}" href="{{ route('blog') }}">{{ translate('Blogs') }}</a>
                 <a class="{{ areActiveRoutes(['contact_us'], 'is-active') }}" href="{{ route('contact_us') }}">{{ translate('Help & Support') }}</a>
             </nav>
             <div class="hq-reference-actions">
@@ -55,9 +57,11 @@
             </div>
         </div>
         <div class="hq-reference-mobile-menu d-lg-none">
+            <a href="{{ route('home') }}">{{ translate('Home') }}</a>
             <a href="{{ route('editorial.about') }}">{{ translate('About Us') }}</a>
             <a href="{{ route('editorial.team') }}">{{ translate('Our Team') }}</a>
             <a href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a>
+            <a href="{{ route('blog') }}">{{ translate('Blogs') }}</a>
             <a href="{{ route('contact_us') }}">{{ translate('Help & Support') }}</a>
         </div>
     </header>
@@ -229,21 +233,18 @@
             <div class="container">
                 <div class="d-lg-flex justify-content-between text-center text-lg-left">
                     <div class="logo">
-                        <a href="{{ route('home') }}" class="d-inline-block">
-                            @if(get_setting('header_logo') != null)
-                            <img src="{{ uploaded_asset(get_setting('header_logo')) }}" alt="{{ env('APP_NAME') }}"
-                                class="mw-100 h-30px"style="width: 140px; height:80px;">
-                            @else
-                            <img src="{{ static_asset('assets/img/logo.png') }}" alt="{{ env('APP_NAME') }}"
-                                class="mw-100 h-30px"style="width: 140px; height:80px;">
-                            @endif
+                        <a href="{{ route('home') }}" class="hq-legacy-brand">
+                            <span class="hq-legacy-brand-mark"><img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true"></span>
+                            <span>{{ get_setting('website_name') ?: 'Hamqadam' }}</span>
                         </a>
                     </div>
                     <ul class="mb-0 pl-0 ml-lg-auto d-lg-flex align-items-stretch justify-content-center justify-content-lg-start mobile-hor-swipe">
                         @foreach ([
+                            ['route' => 'home', 'label' => 'Home'],
                             ['route' => 'editorial.about', 'label' => 'About Us'],
                             ['route' => 'editorial.team', 'label' => 'Our Team'],
                             ['route' => 'happy_stories', 'label' => 'Success Stories'],
+                            ['route' => 'blog', 'label' => 'Blogs'],
                             ['route' => 'contact_us', 'label' => 'Help & Support'],
                         ] as $hqNavItem)
                             <li class="d-inline-block d-lg-flex pb-1 {{ areActiveRoutes([$hqNavItem['route']], 'bg-primary-grad') }}">

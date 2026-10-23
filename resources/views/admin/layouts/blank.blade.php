@@ -10,6 +10,7 @@
 
     <!-- Favicon -->
     <title>{{ config('app.name', 'Matrimonial') }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ static_asset('favicon.svg') }}?v=20261023">
 
     <!-- google font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700">

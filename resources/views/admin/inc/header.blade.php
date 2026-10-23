@@ -6,9 +6,9 @@
             </button>
         </div>
         <div class="aiz-topbar-logo-wrap d-flex align-items-center justify-content-start">
-            <a href="{{ route('admin.dashboard') }}" class="d-block">
-                <img src="{{ uploaded_asset(get_setting('system_logo')) }}" class="img-fluid" style="width: 140px;height: 80px;
-">
+            <a href="{{ route('admin.dashboard') }}" class="hq-admin-brand hq-admin-brand-mobile">
+                <img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true">
+                <span>{{ get_setting('website_name') ?: 'Hamqadam' }}</span>
             </a>
         </div>
     </div>

@@ -1,8 +1,9 @@
 <div class="aiz-sidebar-wrap">
     <div class="aiz-sidebar left c-scrollbar">
         <div class="aiz-side-nav-logo-wrap">
-            <a href="{{ route('admin.dashboard') }}" class="d-block">
-                <img src="{{ uploaded_asset(get_setting('system_logo')) }}" class="img-fluid">
+            <a href="{{ route('admin.dashboard') }}" class="hq-admin-brand">
+                <img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true">
+                <span>{{ get_setting('website_name') ?: 'Hamqadam' }}</span>
             </a>
         </div>
         <div class="aiz-side-nav-wrap">
@@ -721,7 +722,7 @@
                 <!-- Website Setup -->
                 @if (auth()->user()->can('header') ||
                 auth()->user()->can('footer') ||
-                auth()->user()->can('show_all_pages') ||
+                auth()->user()->can('edit_pages') ||
                 auth()->user()->can('appearances'))
                 <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
@@ -748,14 +749,6 @@
                         @foreach(['about'=>'About Us','team'=>'Our Team','privacy'=>'Privacy Policy','terms'=>'Terms & Conditions'] as $hqKey=>$hqLabel)
                         <li class="aiz-side-nav-item"><a class="aiz-side-nav-link" href="{{ route('website.editorial.edit',$hqKey) }}"><span class="aiz-side-nav-text">{{ $hqLabel }}</span></a></li>
                         @endforeach
-                        @endcan
-                        @can('show_all_pages')
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('custom-pages.index') }}"
-                                class="aiz-side-nav-link {{ areActiveRoutes(['website.pages', 'custom-pages.create', 'custom-pages.edit']) }}">
-                                <span class="aiz-side-nav-text">{{ translate('Pages') }}</span>
-                            </a>
-                        </li>
                         @endcan
                         @can('appearances')
                         <li class="aiz-side-nav-item">
