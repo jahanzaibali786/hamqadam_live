@@ -746,6 +746,13 @@
                         @endcan
                         @can('appearances')
                         <li class="aiz-side-nav-item">
+                            <a href="{{ route('website.login_page') }}" class="aiz-side-nav-link {{ areActiveRoutes(['website.login_page']) }}">
+                                <span class="aiz-side-nav-text">{{ translate('Login Page') }}</span>
+                            </a>
+                        </li>
+                        @endcan
+                        @can('appearances')
+                        <li class="aiz-side-nav-item">
                             <a href="{{ route('website.appearances') }}" class="aiz-side-nav-link">
                                 <span class="aiz-side-nav-text">{{ translate('Appearance') }}</span>
                             </a>
