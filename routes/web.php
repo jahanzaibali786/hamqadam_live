@@ -535,5 +535,11 @@ Route::get('/api-docs', function () {
     ]);
 })->name('api.docs');
 
+// Curated CMS-managed editorial pages (before the catch-all slug route)
+Route::get('/about-us', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','about')->name('editorial.about');
+Route::get('/our-team', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','team')->name('editorial.team');
+Route::get('/privacy-policy', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','privacy')->name('editorial.privacy');
+Route::get('/terms-conditions', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','terms')->name('editorial.terms');
+
 //Custom page
 Route::get('/{slug}', [PageController::class, 'show_custom_page'])->name('custom-pages.show_custom_page');
