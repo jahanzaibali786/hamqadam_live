@@ -38,7 +38,7 @@
             $fallback=static_asset(($profile?->gender ?? 1) == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png');
             $avatar=$person->photo && show_profile_picture($person) ? uploaded_asset($person->photo) : $fallback;
           @endphp
-          <article class="hm-sl-card" id="shortlisted_member_{{ $person->id }}" data-name="{{ strtolower(trim($person->first_name.' '.$person->last_name)) }}" data-age="{{ $age ?? 0 }}" data-score="{{ round($score) }}" data-city="{{ strtolower($city) }}" data-career="{{ strtolower($career) }}" data-education="{{ strtolower($person->educations?->first()?->degree ?? '') }}" data-online="{{ $online?1:0 }}" data-recent="{{ $shortlist->created_at?->timestamp ?? 0 }}">
+          <article class="hm-sl-card" id="shortlisted_member_{{ $person->id }}" data-name="{{ strtolower(trim($person->first_name.' '.$person->last_name)) }}" data-age="{{ $age ?? 0 }}" data-score="{{ round($score) }}" data-city="{{ strtolower($city) }}" data-career="{{ strtolower($career) }}" data-education="{{ strtolower($person->education?->first()?->degree ?? '') }}" data-online="{{ $online?1:0 }}" data-recent="{{ $shortlist->created_at?->timestamp ?? 0 }}">
             <div class="hm-sl-image">
               <img src="{{ $avatar }}" alt="{{ $person->first_name }} {{ $person->last_name }}" loading="lazy" onerror="this.onerror=null;this.src='{{ $fallback }}'">
               <span class="hm-sl-online {{ $online?'is-online':'' }}" title="{{ $online?'Online':'Offline' }}"></span>
