@@ -18,10 +18,33 @@ class ChatController extends Controller
 {
     public function index(Request $request)
     {
-        $chat_threads = ChatThread::where('sender_user_id', Auth::user()->id)
-            ->orWhere('receiver_user_id', Auth::user()->id)
+        $viewerId = (int) Auth::id();
+        $chat_threads = ChatThread::query()
+            ->where(function ($query) use ($viewerId) {
+                $query->where('sender_user_id', $viewerId)
+                    ->orWhere('receiver_user_id', $viewerId);
+            })
+            ->with([
+                'sender.member',
+                'receiver.member',
+                'sender.addresses.city',
+                'receiver.addresses.city',
+                'chats',
+            ])
+            ->orderByDesc('updated_at')
             ->get();
-        return view('frontend.member.messages.index', compact('chat_threads'));
+
+        // Display stored matching scores only; never invent compatibility percentages.
+        $partnerIds = $chat_threads->map(function ($thread) use ($viewerId) {
+            return (int) ($thread->sender_user_id === $viewerId
+                ? $thread->receiver_user_id : $thread->sender_user_id);
+        })->unique()->all();
+        $chatMatchScores = \\App\\Models\\ProfileMatch::query()
+            ->where('user_id', $viewerId)
+            ->whereIn('match_id', $partnerIds)
+            ->pluck('match_percentage', 'match_id');
+
+        return view('frontend.member.messages.index', compact('chat_threads', 'chatMatchScores'));
     }
     public function chat_view($id)
     {
