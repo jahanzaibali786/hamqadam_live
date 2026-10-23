@@ -38,11 +38,11 @@
                               @php
                                   $user_to_show = $current_user == $single_chat_thread->sender->id ? 'receiver' : 'sender';
                               @endphp
-                              <a href="javascript:void(0)" class="chat-user-item p-3 d-block text-inherit" data-chat-unread="{{ $single_chat_thread->chats->where('sender_user_id', '!=', $current_user)->where('seen', 0)->count() }}" data-chat-archived="{{ filled($single_chat_thread->{$single_chat_thread->archivedColumnForUserId((int)$current_user)}) ? '1' : '0' }}" data-member-name="{{ $single_chat_thread->$user_to_show->first_name.' '.$single_chat_thread->$user_to_show->last_name }}" data-member-url="{{ route('member_profile', $single_chat_thread->$user_to_show->id) }}" data-member-meta="{{ $single_chat_thread->$user_to_show->member?->birthday ? \\Carbon\\Carbon::parse($single_chat_thread->$user_to_show->member->birthday)->age.' years' : '' }} · {{ $single_chat_thread->$user_to_show->addresses?->first()?->city?->name ?? '' }}"
+                              <a href="javascript:void(0)" class="chat-user-item p-3 d-block text-inherit" data-chat-unread="{{ $single_chat_thread->chats->where('sender_user_id', '!=', $current_user)->where('seen', 0)->count() }}" data-chat-archived="{{ filled($single_chat_thread->{$single_chat_thread->archivedColumnForUserId((int)$current_user)}) ? '1' : '0' }}" data-member-name="{{ $single_chat_thread->$user_to_show->first_name.' '.$single_chat_thread->$user_to_show->last_name }}" data-member-url="{{ route('member_profile', $single_chat_thread->$user_to_show->id) }}" data-member-meta="{{ $single_chat_thread->$user_to_show->member?->birthday ? \Carbon\Carbon::parse($single_chat_thread->$user_to_show->member->birthday)->age.' years' : '' }} · {{ $single_chat_thread->$user_to_show->addresses?->first()?->city?->name ?? '' }}"
  data-member-career="{{ $single_chat_thread->$user_to_show->career?->first()?->designation ?? '' }}"
  data-member-sect="{{ $single_chat_thread->$user_to_show->member?->sectMain?->name ?? '' }}"
  data-member-marital="{{ $single_chat_thread->$user_to_show->member?->marital_status?->name ?? '' }}"
- data-member-verified="{{ app(\\App\\Services\\BadgeService::class)->isVerified($single_chat_thread->$user_to_show->member) ? '1' : '0' }}"
+ data-member-verified="{{ app(\App\Services\BadgeService::class)->isVerified($single_chat_thread->$user_to_show->member) ? '1' : '0' }}"
  data-match-score="{{ $chatMatchScores[$single_chat_thread->$user_to_show->id] ?? '' }}" data-thread-id="{{ $single_chat_thread->id }}" data-url="{{ route('chat_view', $single_chat_thread->id) }}" data-refresh="{{ route('chat_refresh', $single_chat_thread->id) }}" onclick="loadChats(this)">
                                   @if($current_user == $single_chat_thread->sender->id)
                                     @php $user_to_show = 'receiver';  @endphp
@@ -64,7 +64,7 @@
                                           @endif
                                       </span>
                                       <div class="media-body minw-0">
-                                          <h6 class="mt-0 mb-1 fs-14 text-truncate">{{ $single_chat_thread->$user_to_show->first_name.' '.$single_chat_thread->$user_to_show->last_name }} @if(app(\\App\\Services\\BadgeService::class)->isVerified($single_chat_thread->$user_to_show->member)) <span class="hm-chat-verified"><i class="las la-check-circle"></i> Verified</span>@endif</h6>
+                                          <h6 class="mt-0 mb-1 fs-14 text-truncate">{{ $single_chat_thread->$user_to_show->first_name.' '.$single_chat_thread->$user_to_show->last_name }} @if(app(\App\Services\BadgeService::class)->isVerified($single_chat_thread->$user_to_show->member)) <span class="hm-chat-verified"><i class="las la-check-circle"></i> Verified</span>@endif</h6>
                                             @php
                                                 $visible_last_chat = $single_chat_thread->chats->filter(function ($chat) use ($current_user, $single_chat_thread) {
                                                     if ((int) $current_user === (int) $single_chat_thread->sender->id) {

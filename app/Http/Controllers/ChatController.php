@@ -39,7 +39,7 @@ class ChatController extends Controller
             return (int) ($thread->sender_user_id === $viewerId
                 ? $thread->receiver_user_id : $thread->sender_user_id);
         })->unique()->all();
-        $chatMatchScores = \\App\\Models\\ProfileMatch::query()
+        $chatMatchScores = \App\Models\ProfileMatch::query()
             ->where('user_id', $viewerId)
             ->whereIn('match_id', $partnerIds)
             ->pluck('match_percentage', 'match_id');
