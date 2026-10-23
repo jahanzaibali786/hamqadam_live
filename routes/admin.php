@@ -351,6 +351,10 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::get('/website/editorial/{page}', [\App\Http\Controllers\HamqadamEditorialController::class,'edit'])->whereIn('page', ['about','team','privacy','terms'])->middleware('permission:edit_pages')->name('website.editorial.edit');
     Route::post('/website/editorial/{page}', [\App\Http\Controllers\HamqadamEditorialController::class,'update'])->whereIn('page', ['about','team','privacy','terms'])->middleware('permission:edit_pages')->name('website.editorial.update');
 
+    Route::get('/advisor-consultations', [\App\Http\Controllers\Admin\AdvisorConsultationController::class, 'index'])->middleware('permission:show_contact_us_queries')->name('admin.advisor_consultations.index');
+    Route::get('/advisor-consultations/{consultation}', [\App\Http\Controllers\Admin\AdvisorConsultationController::class, 'show'])->whereNumber('consultation')->middleware('permission:show_contact_us_queries')->name('admin.advisor_consultations.show');
+    Route::patch('/advisor-consultations/{consultation}', [\App\Http\Controllers\Admin\AdvisorConsultationController::class, 'update'])->whereNumber('consultation')->middleware('permission:show_contact_us_queries')->name('admin.advisor_consultations.update');
+
     // website setting
     Route::group(['prefix' => 'website'], function () {
         Route::controller(SettingController::class)->group(function () {
