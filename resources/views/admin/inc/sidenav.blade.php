@@ -22,6 +22,74 @@
                     </a>
                 </li>
 
+                {{-- Unified CMS: page and presentation editors are available to all authenticated admin-panel users. --}}
+                <li class="aiz-side-nav-item">
+                    <a href="#" class="aiz-side-nav-link" aria-label="Content Management System">
+                        <i class="las la-layer-group aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">CMS</span>
+                        <span class="aiz-side-nav-arrow"></span>
+                    </a>
+                    <ul class="aiz-side-nav-list level-2">
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('custom-pages.index') }}"
+                               class="aiz-side-nav-link {{ areActiveRoutes(['custom-pages.index', 'custom-pages.create', 'custom-pages.edit', 'custom-pages.show']) }}">
+                                <span class="aiz-side-nav-text">Custom Pages &amp; Homepage</span>
+                            </a>
+                        </li>
+                        @foreach (['about' => 'About Us', 'team' => 'Our Team', 'privacy' => 'Privacy Policy', 'terms' => 'Terms & Conditions'] as $cmsKey => $cmsLabel)
+                            <li class="aiz-side-nav-item">
+                                <a href="{{ route('website.editorial.edit', $cmsKey) }}"
+                                   class="aiz-side-nav-link {{ request()->routeIs('website.editorial.edit') && request()->route('page') === $cmsKey ? 'active' : '' }}">
+                                    <span class="aiz-side-nav-text">{{ $cmsLabel }}</span>
+                                </a>
+                            </li>
+                        @endforeach
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('website.login_page') }}"
+                               class="aiz-side-nav-link {{ areActiveRoutes(['website.login_page']) }}">
+                                <span class="aiz-side-nav-text">Login Page</span>
+                            </a>
+                        </li>
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('website.public_editorial.edit', 'blogs') }}"
+                               class="aiz-side-nav-link {{ request()->routeIs('website.public_editorial.edit') && request()->route('page') === 'blogs' ? 'active' : '' }}">
+                                <span class="aiz-side-nav-text">Blog Page Design</span>
+                            </a>
+                        </li>
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('website.public_editorial.edit', 'stories') }}"
+                               class="aiz-side-nav-link {{ request()->routeIs('website.public_editorial.edit') && request()->route('page') === 'stories' ? 'active' : '' }}">
+                                <span class="aiz-side-nav-text">Success Stories Design</span>
+                            </a>
+                        </li>
+                        {{-- Publishing/moderation keeps its established route-level permissions. --}}
+                        @can('show_blogs')
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('blog.index') }}"
+                               class="aiz-side-nav-link {{ areActiveRoutes(['blog.index', 'blog.create', 'blog.edit']) }}">
+                                <span class="aiz-side-nav-text">Blog Posts</span>
+                            </a>
+                        </li>
+                        @endcan
+                        @can('show_blog_categories')
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('blog-category.index') }}"
+                               class="aiz-side-nav-link {{ areActiveRoutes(['blog-category.index', 'blog-category.create', 'blog-category.edit']) }}">
+                                <span class="aiz-side-nav-text">Blog Categories</span>
+                            </a>
+                        </li>
+                        @endcan
+                        @can('show_happy_stories')
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('happy-story.index') }}"
+                               class="aiz-side-nav-link {{ areActiveRoutes(['happy-story.index', 'happy-story.create', 'happy-story.edit', 'happy-story.show']) }}">
+                                <span class="aiz-side-nav-text">Happy Stories Submissions</span>
+                            </a>
+                        </li>
+                        @endcan
+                    </ul>
+                </li>
+
                 <li class="aiz-side-nav-item">
                     <a href="{{ route('admin.v1_platform') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.v1_platform']) }}">
                         <i class="las la-robot aiz-side-nav-icon"></i>
@@ -415,52 +483,6 @@
                     </ul>
                 </li>
 
-                {{-- Happy Stories --}}
-                @can('show_happy_stories')
-                <li class="aiz-side-nav-item ">
-                    <a href="{{ route('happy-story.index') }}"
-                        class="aiz-side-nav-link {{ areActiveRoutes(['happy-story.edit', 'happy-story.show']) }}">
-                        <i class="las la-handshake aiz-side-nav-icon"></i>
-                        <span class="aiz-side-nav-text">{{ translate('Happy Stories') }}</span>
-                    </a>
-                </li>
-                @endcan
-
-                @can('edit_pages')
-                <li class="aiz-side-nav-item"><a href="{{ route('website.public_editorial.edit','blogs') }}" class="aiz-side-nav-link"><i class="las la-newspaper aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Blog Page Design</span></a></li>
-                <li class="aiz-side-nav-item"><a href="{{ route('website.public_editorial.edit','stories') }}" class="aiz-side-nav-link"><i class="las la-heart aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Success Stories Design</span></a></li>
-                @endcan
-
-                <!--Blog System-->
-                @if (auth()->user()->can('show_blog_categories') ||
-                auth()->user()->can('show_blogs'))
-                <li class="aiz-side-nav-item">
-                    <a href="#" class="aiz-side-nav-link">
-                        <i class="las la-blog aiz-side-nav-icon"></i>
-                        <span class="aiz-side-nav-text">{{ translate('Blog System') }}</span>
-                        <span class="aiz-side-nav-arrow"></span>
-                    </a>
-                    <ul class="aiz-side-nav-list level-2">
-                        @can('show_blogs')
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('blog.index') }}"
-                                class="aiz-side-nav-link {{ areActiveRoutes(['blog.create', 'blog.edit']) }}">
-                                <span class="aiz-side-nav-text">{{ translate('All Posts') }}</span>
-                            </a>
-                        </li>
-                        @endcan
-                        @can('show_blog_categories')
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('blog-category.index') }}"
-                                class="aiz-side-nav-link {{ areActiveRoutes(['blog-category.create', 'blog-category.edit']) }}">
-                                <span class="aiz-side-nav-text">{{ translate('Categories') }}</span>
-                            </a>
-                        </li>
-                        @endcan
-                    </ul>
-                </li>
-                @endif
-
                 <!-- Messaging -->
                 @can('newsletter')
                 <li class="aiz-side-nav-item">
@@ -744,26 +766,6 @@
                             </a>
                         </li>
                         @endcan
-                        @can('edit_pages')
-                        @foreach(['about'=>'About Us','team'=>'Our Team','privacy'=>'Privacy Policy','terms'=>'Terms & Conditions'] as $hqKey=>$hqLabel)
-                        <li class="aiz-side-nav-item"><a class="aiz-side-nav-link" href="{{ route('website.editorial.edit',$hqKey) }}"><span class="aiz-side-nav-text">{{ $hqLabel }}</span></a></li>
-                        @endforeach
-                        @endcan
-                        @can('show_all_pages')
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('custom-pages.index') }}"
-                                class="aiz-side-nav-link {{ areActiveRoutes(['website.pages', 'custom-pages.create', 'custom-pages.edit']) }}">
-                                <span class="aiz-side-nav-text">{{ translate('Pages') }}</span>
-                            </a>
-                        </li>
-                        @endcan
-                        @can('appearances')
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('website.login_page') }}" class="aiz-side-nav-link {{ areActiveRoutes(['website.login_page']) }}">
-                                <span class="aiz-side-nav-text">{{ translate('Login Page') }}</span>
-                            </a>
-                        </li>
-                        @endcan
                         @can('appearances')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('website.appearances') }}" class="aiz-side-nav-link">
@@ -776,7 +778,8 @@
                                 <i class="las la-list aiz-side-nav-icon"></i>
                                 <span class="aiz-side-nav-text">{{ translate('Dropdowns Data') }}</span>
                             </a>
-                        </li>                    </ul>
+                        </li>
+                    </ul>
                 </li>
                 @endif
 
