@@ -49,6 +49,17 @@
         <button id="hm-integrated-search-close" type="button" class="hm-integrated-search-close" aria-label="Close member search"><i class="las la-times"></i></button>
       </div>
     </div>
+    <div class="hm-accessibility-menu">
+      <button type="button" class="hm-accessibility-toggle" id="hm-accessibility-toggle"
+        aria-label="Accessibility options" aria-controls="hm-accessibility-dropdown"
+        aria-expanded="false" aria-haspopup="true" title="Accessibility">
+        <i class="las la-universal-access" aria-hidden="true"></i>
+      </button>
+      <div id="hm-accessibility-dropdown" class="hm-accessibility-dropdown" hidden>
+        <div class="hm-accessibility-dropdown-heading"><strong>Accessibility</strong><button type="button" id="hm-accessibility-close" aria-label="Close accessibility options"><i class="las la-times"></i></button></div>
+        @include('frontend.member.partials.accessibility_tools')
+      </div>
+    </div>
     <nav class="hm-member-topbar-actions" aria-label="Member shortcuts">
       <a href="{{ route('my_shortlists') }}" title="Shortlist" aria-label="My shortlist"><i class="las la-heart"></i></a>
       <a href="{{ route('all.messages') }}" title="Messages" aria-label="Messages"><i class="las la-comment-dots"></i></a>
@@ -67,7 +78,6 @@
       </aside>
       <button type="button" class="hm-member-overlay" aria-label="Close dashboard navigation"></button>
       <main class="aiz-user-panel hq-member-main-content hm-member-workspace" id="hm-member-workspace">
-        @include('frontend.member.partials.accessibility_tools')
         @yield('panel_content')
       </main>
     </div>
@@ -83,6 +93,27 @@
   overlay?.addEventListener('click',close);
   document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
   root.querySelectorAll('.hm-sidebar-column a[href]').forEach(link=>link.addEventListener('click',close));
+  const accessibilityToggle=root.querySelector('#hm-accessibility-toggle');
+  const accessibilityDropdown=root.querySelector('#hm-accessibility-dropdown');
+  const accessibilityClose=root.querySelector('#hm-accessibility-close');
+  function setAccessibilityOpen(open){
+    if(!accessibilityToggle||!accessibilityDropdown)return;
+    accessibilityDropdown.hidden=!open;
+    accessibilityToggle.setAttribute('aria-expanded',String(open));
+    if(open)accessibilityDropdown.querySelector('select,input')?.focus();
+    else accessibilityToggle.focus();
+  }
+  accessibilityToggle?.addEventListener('click',()=>setAccessibilityOpen(accessibilityDropdown.hidden));
+  accessibilityClose?.addEventListener('click',()=>setAccessibilityOpen(false));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&accessibilityDropdown&&!accessibilityDropdown.hidden)setAccessibilityOpen(false);
+  });
+  document.addEventListener('pointerdown',e=>{
+    if(accessibilityDropdown&&!accessibilityDropdown.hidden&&!root.querySelector('.hm-accessibility-menu')?.contains(e.target)){
+      accessibilityDropdown.hidden=true;
+      accessibilityToggle?.setAttribute('aria-expanded','false');
+    }
+  });
   const openSearch=root.querySelector('#hm-integrated-search-open');
   const searchPanel=root.querySelector('#hm-integrated-search-panel');
   const closeSearch=root.querySelector('#hm-integrated-search-close');
