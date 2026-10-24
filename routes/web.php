@@ -229,6 +229,7 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
         Route::post('/new-user-verification', 'new_verify')->name('user.new.verify');
 
         Route::any('/member-listing', 'member_listing')->name('member.listing');
+        Route::get('/active-members', 'member_listing')->defaults('listing_context', 'standalone')->name('members.public_listing');
         Route::get('/member-profile/{id}', 'view_member_profile')->name('member_profile');
 
         Route::post('/user/remaining_package_value', 'user_remaining_package_value')->name('user.remaining_package_value');

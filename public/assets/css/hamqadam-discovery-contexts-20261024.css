@@ -1,0 +1,13 @@
+/* Member listing photo repair and separate dashboard/site containers. */
+.hq-ref24-discovery .hq-discovery-photo{position:relative!important;isolation:isolate!important;overflow:hidden!important;height:260px!important;border-radius:14px 14px 0 0!important;background:#f4eef3!important}
+.hq-ref24-discovery .hq-discovery-photo>img{position:absolute!important;inset:0!important;display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;min-width:0!important;min-height:0!important;object-fit:cover!important;object-position:center 28%!important;border:0!important;border-radius:0!important;clip-path:none!important;mask:none!important;-webkit-mask:none!important;box-shadow:none!important;transform:none!important;opacity:1!important;filter:none!important}
+.hq-ref24-discovery .hq-discovery-photo::before{content:none!important;display:none!important}
+.hq-ref24-discovery .hq-discovery-photo::after{content:""!important;position:absolute!important;inset:auto 0 0!important;height:42%!important;background:linear-gradient(0deg,rgba(25,13,23,.84),transparent)!important;border-radius:0!important;pointer-events:none!important;z-index:1!important}
+.hq-ref24-discovery .hq-profile-badges,.hq-ref24-discovery .hq-card-heart,.hq-ref24-discovery .hq-discovery-photo-overlay{z-index:3!important}
+.hq-ref24-discovery .hq-discovery-photo-overlay{bottom:12px!important}
+.hq-ref24-discovery .hq24-list-view .hq-discovery-photo{height:100%!important;min-height:260px!important}
+.hq-ref24-discovery.hq24-standalone .hq-reference-discovery-page{padding-top:15px!important}
+.hq-ref24-discovery.hq24-standalone{width:100%;min-width:0}
+.hq-ref24-discovery.hq24-dashboard{width:100%;min-width:0}
+.hq-ref24-discovery.hq24-dashboard .container{width:min(100% - 26px,1300px)}
+@media(max-width:620px){.hq-ref24-discovery .hq-discovery-photo{height:245px!important}.hq-ref24-discovery .hq24-list-view .hq-discovery-photo{height:245px!important}}

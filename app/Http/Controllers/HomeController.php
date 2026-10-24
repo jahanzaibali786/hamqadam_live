@@ -485,7 +485,7 @@ class HomeController extends Controller
             $users->reorder()->orderByDesc('users.created_at');
         }
         $users = $users->paginate(8)->withQueryString();
-        return view('frontend.member.member_listing.index', compact('users', 'age_from', 'age_to', 'member_code', 'matital_status', 'religion_id', 'caste_id', 'sub_caste_id', 'mother_tongue', 'profession', 'country_id', 'state_id', 'city_id', 'min_height', 'max_height', 'member_type', 'gender', 'recently_active', 'online_now', 'new_profiles', 'mutual_match'));
+        return view($request->routeIs('members.public_listing') ? 'frontend.member.member_listing.public_index' : 'frontend.member.member_listing.index', compact('users', 'age_from', 'age_to', 'member_code', 'matital_status', 'religion_id', 'caste_id', 'sub_caste_id', 'mother_tongue', 'profession', 'country_id', 'state_id', 'city_id', 'min_height', 'max_height', 'member_type', 'gender', 'recently_active', 'online_now', 'new_profiles', 'mutual_match'));
     }
 
     public function profile_edit(Request $request)
