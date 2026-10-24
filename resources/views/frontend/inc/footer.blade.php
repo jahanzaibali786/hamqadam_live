@@ -27,7 +27,6 @@
                 <a href="{{ route('members.public_listing') }}">{{ translate('Active Members') }}</a>
                 <a href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a>
                 <a href="{{ route('packages') }}">{{ translate('Premium Plans') }}</a>
-                <a href="{{ route('members.public_listing') }}">{{ translate('Advanced Search') }}</a>
             </div>
 
             <div>
@@ -44,9 +43,7 @@
                 <a class="hq-footer-phone" href="tel:{{ preg_replace('/[^0-9+]/', '', $referenceFooterPhone) }}">
                     <i class="las la-phone mr-1"></i>{{ $referenceFooterPhone }}
                 </a>
-                <a href="mailto:{{ $referenceFooterEmail }}">
-                    <i class="las la-envelope mr-1"></i>{{ $referenceFooterEmail }}
-                </a>
+                <a class="hq-footer-email" href="mailto:{{ $referenceFooterEmail }}"><i class="las la-envelope"></i><span>{{ $referenceFooterEmail }}</span></a>
                 <div class="mt-2 text-muted fs-12">
                     <i class="las la-map-marker mr-1"></i>{{ strip_tags($referenceFooterAddress) }}
                 </div>
