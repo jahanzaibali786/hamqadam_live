@@ -53,6 +53,8 @@ final class QaMemberListingBladeCompilationTest extends TestCase
             preg_match_all('/@foreach\b/', $content),
             preg_match_all('/@endforeach\b/', $content)
         );
-        $this->assertStringContainsString('foreach ($users as $key => $user) {', $content);
+        $this->assertStringContainsString('@foreach ($users as $key => $user)', $content);
+        $this->assertStringNotContainsString('foreach ($users as $key => $user) {', $content);
+        $this->assertStringNotContainsString('nested @php', $content);
     }
 }
