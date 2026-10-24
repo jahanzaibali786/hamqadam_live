@@ -63,11 +63,8 @@
                                 </div>
                             </div>
                             <div class="mb-5 hq-discovery-grid">
-                                {{-- Keep the card iteration in native PHP: nested @php blocks can
-                                     disrupt Blade's directive parser in compacted templates. --}}
-                                @php
-                                    foreach ($users as $key => $user) {
-                                @endphp
+                                {{-- Render each member card with a standard Blade loop. --}}
+                                @foreach ($users as $key => $user)
                                     @php
                                         $compatibility = $user->profile_match_for_viewer;
                                         $member = $user->member;
@@ -254,9 +251,7 @@
                                             </div>
                                         </div>
                                     </article>
-                                @php
-                                    }
-                                @endphp
+                                @endforeach
                             </div>
                             <div class="aiz-pagination">
                                 {{ $users->appends(request()->input())->links() }}
