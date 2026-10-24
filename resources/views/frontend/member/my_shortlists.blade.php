@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+{{-- This design stylesheet was previously committed but never included on the page. --}}
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-shortlist-ref-20261023.css') }}?v=20261024-2">
 @php
   $shortlistItems = $shortlists->getCollection()->filter(fn ($entry) => $entry->user !== null);
   $shortlistIds = $shortlistItems->pluck('user_id')->all();
@@ -35,12 +37,20 @@
             $career=$person->career?->first()?->designation ?? $profile?->job_title ?? '';
             $religion=$person->spiritual_backgrounds?->religion?->name ?? '';
             $online=\Illuminate\Support\Facades\Cache::has('user-is-online-'.$person->id);
-            $fallback=static_asset(($profile?->gender ?? 1) == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png');
-            $avatar=$person->photo && show_profile_picture($person) ? uploaded_asset($person->photo) : $fallback;
+            $photoUrl = $person->photo && show_profile_picture($person) ? uploaded_asset($person->photo) : null;
+            $photoPath = strtolower((string) (parse_url((string) ($photoUrl ?? ''), PHP_URL_PATH) ?: ''));
+            $hasPhoto = !empty($photoUrl) && !in_array(basename($photoPath), ['placeholder.jpg', 'avatar-place.png', 'female-avatar-place.png'], true);
+            $photoFallback = $person->photo && !show_profile_picture($person) ? translate('Private photo') : translate('Photo unavailable');
           @endphp
           <article class="hm-sl-card" id="shortlisted_member_{{ $person->id }}" data-name="{{ strtolower(trim($person->first_name.' '.$person->last_name)) }}" data-age="{{ $age ?? 0 }}" data-score="{{ round($score) }}" data-city="{{ strtolower($city) }}" data-career="{{ strtolower($career) }}" data-education="{{ strtolower($person->education?->first()?->degree ?? '') }}" data-online="{{ $online?1:0 }}" data-recent="{{ $shortlist->created_at?->timestamp ?? 0 }}">
             <div class="hm-sl-image">
-              <img src="{{ $avatar }}" alt="{{ $person->first_name }} {{ $person->last_name }}" loading="lazy" onerror="this.onerror=null;this.src='{{ $fallback }}'">
+              <div class="hm-sl-photo-placeholder" aria-label="{{ $photoFallback }}">
+                <i class="las la-user-shield" aria-hidden="true"></i>
+                <small>{{ $photoFallback }}</small>
+              </div>
+              @if ($hasPhoto)
+                <img src="{{ $photoUrl }}" alt="{{ $person->first_name }} {{ $person->last_name }}" loading="lazy" decoding="async" onerror="this.hidden=true">
+              @endif
               <span class="hm-sl-online {{ $online?'is-online':'' }}" title="{{ $online?'Online':'Offline' }}"></span>
               <button type="button" class="hm-sl-favorite" onclick="remove_shortlist({{ $person->id }})" aria-label="Remove {{ $person->first_name }} from shortlist"><i class="las la-heart"></i></button>
               @if($score > 0)<span class="hm-sl-score">{{ round($score) }}% Match</span>@endif
@@ -61,7 +71,17 @@
         @endforeach
         <div class="hm-sl-add" id="hm-sl-add"><i class="lar la-bookmark"></i><h2>Add More Profiles</h2><p>Keep exploring and save profiles you like.</p><a href="{{ route('member.listing') }}">Find More Matches <i class="las la-arrow-right"></i></a></div>
       </div>
-      <div class="hm-sl-no-results" id="hm-sl-no-results" hidden>No profiles match these filters. <button type="button" id="hm-sl-clear">Clear filters</button></div>
+      <div class="hm-sl-no-results" id="hm-sl-no-results" role="status" hidden>
+        <i class="lar la-bookmark" aria-hidden="true"></i>
+        @if($shortlists->total() === 0)
+          <strong>Your shortlist is empty.</strong>
+          <p>Browse member profiles and save meaningful matches here.</p>
+          <a href="{{ route('member.listing') }}" class="hm-sl-empty-link">Browse Members <i class="las la-arrow-right"></i></a>
+        @else
+          <strong>No profiles match these filters.</strong>
+          <button type="button" id="hm-sl-clear">Clear filters</button>
+        @endif
+      </div>
       <div class="hm-sl-pagination">{{ $shortlists->links() }}</div>
     </section>
     <aside class="hm-sl-filters"><div class="hm-sl-filter-heading"><strong><i class="las la-filter"></i> Filters</strong><button type="button" id="hm-sl-reset">Reset</button></div>
@@ -186,7 +206,7 @@
  input('hm-sl-sort').addEventListener('change',apply);
  input('hm-sl-apply').addEventListener('click',()=>{filters=true;apply();});
  function reset(){filters=false;tab='all';input('hm-sl-search').value='';input('hm-sl-sort').value='recent';input('hm-sl-min').value=20;input('hm-sl-max').value=45;input('hm-sl-city').value='';input('hm-sl-education').value='';input('hm-sl-career').value='';input('hm-sl-presence').value='';root.querySelectorAll('[data-sl-tab]').forEach(b=>b.classList.toggle('is-active',b.dataset.slTab==='all'));apply();}
- input('hm-sl-reset').addEventListener('click',reset);input('hm-sl-clear').addEventListener('click',reset);apply();
+ input('hm-sl-reset').addEventListener('click',reset);input('hm-sl-clear')?.addEventListener('click',reset);apply();
 })();
 </script>
 @endsection
