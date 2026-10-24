@@ -1,13 +1,16 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-four-pages-20261024.css') }}?v=1">
+<div class="hq-ref24 hq-ref24-discovery">
     <section class="hq-reference-page-hero hq-discovery-reference-hero">
         <div class="container">
+            <nav class="hq24-breadcrumb" aria-label="Breadcrumb"><a href="{{ route('home') }}">{{ translate('Home') }}</a> / {{ translate('Active Members Discovery') }}</nav>
             <!-- <div class="hq-reference-breadcrumb">{{ translate('Home') }} <span>/</span> {{ translate('Active Members Discovery') }}</div> -->
             <span class="hq-reference-eyebrow"><i class="las la-certificate"></i> {{ translate('Curated Sanctuary of Verified Hearts') }}</span>
             <h1>{{ translate('Active Members Discovery') }}</h1>
-            <p>{{ translate('Explore respectful prospective matches with verified identities, family-minded discovery, and private communication.') }}</p>
+            <p>{{ translate('Explore prospective matches with family-minded discovery, verified identities, and private communication.') }}</p>
             <div class="hq-discovery-meta">
-                <span><i class="las la-circle"></i> {{ translate('Active Profiles') }}</span>
+                <span><i class="las la-circle"></i> <strong>{{ number_format($users->total()) }}</strong> {{ translate('Active Profiles') }}</span>
                 <span><i class="las la-shield-alt"></i> {{ translate('Verified Community') }}</span>
                 <span><i class="las la-comments"></i> {{ translate('Protected Communication') }}</span>
             </div>
@@ -15,6 +18,18 @@
     </section>
     <section class="hq-reference-discovery-page py-4 py-lg-5">
         <div class="container">
+            <div class="hq24-filter-row"><span class="hq24-filter-label">{{ translate('Filters') }}:</span>
+                @foreach(['gender'=>'Gender','age_from'=>'Min age','age_to'=>'Max age','city_id'=>'City','profession'=>'Profession','religion_id'=>'Religion','member_type'=>'Member type'] as $key=>$label)
+                  @if(request()->filled($key))<span class="hq24-filter-chip">{{ $label }}: {{ request($key) }} <a href="{{ route('member.listing', request()->except($key, 'page')) }}" aria-label="Remove {{ $label }} filter">&times;</a></span>@endif
+                @endforeach
+                @if(count(request()->except('page','sort')))<a class="hq24-clear" href="{{ route('member.listing') }}">{{ translate('Reset All') }}</a>@endif
+                <form class="hq24-sort" action="{{ route('member.listing') }}" method="GET">
+                  @foreach(request()->except('sort','page') as $k=>$v)@if(is_scalar($v))<input type="hidden" name="{{ $k }}" value="{{ $v }}">@endif @endforeach
+                  <label for="hq24-sort-select">{{ translate('Sort') }}:</label>
+                  <select name="sort" id="hq24-sort-select" onchange="this.form.submit()"><option value="match" @selected(request('sort','match')==='match')>{{ translate('Match % (High to Low)') }}</option><option value="recent" @selected(request('sort')==='recent')>{{ translate('Recently Active') }}</option><option value="newest" @selected(request('sort')==='newest')>{{ translate('Newest First') }}</option></select>
+                </form>
+                <div class="hq24-view-toggle" role="group" aria-label="Change member grid"><button type="button" class="is-selected" data-cols="two" title="Two columns" aria-label="Two columns" aria-pressed="true"><i class="las la-th-large"></i></button><button type="button" data-cols="one" title="One column" aria-label="One column" aria-pressed="false"><i class="las la-list"></i></button></div>
+            </div>
             <div class="row">
                 <div class="col-12">
                     <div class="row">
@@ -23,7 +38,7 @@
                         </div>
                         <div class="col-xl-9">
                             <div class="d-flex">
-                                <h1 class="h4 fw-600 mb-3 text-body">{{ translate('All Active Members') }}</h1>
+                                <p class="hq24-results-count">{{ translate('Showing') }} <strong>{{ $users->firstItem() ?? 0 }}–{{ $users->lastItem() ?? 0 }}</strong> {{ translate('of') }} <strong>{{ number_format($users->total()) }}</strong> {{ translate('matches matching your family criteria') }}</p>
                                 <div class="d-xl-none ml-auto mb-1 ml-xl-3 mr-0 align-self-end">
                                     <button type="button" class="btn btn-icon p-0 round-btn" data-toggle="class-toggle"
                                         data-target=".aiz-filter-sidebar">
@@ -208,8 +223,10 @@
                     </div>
                 </div>
             </div>
+            <aside class="hq24-upgrade-banner"><div><span class="hq24-upgrade-kicker"><i class="las la-award"></i> {{ translate('Dignified Matchmaking Privilege') }}</span><h2>{{ translate('Unlock Direct Contact Info & Family Introductions') }}</h2><p>{{ translate('Review available membership options for expanded introductions and respectful family connections.') }}</p></div><a class="btn btn-primary" href="{{ route('packages') }}">{{ translate('Explore Premium Plans') }} <i class="las la-arrow-right"></i></a></aside>
         </div>
     </section>
+</div>
 @endsection
 
 
@@ -269,6 +286,10 @@
 @endsection
 
 @section('script')
+<script>
+(function(){const root=document.querySelector('.hq-ref24-discovery');if(!root)return;root.querySelectorAll('.hq24-view-toggle button').forEach(btn=>btn.addEventListener('click',()=>{root.classList.toggle('hq24-list-view',btn.dataset.cols==='one');root.querySelectorAll('.hq24-view-toggle button').forEach(x=>{x.classList.toggle('is-selected',x===btn);x.setAttribute('aria-pressed',String(x===btn));});}));})();
+</script>
+
     <script type="text/javascript">
         $(document).ready(function() {
             get_castes_by_religion();

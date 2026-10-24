@@ -1,6 +1,8 @@
 @extends('frontend.layouts.app')
 
 @section('content')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-four-pages-20261024.css') }}?v=1">
+<div class="hq-ref24 hq-ref24-support">
 @php
     $supportTicketsReady = \Illuminate\Support\Facades\Schema::hasTable('support_tickets');
     $latestTicket = null;
@@ -13,7 +15,7 @@
         <!-- <div class="hq-reference-breadcrumb text-left">{{ translate('Home') }} <span>/</span> {{ translate('Help & Support') }}</div> -->
         <span class="hq-reference-eyebrow"><i class="las la-shield-alt"></i> {{ translate('Dedicated Family Assistance & Concierge') }}</span>
         <h1>{{ translate('How Can Our Matrimonial Counselors Assist You?') }}</h1>
-        <p>{{ translate('Get confidential guidance for identity verification, packages, privacy, proposals, and respectful introductions.') }}</p>
+        <p>{{ translate('Whether you need guidance with identity verification, Hamqadam Coins, package upgrades or profile privacy, our support team is here for you and your family.') }}</p>
 
         <div class="hq-contact-channel-grid">
             <div>
@@ -23,8 +25,8 @@
             </div>
             <div>
                 <i class="las la-comments"></i>
-                <span>{{ translate('Live Support') }}</span>
-                <strong>{{ translate('Speak With Our Team') }}</strong>
+                <span>{{ translate('WhatsApp Concierge') }}</span>
+                <strong>{{ translate('Chat With Counselor') }}</strong>
             </div>
             <div>
                 <i class="las la-envelope"></i>
@@ -153,7 +155,7 @@
             <aside class="hq-ticket-side">
                 @if(auth()->check() && $supportTicketsReady)
                     <div class="hq-ticket-side-card">
-                        <h4><i class="las la-search mr-1"></i>{{ translate('Latest Ticket') }}</h4>
+                        <h4><i class="las la-search mr-1"></i>{{ translate('Track Existing Ticket') }}</h4>
                         @if($latestTicket)
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <strong class="text-dark">#{{ $latestTicket->ticket_id ?: $latestTicket->id }}</strong>
@@ -172,7 +174,7 @@
                 @endif
 
                 <div class="hq-ticket-side-card">
-                    <h4><i class="las la-user-shield mr-1"></i>{{ translate('Privacy First') }}</h4>
+                    <h4><i class="las la-user-shield mr-1"></i>{{ translate('Matrimonial Privacy Guarantee') }}</h4>
                     <p>{{ translate('Support requests are handled within your account context. Sensitive matrimonial information should only be shared when necessary to resolve the issue.') }}</p>
                     <ul>
                         <li>{{ translate('Account-aware support for registered members') }}</li>
@@ -182,7 +184,7 @@
                 </div>
 
                 <div class="hq-ticket-side-card hq-quick-help">
-                    <h4><i class="las la-question-circle mr-1"></i>{{ translate('Quick Help') }}</h4>
+                    <h4><i class="las la-question-circle mr-1"></i>{{ translate('Quick Help Topics') }}</h4>
                     <details>
                         <summary>{{ translate('How do I report a profile?') }}</summary>
                         <p>{{ translate('Open the member profile and use the report option. Include only accurate information so the moderation team can review it properly.') }}</p>
@@ -213,6 +215,7 @@
         </div>
     </div>
 </section>
+</div>
 @endsection
 
 @section('script')
