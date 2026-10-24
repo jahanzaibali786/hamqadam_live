@@ -5,7 +5,7 @@
 @endphp
 
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-four-pages-20261024.css') }}?v=1">
-<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-discovery-contexts-20261024.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-discovery-contexts-20261024.css') }}?v=4">
 <div class="hq-ref24 hq-ref24-discovery {{ request()->routeIs('members.public_listing') ? 'hq24-standalone' : 'hq24-dashboard' }}">
     <section class="hq-reference-page-hero hq-discovery-reference-hero">
         <div class="container">
@@ -70,9 +70,13 @@
                                         $member = $user->member;
                                         $profile_picture_show = show_profile_picture($user);
                                         $photoUrl = $profile_picture_show ? uploaded_asset($user->photo) : null;
-                                        $photoPath = parse_url((string) ($photoUrl ?? ''), PHP_URL_PATH) ?: '';
-                                        $hasVisiblePhoto = $profile_picture_show && !empty($photoUrl)
-                                            && !str_ends_with(strtolower($photoPath), '/placeholder.jpg');
+                                        $photoPath = strtolower((string) (parse_url((string) ($photoUrl ?? ''), PHP_URL_PATH) ?: ''));
+                                        // Missing uploads can fall back to generic artwork; do not enlarge it as a profile photo.
+                                        $fallbackImages = ['placeholder.jpg', 'avatar-place.png', 'female-avatar-place.png'];
+                                        $photoFilename = basename($photoPath);
+                                        $hasVisiblePhoto = $profile_picture_show
+                                            && !empty($photoUrl)
+                                            && !in_array($photoFilename, $fallbackImages, true);
                                         $photoFallbackLabel = $profile_picture_show
                                             ? translate('Photo unavailable')
                                             : translate('Photo private');
@@ -149,7 +153,7 @@
                                     @endphp
 
                                     <article class="hq-discovery-card" id="block_id_{{ $user->id }}">
-                                        <div class="hq-discovery-photo {{ $hasVisiblePhoto ? 'hq24-has-photo' : 'hq24-no-photo' }}">
+                                        <div class="hq24-photo-frame {{ $hasVisiblePhoto ? 'hq24-has-photo' : 'hq24-no-photo' }}">
                                             <div class="hq24-photo-fallback" aria-label="{{ $photoFallbackLabel }}">
                                                 <span class="hq24-photo-fallback-icon" aria-hidden="true"><i class="las la-user-shield"></i></span>
                                                 <span class="hq24-photo-fallback-label">{{ $photoFallbackLabel }}</span>
@@ -157,6 +161,7 @@
                                             @if ($hasVisiblePhoto)
                                                 <img
                                                     src="{{ $photoUrl }}"
+                                                    class="hq24-member-photo"
                                                     alt="{{ trim($user->first_name . ' ' . $user->last_name) }}"
                                                     loading="lazy"
                                                     decoding="async"
