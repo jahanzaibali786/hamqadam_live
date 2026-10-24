@@ -17,6 +17,7 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-unified-header-blog.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-ux-polish.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-chat-reference-20261023.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-chat-header-fix-20261024.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-profile-sections-20261023.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-independent-sidebar.css') }}?v=20261024-1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-pink-unification-20261024.css') }}?v=2">
