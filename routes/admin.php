@@ -360,7 +360,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::patch('/website/team-members/{member}', [\App\Http\Controllers\Admin\TeamMembersController::class,'update'])->middleware('permission:edit_pages')->name('website.team_members.update');
     Route::delete('/website/team-members/{member}', [\App\Http\Controllers\Admin\TeamMembersController::class,'destroy'])->middleware('permission:edit_pages')->name('website.team_members.destroy');
 
-    Route::post('/website/public-navigation/{area}', [\App\Http\Controllers\Admin\PublicNavigationController::class,'update'])->whereIn('area',['header','footer'])->middleware('permission:header')->name('website.public_navigation.update');
+    Route::post('/website/public-navigation/{area}', [\App\Http\Controllers\Admin\PublicNavigationController::class,'update'])->whereIn('area',['header','footer'])->name('website.public_navigation.update');
     // website setting
     Route::group(['prefix' => 'website'], function () {
         Route::controller(SettingController::class)->group(function () {
