@@ -1,6 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-detail.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-gallery-20261024.css') }}?v=1">
 @include('frontend.member.public_profile.reference_detail')
 <div class="hm-public-legacy-profile" id="hm-public-legacy-profile">
     <section class="pt-6 bg-primary-grad text-white">
@@ -2246,6 +2247,7 @@
 @endsection
 
 @section('script')
+<script src="{{ static_asset('assets/js/hamqadam-public-gallery-20261024.js') }}?v=1" defer></script>
     <script type="text/javascript">
         var package_validity = {{ package_validity(Auth::user()->id) }};
         var user_id = {{ Auth::user()->id }}
