@@ -24,10 +24,10 @@
             <div>
                 <h4>{{ translate('Discovery') }}</h4>
                 <a href="{{ route('home') }}">{{ translate('Home') }}</a>
-                <a href="{{ route('member.listing') }}">{{ translate('Active Members') }}</a>
+                <a href="{{ route('members.public_listing') }}">{{ translate('Active Members') }}</a>
                 <a href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a>
                 <a href="{{ route('packages') }}">{{ translate('Premium Plans') }}</a>
-                <a href="{{ route('member.listing') }}">{{ translate('Advanced Search') }}</a>
+                <a href="{{ route('members.public_listing') }}">{{ translate('Advanced Search') }}</a>
             </div>
 
             <div>
