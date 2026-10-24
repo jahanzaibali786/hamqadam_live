@@ -69,7 +69,7 @@ if (! $lang) {
     <link rel="stylesheet" href="{{ static_asset('assets/css/aiz-core.css?v=') }}{{ rand(1000,9999) }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-luxury.css?v=') }}{{ rand(1000,9999) }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-brand.css') }}?v=20261023">
-<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-site-cms-20261024.css') }}?v=2">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-site-cms-20261024.css') }}?v=3">
 
     @if (($lang?->rtl == 1 || in_array($locale, ['ur','ar'],true)))
         <link rel="stylesheet" href="{{ static_asset('assets/css/bootstrap-rtl.min.css') }}">
