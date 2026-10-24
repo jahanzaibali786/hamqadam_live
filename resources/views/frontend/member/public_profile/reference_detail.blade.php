@@ -27,7 +27,9 @@
  if (!$galleryAllowed && $galleryPrivacy === 'only_me' && !$ownProfile) {
    $galleryAllowed = \App\Models\ViewGalleryImage::where('user_id',$user->id)->where('requested_by',Auth::id())->where('status',1)->exists();
  }
- $galleryImages = $galleryAllowed ? \App\Models\GalleryImage::where('user_id',$user->id)->latest()->limit(4)->get() : collect();
+ $galleryImages = $galleryAllowed
+     ? \App\Models\GalleryImage::where('user_id', $user->id)->latest()->get()
+     : collect();
 @endphp
 <div class="hm-detail">
  <div class="hm-detail-back"><a href="{{ url()->previous() }}"><i class="las la-arrow-left"></i> Back to Search Results</a><span>Member ID: {{ $user->code }}</span></div>
@@ -42,12 +44,55 @@
  </div></header>
  <div class="hm-detail-columns">
  <section class="hm-detail-left">
- <div class="hm-detail-photo"><img src="{{ $photo }}" alt="{{ $name }}" onerror="this.onerror=null;this.src='{{ $placeholder }}'">
- @unless($photoAllowed)<div class="hm-detail-photo-private"><i class="las la-lock"></i> Photo private</div>@endunless
- </div>
- <div class="hm-detail-thumbnails"><span><img src="{{ $photo }}" alt="Profile picture"></span>
- @foreach($galleryImages as $galleryImage)<span><img src="{{ uploaded_asset($galleryImage->image) }}" loading="lazy" alt="Member gallery photo"></span>@endforeach
- @if($galleryImages->isEmpty())<span class="hm-detail-thumbnails-note">{{ $galleryAllowed ? 'No additional photos available' : 'Private gallery — request access below' }}</span>@endif
+ <div class="hm-detail-gallery" data-member-gallery aria-label="Member profile photo gallery" tabindex="0">
+   <div class="hm-detail-photo">
+     <img data-member-gallery-main
+          src="{{ $photo }}"
+          alt="{{ $name }} — profile photo"
+          data-gallery-fallback="{{ $placeholder }}"
+          onerror="this.onerror=null;this.src=this.dataset.galleryFallback;">
+     @unless ($photoAllowed)
+       <div class="hm-detail-photo-private" data-gallery-private>
+         <i class="las la-lock"></i> Photo private
+       </div>
+     @endunless
+     @if ($galleryImages->isNotEmpty())
+       <button type="button" class="hm-detail-gallery-arrow hm-detail-gallery-prev"
+               data-gallery-previous aria-label="Previous member photo">
+         <i class="las la-chevron-left" aria-hidden="true"></i>
+       </button>
+       <button type="button" class="hm-detail-gallery-arrow hm-detail-gallery-next"
+               data-gallery-next aria-label="Next member photo">
+         <i class="las la-chevron-right" aria-hidden="true"></i>
+       </button>
+       <span class="hm-detail-gallery-counter" data-gallery-counter aria-live="polite">
+         1 / {{ $galleryImages->count() + 1 }}
+       </span>
+     @endif
+   </div>
+   <div class="hm-detail-thumbnails" aria-label="Select a photo">
+     <button type="button" class="hm-detail-thumb is-active"
+             data-member-gallery-thumb aria-label="View profile photo 1"
+             aria-pressed="true" data-photo-name="{{ $name }} — profile photo">
+       <img src="{{ $photo }}" alt="" loading="lazy"
+            onerror="this.onerror=null;this.src='{{ $placeholder }}';">
+     </button>
+     @foreach ($galleryImages as $galleryImage)
+       <button type="button" class="hm-detail-thumb"
+               data-member-gallery-thumb
+               aria-label="View member gallery photo {{ $loop->iteration + 1 }}"
+               aria-pressed="false"
+               data-photo-name="{{ $name }} — gallery photo {{ $loop->iteration }}">
+         <img src="{{ uploaded_asset($galleryImage->image) }}" loading="lazy" alt=""
+              onerror="this.onerror=null;this.src='{{ $placeholder }}';">
+       </button>
+     @endforeach
+     @if ($galleryImages->isEmpty())
+       <span class="hm-detail-thumbnails-note">
+         {{ $galleryAllowed ? 'No additional photos available' : 'Private gallery — request access below' }}
+       </span>
+     @endif
+   </div>
  </div>
  <article class="hm-detail-panel"><h2><i class="las la-id-card"></i> Basic Information</h2>
  <dl><dt>Age</dt><dd>{{ $age ? $age.' Years' : 'Not specified' }}</dd><dt>Gender</dt><dd>{{ $member?->gender==1?'Male':($member?->gender==2?'Female':'Not specified') }}</dd><dt>Marital Status</dt><dd>{{ $member?->marital_status?->name ?? 'Not specified' }}</dd><dt>City</dt><dd>{{ $city ?: 'Not specified' }}</dd><dt>Country</dt><dd>{{ $country ?: 'Not specified' }}</dd><dt>Religion</dt><dd>{{ $user->spiritual_backgrounds?->religion?->name ?? 'Not specified' }}</dd></dl></article>
