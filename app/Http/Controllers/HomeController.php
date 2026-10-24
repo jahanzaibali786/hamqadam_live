@@ -240,14 +240,7 @@ class HomeController extends Controller
 
             // Screenshot-aligned member dashboard: every figure and card is backed
             // by actual eligible matches, published content, and account records.
-            $dashboardMatchQuery = ProfileMatch::query()
-                ->where('user_id', $user->id)
-                ->where('match_id', '!=', $user->id)
-                ->where('match_percentage', '>', 0)
-                ->whereHas('matchedUser', fn ($q) => $q->where('user_type', 'member')
-                    ->where('approved', 1)->where('blocked', 0)->where('deactivated', 0)
-                    ->whereHas('member', fn ($m) => $m->where(fn ($v) => $v
-                        ->where('hide_profile', 0)->orWhereNull('hide_profile'))));
+            $dashboardMatchQuery = ProfileMatch::query()->visibleToMember($user);
             $dashboardMatchCount = (clone $dashboardMatchQuery)->count();
             $dashboardMatches = $dashboardMatchQuery
                 ->with(['matchedUser.member', 'matchedUser.addresses.city',
