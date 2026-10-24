@@ -2,12 +2,12 @@
     $referenceHelpline = get_setting('header_helpline_no') ?: '+01 112 352 566';
 @endphp
 <div class="hq-reference-header @if(get_setting('header_stikcy') == 'on') position-fixed @else position-absolute @endif w-100 top-0 z-1020">
-    <div class="hq-reference-topbar d-none d-lg-block"><div class="container d-flex align-items-center justify-content-between"><div><span class="mr-4"><i class="las la-headset mr-1"></i>{{ translate('Helpline') }}: <strong>{{ $referenceHelpline }}</strong></span><span class="hq-verified-community"><i class="las la-shield-alt mr-1"></i>{{ translate('100% ID Verified Community') }}</span></div><div class="hq-top-links"><span><i class="las la-globe mr-1"></i>{{ translate('English') }}</span><span>/</span><a href="{{ route('contact_us') }}">{{ translate('FAQ') }}</a><a href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a></div></div></div>
+    <div class="hq-reference-topbar d-none d-lg-block"><div class="container d-flex align-items-center justify-content-between"><div><span class="mr-4"><i class="las la-headset mr-1"></i>{{ get_setting('hq_header_helpline_label') ?: translate('Helpline') }}: <strong>{{ $referenceHelpline }}</strong></span><span class="hq-verified-community"><i class="las la-shield-alt mr-1"></i>{{ get_setting('hq_header_verified_text') ?: translate('100% ID Verified Community') }}</span></div><div class="hq-top-links"><span><i class="las la-globe mr-1"></i>{{ get_setting('hq_header_language_text') ?: translate('English') }}</span><span>/</span><a href="{{ \App\Support\PublicNavigation::link(get_setting('hq_header_faq_url') ?: '/contact-us/page') }}">{{ get_setting('hq_header_faq_text') ?: translate('FAQ') }}</a><a href="{{ \App\Support\PublicNavigation::link(get_setting('hq_header_stories_url') ?: '/happy-stories') }}">{{ get_setting('hq_header_stories_text') ?: translate('Success Stories') }}</a></div></div></div>
     <header class="hq-reference-navbar">
         <div class="container hq-reference-navbar-inner">
             <a href="{{ route('home') }}" class="hq-reference-brand">
-                <span class="hq-reference-brand-mark"><img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true"></span>
-                <span><strong>{{ get_setting('website_name') ?: 'Hamqadam' }}</strong><small>{{ translate('Matrimonial Sanctuary') }}</small></span>
+                <span class="hq-reference-brand-mark"><img src="{{ get_setting('header_logo') ? uploaded_asset(get_setting('header_logo')) : static_asset('assets/img/hamqadam-double-heart.svg') }}" alt="" aria-hidden="true"></span>
+                <span><strong>{{ get_setting('website_name') ?: 'Hamqadam' }}</strong><small>{{ get_setting('site_motto') ?: translate('Matrimonial Sanctuary') }}</small></span>
             </a>
             <nav class="hq-reference-menu d-none d-lg-flex">
                 @foreach(\App\Support\PublicNavigation::items('header') as $item)
