@@ -1,4 +1,4 @@
-/* Member-only pink control palette and independently scrollable profile editor. */
+/* Member-only pink control palette and sticky profile rails with one workspace scroller. */
 .hm-member-app{--hm-control-pink:#ed2479;--hm-control-pink-hover:#c91561;--hm-control-soft:#fff0f6}
 .hm-member-app .hm-member-workspace .btn-primary,.hm-member-app .hm-member-workspace button.btn-primary,.hm-member-app .hm-member-workspace input[type=submit].btn-primary{background:var(--hm-control-pink)!important;border-color:var(--hm-control-pink)!important;color:#fff!important}
 .hm-member-app .hm-member-workspace .btn-primary:hover,.hm-member-app .hm-member-workspace .btn-primary:focus{background:var(--hm-control-pink-hover)!important;border-color:var(--hm-control-pink-hover)!important}
@@ -15,18 +15,75 @@
 .hm-member-app .hm-satisfaction-card{background:#fff;border:1px solid #f4d9e6;border-radius:18px;box-shadow:0 10px 28px rgba(130,33,80,.08)}
 .hm-member-app .hm-satisfaction-card h1{color:#a31656;margin-bottom:20px}
 .hm-member-app .hm-satisfaction-card .form-control:focus{border-color:#ed2479;box-shadow:0 0 0 3px #ed247922}
-.hm-member-app .hm-profile-fixed-rails .hm-profile-parity-grid{align-items:stretch!important}
+/* Profile editor: scroll only the existing dashboard main workspace.
+   Sticky cards are siblings of the normal-flow form, never nested scroll panes. */
 @media(min-width:1200px){
- .hm-member-app .hm-profile-fixed-rails{display:flex;flex-direction:column;min-height:0;height:100%}
- .hm-member-app .hm-profile-fixed-rails .hm-profile-ref-hero{flex:none}
- .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-grid{flex:1 1 0;min-height:0;height:0;overflow:hidden}
- .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-steps,.hm-member-app .hm-profile-fixed-rails .hm-profile-parity-side{height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;align-self:stretch}
- .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-center{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
- .hm-member-app .hm-profile-fixed-rails #hm-profile-ref-content{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
- .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-bottom{flex:none;background:white}
- .hm-member-app .hm-member-workspace:has(.hm-profile-fixed-rails){overflow:hidden!important}
+ .hm-member-app .hm-member-workspace:has(.hm-profile-fixed-rails){
+   overflow-y:auto!important;
+   overflow-x:hidden!important;
+   overscroll-behavior-y:contain;
+ }
+ .hm-member-app .hm-profile-fixed-rails{
+   display:block!important;
+   height:auto!important;
+   min-height:0!important;
+   max-height:none!important;
+   overflow:visible!important;
+ }
+ .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-grid{
+   display:grid!important;
+   align-items:start!important;
+   height:auto!important;
+   min-height:0!important;
+   max-height:none!important;
+   overflow:visible!important;
+ }
+ .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-steps,
+ .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-side{
+   position:sticky!important;
+   top:16px!important;
+   align-self:start!important;
+   height:max-content!important;
+   min-height:0!important;
+   max-height:calc(100dvh - 115px)!important;
+   overflow-y:auto!important;
+   overflow-x:hidden!important;
+   scrollbar-width:thin;
+   overscroll-behavior:contain;
+ }
+ .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-center{
+   display:block!important;
+   height:auto!important;
+   min-height:0!important;
+   max-height:none!important;
+   overflow:visible!important;
+ }
+ .hm-member-app .hm-profile-fixed-rails #hm-profile-ref-content{
+   display:block!important;
+   flex:none!important;
+   height:auto!important;
+   max-height:none!important;
+   min-height:0!important;
+   overflow:visible!important;
+ }
+ .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-bottom{
+   position:static!important;
+   background:white;
+ }
 }
 @media(max-width:1199.98px){
- .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-steps,.hm-member-app .hm-profile-fixed-rails .hm-profile-parity-side{position:static;max-height:none;overflow:visible}
+ .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-steps,
+ .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-side{
+   position:static!important;
+   height:auto!important;
+   max-height:none!important;
+   overflow:visible!important;
+ }
+ .hm-member-app .hm-profile-fixed-rails .hm-profile-parity-center,
+ .hm-member-app .hm-profile-fixed-rails #hm-profile-ref-content{
+   height:auto!important;
+   max-height:none!important;
+   overflow:visible!important;
+ }
 }
 @media(max-width:600px){.hm-member-app .hm-pink-viewer-tabs .card-header{gap:12px}.hm-member-app .hm-satisfaction-page{padding:12px!important}.hm-member-app .hm-satisfaction-card .card-body{padding:20px!important}}
