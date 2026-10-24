@@ -1,4 +1,8 @@
-@php($listingRoute = request()->routeIs('members.public_listing') ? 'members.public_listing' : 'member.listing')
+@php
+    $listingRoute = request()->routeIs('members.public_listing')
+        ? 'members.public_listing'
+        : 'member.listing';
+@endphp
 
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-four-pages-20261024.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-discovery-contexts-20261024.css') }}?v=1">
@@ -20,12 +24,23 @@
     <section class="hq-reference-discovery-page py-4 py-lg-5">
         <div class="container">
             <div class="hq24-filter-row"><span class="hq24-filter-label">{{ translate('Filters') }}:</span>
-                @foreach(['gender'=>'Gender','age_from'=>'Min age','age_to'=>'Max age','city_id'=>'City','profession'=>'Profession','religion_id'=>'Religion','member_type'=>'Member type'] as $key=>$label)
-                  @if(request()->filled($key))<span class="hq24-filter-chip">{{ $label }}: {{ request($key) }} <a href="{{ route($listingRoute, request()->except($key, 'page')) }}" aria-label="Remove {{ $label }} filter">&times;</a></span>@endif
+                @foreach (['gender' => 'Gender', 'age_from' => 'Min age', 'age_to' => 'Max age', 'city_id' => 'City', 'profession' => 'Profession', 'religion_id' => 'Religion', 'member_type' => 'Member type'] as $key => $label)
+                    @if (request()->filled($key))
+                        <span class="hq24-filter-chip">
+                            {{ $label }}: {{ request($key) }}
+                            <a href="{{ route($listingRoute, request()->except($key, 'page')) }}" aria-label="Remove {{ $label }} filter">&times;</a>
+                        </span>
+                    @endif
                 @endforeach
-                @if(count(request()->except('page','sort')))<a class="hq24-clear" href="{{ route($listingRoute) }}">{{ translate('Reset All') }}</a>@endif
+                @if (count(request()->except('page', 'sort')))
+                    <a class="hq24-clear" href="{{ route($listingRoute) }}">{{ translate('Reset All') }}</a>
+                @endif
                 <form class="hq24-sort" action="{{ route($listingRoute) }}" method="GET">
-                  @foreach(request()->except('sort','page') as $k=>$v)@if(is_scalar($v))<input type="hidden" name="{{ $k }}" value="{{ $v }}">@endif @endforeach
+                    @foreach (request()->except('sort', 'page') as $k => $v)
+                        @if (is_scalar($v))
+                            <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                        @endif
+                    @endforeach
                   <label for="hq24-sort-select">{{ translate('Sort') }}:</label>
                   <select name="sort" id="hq24-sort-select" onchange="this.form.submit()"><option value="match" @selected(request('sort','match')==='match')>{{ translate('Match % (High to Low)') }}</option><option value="recent" @selected(request('sort')==='recent')>{{ translate('Recently Active') }}</option><option value="newest" @selected(request('sort')==='newest')>{{ translate('Newest First') }}</option></select>
                 </form>
@@ -48,7 +63,11 @@
                                 </div>
                             </div>
                             <div class="mb-5 hq-discovery-grid">
-                                @foreach ($users as $key => $user)
+                                {{-- Keep the card iteration in native PHP: nested @php blocks can
+                                     disrupt Blade's directive parser in compacted templates. --}}
+                                @php
+                                    foreach ($users as $key => $user) {
+                                @endphp
                                     @php
                                         $compatibility = $user->profile_match_for_viewer;
                                         $member = $user->member;
@@ -143,9 +162,13 @@
                                             </div>
 
                                             <a id="shortlist_a_id_{{ $user->id }}"
-                                                @if ($shortlist_onclick == 1) onclick="do_shortlist({{ $user->id }})"
-                                                @elseif($shortlist_onclick == 0) onclick="remove_shortlist({{ $user->id }})"
-                                                @else onclick="show_shortlist_requirement(@json($shortlist_prompt))" @endif
+                                                @if ($shortlist_onclick == 1)
+                                                    onclick="do_shortlist({{ $user->id }})"
+                                                @elseif ($shortlist_onclick == 0)
+                                                    onclick="remove_shortlist({{ $user->id }})"
+                                                @else
+                                                    onclick="show_shortlist_requirement(@json($shortlist_prompt))"
+                                                @endif
                                                 class="hq-card-heart c-pointer" title="{{ $shortlist_text }}">
                                                 <i class="{{ $shortlist ? 'las' : 'lar' }} la-heart"></i>
                                             </a>
@@ -163,16 +186,24 @@
 
                                         <div class="hq-discovery-body">
                                             <div class="hq-profile-facts">
-                                                @if($age)<span><i class="las la-user"></i>{{ $age }} {{ translate('Years') }}</span>@endif
-                                                @if($height)<span><i class="las la-ruler-vertical"></i>{{ $height }}</span>@endif
-                                                @if($locationText)<span><i class="las la-map-marker"></i>{{ $locationText }}</span>@endif
+                                                @if ($age)
+                                                    <span><i class="las la-user"></i>{{ $age }} {{ translate('Years') }}</span>
+                                                @endif
+                                                @if ($height)
+                                                    <span><i class="las la-ruler-vertical"></i>{{ $height }}</span>
+                                                @endif
+                                                @if ($locationText)
+                                                    <span><i class="las la-map-marker"></i>{{ $locationText }}</span>
+                                                @endif
                                             </div>
 
                                             @if($career?->designation || $education?->degree)
                                                 <div class="hq-profile-profession">
                                                     <i class="las la-graduation-cap"></i>
                                                     <span>{{ $career?->designation ?: $education?->degree }}</span>
-                                                    @if($religionName)<b>• {{ $religionName }}</b>@endif
+                                                    @if ($religionName)
+                                                        <b>• {{ $religionName }}</b>
+                                                    @endif
                                                 </div>
                                             @endif
 
@@ -184,7 +215,9 @@
                                                 @foreach(array_filter([$languageName, $casteName, $maritalStatus]) as $tag)
                                                     <span>{{ $tag }}</span>
                                                 @endforeach
-                                                @if($member?->trust_badge)<span>{{ translate('Trust Badge') }}</span>@endif
+                                                @if ($member?->trust_badge)
+                                                    <span>{{ translate('Trust Badge') }}</span>
+                                                @endif
                                             </div>
 
                                             <div class="hq-discovery-actions">
@@ -211,11 +244,19 @@
 
                                             <div class="hq-card-secondary-actions">
                                                 <button type="button" onclick="ignore_member({{ $user->id }})"><i class="las la-ban"></i>{{ translate('Ignore') }}</button>
-                                                <button type="button" @if(!$profile_reported) onclick="report_member({{ $user->id }})" @endif {{ $profile_reported ? 'disabled' : '' }}><i class="las la-flag"></i>{{ $profile_reported ? translate('Reported') : translate('Report') }}</button>
+                                                <button type="button"
+                                                    @if (! $profile_reported)
+                                                        onclick="report_member({{ $user->id }})"
+                                                    @endif
+                                                    @disabled($profile_reported)>
+                                                    <i class="las la-flag"></i>{{ $profile_reported ? translate('Reported') : translate('Report') }}
+                                                </button>
                                             </div>
                                         </div>
                                     </article>
-                                @endforeach
+                                @php
+                                    }
+                                @endphp
                             </div>
                             <div class="aiz-pagination">
                                 {{ $users->appends(request()->input())->links() }}
