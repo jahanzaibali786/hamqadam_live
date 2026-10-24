@@ -4,6 +4,7 @@ namespace App\Models;
 use App\Models\User;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProfileMatch extends Model
 {
@@ -41,6 +42,30 @@ class ProfileMatch extends Model
         'ai_enhanced' => 'boolean',
         'calculated_at' => 'datetime',
     ];
+
+    /**
+     * Match visibility shared by dashboard cards/counts and the full listing.
+     * Always scope to the signed-in member, excluding hidden or unavailable profiles.
+     */
+    public function scopeVisibleToMember(Builder $query, User $member): Builder
+    {
+        return $query->where('user_id', $member->id)
+            ->where('match_id', '!=', $member->id)
+            ->where('match_percentage', '>', 0)
+            ->whereHas('matchedUser', fn ($q) => $q
+                ->where('user_type', 'member')
+                ->where('approved', 1)
+                ->where('blocked', 0)
+                ->where('deactivated', 0)
+                ->whereHas('member', fn ($m) => $m->where(fn ($x) => $x
+                    ->where('hide_profile', 0)->orWhereNull('hide_profile'))))
+            ->whereNotIn('match_id', function ($q) use ($member) {
+                $q->select('user_id')->from('ignored_users')->where('ignored_by', $member->id);
+            })
+            ->whereNotIn('match_id', function ($q) use ($member) {
+                $q->select('ignored_by')->from('ignored_users')->where('user_id', $member->id);
+            });
+    }
 
     public function user(){
       return $this->belongsTo(User::class, 'match_id');

@@ -66,7 +66,7 @@
                     class="text-muted">{{ translate("Use proper link without extra parameter. Don't use short share link/embeded iframe code.") }}</small>
             </div>
             <div class="form-group mb-0 text-right">
-                <button type="submit" class="btn btn-primary">{{ translate('Save') }}</button>
+                <button type="submit" class="btn btn-primary hm-pink-story-save">{{ translate('Save') }}</button>
             </div>
         </form>
     </div>

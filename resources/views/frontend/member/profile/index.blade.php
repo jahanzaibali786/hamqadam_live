@@ -1,7 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-reference-v2.css') }}?v=1">
-<div class="hm-profile-ref">
+<div class="hm-profile-ref hm-profile-fixed-rails">
 <div class="hm-profile-ref-hero">
  <img class="hm-profile-ref-avatar" src="{{ $member->photo ? uploaded_asset($member->photo) : static_asset('assets/img/avatar-place.png') }}" alt="Profile photo">
  <div><div class="hm-eyebrow">Profile Management</div><h2>{{ $member->first_name }} {{ $member->last_name }}</h2><div class="hm-profile-ref-meta">Manage your introduction, personal details, family, education, career and partner preferences.</div><a href="{{ route('member_profile', $member->id) }}" class="btn btn-outline-primary btn-sm mt-2">View Public Profile</a></div>
