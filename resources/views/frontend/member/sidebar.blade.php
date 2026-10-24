@@ -38,13 +38,6 @@
     </div>
     <div class="aiz-user-sidenav rounded overflow-hidden">
         <div class="px-4 text-center mb-3">
-            <span class="avatar avatar-md mb-2">
-                @if (Auth::user()->photo != null)
-                    <img src="{{ uploaded_asset(Auth::user()->photo) }}">
-                @else
-                    <img src="{{ static_asset('assets/img/avatar-place.png') }}">
-                @endif
-            </span>
             <h4 class="h5 fw-600 mb-1">{{ Auth::user()->first_name . ' ' . Auth::user()->last_name }}</h4>
             @if ($isDedicatedGuardian)
                 @if ($isPausedGuardian)
