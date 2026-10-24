@@ -8,6 +8,7 @@ use Illuminate\Validation\ValidationException;
 class PublicNavigationController extends Controller {
  public function update(Request $request,string $area) {
   abort_unless(in_array($area,['header','footer'],true),404);
+  abort_unless(auth()->user()?->can($area),403);
   $data=$request->validate(['labels'=>'required|array|max:15','labels.*'=>'nullable|string|max:60','links'=>'required|array|max:15','links.*'=>'nullable|string|max:512']);
   $items=[];
   foreach($data['labels'] as $i=>$label) {
