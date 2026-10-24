@@ -41,6 +41,7 @@
                 <h6 class="fs-15 mb-1">
 
                     {{ $chat_thread->$user_to_show->first_name.' '.$chat_thread->$user_to_show->last_name }}
+                </h6>
 
                     @if(Cache::has('user-is-online-' . $chat_thread->$user_to_show->id))
 
@@ -64,9 +65,9 @@
 
         </div>
 
-        <div class="d-flex align-items-center">
+        <div class="hm-chat-header-actions" role="group" aria-label="Conversation actions">
 
-            <div class="mr-2 text-right">
+            <div class="mr-2 text-right d-none">
 
                 <div class="fs-11 text-muted" id="chat-partner-presence">
 
@@ -159,7 +160,7 @@
 
             
 
-            <button class="btn btn-icon btn-circle btn-soft-primary chat-info" data-toggle="class-toggle" data-target=".chat-info-wrap"><i class="las la-info-circle"></i></button>
+            <button type="button" class="btn btn-icon btn-circle btn-soft-primary chat-info" data-toggle="class-toggle" data-target=".chat-info-wrap"><i class="las la-info-circle"></i></button>
 
         </div>
 
