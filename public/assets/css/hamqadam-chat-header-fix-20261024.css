@@ -1,0 +1,17 @@
+/* Final chat-only alignment and composer focus correction. */
+.hm-messages-reference,.hm-messages-reference .aiz-chat,.hm-messages-reference .hm-ref-msg-shell{min-width:0;max-width:100%}
+.hm-messages-reference #single_chat .chat-header{display:flex!important;flex-wrap:nowrap;align-items:center!important;gap:12px;min-width:0}
+.hm-messages-reference #single_chat .chat-header>.media{display:flex;flex:1 1 auto;min-width:0;align-items:center!important}
+.hm-messages-reference #single_chat .chat-header .media-body{min-width:0;flex:1 1 auto}
+.hm-messages-reference #single_chat .chat-header h6{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 0 4px!important;line-height:1.3}
+.hm-messages-reference #single_chat .chat-partner-presence-inline{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm-messages-reference #single_chat .hm-chat-header-actions{display:flex!important;flex:0 0 auto;align-items:center;justify-content:flex-end;gap:8px;margin-left:auto;min-width:0}
+.hm-messages-reference #single_chat .hm-chat-header-actions>.btn,.hm-messages-reference #single_chat .hm-chat-header-actions>.dropdown>.btn{display:inline-flex!important;align-items:center;justify-content:center;width:40px!important;height:40px!important;min-width:40px!important;margin:0!important;padding:0!important;line-height:1!important;vertical-align:middle}
+.hm-messages-reference #single_chat .hm-chat-header-actions>.dropdown{display:flex;align-items:center;margin:0!important}
+.hm-messages-reference #single_chat .hm-chat-header-actions>.btn i,.hm-messages-reference #single_chat .hm-chat-header-actions>.dropdown>.btn i{font-size:18px;line-height:1}
+.hm-messages-reference #single_chat #send-mesaage .input-group{min-width:0;box-shadow:none!important}
+.hm-messages-reference #single_chat #message,.hm-messages-reference #single_chat #message:focus,.hm-messages-reference #single_chat #message:active{border:0!important;outline:0!important;box-shadow:none!important;-webkit-box-shadow:none!important;background:transparent!important}
+.hm-messages-reference #single_chat #send-mesaage .input-group:focus-within{border-color:#f1e7ed!important;outline:0!important;box-shadow:none!important}
+@media(min-width:1081px) and (max-width:1450px){.hm-messages-reference .hm-chat-reference-grid{grid-template-columns:minmax(175px,1fr) minmax(0,1.65fr) minmax(175px,.83fr)!important;gap:9px!important}}
+@media(min-width:741px) and (max-width:1080px){.hm-messages-reference .hm-chat-reference-grid{grid-template-columns:minmax(190px,.9fr) minmax(0,1.65fr)!important;gap:10px!important}.hm-messages-reference .hm-chat-profile-rail{grid-column:1/-1}}
+@media(max-width:740px){.hm-messages-reference #single_chat .chat-header{gap:7px;padding:10px!important}.hm-messages-reference #single_chat .hm-chat-header-actions{gap:4px}.hm-messages-reference #single_chat .hm-chat-header-actions>.btn,.hm-messages-reference #single_chat .hm-chat-header-actions>.dropdown>.btn{width:32px!important;height:32px!important;min-width:32px!important}.hm-messages-reference #single_chat .chat-header .avatar{margin-right:7px!important}}
