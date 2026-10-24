@@ -29,7 +29,7 @@
     }
 @endphp
 
-<div class="aiz-user-sidenav-wrap hq-member-scroll-shell {{ $isDedicatedGuardian ? 'hm-guardian-nav' : 'hm-regular-nav' }} pt-4 sticky-top c-scrollbar-light position-relative z-1 shadow-none">
+<div class="aiz-user-sidenav-wrap hq-member-scroll-shell {{ $isDedicatedGuardian ? 'hm-guardian-nav' : 'hm-regular-nav' }} c-scrollbar-light position-relative z-1 shadow-none">
     <div class="absolute-top-left d-xl-none">
         <button class="btn btn-sm p-2" data-toggle="class-toggle" data-target=".aiz-mobile-side-nav"
             data-same=".mobile-side-nav-thumb">
@@ -37,38 +37,6 @@
         </button>
     </div>
     <div class="aiz-user-sidenav rounded overflow-hidden">
-        <div class="px-4 text-center mb-3">
-            <h4 class="h5 fw-600 mb-1">{{ Auth::user()->first_name . ' ' . Auth::user()->last_name }}</h4>
-            @if ($isDedicatedGuardian)
-                @if ($isPausedGuardian)
-                    <span class="badge badge-inline badge-warning">{{ translate('Access Paused') }}</span>
-                    @if ($pausedLink && $pausedLink->profile)
-                        <div class="bg-soft-warning p-2 rounded text-left mt-3">
-                            <span class="fs-10 text-muted text-uppercase fw-700 d-block">{{ translate('Assisting Member') }}</span>
-                            <strong class="fs-13 d-block text-dark text-truncate">{{ $pausedLink->profile->first_name }} {{ $pausedLink->profile->last_name }}</strong>
-                            <div class="fs-11 text-muted mt-1">
-                                <i class="las la-pause-circle text-warning"></i> {{ translate('Access paused by member') }}
-                            </div>
-                        </div>
-                    @endif
-                @else
-                    <span class="badge badge-inline badge-primary">{{ translate('Wali / Guardian') }}</span>
-                    @if ($firstManagedLink && $firstManagedLink->profile)
-                        <div class="bg-soft-primary p-2 rounded text-left mt-3">
-                            <span class="fs-10 text-muted text-uppercase fw-700 d-block">{{ translate('Assisting Member') }}</span>
-                            <strong class="fs-13 d-block text-primary text-truncate">{{ $firstManagedLink->profile->first_name }} {{ $firstManagedLink->profile->last_name }}</strong>
-                            <div class="fs-11 text-muted mt-1">
-                                <i class="las la-user-tag"></i> {{ $firstManagedLink->relationship }} · {{ translate($firstManagedLink->guardian_role ?? 'Guardian') }}
-                            </div>
-                            <div class="fs-11 text-muted mt-1">
-                                <i class="las la-coins text-warning"></i> {{ $firstManagedLink->profile->member?->package?->name ?? translate('Free') }} · <strong>{{ $firstManagedLink->profile->member?->remaining_interest ?? 0 }} {{ translate('Coins') }}</strong>
-                            </div>
-                        </div>
-                    @endif
-                @endif
-            @endif
-        </div>
-
         <div class="sidemnenu hq-member-side-scroll mb-3" id="hq-member-side-scroll" tabindex="0" role="region" aria-label="Member dashboard navigation">
             <ul class="aiz-side-nav-list" data-toggle="aiz-side-menu">
 
@@ -269,26 +237,7 @@
                 @endif
             </ul>
         </div>
-        @unless($isDedicatedGuardian)
-        @php
-          $promo = match(true) {
-            request()->routeIs('profile_settings') => ['Complete your profile. Get better matches.', 'Complete Now', 'profile_settings'],
-            request()->routeIs('member.verification','member.reference.verification') => ['Verified profiles build stronger trust.', 'Get Verified Now', 'member.verification'],
-            request()->routeIs('member.reference.assistant','member.v1_dashboard') => ['Let AI guide you to meaningful connections.', 'Explore AI Tools', 'member.reference.assistant'],
-            request()->routeIs('member.reference.blogs') => ['Knowledge today. Better relationships tomorrow.', 'Explore Blogs', 'member.reference.blogs'],
-            request()->routeIs('member.reference.stories','happy_story.member') => ['Real people. Real stories. Real happiness.', 'Share Your Story', 'happy_story.member'],
-            request()->routeIs('frontend.notifications') => ['Stay updated. Never miss a meaningful connection.', 'View Plans', 'member.reference.packages'],
-            request()->routeIs('member.reference.meetings') => ['Take the next step with confidence.', 'View Plans', 'member.reference.packages'],
-            request()->routeIs('my_shortlists') => ['Your next chapter could be here.', 'Explore Matches', 'member.listing'],
-            default => ['Find your story. Choose forever.', 'View Premium Plans', 'member.reference.packages'],
-          };
-        @endphp
-        <div class="hm-member-context-promo">
-          <img src="{{ static_asset('assets/img/member-reference-couple.svg') }}" alt="" loading="lazy">
-          <p>{{ $promo[0] }}</p>
-          <a href="{{ route($promo[2]) }}" class="hm-member-promo-cta">{{ $promo[1] }} <i class="las la-arrow-right"></i></a>
-        </div>
-        @endunless
+
         <div class="hm-member-sidebar-logout mb-3 px-3">
             <form action="{{ route('user.logout') }}" method="POST">
               @csrf
