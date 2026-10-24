@@ -356,6 +356,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::patch('/advisor-consultations/{consultation}', [\App\Http\Controllers\Admin\AdvisorConsultationController::class, 'update'])->whereNumber('consultation')->middleware('permission:show_contact_us_queries')->name('admin.advisor_consultations.update');
 
     Route::get('/website/team-members', [\App\Http\Controllers\Admin\TeamMembersController::class,'index'])->middleware('permission:edit_pages')->name('website.team_members.index');
+    Route::get('/website/team-members/create', [\App\Http\Controllers\Admin\TeamMembersController::class,'create'])->middleware('permission:edit_pages')->name('website.team_members.create');
+    Route::get('/website/team-members/{member}/edit', [\App\Http\Controllers\Admin\TeamMembersController::class,'edit'])->whereNumber('member')->middleware('permission:edit_pages')->name('website.team_members.edit');
     Route::post('/website/team-members', [\App\Http\Controllers\Admin\TeamMembersController::class,'store'])->middleware('permission:edit_pages')->name('website.team_members.store');
     Route::patch('/website/team-members/{member}', [\App\Http\Controllers\Admin\TeamMembersController::class,'update'])->middleware('permission:edit_pages')->name('website.team_members.update');
     Route::delete('/website/team-members/{member}', [\App\Http\Controllers\Admin\TeamMembersController::class,'destroy'])->middleware('permission:edit_pages')->name('website.team_members.destroy');
