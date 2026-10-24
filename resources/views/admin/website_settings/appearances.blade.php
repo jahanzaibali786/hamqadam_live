@@ -23,13 +23,6 @@
                       <input type="text" name="site_motto" class="form-control" placeholder="{{ translate('Best Matrimonial Website') }}" value="{{  get_setting('site_motto') }}">
                     </div>
               </div>
-              <div class="form-group row">
-                  <label class="col-md-3 col-from-label">{{ translate('Site Icon') }}</label>
-                  <div class="col-md-8">
-                      <div class="input-group " data-toggle="aizuploader" data-type="image">
-                        <div class="input-group-prepend">
-                          <div class="input-group-text bg-soft-secondary">{{ translate('Browse') }}</div>
-                        </div>
                         <div class="form-control file-amount">{{ translate('Choose File') }}</div>
                                       <input type="hidden" name="types[]" value="site_icon">
                         <input type="hidden" name="site_icon" value="{{ get_setting('site_icon') }}" class="selected-files">
