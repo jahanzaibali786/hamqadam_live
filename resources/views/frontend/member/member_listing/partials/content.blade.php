@@ -62,14 +62,20 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="mb-5 hq-discovery-grid">
+                            <div class="hq-discovery-grid">
                                 {{-- Render each member card with a standard Blade loop. --}}
                                 @foreach ($users as $key => $user)
                                     @php
                                         $compatibility = $user->profile_match_for_viewer;
                                         $member = $user->member;
-                                        $avatar_image = ($member?->gender == 1) ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png';
                                         $profile_picture_show = show_profile_picture($user);
+                                        $photoUrl = $profile_picture_show ? uploaded_asset($user->photo) : null;
+                                        $photoPath = parse_url((string) ($photoUrl ?? ''), PHP_URL_PATH) ?: '';
+                                        $hasVisiblePhoto = $profile_picture_show && !empty($photoUrl)
+                                            && !str_ends_with(strtolower($photoPath), '/placeholder.jpg');
+                                        $photoFallbackLabel = $profile_picture_show
+                                            ? translate('Photo unavailable')
+                                            : translate('Photo private');
                                         $isVerified = app(\App\Services\BadgeService::class)->isVerified($member);
                                         $isOnline = Cache::has('user-is-online-' . $user->id);
                                         $age = !empty($member?->birthday) ? \Carbon\Carbon::parse($member->birthday)->age : null;
@@ -143,11 +149,19 @@
                                     @endphp
 
                                     <article class="hq-discovery-card" id="block_id_{{ $user->id }}">
-                                        <div class="hq-discovery-photo">
-                                            <img
-                                                src="{{ $profile_picture_show ? (uploaded_asset($user->photo) ?: static_asset($avatar_image)) : static_asset($avatar_image) }}"
-                                                onerror="this.onerror=null;this.src='{{ static_asset($avatar_image) }}';"
-                                                alt="{{ $profile_picture_show ? trim($user->first_name . ' ' . $user->last_name) : translate('Profile photo hidden for privacy') }}">
+                                        <div class="hq-discovery-photo {{ $hasVisiblePhoto ? 'hq24-has-photo' : 'hq24-no-photo' }}">
+                                            <div class="hq24-photo-fallback" aria-label="{{ $photoFallbackLabel }}">
+                                                <span class="hq24-photo-fallback-icon" aria-hidden="true"><i class="las la-user-shield"></i></span>
+                                                <span class="hq24-photo-fallback-label">{{ $photoFallbackLabel }}</span>
+                                            </div>
+                                            @if ($hasVisiblePhoto)
+                                                <img
+                                                    src="{{ $photoUrl }}"
+                                                    alt="{{ trim($user->first_name . ' ' . $user->last_name) }}"
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    onerror="this.remove();">
+                                            @endif
 
                                             <div class="hq-profile-badges">
                                                 @if($isVerified)
