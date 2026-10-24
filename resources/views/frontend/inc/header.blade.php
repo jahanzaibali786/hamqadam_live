@@ -10,12 +10,9 @@
                 <span><strong>{{ get_setting('website_name') ?: 'Hamqadam' }}</strong><small>{{ translate('Matrimonial Sanctuary') }}</small></span>
             </a>
             <nav class="hq-reference-menu d-none d-lg-flex">
-                <a class="{{ areActiveRoutes(['home'], 'is-active') }}" href="{{ route('home') }}">{{ translate('Home') }}</a>
-                <a class="{{ areActiveRoutes(['editorial.about'], 'is-active') }}" href="{{ route('editorial.about') }}">{{ translate('About Us') }}</a>
-                <a class="{{ areActiveRoutes(['editorial.team'], 'is-active') }}" href="{{ route('editorial.team') }}">{{ translate('Our Team') }}</a>
-                <a class="{{ areActiveRoutes(['happy_stories'], 'is-active') }}" href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a>
-                <a class="{{ areActiveRoutes(['blog', 'blog.details', 'blog.description'], 'is-active') }}" href="{{ route('blog') }}">{{ translate('Blogs') }}</a>
-                <a class="{{ areActiveRoutes(['contact_us'], 'is-active') }}" href="{{ route('contact_us') }}">{{ translate('Help & Support') }}</a>
+                @foreach(\App\Support\PublicNavigation::items('header') as $item)
+                  <a href="{{ \App\Support\PublicNavigation::link($item['url']) }}" class="{{ rtrim(parse_url($item['url'],PHP_URL_PATH) ?: '', '/') === request()->getPathInfo() ? 'is-active' : '' }}">{{ $item['label'] }}</a>
+                @endforeach
             </nav>
             <div class="hq-reference-actions">
                 @auth
@@ -57,12 +54,9 @@
             </div>
         </div>
         <div class="hq-reference-mobile-menu d-lg-none">
-            <a href="{{ route('home') }}">{{ translate('Home') }}</a>
-            <a href="{{ route('editorial.about') }}">{{ translate('About Us') }}</a>
-            <a href="{{ route('editorial.team') }}">{{ translate('Our Team') }}</a>
-            <a href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a>
-            <a href="{{ route('blog') }}">{{ translate('Blogs') }}</a>
-            <a href="{{ route('contact_us') }}">{{ translate('Help & Support') }}</a>
+          @foreach(\App\Support\PublicNavigation::items('header') as $item)
+            <a href="{{ \App\Support\PublicNavigation::link($item['url']) }}">{{ $item['label'] }}</a>
+          @endforeach
         </div>
     </header>
 </div>

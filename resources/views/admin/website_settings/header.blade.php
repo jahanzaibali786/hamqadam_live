@@ -67,4 +67,5 @@
 		</div>
 	</div>
 </div>
+<div class="card mt-3"><div class="card-header"><strong>Public Website Navbar Links</strong></div><div class="card-body"><p>These links change the public website, not the admin panel.</p><form action="{{ route('website.public_navigation.update','header') }}" method="POST">@csrf @foreach(\App\Support\PublicNavigation::items('header') as $item)<div class="row mb-2"><div class="col-md-5"><input class="form-control" name="labels[]" value="{{ $item['label'] }}" placeholder="Label" maxlength="60"></div><div class="col-md-7"><input class="form-control" name="links[]" value="{{ $item['url'] }}" placeholder="/page-path or HTTPS URL" maxlength="512"></div></div>@endforeach @for($n=0;$n<3;$n++)<div class="row mb-2"><div class="col-md-5"><input class="form-control" name="labels[]" placeholder="New link title"></div><div class="col-md-7"><input class="form-control" name="links[]" placeholder="/page-path"></div></div>@endfor<button type="submit" class="btn btn-primary">Save Website Links</button></form></div></div>
 @endsection

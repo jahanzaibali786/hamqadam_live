@@ -14,7 +14,7 @@
                 <a href="{{ route('home') }}" class="hq-footer-brand">
                     <span class="hq-footer-brand-mark"><img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true"></span>{{ $referenceSiteName }}
                 </a>
-                <p>{{ translate('Find Your Perfect Partner With Trust & Care. Hamqadam is a dignified, secure matrimonial platform committed to verified profiles, family respect, and lasting lifelong unions.') }}</p>
+                <p>{{ get_setting('about_us_description') ? strip_tags(get_setting('about_us_description')) : translate('Find Your Perfect Partner With Trust & Care. Hamqadam is a dignified, secure matrimonial platform committed to verified profiles, family respect, and lasting lifelong unions.') }}</p>
                 <div class="hq-footer-trust">
                     <span><i class="las la-shield-alt"></i>{{ translate('100% Verified Profiles') }}</span>
                     <span><i class="las la-lock"></i>{{ translate('256-Bit SSL Protection') }}</span>
@@ -22,16 +22,14 @@
             </div>
 
             <div>
-                <h4>{{ translate('Discovery') }}</h4>
-                <a href="{{ route('home') }}">{{ translate('Home') }}</a>
-                <a href="{{ route('members.public_listing') }}">{{ translate('Active Members') }}</a>
-                <a href="{{ route('happy_stories') }}">{{ translate('Success Stories') }}</a>
-                <a href="{{ route('packages') }}">{{ translate('Premium Plans') }}</a>
-                <a href="{{ route('members.public_listing') }}">{{ translate('Advanced Search') }}</a>
+                <h4>{{ get_setting('hq_footer_discovery_heading') ?: 'Discovery' }}</h4>
+                @foreach(\App\Support\PublicNavigation::items('footer') as $item)
+                  <a href="{{ \App\Support\PublicNavigation::link($item['url']) }}">{{ $item['label'] }}</a>
+                @endforeach
             </div>
 
             <div>
-                <h4>{{ translate('Trust & Safety') }}</h4>
+                <h4>{{ get_setting('hq_footer_trust_heading') ?: translate('Trust & Safety') }}</h4>
                 <a href="{{ url('/privacy-policy') }}">{{ translate('Privacy Policy') }}</a>
                 <a href="{{ url('/terms-conditions') }}">{{ translate('Terms & Conditions') }}</a>
                 <a href="{{ route('contact_us') }}">{{ translate('Identity Verification') }}</a>
@@ -39,18 +37,16 @@
             </div>
 
             <div class="hq-footer-assistance">
-                <h4>{{ translate('Assistance') }}</h4>
+                <h4>{{ get_setting('hq_footer_assistance_heading') ?: translate('Assistance') }}</h4>
                 <p>{{ translate('Direct Dedicated Support') }}</p>
                 <a class="hq-footer-phone" href="tel:{{ preg_replace('/[^0-9+]/', '', $referenceFooterPhone) }}">
                     <i class="las la-phone mr-1"></i>{{ $referenceFooterPhone }}
                 </a>
-                <a href="mailto:{{ $referenceFooterEmail }}">
-                    <i class="las la-envelope mr-1"></i>{{ $referenceFooterEmail }}
-                </a>
+                <a class="hq-footer-email" href="mailto:{{ $referenceFooterEmail }}"><i class="las la-envelope"></i><span>{{ $referenceFooterEmail }}</span></a>
                 <div class="mt-2 text-muted fs-12">
                     <i class="las la-map-marker mr-1"></i>{{ strip_tags($referenceFooterAddress) }}
                 </div>
-                <small class="d-block mt-2">{{ translate('Available 24/7 for Family Consultations') }}</small>
+                <small class="d-block mt-2">{{ get_setting('hq_footer_assistance_note') ?: translate('Available 24/7 for Family Consultations') }}</small>
             </div>
         </div>
 

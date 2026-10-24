@@ -719,6 +719,9 @@
                 </li>
                 @endcan
 
+                @can('edit_pages')
+                <li class="aiz-side-nav-item"><a href="{{ route('website.team_members.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['website.team_members.index']) }}"><i class="las la-users aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Our Team Members</span></a></li>
+                @endcan
                 <!-- Website Setup -->
                 @if (auth()->user()->can('header') ||
                 auth()->user()->can('footer') ||

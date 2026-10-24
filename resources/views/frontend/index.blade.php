@@ -197,6 +197,8 @@
 @endif
 
 
+@include('frontend.partials.home_team_carousel')
+
 <!-- Banner section 1 -->
 @if (get_setting('show_home_banner1_section') == 'on' && get_setting('home_banner1_images') != null)
 <section class="hq-section hq-luxury-offers pt-7 bg-white">

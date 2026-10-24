@@ -1,3 +1,6 @@
+@php
+  $cmsTeamMembers = \App\Support\HamqadamTeamContent::members();
+@endphp
 <section class="hqed-team-hero"><div class="hqed-wrap hqed-centered"><span class="hqed-eyebrow"><i class="las la-shield-alt"></i> {{ $data['hero']['eyebrow'] }}</span><h1>{{ $data['hero']['title'] }} <em>{{ $data['hero']['accent'] }}</em></h1><p>{{ $data['hero']['description'] }}</p><div class="hqed-pills">
 @foreach($data['hero']['badges'] as $badge)<span>{{ $badge['text'] }}</span>@endforeach
 </div></div></section>
@@ -5,7 +8,7 @@
 @foreach($data['practice']['filters'] as $filter)<button type="button" data-group="{{ $filter['key'] }}">{{ $filter['label'] }}</button>@endforeach
 </div></div></section>
 <section class="hqed-section"><div class="hqed-wrap"><div class="hqed-team-section-heading"><div><span class="hqed-eyebrow">{{ $data['practice']['eyebrow'] }}</span><h2>{{ $data['practice']['heading'] }}</h2></div><span class="hqed-team-status"><b>●</b> {{ $data['practice']['status'] }}</span></div><div class="hqed-grid3 hqed-team-grid">
-@foreach($data['practice']['members'] as $member)<article class="hqed-card hqed-person" data-member-group="{{ $member['group'] }}"><div class="hqed-person-head"><div class="hqed-avatar">{{ $member['initials'] }}</div><span class="hqed-tag">{{ $member['badge'] }}</span></div><h3>{{ $member['name'] }}</h3><strong class="hqed-role">{{ $member['role'] }}</strong><p>{{ $member['bio'] }}</p><div class="hqed-focus"><strong>{{ $data['practice']['title'] }}</strong><small>{{ $member['focus'] }}</small></div><div class="hqed-person-footer"><span><i class="las la-map-marker"></i> {{ $member['location'] }}</span><a href="{{ url($member['action_link']) }}">{{ $member['action_text'] }} <i class="las la-arrow-right"></i></a></div></article>@endforeach
+@foreach($cmsTeamMembers as $member)<article class="hqed-card hqed-person" data-member-group="{{ $member['group'] }}"><div class="hqed-person-head"><div class="hqed-avatar">@if(!empty($member['image_id']))<img src="{{ uploaded_asset($member['image_id']) }}" alt="{{ $member['name'] }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%">@else{{ $member['initials'] }}@endif</div><span class="hqed-tag">{{ $member['badge'] }}</span></div><h3>{{ $member['name'] }}</h3><strong class="hqed-role">{{ $member['role'] }}</strong><p>{{ $member['bio'] }}</p><div class="hqed-focus"><strong>{{ $data['practice']['title'] }}</strong><small>{{ $member['focus'] }}</small></div><div class="hqed-person-footer"><span><i class="las la-map-marker"></i> {{ $member['location'] }}</span><a href="{{ url($member['action_link']) }}">{{ $member['action_text'] }} <i class="las la-arrow-right"></i></a></div></article>@endforeach
 </div></div></section>
 <section class="hqed-council"><div class="hqed-wrap hqed-council-grid"><div><span class="hqed-eyebrow">{{ $data['council']['eyebrow'] }}</span><h2>{{ $data['council']['title'] }}</h2><p>{{ $data['council']['description'] }}</p><div class="hqed-grid2 hqed-council-stats">
 @foreach($data['council']['stats'] as $stat)<div class="hqed-card"><strong>{{ $stat['value'] }}</strong><small>{{ $stat['label'] }}</small></div>@endforeach

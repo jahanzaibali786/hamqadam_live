@@ -132,7 +132,7 @@
         </script>
     @endif
 
-    <script defer src="{{ static_asset('assets/js/hamqadam-admin-active-sidebar.js') }}?v=2"></script>
+    <script defer src="{{ static_asset('assets/js/hamqadam-admin-active-sidebar.js') }}?v=20261024-5"></script>
     @yield('script')
 
 

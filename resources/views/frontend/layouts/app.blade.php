@@ -69,6 +69,7 @@ if (! $lang) {
     <link rel="stylesheet" href="{{ static_asset('assets/css/aiz-core.css?v=') }}{{ rand(1000,9999) }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-luxury.css?v=') }}{{ rand(1000,9999) }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-brand.css') }}?v=20261023">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-site-cms-20261024.css') }}?v=2">
 
     @if (($lang?->rtl == 1 || in_array($locale, ['ur','ar'],true)))
         <link rel="stylesheet" href="{{ static_asset('assets/css/bootstrap-rtl.min.css') }}">
@@ -182,7 +183,7 @@ if (! $lang) {
       @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
     </style>
     <div
-        class="aiz-main-wrapper d-flex flex-column position-relative @if (Route::currentRouteName() != 'home' && !\Illuminate\Support\Facades\View::hasSection('member_dashboard_shell')) pt-8 pt-lg-10 @endif bg-white">
+        class="aiz-main-wrapper d-flex flex-column position-relative @if (Route::currentRouteName() != 'home' && !\Illuminate\Support\Facades\View::hasSection('member_dashboard_shell')) hq-public-interior-offset @endif bg-white">
 
         @unless(\Illuminate\Support\Facades\View::hasSection('member_dashboard_shell'))
             @include('frontend.inc.header')
@@ -423,6 +424,7 @@ if (! $lang) {
         </script>
     @endif
 
+    <script src="{{ static_asset('assets/js/hamqadam-home-team-20261024.js') }}?v=1" defer></script>
     @yield('script')
 
     @if (Auth::check() && Auth::user()->user_type == 'member')
