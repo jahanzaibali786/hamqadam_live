@@ -12,7 +12,7 @@
         <div class="hq-footer-grid">
             <div class="hq-footer-about">
                 <a href="{{ route('home') }}" class="hq-footer-brand">
-                    <span class="hq-footer-brand-mark"><img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true"></span>{{ $referenceSiteName }}
+                    <span class="hq-footer-brand-mark"><img src="{{ get_setting('footer_logo') ? uploaded_asset(get_setting('footer_logo')) : static_asset('assets/img/hamqadam-double-heart.svg') }}" alt="" aria-hidden="true"></span>{{ $referenceSiteName }}
                 </a>
                 <p>{{ get_setting('about_us_description') ? strip_tags(get_setting('about_us_description')) : translate('Find Your Perfect Partner With Trust & Care. Hamqadam is a dignified, secure matrimonial platform committed to verified profiles, family respect, and lasting lifelong unions.') }}</p>
                 <div class="hq-footer-trust">
