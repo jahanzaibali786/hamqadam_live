@@ -24,6 +24,8 @@ return new class extends Migration {
             $table->timestamps();
             $table->index(['is_active', 'sort_order']);
         });
+        // Initial rows come from the existing Our Team page; CMS can change them afterward.
+        (new \Database\Seeders\HamqadamTeamMembersSeeder())->run();
     }
     public function down(): void { Schema::dropIfExists('hamqadam_team_members'); }
 };
