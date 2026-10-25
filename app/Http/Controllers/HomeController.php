@@ -83,10 +83,8 @@ class HomeController extends Controller
 
         // Curated homepage profiles only; moderation and member privacy remain enforced.
         $base = User::eligibleForPublicHomepage();
-        $new_members = (clone $base)->orderByDesc('id')
-            ->limit(max(1, (int) get_setting('max_new_member_show_homepage')))->get();
-        $premium_members = (clone $base)->where('membership', 2)->inRandomOrder()
-            ->limit(max(1, (int) get_setting('max_premium_member_homepage')))->get();
+        $new_members = (clone $base)->whereIn('membership', [0, 1])->orderByDesc('id')->get();
+        $premium_members = (clone $base)->where('membership', 2)->orderByDesc('id')->get();
 
         $on_behalves = OnBehalf::all();
         $religions = Religion::all();
