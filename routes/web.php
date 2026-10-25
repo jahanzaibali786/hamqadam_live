@@ -354,6 +354,7 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
 
         Route::resource('profile-viewers', ProfileViewerController::class);
         Route::get('/matched-profiles', [ProfileMatchController::class, 'myMatchedProfiles'])->name('my_matched_profiles');
+        Route::get('/matched-profiles/{member}/why', [\App\Http\Controllers\MemberMatchDetailController::class, 'show'])->whereNumber('member')->name('member.match.why');
         Route::get('/horoscope-matched-profiles', [HoroscopeProfileMatchController::class, 'horoscopeMatchedProfiles'])->name('horoscope_matched_profiles');
         Route::get('/matched-refresh', [ProfileMatchController::class, 'matchedRefresh'])->name('match.refresh');
         Route::get('/horoscope-matched-refresh', [HoroscopeProfileMatchController::class, 'horoscopeMatchedRefresh'])->name('horoscope.match.refresh');
