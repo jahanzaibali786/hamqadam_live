@@ -364,6 +364,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::delete('/website/team-members/{member}', [\App\Http\Controllers\Admin\TeamMembersController::class,'destroy'])->middleware('permission:edit_pages')->name('website.team_members.destroy');
 
     Route::post('/website/public-navigation/{area}', [\App\Http\Controllers\Admin\PublicNavigationController::class,'update'])->whereIn('area',['header','footer','footer_trust','footer_bottom'])->name('website.public_navigation.update');
+    Route::get('/website/home-content', [\App\Http\Controllers\Admin\HomePageContentController::class,'edit'])->middleware('permission:edit_pages')->name('website.home_content.edit');
+    Route::post('/website/home-content', [\App\Http\Controllers\Admin\HomePageContentController::class,'update'])->middleware('permission:edit_pages')->name('website.home_content.update');
     // website setting
     Route::group(['prefix' => 'website'], function () {
         Route::controller(SettingController::class)->group(function () {

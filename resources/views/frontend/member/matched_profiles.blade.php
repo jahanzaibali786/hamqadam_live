@@ -1,6 +1,6 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
-<div class="hm-four"><header class="hm-four-head"><div><h1><i class="las la-user-friends"></i> Matched Profiles</h1><p>People who are a great match based on your profile and preferences.</p></div><aside>Better matches lead to brighter futures.</aside></header>
+<div class="hm-four">@if($errors->has('proposal'))<div class="alert alert-danger">{{ $errors->first('proposal') }}</div>@endif@if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif<header class="hm-four-head"><div><h1><i class="las la-user-friends"></i> Matched Profiles</h1><p>People who are a great match based on your profile and preferences.</p></div><aside>Better matches lead to brighter futures.</aside></header>
 <div class="hm-four-layout"><main>
 <nav class="hm-four-tabs"><a class="{{ !request('tab')||request('tab')==='all'?'active':'' }}" href="{{ route('my_matched_profiles') }}">All Matches ({{ $matchedProfiles->total() }})</a><a class="{{ request('tab')==='high'?'active':'' }}" href="{{ route('my_matched_profiles',['tab'=>'high']) }}">High Compatibility</a><a class="{{ request('tab')==='new'?'active':'' }}" href="{{ route('my_matched_profiles',['tab'=>'new']) }}">New Matches</a><a class="{{ request('tab')==='recent'?'active':'' }}" href="{{ route('my_matched_profiles',['tab'=>'recent']) }}">Recently Active</a></nav>
 <div class="hm-four-matches">
@@ -22,7 +22,7 @@
         <p><i class="las la-map-marker"></i>{{ $person->addresses->firstWhere('type','present')?->city?->name ?? 'Location not provided' }}</p>
         <p><i class="las la-briefcase"></i>{{ $member?->job_title ?? 'Profession not provided' }}</p>
         <p><i class="las la-graduation-cap"></i>{{ $person->education->last()?->degree ?? 'Education not provided' }}</p>
-        <div class="hm-four-actions"><a href="{{ $detailUrl }}">View Profile</a><button type="button" id="interest_a_id_{{ $person->id }}" onclick="express_interest({{ $person->id }})" title="Send Interest"><i class="las la-heart"></i></button></div>
+        @include('frontend.member.partials.match_actions',['person'=>$person,'detailUrl'=>$detailUrl])
       </div>
     </article>
   @endif

@@ -157,7 +157,6 @@
                       ];
                       if(auth()->user()->member?->auto_profile_match == 1) $memberNav[] = ['my_matched_profiles','Matched Profiles','la-user-friends'];
                       $memberNav[] = ['interest_requests','Proposals','la-ring'];
-                      $memberNav[] = ['client.scope.portal','Why This Match','la-magic'];
                       if(auth()->user()->member?->auto_horoscope_profile_match == 1) $memberNav[] = ['horoscope_matched_profiles','Horoscope Match','la-moon'];
                       $memberNav = array_merge($memberNav, [
                         ['member.listing','Advanced Search','la-search'],

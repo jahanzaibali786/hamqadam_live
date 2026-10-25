@@ -8,6 +8,8 @@
  $myAddress=$me->addresses?->firstWhere('type','present');
 @endphp
 <div class="hm-ref26 hm-dash26">
+@if($errors->has('proposal'))<div class="alert alert-danger">{{ $errors->first('proposal') }}</div>@endif
+@if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
  <header class="hm-dash26-welcome"><div><h1>Welcome back, <span>{{ $me->first_name }}!</span> 👋</h1><p>Let's find meaningful connections for your future.</p></div><div class="hm-dash26-quote"><i class="las la-quote-left"></i><strong>Every person has a story.<br>Find yours.</strong><img src="{{ static_asset('assets/img/member-reference-couple.svg') }}" alt=""></div></header>
  <div class="hm-dash26-upper">
   <div class="hm-dash26-left">
@@ -30,7 +32,9 @@
     <article class="hm-dash26-person"><a href="{{ $canView?route('member_profile',$person->id):route('member.reference.packages') }}" class="hm-dash26-photo"><img src="{{ $photo }}" onerror="this.onerror=null;this.src='{{ $fallback }}'" loading="lazy" alt="{{ $person->first_name }} profile">
      <span class="hm-dash26-heart"><i class="las la-heart"></i></span></a>
      <strong>{{ $person->first_name }}@if($related?->birthday), {{ \Carbon\Carbon::parse($related->birthday)->age }}@endif</strong>
-     <small>{{ $loc?->city?->name??'Location not provided' }}</small><p><i class="las la-briefcase"></i> {{ $related?->job_title??'Profession not provided' }}</p><div><b><i class="las la-heart"></i> {{ round($match->match_percentage) }}% Match</b><a href="{{ $canView?route('member_profile',$person->id):route('member.reference.packages') }}" aria-label="View {{ $person->first_name }} profile"><i class="las la-ellipsis-v"></i></a></div>
+     <small>{{ $loc?->city?->name??'Location not provided' }}</small><p><i class="las la-briefcase"></i> {{ $related?->job_title??'Profession not provided' }}</p><div><b><i class="las la-heart"></i> {{ round($match->match_percentage) }}% Match</b></div>
+     @php($detailUrl=$canView?route('member_profile',$person->id):route('member.reference.packages'))
+     @include('frontend.member.partials.match_actions',['person'=>$person,'detailUrl'=>$detailUrl])
     </article>
     @empty <p class="hm-ref26-empty">No compatible profiles are available yet. <a href="{{ route('profile_settings') }}">Update your preferences</a>.</p>@endforelse
    </div></section>
