@@ -162,8 +162,7 @@
             </div>
         </div>
         <div class="hq-home-member-carousel-wrap"><div class="hq-home-carousel-controls"><button type="button" class="hq-home-carousel-prev" aria-label="Previous premium members"><i class="las la-chevron-left"></i></button><button type="button" class="hq-home-carousel-next" aria-label="Next premium members"><i class="las la-chevron-right"></i></button></div><div class="aiz-carousel gutters-10 half-outside-arrow hq-home-controlled-carousel" data-items="5" data-xl-items="4"
-            data-lg-items="4" data-md-items="3" data-sm-items="2" data-xs-items="1" data-dots='false' data-arrows='false'
-            data-infinite='true'>
+            data-lg-items="4" data-md-items="3" data-sm-items="2" data-xs-items="1" data-dots='false' data-arrows='false' data-autoplay='true' data-infinite='true'>
             @foreach ($premium_members as $key => $member)
             <div class="carousel-box">
                 @include('frontend.inc.member_box_1', ['member' => $member])
@@ -292,8 +291,7 @@
             </div>
         </div>
         <div class="hq-home-member-carousel-wrap"><div class="hq-home-carousel-controls"><button type="button" class="hq-home-carousel-prev" aria-label="Previous new members"><i class="las la-chevron-left"></i></button><button type="button" class="hq-home-carousel-next" aria-label="Next new members"><i class="las la-chevron-right"></i></button></div><div class="aiz-carousel gutters-10 half-outside-arrow hq-home-controlled-carousel" data-items="5" data-xl-items="4"
-            data-lg-items="4" data-md-items="3" data-sm-items="2" data-xs-items="1" data-dots='false' data-arrows='false'
-            data-infinite='true'>
+            data-lg-items="4" data-md-items="3" data-sm-items="2" data-xs-items="1" data-dots='false' data-arrows='false' data-autoplay='true' data-infinite='true'>
             @foreach ($new_members as $key => $member)
             <div class="carousel-box">
                 @include('frontend.inc.member_box_1', ['member' => $member])
@@ -537,6 +535,20 @@ document.addEventListener('DOMContentLoaded', function () {
   const carousel = wrap.querySelector('.hq-home-controlled-carousel');
   if (!carousel || typeof window.jQuery === 'undefined') return;
   const $carousel = window.jQuery(carousel);
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const slides = carousel.querySelectorAll('.carousel-box').length;
+  const syncAutoplay = function () {
+    if (!$carousel.hasClass('slick-initialized')) return;
+    const visible = Number($carousel.slick('slickGetOption', 'slidesToShow')) || 1;
+    const enabled = !reduceMotion && slides > visible;
+    $carousel.slick('slickSetOption', {
+      autoplay: enabled, autoplaySpeed: 4500, pauseOnHover: true, pauseOnFocus: true
+    }, false);
+    if (enabled) $carousel.slick('slickPlay'); else $carousel.slick('slickPause');
+  };
+  $carousel.on('init reInit breakpoint', function () { window.requestAnimationFrame(syncAutoplay); });
+  if ($carousel.hasClass('slick-initialized')) syncAutoplay();
+  window.addEventListener('load', syncAutoplay, { once: true });
   wrap.querySelector('.hq-home-carousel-prev')?.addEventListener('click', function () {
    if ($carousel.hasClass('slick-initialized')) $carousel.slick('slickPrev');
   });
