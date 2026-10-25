@@ -491,6 +491,7 @@ class MemberController extends Controller
     public function introduction_update(Request $request, $id)
     {
         $member = Member::findOrFail($id);
+        $request->validate(['introduction' => ['required', 'string', 'max:2500']]);
         $member->introduction = $request->introduction;
         if ($member->save()) {
             flash('Member introduction info has been updated successfully')->success();

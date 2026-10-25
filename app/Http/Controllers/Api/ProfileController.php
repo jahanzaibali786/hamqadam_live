@@ -105,6 +105,7 @@ class ProfileController extends Controller
     public function introduction_update(Request $request)
     {
         $member = Member::where('user_id', auth()->id())->first();
+        $request->validate(['introduction' => ['required', 'string', 'max:2500']]);
         $member->introduction = $request->introduction;
         $member->save();
         return $this->success_message('Introduction updated successfully!');
