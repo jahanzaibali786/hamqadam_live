@@ -1,7 +1,7 @@
 <div class="hq-member-card rounded border position-relative overflow-hidden">
     <a
         @if(!Auth::check())
-            onclick="loginModal()"
+            href="{{ route('login') }}"
         @elseif(get_setting('full_profile_show_according_to_membership') == 1 && Auth::user()->membership == 1)
             href="javascript:void(0);" onclick="package_update_alert()"
         @else
@@ -11,7 +11,10 @@
     >
         @php
             $avatar_image = (optional($member->member)->gender == 1) ? 'assets/img/avatar-place.png' : ((optional($member->member)->gender == 2) ? 'assets/img/female-avatar-place.png' : null);
-            $profile_picture_show = show_profile_picture($member);
+            $profile_picture_show = (bool) $member->display_on_website
+                && (bool) $member->approved && (bool) $member->photo_approved
+                && (bool) $member->photo && !(bool) $member->member?->hide_profile
+                && !(bool) $member->profile_privacy_setting?->invisible_mode;
         @endphp
         <div class="hq-member-media">
             <img
