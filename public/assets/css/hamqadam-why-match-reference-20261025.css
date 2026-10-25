@@ -1,0 +1,34 @@
+/* Why This Match — responsive reference-inspired editorial layout. */
+.hm-member-app .hm-why-page{--why-wine:#9f1239;--why-text:#a84469;--why-line:#f1e1e8;max-width:1440px;margin:auto;padding:22px 18px 50px;color:#333047}
+.hm-why-page *{box-sizing:border-box}
+.hm-why-top{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:21px;padding:17px 22px;border-radius:17px;background:linear-gradient(115deg,#fff6fa,#fcebf2);border:1px solid #f9edf2}
+.hm-why-back{display:inline-flex;align-items:center;gap:7px;color:#a84469;font-size:12px;text-decoration:none;margin-bottom:15px}
+.hm-why-eyebrow{font-size:10px;font-weight:750;letter-spacing:.09em;color:#a84469}
+.hm-why-heading h1{font-family:Georgia,serif;color:#401528;font-size:clamp(26px,2.8vw,37px);margin:5px 0 6px;font-weight:700}
+.hm-why-heading p{margin:0;color:#756874;font-size:13px;line-height:1.6}
+.hm-why-mark{height:68px;width:68px;flex:0 0 68px;border-radius:20px;background:#fbe2eb;display:grid;place-items:center;color:#a84469;font-size:29px}
+.hm-why-overview{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:16px;margin-bottom:25px}
+.hm-why-person-card,.hm-why-score-card,.hm-why-panel{background:#fff;border:1px solid var(--why-line);border-radius:17px;box-shadow:0 8px 25px #5f143b08}
+.hm-why-person-card{display:grid;grid-template-columns:minmax(120px,42%) minmax(0,1fr);gap:20px;padding:17px;align-items:center;min-width:0}
+.hm-why-portrait{height:252px;border-radius:13px;overflow:hidden;background:#faebf2}
+.hm-why-portrait img{height:100%;width:100%;object-fit:cover;display:block}
+.hm-why-person-meta{min-width:0}.hm-why-person-meta h2{font-family:Georgia,serif;font-size:clamp(19px,2vw,28px);color:#421b2b;margin:12px 0 8px;overflow-wrap:anywhere}.hm-why-person-meta p{color:#817382;font-size:12px}
+.hm-why-verified{font-size:10px;padding:6px 10px;border-radius:30px;background:#eaf8ee;color:#19865b;font-weight:750}
+.hm-why-outline{display:inline-flex;align-items:center;gap:7px;border:1px solid #e6bbcb;border-radius:9px;padding:10px 16px;text-decoration:none;color:#a84469;font-weight:700;font-size:12px;margin-top:13px}
+.hm-why-score-card{text-align:center;padding:19px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hm-why-score-ring{height:155px;width:155px;border-radius:50%;background:conic-gradient(#a84469 calc(var(--hm-match-score)*1%),#f7e3ec 0);padding:12px;display:grid;place-items:center;margin:12px 0}
+.hm-why-score-ring>div{height:100%;width:100%;background:white;border-radius:50%;display:flex;flex-direction:column;justify-content:center}
+.hm-why-score-ring strong{font-size:38px;color:#9f1239;line-height:1.1}.hm-why-score-ring span{color:#907581;font-size:11px}
+.hm-why-score-card h2{font-size:19px;color:#471f34;margin:4px 0 7px}.hm-why-score-card p{font-size:12px;line-height:1.65;color:#857280;margin:0;max-width:380px}
+.hm-why-score-note{margin-top:12px;color:#a84469;font-size:10px}
+.hm-why-section-intro{text-align:center;margin:13px 0 21px}.hm-why-section-intro h2{color:#451e35;font-family:Georgia,serif;font-size:clamp(21px,2.2vw,29px);margin:7px 0}.hm-why-section-intro p{color:#837685;font-size:12px}
+.hm-why-insights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.hm-why-panel{padding:22px;min-width:0}.hm-why-panel-heading{display:flex;align-items:center;gap:11px;margin-bottom:17px}.hm-why-panel-heading h3{margin:0 0 3px;font-size:17px;color:#43263a}.hm-why-panel-heading p{margin:0;color:#928390;font-size:11px}
+.hm-why-panel-icon{height:39px;width:39px;flex:0 0 39px;display:grid;place-items:center;border-radius:11px;background:#fceaf1;color:#a84469;font-size:20px}.hm-why-panel-icon.is-positive{color:#178d66;background:#eaf8f0}
+.hm-why-reason-list{display:grid;gap:9px}.hm-why-reason{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:9px;background:#fbf8fa;font-size:12px;line-height:1.55;color:#625866;overflow-wrap:anywhere}.hm-why-reason i{color:#258e6d;flex:none;font-size:17px}.hm-why-reason.is-consideration i{color:#a84469}
+.hm-why-empty{font-size:12px;color:#877985;margin:0}.hm-why-breakdown{margin-bottom:16px}.hm-why-breakdown-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 28px}.hm-why-breakdown-line{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;font-size:12px}.hm-why-breakdown-line strong{color:#544559;font-weight:650}.hm-why-breakdown-line span{color:#a84469;font-weight:750;overflow-wrap:anywhere}.hm-why-progress{height:7px;border-radius:30px;background:#f8ebf0;overflow:hidden}.hm-why-progress span{display:block;height:100%;border-radius:30px;background:linear-gradient(135deg,#9f1239,#67051f)}
+.hm-why-guidance{margin-bottom:18px}.hm-why-guidance .hm-why-reason{margin-bottom:8px}
+.hm-why-footer{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:23px 27px;background:linear-gradient(110deg,#fff0f6,#fbe5ef);border-radius:16px}.hm-why-footer h2{font-family:Georgia,serif;font-size:22px;color:#451b34;margin:6px 0}.hm-why-footer p{color:#806d7a;font-size:12px;margin:0}.hm-member-app .hm-why-primary{display:inline-flex;flex:none;justify-content:center;align-items:center;gap:10px;padding:13px 22px;border-radius:10px;background:linear-gradient(135deg,#9f1239,#67051f)!important;color:white!important;font-weight:700;font-size:12px;text-decoration:none}
+@media(max-width:850px){.hm-why-overview{grid-template-columns:1fr}.hm-why-portrait{height:225px}.hm-why-score-card{padding:22px}.hm-why-insights{grid-template-columns:1fr}}
+@media(max-width:550px){.hm-member-app .hm-why-page{padding:12px 9px 28px}.hm-why-top{padding:15px}.hm-why-mark{display:none}.hm-why-person-card{grid-template-columns:125px minmax(0,1fr);gap:12px;padding:10px}.hm-why-portrait{height:172px}.hm-why-person-meta h2{font-size:18px}.hm-why-score-ring{height:134px;width:134px}.hm-why-panel{padding:15px}.hm-why-breakdown-grid{grid-template-columns:1fr}.hm-why-footer{flex-direction:column;align-items:stretch;padding:18px}.hm-member-app .hm-why-primary{width:100%}}
+@media(max-width:360px){.hm-why-person-card{grid-template-columns:1fr}.hm-why-portrait{height:200px}.hm-why-person-meta{padding:6px}}
