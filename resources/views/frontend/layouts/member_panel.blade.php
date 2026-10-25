@@ -23,6 +23,8 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-pink-unification-20261024.css') }}?v=2">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-home-member-match-fixes-20261025.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-match-actions-20261025.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-wine-theme-20261025.css') }}?v=1">
+<script src="{{ static_asset('assets/js/hamqadam-match-card-menu-20261025.js') }}?v=1" defer></script>
 @php
     $memberShellUser = auth()->user();
     $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
