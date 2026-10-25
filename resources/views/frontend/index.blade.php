@@ -40,7 +40,7 @@
                     </div>
                     <div class="hq-hero-photo-caption"><span>{{ \App\Support\HomePageContent::get('hero_sanctuary_label') }}</span><strong>{{ \App\Support\HomePageContent::get('hero_sanctuary_caption') }}</strong></div>
                     <div class="hq-match-float hq-match-float-bottom">
-                        <span class="hq-match-score">{{ $hero_male && $hero_male->membership == 2 ? translate('Premium Match') : translate('Verified Match') }}</span>
+                        <span class="hq-match-score">{{ $hero_male && $hero_male->membership == 2 ? \App\Support\HomePageContent::get('hero_premium_label') : \App\Support\HomePageContent::get('hero_standard_label') }}</span>
                         <strong>{{ $hero_male ? $hero_male->first_name : \App\Support\HomePageContent::get('hero_male_fallback') }}</strong>
                         <small>ID: {{ $hero_male ? ($hero_male->code ?: $hero_male->id) : '202609201' }} · {{ $hero_male?->member?->permanent_address?->city ?: ($hero_male?->member?->present_address?->city ?: \App\Support\HomePageContent::get('hero_fallback_city_male')) }}</small>
                     </div>
