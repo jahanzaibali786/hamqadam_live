@@ -10,26 +10,27 @@
         class="d-block text-reset c-pointer"
     >
         @php
-            $avatar_image = (optional($member->member)->gender == 1) ? 'assets/img/avatar-place.png' : ((optional($member->member)->gender == 2) ? 'assets/img/female-avatar-place.png' : null);
-            $profile_picture_show = (bool) $member->display_on_website
-                && (bool) $member->approved && (bool) $member->photo_approved
-                && (bool) $member->photo && !(bool) $member->member?->hide_profile
+            // Guest visibility comes from explicit website featuring, not Auth::check().
+            // Photo moderation and profile privacy are still enforced.
+            $showPublicPhoto = (bool) $member->display_on_website
+                && (bool) $member->approved
+                && (bool) $member->photo_approved
+                && !empty($member->photo)
+                && !(bool) $member->member?->hide_profile
                 && !(bool) $member->profile_privacy_setting?->invisible_mode;
+            $memberPhoto = $showPublicPhoto ? uploaded_asset($member->photo) : null;
         @endphp
-        <div class="hq-member-media">
-            <img
-                @if($profile_picture_show)
-                    src="{{ uploaded_asset($member->photo) }}"
-                @else
-                    src="{{ static_asset($avatar_image) }}"
-                @endif
-                onerror="this.onerror=null;this.src='{{ static_asset($avatar_image) }}';"
-                class="img-fit mw-100 h-350px {{ !$profile_picture_show ? 'hq-member-photo-locked' : '' }}"
-            >
-            @if(!$profile_picture_show)
-                <div class="hq-member-lock d-flex justify-content-center align-items-center text-white">
-                    <i class="las la-lock"></i>
-                </div>
+        <div class="hq-member-media hq-home-public-photo">
+            <div class="hq-member-photo-placeholder" aria-hidden="true">
+                <i class="las la-user-circle"></i>
+            </div>
+            @if ($showPublicPhoto)
+                <img src="{{ $memberPhoto }}"
+                     class="hq-member-photo-visible"
+                     loading="lazy"
+                     decoding="async"
+                     alt="{{ $member->first_name }} — public profile photo"
+                     onerror="this.hidden=true;">
             @endif
         </div>
 
