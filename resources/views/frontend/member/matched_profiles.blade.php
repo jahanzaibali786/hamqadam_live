@@ -18,11 +18,13 @@
     @endphp
     <article class="hm-four-profile">
       <div class="hm-four-photo"><img src="{{ $photo }}" alt="{{ $person->first_name }}" loading="lazy" onerror="this.onerror=null;this.src='{{ $fallback }}'"><b>{{ round($match->match_percentage) }}% Match</b></div>
+     @php($matchActions=\App\Support\MemberMatchCardActions::between(auth()->user(),$person))
+     @include('frontend.member.partials.match_dropdown',['person'=>$person,'detailUrl'=>$detailUrl ?? route('member_profile',$person->id),'matchActions'=>$matchActions])
       <div><h2>{{ $person->first_name }} {{ $person->last_name }}</h2>
         <p><i class="las la-map-marker"></i>{{ $person->addresses->firstWhere('type','present')?->city?->name ?? 'Location not provided' }}</p>
         <p><i class="las la-briefcase"></i>{{ $member?->job_title ?? 'Profession not provided' }}</p>
         <p><i class="las la-graduation-cap"></i>{{ $person->education->last()?->degree ?? 'Education not provided' }}</p>
-        @include('frontend.member.partials.match_actions',['person'=>$person,'detailUrl'=>$detailUrl])
+        @include('frontend.member.partials.match_actions',['person'=>$person,'detailUrl'=>$detailUrl,'matchActions'=>$matchActions])
       </div>
     </article>
   @endif
