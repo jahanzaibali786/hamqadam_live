@@ -33,16 +33,16 @@
                 @endphp
                 <div class="hq-hero-visual" aria-hidden="true">
                     <div class="hq-match-float hq-match-float-top">
-                        <span class="hq-match-score">96% {{ translate('Match') }}</span>
+                        <span class="hq-match-score">96% {{ \App\Support\HomePageContent::get('hero_match_label') }}</span>
                         <span class="hq-match-verified"><i class="las la-shield-alt"></i> {{ \App\Support\HomePageContent::get('hero_verified_label') }}</span>
-                        <strong>{{ $hero_female ? $hero_female->first_name : translate('Laiba') }}</strong>
-                        <small>ID: {{ $hero_female ? ($hero_female->code ?: $hero_female->id) : '202609213' }} · {{ $hero_female?->member?->permanent_address?->city ?: ($hero_female?->member?->present_address?->city ?: 'Lahore') }}</small>
+                        <strong>{{ $hero_female ? $hero_female->first_name : \App\Support\HomePageContent::get('hero_female_fallback') }}</strong>
+                        <small>ID: {{ $hero_female ? ($hero_female->code ?: $hero_female->id) : '202609213' }} · {{ $hero_female?->member?->permanent_address?->city ?: ($hero_female?->member?->present_address?->city ?: \App\Support\HomePageContent::get('hero_fallback_city_female')) }}</small>
                     </div>
                     <div class="hq-hero-photo-caption"><span>{{ \App\Support\HomePageContent::get('hero_sanctuary_label') }}</span><strong>{{ \App\Support\HomePageContent::get('hero_sanctuary_caption') }}</strong></div>
                     <div class="hq-match-float hq-match-float-bottom">
                         <span class="hq-match-score">{{ $hero_male && $hero_male->membership == 2 ? translate('Premium Match') : translate('Verified Match') }}</span>
-                        <strong>{{ $hero_male ? $hero_male->first_name : translate('Ubaid') }}</strong>
-                        <small>ID: {{ $hero_male ? ($hero_male->code ?: $hero_male->id) : '202609201' }} · {{ $hero_male?->member?->permanent_address?->city ?: ($hero_male?->member?->present_address?->city ?: 'Islamabad') }}</small>
+                        <strong>{{ $hero_male ? $hero_male->first_name : \App\Support\HomePageContent::get('hero_male_fallback') }}</strong>
+                        <small>ID: {{ $hero_male ? ($hero_male->code ?: $hero_male->id) : '202609201' }} · {{ $hero_male?->member?->permanent_address?->city ?: ($hero_male?->member?->present_address?->city ?: \App\Support\HomePageContent::get('hero_fallback_city_male')) }}</small>
                     </div>
                 </div>
             </div>
@@ -156,8 +156,8 @@
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
                 <div class="text-center section-title mb-5">
-                    <h2 class="fw-600 mb-3 text-dark">{{ get_setting('premium_member_section_title') }}</h2>
-                    <p class="fw-400 fs-16 opacity-60">{{ get_setting('premium_member_section_sub_title') }}</p>
+                    <h2 class="fw-600 mb-3 text-dark">{{ get_setting('premium_member_section_title') ?: \App\Support\HomePageContent::get('premium_title') }}</h2>
+                    <p class="fw-400 fs-16 opacity-60">{{ get_setting('premium_member_section_sub_title') ?: \App\Support\HomePageContent::get('premium_description') }}</p>
                 </div>
             </div>
         </div>
@@ -285,8 +285,8 @@
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
                 <div class="text-center section-title mb-5">
-                    <h2 class="fw-600 mb-3 text-dark">{{ get_setting('new_member_section_title') }}</h2>
-                    <p class="fw-400 fs-16 opacity-60">{{ get_setting('new_member_section_sub_title') }}</p>
+                    <h2 class="fw-600 mb-3 text-dark">{{ get_setting('new_member_section_title') ?: \App\Support\HomePageContent::get('new_title') }}</h2>
+                    <p class="fw-400 fs-16 opacity-60">{{ get_setting('new_member_section_sub_title') ?: \App\Support\HomePageContent::get('new_description') }}</p>
                 </div>
             </div>
         </div>
