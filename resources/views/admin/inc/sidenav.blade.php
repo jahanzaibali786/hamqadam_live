@@ -749,6 +749,7 @@
                         </li>
                         @endcan
                         @can('edit_pages')
+                        <li class="aiz-side-nav-item"><a href="{{ route('website.home_content.edit') }}" class="aiz-side-nav-link {{ areActiveRoutes(['website.home_content.edit']) }}"><span class="aiz-side-nav-text">Home Page Content</span></a></li>
                         @foreach(['about'=>'About Us','team'=>'Our Team','privacy'=>'Privacy Policy','terms'=>'Terms & Conditions'] as $hqKey=>$hqLabel)
                         <li class="aiz-side-nav-item"><a class="aiz-side-nav-link" href="{{ route('website.editorial.edit',$hqKey) }}"><span class="aiz-side-nav-text">{{ $hqLabel }}</span></a></li>
                         @endforeach
