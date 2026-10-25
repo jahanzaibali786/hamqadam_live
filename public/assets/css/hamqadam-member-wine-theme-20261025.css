@@ -17,3 +17,50 @@
 .hm-member-app .hm-match-status{display:block;width:100%;text-align:center;color:#a84469}
 .hm-member-app .hm-dash26-person .hm-dash26-heart{right:46px!important}
 .hm-member-app .hm-four-photo b{right:46px!important}
+
+/* Member portal palette override, loaded last. Staff admin CMS is unaffected. */
+.hm-member-app{--hm-control-pink:#9f1239;--hm-control-pink-hover:#67051f;--hm-action-pink:#9f1239;--hm-action-hover:#67051f;--hm-pink:#a84469;--pink:#a84469;--accent:#a84469;--hm-color:#a84469}
+.hm-member-app .hm-member-workspace{--pink:#a84469;--accent:#a84469;--hm-color:#a84469}
+.hm-member-app .hm-member-workspace a:not(.btn):not(.hm-match-send):not(.hm-ref26-primary):not(.hm-ref-cta):not(.hm-next-primary):not(.hm-pink-button):not(.hm-match-menu-item){color:#a84469}
+.hm-member-app .hm-member-workspace .btn-primary,
+.hm-member-app .hm-member-workspace .hm-ref26-primary,
+.hm-member-app .hm-member-workspace .hm-ref-cta,
+.hm-member-app .hm-member-workspace .hm-next-primary,
+.hm-member-app .hm-member-workspace .hm-pink-button,
+.hm-member-app .hm-member-workspace .hm-ref-plan .hm-ref-cta,
+.hm-member-app .hm-member-workspace .hm-four-primary,
+.hm-member-app .hm-member-workspace button[type=submit]:not(.hm-match-menu-item):not(.hm-match-menu-toggle):not(.btn-light):not(.btn-outline-primary),
+.hm-member-app .hm-member-workspace .hm-referral26-share button,
+.hm-member-app .hm-member-workspace .hm-home-ref-view,
+.hm-member-app .hm-member-workspace .hm-member-promo-cta{background:linear-gradient(135deg,#9f1239,#67051f)!important;border-color:#9f1239!important;color:#fff!important}
+.hm-member-app .hm-member-workspace .btn-outline-primary{border-color:#a84469!important;color:#a84469!important}
+.hm-member-app .hm-member-workspace .btn-outline-primary:hover{background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff!important}
+.hm-member-app .hm-member-workspace .text-primary,
+.hm-member-app .hm-member-workspace .hm-ref26-section-head a,
+.hm-member-app .hm-member-workspace .hm-dash26-stats small,
+.hm-member-app .hm-member-workspace .hm-dash26-person>div b,
+.hm-member-app .hm-member-workspace .hm-dash26-completion>b span,
+.hm-member-app .hm-member-workspace .hm-four-photo b,
+.hm-member-app .hm-member-workspace .hm-ref-price,
+.hm-member-app .hm-member-workspace .hm-ref-kicker,
+.hm-member-app .hm-member-workspace .hm-pink-viewer-tabs .btn-group .btn:not(.btn-primary){color:#a84469!important}
+.hm-member-app .hm-member-workspace .bg-primary,
+.hm-member-app .hm-member-workspace .badge-primary,
+.hm-member-app .hm-member-workspace .progress-bar,
+.hm-member-app .hm-member-workspace .hm-ref26-track>i,
+.hm-member-app .hm-member-workspace .hm-next-progress>span,
+.hm-member-app .hm-member-workspace .hm-ref26-ring,
+.hm-member-app .hm-member-workspace .hm-pink-viewer-tabs .btn-primary,
+.hm-member-app .hm-member-workspace .nav-pills .nav-link.active,
+.hm-member-app .hm-member-workspace .page-item.active .page-link{background:linear-gradient(135deg,#9f1239,#67051f)!important;border-color:#9f1239!important;color:#fff!important}
+.hm-member-app .hm-member-workspace input[type=checkbox],
+.hm-member-app .hm-member-workspace input[type=radio]{accent-color:#9f1239}
+.hm-member-app .hm-member-workspace .form-control:focus{border-color:#a84469!important;box-shadow:0 0 0 2px #a8446926!important}
+.hm-member-app .hm-member-topbar-actions>a:not(.hm-member-account),
+.hm-member-app .hm-member-topbar-brand,
+.hm-member-app .hm-member-heart,
+.hm-member-app .hm-integrated-nav .is-active,
+.hm-member-app .hm-member-workspace .hm-dash26-stats .pink{color:#a84469!important}
+.hm-member-app .hm-sidebar-column .aiz-user-sidenav .btn-primary,
+.hm-member-app .hm-member-context-promo .hm-member-promo-cta{background:linear-gradient(135deg,#9f1239,#67051f)!important;border-color:#9f1239!important;color:#fff!important}
+.hm-member-app .hm-member-workspace .hm-dash26-ring{background:conic-gradient(#9f1239 calc(var(--progress)*1%),#f6e5ed 0)!important}
