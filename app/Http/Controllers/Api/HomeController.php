@@ -154,10 +154,7 @@ class HomeController extends Controller
             $user = $token->tokenable;
         }
         // new members & premium members
-        $members = User::where('user_type', 'member')
-            ->where('approved', 1)
-            ->where('blocked', 0)
-            ->where('deactivated', 0);
+        $members = User::eligibleForPublicHomepage();
 
         if ($token && $user->user_type == 'member') {
             $members = $members->where('id', '!=', $user->id);
@@ -191,10 +188,7 @@ class HomeController extends Controller
             $user = $token->tokenable;
         }
         // new members & premium members
-        $members = User::where('user_type', 'member')
-            ->where('approved', 1)
-            ->where('blocked', 0)
-            ->where('deactivated', 0);
+        $members = User::eligibleForPublicHomepage();
 
         if ($user && $user->user_type == 'member') {
             $members = $members->where('id', '!=', $user->id);
@@ -236,10 +230,7 @@ class HomeController extends Controller
         $data['slider_images'] = $slider_images;
 
         // new members & premium members
-        $members = User::where('user_type', 'member')
-            ->where('approved', 1)
-            ->where('blocked', 0)
-            ->where('deactivated', 0);
+        $members = User::eligibleForPublicHomepage();
             
         if (auth()->user() && auth()->user()->user_type == 'member') {
             $members = $members->where('id', '!=', auth()->user()->id);
