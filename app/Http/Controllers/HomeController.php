@@ -81,36 +81,12 @@ class HomeController extends Controller
     public function index()
     {
 
-        $members = User::where('user_type', 'member')
-            ->where('approved', 1)
-            ->where('blocked', 0)
-            ->where('deactivated', 0);
-
-        if (Auth::user() && Auth::user()->user_type == 'member') {
-            $members = $members->where('id', '!=', Auth::user()->id)
-                ->whereIn("id", function ($query) {
-                    $query->select('user_id')
-                        ->from('members')
-                        ->where('gender', '!=', Auth::user()->member->gender);
-                });
-
-            $ignored_to = IgnoredUser::where('ignored_by', Auth::user()->id)->pluck('user_id')->toArray();
-            if (count($ignored_to) > 0) {
-                $members = $members->whereNotIn('id', $ignored_to);
-            }
-
-            $ignored_by_ids = IgnoredUser::where('user_id', Auth::user()->id)->pluck('ignored_by')->toArray();
-            if (count($ignored_by_ids) > 0) {
-                $members = $members->whereNotIn('id', $ignored_by_ids);
-            }
-        }
-
-        $premium_members = $members;
-        $new_members = $members;
-
-        $new_members = $new_members->orderBy('id', 'desc')->limit(get_setting('max_new_member_show_homepage'))->get()->shuffle();
-        $premium_members = $premium_members->where('membership', 2)->inRandomOrder()->limit(get_setting('max_premium_member_homepage'))->get();
-
+        // Curated homepage profiles only; moderation and member privacy remain enforced.
+        $base = User::eligibleForPublicHomepage();
+        $new_members = (clone $base)->orderByDesc('id')
+            ->limit(max(1, (int) get_setting('max_new_member_show_homepage')))->get();
+        $premium_members = (clone $base)->where('membership', 2)->inRandomOrder()
+            ->limit(max(1, (int) get_setting('max_premium_member_homepage')))->get();
 
         $on_behalves = OnBehalf::all();
         $religions = Religion::all();

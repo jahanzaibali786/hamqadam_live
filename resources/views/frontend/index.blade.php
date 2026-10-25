@@ -27,31 +27,9 @@
             </div>
             <div class="col-lg-6 col-xl-6 d-none d-lg-block">
                 @php
-                    $hero_female = \App\Models\User::where('user_type', 'member')
-                        ->where('approved', 1)
-                        ->where('blocked', 0)
-                        ->where('deactivated', 0)
-                        ->whereHas('member', function($q) {
-                            $q->where('gender', 2);
-                        })
-                        ->latest('id')
-                        ->first()
-                        ?? collect($new_members ?? [])->first(fn($u) => optional($u->member)->gender == 2)
-                        ?? collect($new_members ?? [])->first();
-
-                    $hero_male = \App\Models\User::where('user_type', 'member')
-                        ->where('approved', 1)
-                        ->where('blocked', 0)
-                        ->where('deactivated', 0)
-                        ->where('id', '!=', $hero_female?->id ?? 0)
-                        ->whereHas('member', function($q) {
-                            $q->where('gender', 1);
-                        })
-                        ->latest('id')
-                        ->first()
-                        ?? collect($premium_members ?? [])->first(fn($u) => optional($u->member)->gender == 1 && (!$hero_female || $u->id != $hero_female->id))
-                        ?? collect($new_members ?? [])->filter(fn($u) => !$hero_female || $u->id != $hero_female->id)->first()
-                        ?? $hero_female;
+                    $featured = collect($premium_members)->concat($new_members)->unique('id');
+                    $hero_female = $featured->first(fn($u) => (int) $u->member?->gender === 2);
+                    $hero_male = $featured->first(fn($u) => (int) $u->member?->gender === 1);
                 @endphp
                 <div class="hq-hero-visual" aria-hidden="true">
                     <div class="hq-match-float hq-match-float-top">

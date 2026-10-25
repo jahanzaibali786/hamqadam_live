@@ -100,6 +100,24 @@ class MemberController extends Controller
         ];
     }
 
+    public function updateWebsiteVisibility(Request $request, int $id)
+    {
+        abort_unless(auth()->user()->can('edit_member'), 403);
+        $data = $request->validate(['display_on_website' => ['required', 'boolean']]);
+        $member = User::where('user_type', 'member')->findOrFail($id);
+        if ((bool) $data['display_on_website'] && (
+            !$member->approved || $member->blocked || $member->deactivated ||
+            !$member->member || $member->member->hide_profile ||
+            $member->profile_privacy_setting?->invisible_mode
+        )) {
+            return back()->withErrors(['display_on_website' => 'Only approved, active and publicly visible member profiles can be featured.']);
+        }
+        $member->display_on_website = (bool) $data['display_on_website'];
+        $member->save();
+
+        return back()->with('success', 'Homepage visibility updated.');
+    }
+
     public function premiumIndex(Request $request)
     {
 

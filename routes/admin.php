@@ -118,6 +118,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
     // Member Manage
     Route::resource('members', MemberController::class)->except(['destroy']);
+    Route::patch('/members/{id}/website-visibility', [MemberController::class, 'updateWebsiteVisibility'])->middleware('permission:edit_member')->name('members.website_visibility');
     Route::get('/member-activity', [UserActivityController::class, 'index'])->name('member.activity.index');
     Route::controller(MemberController::class)->group(function () {
         Route::get('/premium-members-list', 'premiumIndex')->name('premium.members.index');
