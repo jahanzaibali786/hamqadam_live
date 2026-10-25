@@ -1,0 +1,19 @@
+/* Per-profile menu: trigger at the image corner, viewport-positioned flyout. */
+.hm-member-app .hm-dash26-person,.hm-member-app .hm-four-profile{position:relative;isolation:isolate}
+.hm-member-app .hm-dash26-person .hm-match-menu{position:absolute;top:7px;right:7px;z-index:5}
+.hm-member-app .hm-four-profile .hm-match-menu{position:absolute;top:9px;right:9px;z-index:5}
+.hm-member-app .hm-match-menu-toggle{display:grid;place-items:center;width:32px;height:32px;border:1px solid #efd8e1;border-radius:50%;background:rgba(255,255,255,.96);color:#a84469;cursor:pointer;box-shadow:0 2px 9px #250b2222}
+.hm-member-app .hm-match-menu-toggle:hover,.hm-member-app .hm-match-menu-toggle[aria-expanded=true]{background:linear-gradient(135deg,#9f1239,#67051f)!important;color:white}
+.hm-member-app .hm-match-menu-panel{position:fixed;z-index:2147483000;min-width:205px;max-width:min(245px,calc(100vw - 20px));padding:7px;border:1px solid #ecd8e0;border-radius:10px;background:#fff;box-shadow:0 14px 40px #32101e38;max-height:min(390px,70dvh);overflow-y:auto}
+.hm-member-app .hm-match-menu-panel[hidden]{display:none!important}
+.hm-member-app .hm-match-menu-item{display:flex;align-items:center;gap:9px;width:100%;padding:10px 11px;border:0;border-radius:6px;background:transparent;color:#a84469!important;text-decoration:none;text-align:left;font-size:12px;font-weight:600;cursor:pointer}
+.hm-member-app .hm-match-menu-item:hover:not(.is-disabled),.hm-member-app .hm-match-menu-item:focus-visible:not(.is-disabled){background:#fbedf3!important;color:#8c214b!important}
+.hm-member-app .hm-match-menu-item i{font-size:16px;flex:none}
+.hm-member-app .hm-match-menu-item.is-disabled{opacity:.6;cursor:default}
+.hm-member-app .hm-match-menu-panel form{margin:0}
+.hm-member-app .hm-match-controls{display:block!important;width:100%!important;margin:9px 0 0!important}
+.hm-member-app .hm-match-controls .hm-match-send-form{display:block!important;width:100%!important;margin:0!important}
+.hm-member-app .hm-match-controls .hm-match-send{display:flex!important;align-items:center;justify-content:center;min-height:37px;width:100%!important;max-width:100%!important;padding:9px 7px!important;border-radius:7px!important;background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff!important;font-size:11px!important;line-height:1.3;text-align:center;white-space:normal}
+.hm-member-app .hm-match-status{display:block;width:100%;text-align:center;color:#a84469}
+.hm-member-app .hm-dash26-person .hm-dash26-heart{right:46px!important}
+.hm-member-app .hm-four-photo b{right:46px!important}
