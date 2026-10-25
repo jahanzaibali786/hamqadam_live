@@ -17,7 +17,16 @@ class HomePageContent {
  ];}
  public static function all(): array {
   $stored=json_decode((string)get_setting('hq_home_page_content',''),true);
-  return array_replace(self::defaults(),is_array($stored)?array_intersect_key($stored,self::defaults()):[]);
+  $defaults=self::defaults();
+  // Start from existing homepage settings on the first CMS edit, so the live
+  // content remains unchanged until an admin saves this editor.
+  if(!is_array($stored)){
+   foreach(['premium_title'=>'premium_member_section_title','premium_description'=>'premium_member_section_sub_title','new_title'=>'new_member_section_title','new_description'=>'new_member_section_sub_title'] as $key=>$setting){
+    if(filled(get_setting($setting))) $defaults[$key]=(string)get_setting($setting);
+   }
+   return $defaults;
+  }
+  return array_replace($defaults,array_intersect_key($stored,$defaults));
  }
  public static function get(string $key): string {return (string)(self::all()[$key]??'');}
 }
