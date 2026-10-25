@@ -31,7 +31,7 @@ document.addEventListener('click',function(event){
  }
  if(openMenu&&!event.target.closest('.hm-match-menu-panel'))closeMenu();
 });
-document.addEventListener('keydown',function(event){if(event.key==='Escape'&&openMenu){closeMenu();openButton?.focus()}});
+document.addEventListener('keydown',function(event){if(event.key==='Escape'&&openMenu){const trigger=openButton;closeMenu();trigger?.focus()}});
 window.addEventListener('resize',reposition);
 document.addEventListener('scroll',reposition,true);
 })();
