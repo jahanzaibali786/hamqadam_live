@@ -53,7 +53,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var array
      */
     protected $fillable = [
-        'first_name', 'last_name', 'email', 'password', 'code', 'phone','membership','approved', 'verification_code','fcm_token','referred_by','email_verified_at', 'match_refresh_updated_at', 'refresh_updated_at', 'admin_identifier'
+        'first_name', 'last_name', 'email', 'password', 'code', 'phone','membership','approved', 'verification_code','fcm_token','referred_by','email_verified_at', 'match_refresh_updated_at', 'refresh_updated_at', 'admin_identifier','display_on_website'
     ];
 
     /**
@@ -73,7 +73,23 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'last_active_at' => 'datetime',
+        'display_on_website' => 'boolean',
     ];
+
+    /**
+     * Public homepage picks are curated by staff and always remain subject to
+     * member visibility and moderation rules.
+     */
+    public function scopeEligibleForPublicHomepage($query)
+    {
+        return $query->where('user_type', 'member')
+            ->where('display_on_website', true)
+            ->where('approved', 1)
+            ->where('blocked', 0)
+            ->where('deactivated', 0)
+            ->whereHas('member', fn ($member) => $member->where('hide_profile', 0))
+            ->whereDoesntHave('profile_privacy_setting', fn ($privacy) => $privacy->where('invisible_mode', true));
+    }
 
     public function member()
     {
