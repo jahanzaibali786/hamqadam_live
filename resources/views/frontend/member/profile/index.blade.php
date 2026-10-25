@@ -34,7 +34,7 @@
                 <div class="form-group row">
                     <label class="col-md-2 col-form-label">{{translate('Introduction')}}</label>
                     <div class="col-md-10">
-                        <textarea type="text" name="introduction" class="form-control" rows="4" placeholder="{{translate('Introduction')}}" required>{{ $member->member->introduction }}</textarea>
+                        <textarea type="text" name="introduction" class="form-control" maxlength="2500" rows="6" placeholder="{{translate('Introduction')}}" required>{{ $member->member->introduction }}</textarea>
                     </div>
                 </div>
                 <div class="text-right">
