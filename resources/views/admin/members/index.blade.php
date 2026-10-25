@@ -117,20 +117,6 @@
                                         <span class="badge badge-inline badge-danger">{{translate('Deactivated')}}</span>
                                     @endif
                                 </td>
-                                <td>
-                                    @can('edit_member')
-                                    <form action="{{ route('members.website_visibility', $member->id) }}" method="POST">
-                                        @csrf @method('PATCH')
-                                        <input type="hidden" name="display_on_website" value="{{ $member->display_on_website ? 0 : 1 }}">
-                                        <label class="d-inline-flex align-items-center" style="gap:6px;cursor:pointer">
-                                            <input type="checkbox" {{ $member->display_on_website ? 'checked' : '' }} onchange="this.form.submit()">
-                                            <span class="small">{{ $member->display_on_website ? 'Featured' : 'Not featured' }}</span>
-                                        </label>
-                                    </form>
-                                    @else
-                                        {{ $member->display_on_website ? 'Featured' : 'Not featured' }}
-                                    @endcan
-                                </td>
                                 <td class="text-right">
                                     <div class="btn-group mb-2">
                                         <div class="btn-group">
@@ -139,6 +125,7 @@
                                                 <i class="las la-ellipsis-v"></i>
                                             </button>
                                             <div class="dropdown-menu dropdown-menu-right">
+                                                @include('admin.members.partials.featured_option', ['member' => $member])
                                                 @can ('view_member_profile')
                                                     <a class="dropdown-item" href="{{ route('members.show', encrypt($member->id)) }}">{{translate('View')}}</a>
                                                 @endcan
