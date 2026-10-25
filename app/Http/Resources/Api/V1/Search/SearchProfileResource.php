@@ -30,6 +30,16 @@ class SearchProfileResource extends JsonResource
             'about_me' => filled(trim((string) $this->member?->introduction))
                 ? trim((string) $this->member->introduction)
                 : null,
+            // Extended member card data, never private contact or verification documents.
+            'job_title' => $this->career->first()?->designation ?? $this->member?->job_title,
+            'education_institution_id' => $this->education->first()?->institution_id,
+            'looking_for' => $this->member?->looking_for,
+            'family_values' => $this->member?->family_values,
+            'marriage_timeline' => $this->member?->marriage_timeline,
+            'personality_type' => $this->member?->personality_type,
+            'life_values' => $this->member?->life_values,
+            'interests' => $this->member?->interests_multi_select,
+            'profile_completion_percentage' => $this->member?->profile_completion_percentage,
             'marital_status_id' => $this->member?->marital_status_id,
             'height' => $this->physical_attributes?->height,
             'religion_id' => $this->spiritual_backgrounds?->religion_id,
