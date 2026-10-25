@@ -120,11 +120,11 @@
         <div class="container">
             <div class="hq-register-shell">
                 <div class="hq-register-intro">
-                    <span class="hq-reference-eyebrow"><i class="las la-coins"></i> {{ translate('Auspicious Welcome Gift') }}</span>
-                    <h2>{{ translate('Create Your Account') }}</h2>
-                    <p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('Free plan') }} {{ translate('instantly upon verification.') }}</p>
+                    <span class="hq-reference-eyebrow"><i class="las la-coins"></i> {{ \App\Support\HomePageContent::get('registration_gift') }}</span>
+                    <h2>{{ \App\Support\HomePageContent::get('registration_title') }}</h2>
+                    <p>{{ \App\Support\HomePageContent::get('registration_reward_prefix') }} {{ $registrationRewardCoins }} {{ \App\Support\HomePageContent::get('registration_reward_mid') }} {{ $registrationPackage?->name ?? translate('Free plan') }} {{ \App\Support\HomePageContent::get('registration_reward_end') }}</p>
                     <div class="hq-register-steps" aria-hidden="true">
-                        <span class="active">01 {{ translate('Account') }}</span><span>02 {{ translate('Basic') }}</span><span>03 {{ translate('Religion') }}</span><span>04 {{ translate('Location') }}</span>
+                        <span class="active">01 {{ \App\Support\HomePageContent::get('registration_step_account') }}</span><span>02 {{ \App\Support\HomePageContent::get('registration_step_basic') }}</span><span>03 {{ \App\Support\HomePageContent::get('registration_step_religion') }}</span><span>04 {{ \App\Support\HomePageContent::get('registration_step_location') }}</span>
                     </div>
                 </div>
                 <div id="register-form-container" class="hq-register-form-card">
@@ -134,7 +134,7 @@
                         <div class="mb-3 d-none" id="registrationTermsBlock">
                             <label class="aiz-checkbox">
                                 <input type="checkbox" name="checkbox_example_1" required>
-                                <span class="opacity-60">{{ translate('By signing up you agree to our') }} <a href="{{ url('/terms-conditions') }}" target="_blank">{{ translate('terms and conditions') }}.</a></span>
+                                <span class="opacity-60">{{ \App\Support\HomePageContent::get('registration_terms_prefix') }} <a href="{{ url('/terms-conditions') }}" target="_blank">{{ \App\Support\HomePageContent::get('registration_terms_link') }}.</a></span>
                                 <span class="aiz-square-check"></span>
                             </label>
                         </div>
@@ -344,7 +344,7 @@
             @endforeach
         </div>
         <div class="text-center mt-4">
-            <a href="{{ route('happy_stories') }}" class="btn btn-primary round-btn">{{ translate('View More') }}</a>
+            <a href="{{ route('happy_stories') }}" class="btn btn-primary round-btn">{{ \App\Support\HomePageContent::get('story_more') }}</a>
         </div>
     </div>
 </section>
@@ -375,44 +375,44 @@
                         <ul class="list-group list-group-raw fs-15 mb-5">
                             <li class="list-group-item py-2">
                                 <i class="las la-check text-success mr-2"></i>
-                                {{ $package->express_interest }} {{ translate('Coins') }}
+                                {{ $package->express_interest }} {{ \App\Support\HomePageContent::get('package_coins') }}
                             </li>
                             <li class="list-group-item py-2">
                                 <i class="las la-check text-success mr-2"></i>
-                                {{ $package->photo_gallery }} {{ translate('Gallery Photo Upload') }}
+                                {{ $package->photo_gallery }} {{ \App\Support\HomePageContent::get('package_gallery') }}
                             </li>
                             <li class="list-group-item py-2">
                                 <i class="las la-check text-success mr-2"></i>
-                                {{ $package->contact }} {{ translate('Contact Info View') }}
+                                {{ $package->contact }} {{ \App\Support\HomePageContent::get('package_contacts') }}
                             </li>
                             <li class="list-group-item py-2 text-line-through">
                                 @if ($package->auto_profile_match == 0)
                                 <i class="las la-times text-danger mr-2"></i>
-                                <del class="opacity-60">{{ translate('Show Auto Profile Match') }}</del>
+                                <del class="opacity-60">{{ \App\Support\HomePageContent::get('package_auto_match') }}</del>
                                 @else
                                 <i class="las la-check text-success mr-2"></i>
-                                {{ translate('Show Auto Profile Match') }}
+                                {{ \App\Support\HomePageContent::get('package_auto_match') }}
                                 @endif
                             </li>
                             <li class="list-group-item py-2 text-line-through">
                                 @if ($package->auto_horoscope_profile_match == 0)
                                 <i class="las la-times text-danger mr-2"></i>
-                                <del class="opacity-60">{{ translate('Show Auto Horoscope Profile Match') }}</del>
+                                <del class="opacity-60">{{ \App\Support\HomePageContent::get('package_horoscope') }}</del>
                                 @else
                                 <i class="las la-check text-success mr-2"></i>
-                                {{ translate('Show Auto Horoscope Profile Match') }}
+                                {{ \App\Support\HomePageContent::get('package_horoscope') }}
                                 @endif
                             </li>
                         </ul>
                         <div class="mb-5 text-dark text-center">
                             @if ($package->id == 1)
-                            <span class="display-4 fw-600 lh-1 mb-0">{{ translate('Free') }}</span>
+                            <span class="display-4 fw-600 lh-1 mb-0">{{ \App\Support\HomePageContent::get('package_free') }}</span>
                             @else
                             <span
                                 class="display-4 fw-600 lh-1 mb-0">{{ single_price($package->price) }}</span>
                             @endif
                             <span class="text-secondary d-block">{{ $package->validity }}
-                                {{ translate('Days') }}</span>
+                                {{ \App\Support\HomePageContent::get('package_days') }}</span>
                         </div>
                         <div class="text-center mb-3">
                             @if ($package->id != 1)
@@ -508,14 +508,14 @@
                         @endif
                         <p class="opacity-70 mb-4">{{ $blog->short_description }}</p>
                         <a href="{{ route('blog.details', $blog->slug) }}"
-                            class="btn btn-soft-primary round-btn">{{ translate('View More') }}</a>
+                            class="btn btn-soft-primary round-btn">{{ \App\Support\HomePageContent::get('story_more') }}</a>
                     </div>
                 </div>
             </div>
             @endforeach
         </div>
         <div class="text-center mt-4">
-            <a href="{{ route('blog') }}" class="btn btn-primary round-btn">{{ translate('View More') }}</a>
+            <a href="{{ route('blog') }}" class="btn btn-primary round-btn">{{ \App\Support\HomePageContent::get('story_more') }}</a>
         </div>
     </div>
 </section>
