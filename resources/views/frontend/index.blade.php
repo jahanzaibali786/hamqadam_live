@@ -156,8 +156,8 @@
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
                 <div class="text-center section-title mb-5">
-                    <h2 class="fw-600 mb-3 text-dark">{{ get_setting('premium_member_section_title') ?: \App\Support\HomePageContent::get('premium_title') }}</h2>
-                    <p class="fw-400 fs-16 opacity-60">{{ get_setting('premium_member_section_sub_title') ?: \App\Support\HomePageContent::get('premium_description') }}</p>
+                    <h2 class="fw-600 mb-3 text-dark">{{ \App\Support\HomePageContent::get('premium_title') }}</h2>
+                    <p class="fw-400 fs-16 opacity-60">{{ \App\Support\HomePageContent::get('premium_description') }}</p>
                 </div>
             </div>
         </div>
@@ -285,8 +285,8 @@
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
                 <div class="text-center section-title mb-5">
-                    <h2 class="fw-600 mb-3 text-dark">{{ get_setting('new_member_section_title') ?: \App\Support\HomePageContent::get('new_title') }}</h2>
-                    <p class="fw-400 fs-16 opacity-60">{{ get_setting('new_member_section_sub_title') ?: \App\Support\HomePageContent::get('new_description') }}</p>
+                    <h2 class="fw-600 mb-3 text-dark">{{ \App\Support\HomePageContent::get('new_title') }}</h2>
+                    <p class="fw-400 fs-16 opacity-60">{{ \App\Support\HomePageContent::get('new_description') }}</p>
                 </div>
             </div>
         </div>
