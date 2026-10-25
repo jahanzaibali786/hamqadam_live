@@ -175,7 +175,7 @@ class HomeController extends Controller
             }
         }
 
-        $premium_members = $members->where('membership', 2)->inRandomOrder()->limit(get_setting('max_premium_member_homepage'))->get();
+        $premium_members = $members->where('membership', 2)->orderByDesc('id')->get();
         $premium_members = MemberResource::collection($premium_members);
 
         return get_setting('show_premium_member_section') == 'on' ? $this->response_data($premium_members) : $this->response_data([]);
@@ -209,7 +209,7 @@ class HomeController extends Controller
             }
         }
 
-        $new_members = $members->orderBy('id', 'desc')->limit(get_setting('max_new_member_show_homepage'))->get()->shuffle();
+        $new_members = $members->whereIn('membership', [0, 1])->orderByDesc('id')->get();
         $new_members = MemberResource::collection($new_members);
 
         return get_setting('show_new_member_section') == 'on' ? $this->response_data($new_members) : $this->response_data([]);
@@ -254,8 +254,8 @@ class HomeController extends Controller
         $premium_members = $members;
         $new_members = $members;
 
-        $new_members = $new_members->orderBy('id', 'desc')->limit(get_setting('max_new_member_show_homepage'))->get()->shuffle();
-        $premium_members = $premium_members->where('membership', 2)->inRandomOrder()->limit(get_setting('max_premium_member_homepage'))->get();
+        $new_members = (clone $members)->whereIn('membership', [0, 1])->orderByDesc('id')->get();
+        $premium_members = (clone $members)->where('membership', 2)->orderByDesc('id')->get();
         $data['new_members'] = MemberResource::collection($new_members);
         $data['premium_members'] = MemberResource::collection($premium_members);
 
