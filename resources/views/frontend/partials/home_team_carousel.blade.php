@@ -1,7 +1,7 @@
 @php($homeTeam = \App\Support\HamqadamTeamContent::members())
 @if(count($homeTeam))
 <section class="hq-home-team" aria-labelledby="hq-home-team-title" data-home-team>
-<div class="container"><div class="hq-home-team-heading"><span>OUR PEOPLE</span><h2 id="hq-home-team-title">The Hearts & Minds Behind Hamqadam</h2><p>Meet the people guiding respectful, family-minded connections.</p></div>
+<div class="container"><div class="hq-home-team-heading"><span>{{ \App\Support\HomePageContent::get('team_kicker') }}</span><h2 id="hq-home-team-title">{{ \App\Support\HomePageContent::get('team_title') }}</h2><p>{{ \App\Support\HomePageContent::get('team_description') }}</p></div>
 <div class="hq-home-team-controls"><button type="button" data-home-team-prev aria-label="Previous team member"><i class="las la-arrow-left"></i></button><button type="button" data-home-team-next aria-label="Next team member"><i class="las la-arrow-right"></i></button></div>
 <div class="hq-home-team-track" data-home-team-track tabindex="0">
 @foreach($homeTeam as $member)
@@ -11,5 +11,5 @@
 </article>
 @endforeach
 </div>
-<div class="hq-home-team-footer"><a href="{{ route('editorial.team') }}">Meet Our Team <i class="las la-arrow-right"></i></a></div></div></section>
+<div class="hq-home-team-footer"><a href="{{ route('editorial.team') }}">{{ \App\Support\HomePageContent::get('team_button') }} <i class="las la-arrow-right"></i></a></div></div></section>
 @endif
