@@ -49,9 +49,10 @@ class MemberConnectionWorkflow
         $interest = DB::transaction(function () use ($sender,$recipient,$template) {
             // Lock the two users in stable order to serialize opposite-direction requests.
             User::whereIn('id',[$sender->id,$recipient->id])->orderBy('id')->lockForUpdate()->get();
-            $exists = ExpressInterest::where(fn ($q) => $q->where('interested_by',$sender->id)->where('user_id',$recipient->id))
-                ->orWhere(fn ($q) => $q->where('interested_by',$recipient->id)->where('user_id',$sender->id))
-                ->whereIn('status',[0,1])->exists();
+            $exists = ExpressInterest::where(function ($q) use ($sender,$recipient) {
+                $q->where(fn ($side) => $side->where('interested_by',$sender->id)->where('user_id',$recipient->id))
+                  ->orWhere(fn ($side) => $side->where('interested_by',$recipient->id)->where('user_id',$sender->id));
+            })->whereIn('status',[0,1])->exists();
             if ($exists) throw ValidationException::withMessages(['member'=>'An active interest already exists between these members.']);
             $member = $sender->member()->lockForUpdate()->first();
             $cost = max(0,(int) feature_coin_cost('express_interest',1));
