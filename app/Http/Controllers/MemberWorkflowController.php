@@ -18,10 +18,16 @@ class MemberWorkflowController extends Controller
     {
         $person=User::where('user_type','member')->whereKey($member)->firstOrFail();
         abort_if($person->id===$request->user()->id,404);
-        $interest=ExpressInterest::where(fn ($q)=>$q->where('interested_by',$request->user()->id)->where('user_id',$member))
-            ->orWhere(fn ($q)=>$q->where('interested_by',$member)->where('user_id',$request->user()->id))->latest('id')->first();
-        $proposal=MarriageProposal::where(fn($q)=>$q->where('sender_id',$request->user()->id)->where('recipient_id',$member))
-            ->orWhere(fn($q)=>$q->where('sender_id',$member)->where('recipient_id',$request->user()->id))->latest('id')->first();
+        $interest=ExpressInterest::where('interaction_type','interest')->where(function ($q) use ($request,$member) {
+            $q->where(fn ($x)=>$x->where('interested_by',$request->user()->id)->where('user_id',$member))
+              ->orWhere(fn ($x)=>$x->where('interested_by',$member)->where('user_id',$request->user()->id));
+        })->latest('id')->first();
+        $proposal=MarriageProposal::where(function ($q) use ($request,$member) {
+            $q->where(fn($x)=>$x->where('sender_id',$request->user()->id)->where('recipient_id',$member))
+              ->orWhere(fn($x)=>$x->where('sender_id',$member)->where('recipient_id',$request->user()->id));
+        })->where(function($q) use ($request) {
+            $q->where('status','!=','draft')->orWhere('sender_id',$request->user()->id);
+        })->latest('id')->first();
         $templates=WorkflowMessageTemplate::active('interest')->get();
         $proposalTemplates=WorkflowMessageTemplate::active('proposal')->get();
         $unlocked=$this->workflow->canCommunicate($request->user()->id,$member);
