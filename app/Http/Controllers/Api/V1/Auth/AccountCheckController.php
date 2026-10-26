@@ -27,16 +27,39 @@ use Illuminate\Validation\ValidationException;
  */
 class AccountCheckController extends ApiController
 {
-    /** POST /auth/check — { type: email|phone|cnic, value, exclude_user_id? } */
+    /** POST /auth/check — { type: email|phone|cnic|referral, value, exclude_user_id? } */
     public function check(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'type' => ['required', 'string', Rule::in(['email', 'phone', 'cnic'])],
+            'type' => ['required', 'string', Rule::in(['email', 'phone', 'cnic', 'referral'])],
             'value' => ['required', 'string', 'max:255'],
             'exclude_user_id' => ['nullable', 'integer'],
         ]);
 
         $value = trim($data['value']);
+
+        // Referral codes are looked up, not "claimed": valid = a real member owns it.
+        if ($data['type'] === 'referral') {
+            $referrer = User::query()
+                ->where('user_type', 'member')
+                ->where('blocked', 0)
+                ->where('deactivated', 0)
+                ->whereNotNull('code')
+                ->whereRaw('LOWER(code) = ?', [mb_strtolower($value)])
+                ->first();
+
+            return $this->success([
+                'type' => 'referral',
+                'value' => $value,
+                'valid' => $referrer !== null,
+                'available' => $referrer !== null,
+                // First name only — enough to confirm "yes, that's my friend".
+                'referrer_name' => $referrer ? trim((string) $referrer->first_name) : null,
+                'message' => $referrer
+                    ? 'Referral code is valid.'
+                    : 'This referral code does not belong to any member.',
+            ]);
+        }
         $excludeUserId = (int) ($request->user()?->id ?? $data['exclude_user_id'] ?? 0);
 
         switch ($data['type']) {
