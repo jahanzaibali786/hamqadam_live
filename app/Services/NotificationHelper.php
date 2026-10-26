@@ -59,17 +59,14 @@ class NotificationHelper
         User $sender,
         int $interestId,
     ): void {
-        $senderName = trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''));
+        $name = trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''));
 
-        self::createAndPush(
-            recipient: $recipient,
-            type: 'interest',
-            title: 'New Interest',
-            message: "$senderName is interested in you!",
-            notifyBy: $sender->id,
-            infoId: $interestId,
-            route: '/interests',
-        );
+        self::event($recipient, 'interest_received', [
+            'event_id' => (string) $interestId,
+            'info_id' => $interestId,
+            'notify_by' => $sender->id,
+            'sender_name' => $name,
+        ]);
     }
 
     public static function interestAccepted(
@@ -79,15 +76,12 @@ class NotificationHelper
     ): void {
         $name = trim(($accepter->first_name ?? '') . ' ' . ($accepter->last_name ?? ''));
 
-        self::createAndPush(
-            recipient: $recipient,
-            type: 'interest_accepted',
-            title: 'Interest Accepted',
-            message: "$name accepted your interest!",
-            notifyBy: $accepter->id,
-            infoId: $interestId,
-            route: '/interests',
-        );
+        self::event($recipient, 'interest_accepted', [
+            'event_id' => (string) $interestId,
+            'info_id' => $interestId,
+            'notify_by' => $accepter->id,
+            'matched_user_name' => $name,
+        ]);
     }
 
     public static function interestRejected(
@@ -115,17 +109,14 @@ class NotificationHelper
         User $sender,
         int $proposalId,
     ): void {
-        $senderName = trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''));
+        $name = trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''));
 
-        self::createAndPush(
-            recipient: $recipient,
-            type: 'proposal',
-            title: 'New Proposal',
-            message: "$senderName sent you a proposal!",
-            notifyBy: $sender->id,
-            infoId: $proposalId,
-            route: '/proposals',
-        );
+        self::event($recipient, 'proposal_received', [
+            'event_id' => (string) $proposalId,
+            'info_id' => $proposalId,
+            'notify_by' => $sender->id,
+            'sender_name' => $name,
+        ]);
     }
 
     public static function proposalAccepted(
@@ -135,15 +126,12 @@ class NotificationHelper
     ): void {
         $name = trim(($accepter->first_name ?? '') . ' ' . ($accepter->last_name ?? ''));
 
-        self::createAndPush(
-            recipient: $recipient,
-            type: 'proposal_accepted',
-            title: 'Proposal Accepted',
-            message: "$name accepted your proposal!",
-            notifyBy: $accepter->id,
-            infoId: $proposalId,
-            route: '/proposals',
-        );
+        self::event($recipient, 'proposal_accepted', [
+            'event_id' => (string) $proposalId,
+            'info_id' => $proposalId,
+            'notify_by' => $accepter->id,
+            'matched_user_name' => $name,
+        ]);
     }
 
     public static function proposalRejected(
