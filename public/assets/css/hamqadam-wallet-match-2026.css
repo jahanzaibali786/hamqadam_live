@@ -23,11 +23,11 @@
 .hm-wallet-choice.is-popular{border:2px solid var(--hm-pink);background:#f8f6f7}
 .hm-wallet-choice>i{font-size:46px;color:#f8b322;margin-bottom:2px}
 .hm-wallet-choice>strong{font-size:14px;font-weight:800}.hm-wallet-choice>b{font-size:15px;color:var(--hm-pink)}
-.hm-wallet-choice .hm-wallet-buy{margin-top:6px;width:100%;border:1px solid var(--hm-pink);border-radius:6px;background:#fff;color:var(--hm-pink);padding:8px 5px;font-size:12px;font-weight:700;cursor:pointer}
-.hm-wallet-choice .hm-wallet-buy.primary{background:var(--hm-pink);color:#fff}
+.hm-wallet-choice .hm-wallet-buy{margin-top:6px;width:100%;border:1px solid #9f1239;border-radius:6px;background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff!important;padding:8px 5px;font-size:12px;font-weight:700;cursor:pointer}
+.hm-wallet-choice .hm-wallet-buy.primary{background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff!important}
 .hm-wallet-popular{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--hm-pink);color:white;border-radius:30px;padding:4px 13px;font-size:10px;font-weight:700;white-space:nowrap}
 .hm-wallet-promo{display:flex;align-items:center;gap:14px;padding:14px;margin:15px 0 12px;border-radius:9px;background:#f8f6f7}
-.hm-wallet-promo>i{font-size:29px;color:var(--hm-pink)}.hm-wallet-promo>div{flex:1;min-width:0}.hm-wallet-promo strong,.hm-wallet-payments h2{font-size:14px;font-weight:800}.hm-wallet-promo p,.hm-wallet-payments p{font-size:11px;color:var(--hm-mute);margin:2px 0 0}.hm-wallet-promo>a{padding:8px 13px;border-radius:6px;background:var(--hm-pink);color:#fff;font-size:11px;font-weight:700}
+.hm-wallet-promo>i{font-size:29px;color:var(--hm-pink)}.hm-wallet-promo>div{flex:1;min-width:0}.hm-wallet-promo strong,.hm-wallet-payments h2{font-size:14px;font-weight:800}.hm-wallet-promo p,.hm-wallet-payments p{font-size:11px;color:var(--hm-mute);margin:2px 0 0}.hm-wallet-promo>a{padding:8px 13px;border-radius:6px;background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff!important;font-size:11px;font-weight:700}
 .hm-wallet-payments{padding:11px 2px}.hm-wallet-payments h2{margin:0}.hm-wallet-methods{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
 .hm-wallet-methods span{display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--hm-line);border-radius:7px;padding:12px 5px;font-size:10px;text-align:center;min-height:55px}.hm-wallet-methods i{color:var(--hm-pink);font-size:23px}
 .hm-wallet-payments>small{display:block;color:var(--hm-mute);margin:6px 0 11px;font-size:10px}
