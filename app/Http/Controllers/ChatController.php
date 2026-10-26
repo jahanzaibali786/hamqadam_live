@@ -46,10 +46,22 @@ class ChatController extends Controller
 
         return view('frontend.member.messages.index', compact('chat_threads', 'chatMatchScores'));
     }
-    public function chat_view($id)
+    public function chat_view(Request $request, $id)
     {
         $chat_thread = ChatThread::findOrFail($id);
         $this->ensureParticipant($chat_thread);
+
+        // This endpoint also serves the AJAX conversation fragment loaded by
+        // /chat. A direct browser navigation must render the *full* member
+        // dashboard: returning messages.blade.php alone omits all page CSS,
+        // scripts and the three-column layout. Let the existing /chat page
+        // select this thread via its ?thread= deep link instead.
+        if (! $request->ajax()) {
+            return redirect()
+                ->route('all.messages', ['thread' => $chat_thread->id])
+                ->header('Cache-Control', 'private, no-store');
+        }
+
         $this->markDeliveredForWeb($chat_thread);
         $readIds = [];
         foreach ($chat_thread->chats as $chat) {
