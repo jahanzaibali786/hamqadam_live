@@ -354,6 +354,12 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
 
         Route::resource('profile-viewers', ProfileViewerController::class);
         Route::get('/matched-profiles', [ProfileMatchController::class, 'myMatchedProfiles'])->name('my_matched_profiles');
+        Route::get('/matched-profiles/{member}/connection', [\App\Http\Controllers\MemberWorkflowController::class, 'show'])->whereNumber('member')->name('member.workflow.show');
+        Route::post('/matched-profiles/{member}/connection/interest', [\App\Http\Controllers\MemberWorkflowController::class, 'interest'])->whereNumber('member')->name('member.workflow.interest');
+        Route::post('/connection/interests/{interest}/respond', [\App\Http\Controllers\MemberWorkflowController::class, 'respondInterest'])->whereNumber('interest')->name('member.workflow.interest.respond');
+        Route::post('/matched-profiles/{member}/connection/proposal', [\App\Http\Controllers\MemberWorkflowController::class, 'proposal'])->whereNumber('member')->name('member.workflow.proposal');
+        Route::post('/connection/proposals/{proposal}/respond', [\App\Http\Controllers\MemberWorkflowController::class, 'respondProposal'])->whereNumber('proposal')->name('member.workflow.proposal.respond');
+        Route::post('/connection/preferences', [\App\Http\Controllers\MemberWorkflowController::class, 'preferences'])->name('member.workflow.preferences');
         Route::get('/matched-profiles/{member}/why', [\App\Http\Controllers\MemberMatchDetailController::class, 'show'])->whereNumber('member')->name('member.match.why');
         Route::post('/matched-profiles/{member}/proposal', [\App\Http\Controllers\MemberMatchActionController::class, 'propose'])->whereNumber('member')->name('member.match.propose');
         Route::get('/horoscope-matched-profiles', [HoroscopeProfileMatchController::class, 'horoscopeMatchedProfiles'])->name('horoscope_matched_profiles');
