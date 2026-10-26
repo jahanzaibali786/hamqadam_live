@@ -266,6 +266,18 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
 | Sending costs feature_coin_cost('express_interest') coins and returns 402 with
 | code `insufficient_coins` when the balance is short. Responding is free.
 */
+// Staged workflow API (separate from legacy proposal endpoints).
+Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('connection-workflow')->name('api.v1.connection.')->group(function () {
+    Route::get('/templates', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'templates'])->name('templates');
+    Route::get('/members/{member}', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'state'])->whereNumber('member')->name('state');
+    Route::post('/members/{member}/interest', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'interest'])->whereNumber('member')->middleware('throttle:10,1')->name('interest');
+    Route::post('/interests/{interest}/respond', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'respondInterest'])->whereNumber('interest')->name('interest.respond');
+    Route::post('/members/{member}/proposal', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'proposal'])->whereNumber('member')->middleware('throttle:10,1')->name('proposal');
+    Route::post('/proposals/{proposal}/respond', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'respondProposal'])->whereNumber('proposal')->name('proposal.respond');
+    Route::get('/communication-preferences', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'preferences'])->name('preferences');
+    Route::patch('/communication-preferences', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'preferences'])->name('preferences.update');
+});
+
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('interests')->name('api.v1.interests.')->group(function () {
     Route::get('/sent', [InterestController::class, 'sent'])->name('sent');
     Route::get('/received', [InterestController::class, 'received'])->name('received');
