@@ -136,6 +136,10 @@ class ChatController extends Controller
     {
         $chat_thread = ChatThread::findOrFail((int) $request->chat_thread_id);
         $this->ensureParticipant($chat_thread);
+        $otherId=(int)($chat_thread->sender_user_id===Auth::id() ? $chat_thread->receiver_user_id : $chat_thread->sender_user_id);
+        if (!app(\App\Services\MemberConnectionWorkflow::class)->canCommunicate(Auth::id(),$otherId)) {
+            return response()->json(['message'=>'Chat requires accepted interest.'],403);
+        }
         if ($this->isBlocked($chat_thread)) {
             return response()->json([
                 'message' => translate('This chat is blocked. Unblock it before sending messages.'),
