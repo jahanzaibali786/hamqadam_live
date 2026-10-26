@@ -138,7 +138,7 @@ class ReferralRewardService
         $packageRule=RewardRule::where('event_key',self::PACKAGE_EVENT)->first();
         return [
             'referral_code' => $code,
-            'referral_url' => route('register', ['referral_code' => $code]),
+            'referral_url' => route('referral.invite', ['code' => $code]),
             'total_referrals' => $total,
             'rewarded_referrals' => $count,
             'pending_referrals' => max(0, $total - $count),

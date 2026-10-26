@@ -569,5 +569,8 @@ Route::get('/our-team', [\App\Http\Controllers\HamqadamEditorialController::clas
 Route::get('/privacy-policy', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','privacy')->name('editorial.privacy');
 Route::get('/terms-conditions', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','terms')->name('editorial.terms');
 
+// Smart referral link: phones go to the app stores, desktops to web sign-up.
+Route::get('/invite/{code}', \App\Http\Controllers\ReferralInviteController::class)->where('code', '[A-Za-z0-9_-]+')->name('referral.invite');
+
 //Custom page
 Route::get('/{slug}', [PageController::class, 'show_custom_page'])->name('custom-pages.show_custom_page');
