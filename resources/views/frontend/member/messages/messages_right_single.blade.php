@@ -30,8 +30,9 @@
                         🎙 {{ translate('Voice note') }}@if(is_array($voiceMeta) && !empty($voiceMeta['duration'])) · {{ (int) $voiceMeta['duration'] }}s @endif
                     </span>
                 </div>
-                <div class="d-flex justify-content-end align-items-center mt-1">
+                <div class="hm-message-meta">
                     <span class="time">{{ Carbon\Carbon::parse($chat->created_at)->diffForHumans() }}</span>
+                    @include('frontend.member.messages._receipt', ['chat' => $chat])
                 </div>
             </div>
             <span class="avatar avatar-xs flex-shrink-0">
@@ -48,11 +49,12 @@
         <div class="media">
             <div class="media-body">
                 <div class="text bg-soft-primary text-dark">{{ $chat->message }}</div>
-                <div class="d-flex justify-content-end align-items-center mt-1">
-                    <a href="javascript:void(0)" class="text-danger fs-12 chat-delete-message" data-message-id="{{ $chat->id }}" title="Delete message">
-                        <i class="las la-trash"></i>
+                <div class="hm-message-meta">
+                    <a href="javascript:void(0)" class="text-danger fs-12 chat-delete-message" data-message-id="{{ $chat->id }}" title="Delete message" aria-label="Delete message">
+                        <i class="las la-trash" aria-hidden="true"></i>
                     </a>
-                    <span class="time ml-2">{{ Carbon\Carbon::parse($chat->created_at)->diffForHumans() }}</span>
+                    <span class="time">{{ Carbon\Carbon::parse($chat->created_at)->diffForHumans() }}</span>
+                    @include('frontend.member.messages._receipt', ['chat' => $chat])
                 </div>
             </div>
             <span class="avatar avatar-xs flex-shrink-0">
@@ -120,11 +122,13 @@
                     @endforeach
                 </div>
                 
-                <div class="d-flex justify-content-end align-items-center mt-1">
-                    <a href="javascript:void(0)" class="text-danger fs-12 chat-delete-message" data-message-id="{{ $chat->id }}" title="Delete message">
-                        <i class="las la-trash"></i>
+                <div class="hm-message-meta">
+                    <a href="javascript:void(0)" class="text-danger fs-12 chat-delete-message" data-message-id="{{ $chat->id }}" title="Delete message" aria-label="Delete message">
+                        <i class="las la-trash" aria-hidden="true"></i>
                     </a>
-                </div><span class="time">{{ Carbon\Carbon::parse($chat->created_at)->diffForHumans() }}</span>
+                    <span class="time">{{ Carbon\Carbon::parse($chat->created_at)->diffForHumans() }}</span>
+                    @include('frontend.member.messages._receipt', ['chat' => $chat])
+                </div>
             </div>
             <span class="avatar avatar-xs flex-shrink-0">
                 @if ($chat->sender->photo != null)

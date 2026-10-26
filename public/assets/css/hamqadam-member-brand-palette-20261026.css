@@ -1,0 +1,59 @@
+/* Member portal only: definitive Hamqadam wine palette, loaded after legacy page styles.
+   Neutral surface shades are intentionally not pink. Do not apply to public/admin. */
+.hm-member-app{
+ --hm-pink:#a84469;--hm-wine:#9f1239;--hm-light:#f8f6f7;
+ --hm-control-pink:#9f1239;--hm-control-pink-hover:#67051f;
+ --hm-action-pink:#9f1239;--hm-action-hover:#67051f;
+ --accent:#a84469;--pink:#a84469;--hm-color:#a84469;
+ --hm-brand-gradient:linear-gradient(135deg,#9f1239,#67051f)
+}
+.hm-member-app .hm-member-workspace{
+ --hm-pink:#a84469;--hm-wine:#9f1239;--hm-light:#f8f6f7;
+ --hm-control-pink:#9f1239;--hm-control-pink-hover:#67051f;
+ --hm-action-pink:#9f1239;--hm-action-hover:#67051f;
+ --accent:#a84469;--pink:#a84469;--hm-color:#a84469
+}
+/* Filled CTA, submit, pagination and selected navigation use the same wine gradient. */
+.hm-member-app :is(.hm-member-workspace,.hm-sidebar-column) :is(.btn-primary,.btn.btn-primary,button[type=submit]:not(.btn-outline-primary):not(.btn-light):not(.dropdown-item),input[type=submit]:not(.btn-outline-primary),.hm-match-send,.hm-match-send-form .btn,.hm-ref26-primary,.hm-ref-cta,.hm-next-primary,.hm-pink-button,.hm-four-primary,.hm-member-promo-cta,.hm-referral26-share button,.hm-home-ref-view,.hm-why26-button,.hm-connection-link,.page-item.active .page-link,.nav-pills .nav-link.active){
+ background:linear-gradient(135deg,#9f1239,#67051f)!important;
+ background-color:#9f1239!important;
+ border-color:#9f1239!important;color:#fff!important
+}
+.hm-member-app :is(.hm-member-workspace,.hm-sidebar-column) :is(.btn-primary,.hm-match-send,.hm-ref26-primary,.hm-next-primary,button[type=submit]:not(.btn-outline-primary)):hover{
+ background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff!important
+}
+/* Text accents (not body copy). */
+.hm-member-app .hm-member-workspace :is(.text-primary,.hm-eyebrow,.hm-ref-price,.hm-ref-kicker,.hm-ref26-section-head a,.hm-match-status,.hm-referral26-section-head a,.hm-member-action-label,.hm-connection-card h2 i,.hm-chat-typing){
+ color:#a84469!important
+}
+.hm-member-app :is(.hm-member-workspace,.hm-sidebar-column) :is(.btn-outline-primary,.badge-soft-primary){
+ color:#a84469!important;border-color:#a84469!important
+}
+.hm-member-app :is(.hm-member-workspace,.hm-sidebar-column) .btn-outline-primary:hover{
+ background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff!important
+}
+.hm-member-app .hm-member-workspace :is(.progress-bar,.badge-primary,.bg-primary,.hm-ref26-track>i,.hm-next-progress>span){
+ background:linear-gradient(135deg,#9f1239,#67051f)!important
+}
+.hm-member-app :is(input[type=checkbox],input[type=radio]){accent-color:#9f1239}
+/* Preserve deliberate focus visibility without blue focus borders or glows. */
+.hm-member-app .hm-member-workspace :is(input,textarea,select,.form-control):focus{
+ border-color:#e9dfe5!important;outline:0!important;box-shadow:none!important
+}
+
+/* Specific wallet payment cards: visible contrast on neutral card surfaces. */
+.hm-member-app .hm-wallet-2026 .hm-wallet-choices .hm-wallet-buy,
+.hm-member-app .hm-wallet-2026 .hm-wallet-choices .hm-wallet-buy.primary,
+.hm-member-app .hm-wallet-2026 .hm-wallet-payments .hm-pink-button{
+ background:linear-gradient(135deg,#9f1239,#67051f)!important;
+ background-color:#9f1239!important;color:#fff!important;
+ border:1px solid #9f1239!important;box-shadow:0 3px 10px #67051f20;
+}
+.hm-member-app .hm-wallet-2026 .hm-wallet-choices .hm-wallet-buy:hover{filter:brightness(1.1)}
+.hm-member-app .hm-detail .hm-detail-action-primary,
+.hm-member-app .hm-blog-26 .hm-blog-featured a,
+.hm-member-app .hm-blog-26 .hm-blog-panel form button{
+ background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff!important;
+}
+.hm-member-app .hm-blog-26 .hm-blog-cats a.active,
+.hm-member-app .hm-detail :is(.hm-detail-score strong,.hm-detail-panel h2 i){color:#a84469!important}

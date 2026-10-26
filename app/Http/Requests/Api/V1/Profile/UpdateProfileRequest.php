@@ -23,7 +23,7 @@ class UpdateProfileRequest extends ApiFormRequest
             'mother_tongue' => ['sometimes', 'nullable', 'integer'],
             'known_languages' => ['sometimes', 'nullable', 'array'],
             'known_languages.*' => ['integer'],
-            'about_me' => ['sometimes', 'nullable', 'string', 'max:5000'],
+            'about_me' => ['sometimes', 'nullable', 'string', 'max:2500'],
             'ai_generated_bio' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'video_introduction' => ['sometimes', 'nullable', 'string', 'max:255'],
             'voice_introduction' => ['sometimes', 'nullable', 'string', 'max:255'],

@@ -41,6 +41,7 @@
                 <h6 class="fs-15 mb-1">
 
                     {{ $chat_thread->$user_to_show->first_name.' '.$chat_thread->$user_to_show->last_name }}
+                </h6>
 
                     @if(Cache::has('user-is-online-' . $chat_thread->$user_to_show->id))
 
@@ -53,7 +54,7 @@
                     @endif
 
                 @php $inlinePartnerLastSeen = Cache::has('user-is-online-' . $chat_thread->$user_to_show->id) ? null : optional($chat_thread->$user_to_show->last_active_at ?? $chat_thread->$user_to_show->last_login_at); @endphp
-                <div class="fs-11 text-muted chat-partner-presence-inline">
+                <div class="fs-11 text-muted chat-partner-presence-inline hm-chat-presence" id="hm-web-presence">
                     @if (Cache::has('user-is-online-' . $chat_thread->$user_to_show->id))
                         <span class="text-success fw-600">{{ translate('Online') }}</span>
                     @elseif($inlinePartnerLastSeen)
@@ -64,9 +65,9 @@
 
         </div>
 
-        <div class="d-flex align-items-center">
+        <div class="hm-chat-header-actions" role="group" aria-label="Conversation actions">
 
-            <div class="mr-2 text-right">
+            <div class="mr-2 text-right d-none">
 
                 <div class="fs-11 text-muted" id="chat-partner-presence">
 
@@ -159,10 +160,16 @@
 
             
 
-            <button class="btn btn-icon btn-circle btn-soft-primary chat-info" data-toggle="class-toggle" data-target=".chat-info-wrap"><i class="las la-info-circle"></i></button>
+            <button type="button" class="btn btn-icon btn-circle btn-soft-primary chat-info" data-toggle="class-toggle" data-target=".chat-info-wrap"><i class="las la-info-circle"></i></button>
 
         </div>
 
+    </div>
+    <div class="hm-chat-inbox-actions" aria-label="Conversation shortcuts">
+      <a href="{{ route('member_profile', $chat_thread->$user_to_show->id) }}"><i class="las la-user"></i> View Profile</a>
+      <a href="{{ route('my_interests.index') }}"><i class="las la-heart"></i> My Interests</a>
+      <a href="{{ route('member.reference.meetings') }}"><i class="las la-calendar"></i> Schedule Call</a>
+      <button type="button" onclick="openChatReportModal()"><i class="las la-flag"></i> Report</button>
     </div>
 
     <div class="chat-list-wrap c-scrollbar-light scroll-to-btm" id="parentDiv">
@@ -194,6 +201,7 @@
 
     </div>
 
+    <div class="hm-chat-typing" id="hm-web-typing" hidden aria-live="polite"><span class="hm-chat-typing-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>Typing a message…</span></div>
     <div class="chat-footer border-top p-3 attached-bottom bg-white">
 
         @if (!empty($chat_blocked_by_me))

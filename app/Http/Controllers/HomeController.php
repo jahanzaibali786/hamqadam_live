@@ -81,36 +81,10 @@ class HomeController extends Controller
     public function index()
     {
 
-        $members = User::where('user_type', 'member')
-            ->where('approved', 1)
-            ->where('blocked', 0)
-            ->where('deactivated', 0);
-
-        if (Auth::user() && Auth::user()->user_type == 'member') {
-            $members = $members->where('id', '!=', Auth::user()->id)
-                ->whereIn("id", function ($query) {
-                    $query->select('user_id')
-                        ->from('members')
-                        ->where('gender', '!=', Auth::user()->member->gender);
-                });
-
-            $ignored_to = IgnoredUser::where('ignored_by', Auth::user()->id)->pluck('user_id')->toArray();
-            if (count($ignored_to) > 0) {
-                $members = $members->whereNotIn('id', $ignored_to);
-            }
-
-            $ignored_by_ids = IgnoredUser::where('user_id', Auth::user()->id)->pluck('ignored_by')->toArray();
-            if (count($ignored_by_ids) > 0) {
-                $members = $members->whereNotIn('id', $ignored_by_ids);
-            }
-        }
-
-        $premium_members = $members;
-        $new_members = $members;
-
-        $new_members = $new_members->orderBy('id', 'desc')->limit(get_setting('max_new_member_show_homepage'))->get()->shuffle();
-        $premium_members = $premium_members->where('membership', 2)->inRandomOrder()->limit(get_setting('max_premium_member_homepage'))->get();
-
+        // Curated homepage profiles only; moderation and member privacy remain enforced.
+        $base = User::eligibleForPublicHomepage();
+        $new_members = (clone $base)->whereIn('membership', [0, 1])->orderByDesc('id')->get();
+        $premium_members = (clone $base)->where('membership', 2)->orderByDesc('id')->get();
 
         $on_behalves = OnBehalf::all();
         $religions = Religion::all();
@@ -238,7 +212,26 @@ class HomeController extends Controller
             $similar_profiles = $similar_profiles->get();
             $similar_horoscope_profiles = $similar_horoscope_profiles->get();
 
-            return view('frontend.member.dashboard', compact('similar_profiles', 'similar_horoscope_profiles'));
+            // Screenshot-aligned member dashboard: every figure and card is backed
+            // by actual eligible matches, published content, and account records.
+            $dashboardMatchQuery = ProfileMatch::query()->visibleToMember($user);
+            $dashboardMatchCount = (clone $dashboardMatchQuery)->count();
+            $dashboardMatches = $dashboardMatchQuery
+                ->with(['matchedUser.member', 'matchedUser.addresses.city',
+                    'matchedUser.career', 'matchedUser.education'])
+                ->orderByDesc('match_percentage')->limit(6)->get();
+            $dashboardTopMatch = $dashboardMatches->first();
+            $dashboardViewerCount = ProfileViewer::where('user_id', $user->id)
+                ->where('created_at', '>=', now()->startOfMonth())->count();
+            $dashboardActivity = $user->notifications()->latest()->limit(4)->get();
+            $dashboardStories = HappyStory::where('approved', 1)->latest()->limit(2)->get();
+            $dashboardBlogs = \App\Models\Blog::active()->latest()->limit(2)->get();
+
+            return view('frontend.member.dashboard', compact(
+                'similar_profiles', 'similar_horoscope_profiles', 'dashboardMatches',
+                'dashboardMatchCount', 'dashboardTopMatch', 'dashboardViewerCount',
+                'dashboardActivity', 'dashboardStories', 'dashboardBlogs'
+            ));
         } else {
             abort(404);
         }
@@ -445,8 +438,21 @@ class HomeController extends Controller
                     });
             });
         }
-        $users = $users->paginate(10)->withQueryString();
-        return view('frontend.member.member_listing.index', compact('users', 'age_from', 'age_to', 'member_code', 'matital_status', 'religion_id', 'caste_id', 'sub_caste_id', 'mother_tongue', 'profession', 'country_id', 'state_id', 'city_id', 'min_height', 'max_height', 'member_type', 'gender', 'recently_active', 'online_now', 'new_profiles', 'mutual_match'));
+        $sort = (string) $request->query('sort', 'match');
+        if (! in_array($sort, ['match', 'recent', 'newest'], true)) $sort = 'match';
+        if ($sort === 'match') {
+            $users->reorder()->orderByDesc(\App\Models\ProfileMatch::query()
+                ->select('match_percentage')
+                ->whereColumn('match_id', 'users.id')
+                ->where('user_id', Auth::id())->limit(1))
+                ->orderByDesc('users.created_at');
+        } elseif ($sort === 'recent') {
+            $users->reorder()->orderByDesc('users.last_active_at')->orderByDesc('users.created_at');
+        } else {
+            $users->reorder()->orderByDesc('users.created_at');
+        }
+        $users = $users->paginate(8)->withQueryString();
+        return view($request->routeIs('members.public_listing') ? 'frontend.member.member_listing.public_index' : 'frontend.member.member_listing.index', compact('users', 'age_from', 'age_to', 'member_code', 'matital_status', 'religion_id', 'caste_id', 'sub_caste_id', 'mother_tongue', 'profession', 'country_id', 'state_id', 'city_id', 'min_height', 'max_height', 'member_type', 'gender', 'recently_active', 'online_now', 'new_profiles', 'mutual_match'));
     }
 
     public function profile_edit(Request $request)

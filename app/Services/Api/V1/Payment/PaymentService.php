@@ -585,6 +585,7 @@ class PaymentService
             'subscription_ends_at' => Carbon::parse($member->package_validity)->endOfDay(),
             'payment_details' => json_encode($details),
         ])->save();
+        app(\App\Services\Referral\PaidPackageReferralRewardService::class)->award($payment);
 
         return $payment;
     }

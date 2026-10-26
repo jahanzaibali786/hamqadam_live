@@ -1,0 +1,106 @@
+{{-- Privacy policy: explicit Blade blocks keep nested directives compiler-safe. --}}
+<section class="hqed-policy-hero">
+    <div class="hqed-wrap hqed-policy-hero-grid">
+        <div>
+            <div class="hqed-policy-meta">
+                <span class="hqed-eyebrow">{{ $data['hero']['eyebrow'] }}</span>
+                <small>{{ $data['hero']['updated'] }}</small>
+            </div>
+            <h1>{{ $data['hero']['title'] }}</h1>
+            <p>{{ $data['hero']['description'] }}</p>
+        </div>
+        <div class="hqed-card hqed-score">
+            <div>
+                <strong>{{ $data['hero']['score_title'] }}</strong>
+                <small>{{ $data['hero']['score_badge'] }}</small>
+            </div>
+            <div class="hqed-score-metrics">
+                @foreach ($data['hero']['metrics'] as $metric)
+                    <div>
+                        <strong>{{ $metric['value'] }}</strong>
+                        <small>{{ $metric['label'] }}</small>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="hqed-policy-stripe">
+    <div class="hqed-wrap">
+        @foreach ($data['stripe'] as $badge)
+            <span>
+                <i class="las la-{{ $badge['icon'] }}"></i>
+                {{ $badge['text'] }}
+            </span>
+        @endforeach
+    </div>
+</div>
+
+<section class="hqed-section hqed-policy-body">
+    <div class="hqed-wrap hqed-document-grid">
+        <aside class="hqed-document-aside">
+            <div class="hqed-card hqed-toc">
+                <div>
+                    <strong>{{ $data['sidebar']['title'] }}</strong>
+                    <small>{{ $data['sidebar']['count_label'] }}</small>
+                </div>
+                <nav aria-label="Policy contents">
+                    @foreach ($data['sections'] as $section)
+                        <a href="#policy-{{ $section['num'] }}">
+                            <span>{{ $section['num'] }}</span>
+                            {{ $section['nav'] }}
+                            <i class="las la-angle-right"></i>
+                        </a>
+                    @endforeach
+                </nav>
+            </div>
+            <div class="hqed-card hqed-aside-support">
+                <strong>{{ $data['sidebar']['officer_heading'] }}</strong>
+                <p>{{ $data['sidebar']['officer_text'] }}</p>
+                <a href="tel:{{ preg_replace('/[^+0-9]/', '', $data['sidebar']['officer_phone']) }}">
+                    {{ $data['sidebar']['officer_phone'] }}
+                </a>
+            </div>
+        </aside>
+
+        <div class="hqed-document-content">
+            @foreach ($data['sections'] as $section)
+                <section class="hqed-document-section" id="policy-{{ $section['num'] }}">
+                    <h2>
+                        <span>{{ $section['num'] }}</span>
+                        {{ $section['title'] }}
+                    </h2>
+                    <div class="hqed-card">
+                        <p>{{ $section['intro'] }}</p>
+
+                        @if (!empty($section['cards']))
+                            <div class="hqed-document-card-grid">
+                                @foreach ($section['cards'] as $card)
+                                    <div class="hqed-mini-card">
+                                        <h3>{{ $card['title'] }}</h3>
+                                        <p>{{ $card['description'] }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        @if (!empty($section['bullets']))
+                            <ul class="hqed-bullets">
+                                @foreach ($section['bullets'] as $bullet)
+                                    <li>{{ $bullet }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
+
+                        @if (!empty($section['notice']))
+                            <div class="hqed-notice">{{ $section['notice'] }}</div>
+                        @endif
+                    </div>
+                </section>
+            @endforeach
+        </div>
+    </div>
+</section>
+
+@include('frontend.editorial.sections.cta', ['cta' => $data['cta'], 'variant' => 'simple'])

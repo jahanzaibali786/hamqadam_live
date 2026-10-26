@@ -29,7 +29,7 @@
     }
 @endphp
 
-<div class="aiz-user-sidenav-wrap hq-member-scroll-shell pt-4 sticky-top c-scrollbar-light position-relative z-1 shadow-none">
+<div class="aiz-user-sidenav-wrap hq-member-scroll-shell {{ $isDedicatedGuardian ? 'hm-guardian-nav' : 'hm-regular-nav' }} c-scrollbar-light position-relative z-1 shadow-none">
     <div class="absolute-top-left d-xl-none">
         <button class="btn btn-sm p-2" data-toggle="class-toggle" data-target=".aiz-mobile-side-nav"
             data-same=".mobile-side-nav-thumb">
@@ -37,45 +37,6 @@
         </button>
     </div>
     <div class="aiz-user-sidenav rounded overflow-hidden">
-        <div class="px-4 text-center mb-3">
-            <span class="avatar avatar-md mb-2">
-                @if (Auth::user()->photo != null)
-                    <img src="{{ uploaded_asset(Auth::user()->photo) }}">
-                @else
-                    <img src="{{ static_asset('assets/img/avatar-place.png') }}">
-                @endif
-            </span>
-            <h4 class="h5 fw-600 mb-1">{{ Auth::user()->first_name . ' ' . Auth::user()->last_name }}</h4>
-            @if ($isDedicatedGuardian)
-                @if ($isPausedGuardian)
-                    <span class="badge badge-inline badge-warning">{{ translate('Access Paused') }}</span>
-                    @if ($pausedLink && $pausedLink->profile)
-                        <div class="bg-soft-warning p-2 rounded text-left mt-3">
-                            <span class="fs-10 text-muted text-uppercase fw-700 d-block">{{ translate('Assisting Member') }}</span>
-                            <strong class="fs-13 d-block text-dark text-truncate">{{ $pausedLink->profile->first_name }} {{ $pausedLink->profile->last_name }}</strong>
-                            <div class="fs-11 text-muted mt-1">
-                                <i class="las la-pause-circle text-warning"></i> {{ translate('Access paused by member') }}
-                            </div>
-                        </div>
-                    @endif
-                @else
-                    <span class="badge badge-inline badge-primary">{{ translate('Wali / Guardian') }}</span>
-                    @if ($firstManagedLink && $firstManagedLink->profile)
-                        <div class="bg-soft-primary p-2 rounded text-left mt-3">
-                            <span class="fs-10 text-muted text-uppercase fw-700 d-block">{{ translate('Assisting Member') }}</span>
-                            <strong class="fs-13 d-block text-primary text-truncate">{{ $firstManagedLink->profile->first_name }} {{ $firstManagedLink->profile->last_name }}</strong>
-                            <div class="fs-11 text-muted mt-1">
-                                <i class="las la-user-tag"></i> {{ $firstManagedLink->relationship }} · {{ translate($firstManagedLink->guardian_role ?? 'Guardian') }}
-                            </div>
-                            <div class="fs-11 text-muted mt-1">
-                                <i class="las la-coins text-warning"></i> {{ $firstManagedLink->profile->member?->package?->name ?? translate('Free') }} · <strong>{{ $firstManagedLink->profile->member?->remaining_interest ?? 0 }} {{ translate('Coins') }}</strong>
-                            </div>
-                        </div>
-                    @endif
-                @endif
-            @endif
-        </div>
-
         <div class="sidemnenu hq-member-side-scroll mb-3" id="hq-member-side-scroll" tabindex="0" role="region" aria-label="Member dashboard navigation">
             <ul class="aiz-side-nav-list" data-toggle="aiz-side-menu">
 
@@ -184,288 +145,103 @@
                         </a>
                     </li>
                 @else
-                    {{-- Standard Member Menu --}}
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('dashboard') }}" class="aiz-side-nav-link {{ areActiveRoutes(['dashboard']) }}">
-                            <i class="las la-home aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Dashboard') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('member.v1_dashboard') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.v1_dashboard']) }}">
-                            <i class="las la-robot aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('AI Dashboard') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('profile_settings') }}" class="aiz-side-nav-link">
-                            <i class="las la-user aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('My Profile') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('member_profile', Auth::user()->id) }}" class="aiz-side-nav-link {{ areActiveRoutes(['member_profile']) }}">
-                            <i class="las la-id-card aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Public Profile') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('guardian_mode.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['guardian_mode.index', 'guardian_mode.permissions.edit', 'guardian_mode.activity', 'guardian_mode.introductions']) }}">
-                            <i class="las la-users aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Guardian Mode') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('guardian_panel.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['guardian_panel.index', 'guardian_panel.matches']) }}">
-                            <i class="las la-user-shield aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Guardian Panel') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('gallery-image.index') }}" class="aiz-side-nav-link">
-                            <i class="las la-image aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Gallery') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('happy_story.member') }}" class="aiz-side-nav-link">
-                            <i class="las la-handshake aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Happy Story') }}</span>
-                        </a>
-                    </li>
-                    @if (get_setting('wallet_system'))
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('wallet.index') }}" class="aiz-side-nav-link">
-                                <i class="las la-dollar-sign aiz-side-nav-icon"></i>
-                                <span class="aiz-side-nav-text">{{ translate('My Wallet') }}</span>
-                            </a>
-                        </li>
-                    @endif
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('all.messages') }}" class="aiz-side-nav-link">
-                            <i class="las la-envelope aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Messaging') }}</span>
+                    {{-- Curated reference menu: one visible destination per feature. --}}
+                    @php
+                      $memberNav = [
+                        ['dashboard','Dashboard','la-home'],
+                        ['profile_settings','My Profile','la-user'],
+                        ['__public_profile__','Public Profile','la-id-card'],
+                        ['my_interests.index','My Interest','la-heart'],
+                        ['my_shortlists','Shortlist','la-bookmark'],
+                        ['all.messages','Messaging','la-comment-dots'],
+                      ];
+                      if(auth()->user()->member?->auto_profile_match == 1) $memberNav[] = ['my_matched_profiles','Matched Profiles','la-user-friends'];
+                      $memberNav[] = ['interest_requests','Proposals','la-ring'];
+                      if(auth()->user()->member?->auto_horoscope_profile_match == 1) $memberNav[] = ['horoscope_matched_profiles','Horoscope Match','la-moon'];
+                      $memberNav = array_merge($memberNav, [
+                        ['member.listing','Advanced Search','la-search'],
+                        ['profile-viewers.index','Profile Viewers','la-eye'],
+                      ]);
+                      if(get_setting('wallet_system')) $memberNav[] = ['wallet.index','My Wallet','la-wallet'];
+                      $memberNav = array_merge($memberNav, [
+                        ['member.reference.packages','Packages & Plans','la-crown'],
+                        ['member.referrals.index','Referral Program','la-user-plus'],
+                        ['member.reference.stories','Happy Stories','la-heart'],
+                        ['member.reference.blogs','Blogs & Articles','la-book-open'],
+                        ['client.scope.support','Support & Feedback','la-headset'],
+                        ['member.verification','Verification','la-shield-alt'],
+                        ['member.reference.meetings','Meeting Scheduling','la-calendar-alt'],
+                        ['member.reference.assistant','AI Assistant','la-robot'],
+                        ['frontend.notifications','Notifications','la-bell'],
+                        ['member.reference.settings','Settings','la-cog'],
+                      ]);
+                      $extraMenu = [
+                        ['member.v1_dashboard','AI Dashboard','la-brain'],
+                        ['guardian_mode.index','Guardian Mode','la-users'],
+                        ['guardian_panel.index','Guardian Panel','la-user-shield'],
+                        ['gallery-image.index','Gallery & Photos','la-images'],
+                        ['happy_story.member','My Submitted Stories','la-edit'],
+                        ['member.payment_refunds.index','Payments & Refunds','la-file-invoice-dollar'],
+                        ['package_purchase_history','Purchase History','la-receipt'],
+                        ['package_usage_history','Package Usage History','la-history'],
+                        ['my_ignored_list','Ignored Members','la-ban'],
+                        ['client.scope.notifications','Notification Preferences','la-sliders-h'],
+                        ['client.scope.satisfaction','Rate Hamqadam','la-star'],
+                        ['member.change_password','Change Password','la-key'],
+                      ];
+                    @endphp
+
+                    @foreach($memberNav as $navItem)
+                      @php
+                        $targetRoute = $navItem[0];
+                        $isActiveNav = $targetRoute==='__public_profile__' ? request()->routeIs('member_profile') : request()->routeIs($targetRoute);
+                        $navUrl = $targetRoute==='__public_profile__' ? route('member_profile', Auth::id()) : route($targetRoute);
+                      @endphp
+                      <li class="aiz-side-nav-item">
+                        <a href="{{ $navUrl }}" class="aiz-side-nav-link {{ $isActiveNav?'active':'' }}"
+                          @if($isActiveNav) aria-current="page" @endif>
+                          <i class="las {{ $navItem[2] }} aiz-side-nav-icon" aria-hidden="true"></i>
+                          <span class="aiz-side-nav-text">{{ $navItem[1] }}</span>
+                          @if($targetRoute==='all.messages')
                             <span class="badge badge-primary badge-circle ml-auto unseen-chat-badge-sidebar" style="display:none">0</span>
+                          @endif
                         </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('my_interests.index') }}" class="aiz-side-nav-link">
-                            <i class="la la-heart-o aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('My Interest') }}</span>
+                      </li>
+                    @endforeach
+                    {{-- Every permitted feature is visible as a normal navigation link; no hidden "More Features" accordion. --}}
+                    @foreach($extraMenu as $navItem)
+                      <li class="aiz-side-nav-item">
+                        <a href="{{ route($navItem[0]) }}"
+                           class="aiz-side-nav-link {{ request()->routeIs($navItem[0])?'active':'' }}"
+                           @if(request()->routeIs($navItem[0])) aria-current="page" @endif>
+                          <i class="las {{ $navItem[2] }} aiz-side-nav-icon" aria-hidden="true"></i>
+                          <span class="aiz-side-nav-text">{{ $navItem[1] }}</span>
                         </a>
-                    </li>
-                    @if (get_setting('profile_picture_privacy') == 'only_me' || get_setting('gallery_image_privacy') == 'only_me')
-                        <li class="aiz-side-nav-item">
-                            <a href="javascript:void(0);" class="aiz-side-nav-link">
-                                <i class="las la-images aiz-side-nav-icon"></i>
-                                <span class="aiz-side-nav-text">{{ translate('Picture View Requests') }}</span>
-                                <span class="aiz-side-nav-arrow"></span>
-                            </a>
-                            <ul class="aiz-side-nav-list level-2">
-                                @if (get_setting('profile_picture_privacy') == 'only_me')
-                                    <li class="aiz-side-nav-item">
-                                        <a href="{{ route('profile-picture-view-request.index') }}"
-                                            class="aiz-side-nav-link">
-                                            <span
-                                                class="aiz-side-nav-text">{{ translate('Profile Picture View Request') }}</span>
-                                        </a>
-                                    </li>
-                                @endif
-                                @if (get_setting('gallery_image_privacy') == 'only_me')
-                                    <li class="aiz-side-nav-item">
-                                        <a href="{{ route('gallery-image-view-request.index') }}"
-                                            class="aiz-side-nav-link">
-                                            <span
-                                                class="aiz-side-nav-text">{{ translate('Gallery Image View Request') }}</span>
-                                        </a>
-                                    </li>
-                                @endif
-                            </ul>
-                        </li>
+                      </li>
+                    @endforeach
+                    @if (get_setting('profile_picture_privacy') == 'only_me')
+                      <li class="aiz-side-nav-item">
+                        <a href="{{ route('profile-picture-view-request.index') }}" class="aiz-side-nav-link {{ request()->routeIs('profile-picture-view-request.*')?'active':'' }}">
+                          <i class="las la-image aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Picture View Requests</span>
+                        </a>
+                      </li>
                     @endif
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('my_shortlists') }}" class="aiz-side-nav-link">
-                            <i class="las la-list aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Shortlist') }}</span>
+                    @if (get_setting('gallery_image_privacy') == 'only_me')
+                      <li class="aiz-side-nav-item">
+                        <a href="{{ route('gallery-image-view-request.index') }}" class="aiz-side-nav-link {{ request()->routeIs('gallery-image-view-request.*')?'active':'' }}">
+                          <i class="las la-images aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Gallery View Requests</span>
                         </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('my_ignored_list') }}" class="aiz-side-nav-link">
-                            <i class="las la-ban aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Ignored User List') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('profile-viewers.index') }}" class="aiz-side-nav-link">
-                            <i class="las la-eye aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Profile Viewers') }}</span>
-                        </a>
-                    </li>
-                    @if(Auth::user()->member && Auth::user()->member->auto_profile_match == 1)
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('my_matched_profiles') }}" class="aiz-side-nav-link">
-                                <i class="las la-user-friends aiz-side-nav-icon"></i>
-                                <span class="aiz-side-nav-text">{{ translate('Matched Profile') }}</span>
-                            </a>
-                        </li>
-                    @endif
-                    @if(Auth::user()->member && Auth::user()->member->auto_horoscope_profile_match == 1)
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('horoscope_matched_profiles') }}" class="aiz-side-nav-link">
-                                <i class="las la-user-friends aiz-side-nav-icon"></i>
-                                <span class="aiz-side-nav-text">{{ translate('Horoscope Matched Profile') }}</span>
-                            </a>
-                        </li>
-                    @endif
-                    <li class="aiz-side-nav-item">
-                        <a href="javascript:void(0);" class="aiz-side-nav-link">
-                            <i class="las la-cog aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Account Settings') }}</span>
-                            <span class="aiz-side-nav-arrow"></span>
-                        </a>
-                        <ul class="aiz-side-nav-list level-2">
-                            @if (addon_activation('support_tickets'))
-                                <li class="aiz-side-nav-item">
-                                    <a href="{{ route('support-tickets.user_index') }}"
-                                        class="aiz-side-nav-link {{ areActiveRoutes(['support-tickets.user_index', 'support-tickets.user_ticket_create']) }}">
-                                        <span class="aiz-side-nav-text">{{ translate('Support Ticket') }}</span>
-                                        @if (env('DEMO_MODE') == 'On')
-                                            <span class="badge badge-inline badge-danger">{{ translate('Addon') }}</span>
-                                        @endif
-                                    </a>
-                                </li>
-                            @endif
-                            <li class="aiz-side-nav-item">
-                                <a href="javascript:void(0);" class="aiz-side-nav-link" onclick="account_deactivation()">
-                                    @if (Auth::user()->deactivated == 0)
-                                        <span class="aiz-side-nav-text">{{ translate('Deactive Account') }}</span>
-                                    @else
-                                        <span class="aiz-side-nav-text">{{ translate('Reactive Account') }}</span>
-                                    @endif
-                                </a>
-                            </li>
-                            <li class="aiz-side-nav-item">
-                                <a href="{{ route('member.change_password') }}" class="aiz-side-nav-link">
-                                    <span class="aiz-side-nav-text">{{ translate('Change Password') }}</span>
-                                </a>
-                            </li>
-                            <li class="aiz-side-nav-item">
-                                <a href="javascript:void(0);" class="aiz-side-nav-link" onclick="account_delete()">
-                                    <span class="aiz-side-nav-text">{{ translate('Delete Account') }}</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="javascript:void(0);" class="aiz-side-nav-link">
-                            <i class="las la-shopping-basket aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Packages') }}</span>
-                            <span class="aiz-side-nav-arrow"></span>
-                        </a>
-                        <ul class="aiz-side-nav-list level-2">
-                            <li class="aiz-side-nav-item">
-                                <a href="{{ route('packages') }}" class="aiz-side-nav-link">
-                                    <span class="aiz-side-nav-text">{{ translate('Packages') }}</span>
-                                </a>
-                            </li>
-                            <li class="aiz-side-nav-item">
-                                <a href="{{ route('package_purchase_history') }}" class="aiz-side-nav-link">
-                                    <span class="aiz-side-nav-text">{{ translate('Package Purchase History') }}</span>
-                                </a>
-                            </li>
-                            <li class="aiz-side-nav-item">
-                                <a href="{{ route('package_usage_history') }}" class="aiz-side-nav-link">
-                                    <span class="aiz-side-nav-text">{{ translate('Package Usage History') }}</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                    {{-- Client-requested member features, visible in the member dashboard. --}}
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('client.scope.portal') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.portal', 'client.scope.got-match']) }}">
-                            <i class="las la-heart aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('My Matches & Got Match') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('client.scope.notifications') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.notifications']) }}">
-                            <i class="las la-bell aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Notification Preferences & History') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('client.scope.support') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.support']) }}">
-                            <i class="las la-headset aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Support Tickets & Ratings') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('client.scope.satisfaction') }}" class="aiz-side-nav-link {{ areActiveRoutes(['client.scope.satisfaction']) }}">
-                            <i class="las la-star aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Rate Hamqadam (NPS)') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('blog') }}" class="aiz-side-nav-link">
-                            <i class="las la-book-open aiz-side-nav-icon"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Articles & Marriage Advice') }}</span>
-                        </a>
-                    </li>
-                    {{-- Dedicated referral & refund destinations use the regular member panel layout. --}}
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('member.referrals.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.referrals.index']) }}" @if(request()->routeIs('member.referrals.index')) aria-current="page" @endif>
-                            <i class="las la-user-plus aiz-side-nav-icon" aria-hidden="true"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Refer Friends & Rewards') }}</span>
-                        </a>
-                    </li>
-                    <li class="aiz-side-nav-item">
-                        <a href="{{ route('member.payment_refunds.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['member.payment_refunds.index', 'member.payment_refunds.store']) }}" @if(request()->routeIs('member.payment_refunds.index')) aria-current="page" @endif>
-                            <i class="las la-file-invoice-dollar aiz-side-nav-icon" aria-hidden="true"></i>
-                            <span class="aiz-side-nav-text">{{ translate('Payments & Refunds') }}</span>
-                        </a>
-                    </li>
-                    @if (addon_activation('referral_system'))
-                        <li class="aiz-side-nav-item">
-                            <a href="javascript:void(0);" class="aiz-side-nav-link">
-                                <i class="las la-shopping-basket aiz-side-nav-icon"></i>
-                                <span class="aiz-side-nav-text">{{ translate('Legacy Referral Wallet') }}</span>
-                                @if (env('DEMO_MODE') == 'On')
-                                    <span class="badge badge-inline badge-danger">{{ translate('Addon') }}</span>
-                                @endif
-                                <span class="aiz-side-nav-arrow"></span>
-                            </a>
-                            <ul class="aiz-side-nav-list level-2">
-                                <li class="aiz-side-nav-item">
-                                    <a href="{{ route('my_referred_users') }}" class="aiz-side-nav-link">
-                                        <span class="aiz-side-nav-text">{{ translate('Referred Users') }}</span>
-                                    </a>
-                                </li>
-                                <li class="aiz-side-nav-item">
-                                    <a href="{{ route('my_referral_earnings') }}" class="aiz-side-nav-link">
-                                        <span class="aiz-side-nav-text">{{ translate('Referral Earnings') }}</span>
-                                    </a>
-                                </li>
-                                <li class="aiz-side-nav-item">
-                                    <a href="{{ route('wallet_withdraw_request_history') }}" class="aiz-side-nav-link">
-                                        <span class="aiz-side-nav-text">{{ translate('Wallet Withdraw Requests') }}</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
+                      </li>
                     @endif
                 @endif
             </ul>
         </div>
-        <div class="mb-3 px-3">
-            <a href="javascript:void(0);" class="btn btn-block btn-primary" href="{{ route('user.logout') }}"
-                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                <i class="las la-sign-out-alt"></i>
-                <span>{{ translate('Logout') }}</span>
 
-                <form id="logout-form" action="{{ route('user.logout') }}" method="POST" style="display: none;">
-                    @csrf
-                </form>
-            </a>
+        <div class="hm-member-sidebar-logout mb-3 px-3">
+            <form action="{{ route('user.logout') }}" method="POST">
+              @csrf
+              <button type="submit" class="btn btn-block btn-primary"><i class="las la-sign-out-alt"></i> {{ translate('Logout') }}</button>
+            </form>
         </div>
     </div>
 </div>

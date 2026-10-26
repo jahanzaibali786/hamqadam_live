@@ -1,69 +1,17 @@
 @extends('frontend.layouts.app')
-
+@section('meta_title',$data['meta_title'])
+@section('meta')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-editorial.css') }}?v=1">
+@endsection
 @section('content')
-
-<section class="pt-4 mb-4">
-    <div class="container text-center">
-        <div class="row">
-            <div class="col-lg-6 text-center text-lg-left">
-                <h1 class="fw-600 h4">{{ translate('Blog')}}</h1>
-            </div>
-            <div class="col-lg-6">
-                <ul class="breadcrumb bg-transparent p-0 justify-content-center justify-content-lg-end">
-                    <li class="breadcrumb-item opacity-50">
-                        <a class="text-reset" href="{{ route('home') }}">
-                            {{ translate('Home')}}
-                        </a>
-                    </li>
-                    <li class="text-dark fw-600 breadcrumb-item">
-                        <a class="text-reset" href="{{ route('blog') }}">
-                            "{{ translate('Blog') }}"
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="pb-4">
-    <div class="container">
-        <div class="card-columns">
-            @foreach($blogs as $blog)
-                <div class="card mb-3 overflow-hidden shadow-sm">
-                    <a href="{{ url("blog").'/'. $blog->slug }}" class="text-reset d-block">
-                        <img
-                            src="{{ static_asset('assets/img/placeholder-rect.jpg') }}"
-                            data-src="{{ uploaded_asset($blog->banner) }}"
-                            alt="{{ $blog->title }}"
-                            class="img-fluid lazyload "
-                        >
-                    </a>
-                    <div class="p-4">
-                        <h2 class="fs-18 fw-600 mb-1">
-                            <a href="{{ url("blog").'/'. $blog->slug }}" class="text-reset">
-                                {{ $blog->title }}
-                            </a>
-                        </h2>
-                        @if($blog->category != null)
-                        <div class="mb-2 opacity-50">
-                            <i>{{ $blog->category->category_name }}</i>
-                        </div>
-                        @endif
-                        <p class="opacity-70 mb-4">
-                            {{ $blog->short_description }}
-                        </p>
-                        <a href="{{ url("blog").'/'. $blog->slug }}" class="btn btn-soft-primary round-btn">
-                            {{ translate('View More') }}
-                        </a>
-                    </div>
-                </div>
-            @endforeach
-            
-        </div>
-        <div class="aiz-pagination aiz-pagination-center mt-4">
-            {{ $blogs->links() }}
-        </div>
-    </div>
-</section>
+<div class="hqe hqe-blog">
+<section class="hqe-hero"><div class="hqe-container hqe-center"><span class="hqe-kicker"><i class="las la-book-reader"></i> {{ $data['hero_badge'] }}</span><h1>{{ $data['hero_title'] }}</h1><p>{{ $data['hero_description'] }}</p><form action="{{ route('blog') }}" method="get" class="hqe-search" role="search"><i class="las la-search"></i><input name="search" type="search" value="{{ $search }}" maxlength="120" placeholder="{{ $data['search_placeholder'] }}" aria-label="Search articles"><button type="submit">{{ $data['search_button'] }}</button></form><div class="hqe-popular">{{ $data['popular_label'] }} @foreach($categories->take(3) as $cat)<a href="{{ route('blog',['category'=>$cat->slug]) }}">{{ $cat->category_name }}</a>@endforeach</div></div></section>
+<main class="hqe-container"><nav class="hqe-tabs" aria-label="Article categories"><a class="{{ $category===''?'active':'' }}" href="{{ route('blog',array_filter(['search'=>$search])) }}">{{ $data['all_topics'] }}</a>@foreach($categories as $cat)<a class="{{ $category===$cat->slug?'active':'' }}" href="{{ route('blog',array_filter(['category'=>$cat->slug,'search'=>$search])) }}">{{ $cat->category_name }}</a>@endforeach</nav>
+@if($featured && $search==='' && $category==='' && $blogs->currentPage()===1)<section class="hqe-blog-feature"><div class="hqe-feature-image"><a href="{{ route('blog.details',$featured->slug) }}"><img src="{{ uploaded_asset($featured->banner) ?: static_asset('assets/img/default-blog.png') }}" alt="{{ $featured->title }}"></a><span class="hqe-image-badge"><i class="las la-star"></i> {{ $data['featured_badge'] }}</span></div><div class="hqe-feature-copy"><span class="hqe-chip">{{ $featured->category?->category_name??'Editorial' }}</span><small>{{ max(1,(int)ceil(str_word_count(strip_tags((string)$featured->description))/200)) }} min read · {{ $featured->created_at?->format('F Y') }}</small><h2><a href="{{ route('blog.details',$featured->slug) }}">{{ $featured->title }}</a></h2><p>{{ \Illuminate\Support\Str::limit(strip_tags((string)$featured->short_description),220) }}</p><div class="hqe-feature-footer"><div><span class="hqe-avatar">HQ</span><div><strong>{{ $data['featured_author'] }}</strong><small>{{ $featured->category?->category_name??'Matrimonial Guidance' }}</small></div></div><a class="hqe-button" href="{{ route('blog.details',$featured->slug) }}">{{ $data['featured_button'] }} <i class="las la-arrow-right"></i></a></div></div></section>@endif
+<div class="hqe-section-head"><div><span class="hqe-label">{{ $data['articles_badge'] }}</span><h2>{{ $data['articles_title'] }}</h2></div><small>{{ $blogs->total() }} {{ $data['search_results'] }}</small></div>
+<div class="hqe-article-grid">@forelse($blogs as $blog)<article class="hqe-article"><a class="hqe-article-image" href="{{ route('blog.details',$blog->slug) }}"><img src="{{ $blog->banner ? (uploaded_asset($blog->banner) ?: static_asset('assets/img/default-blog.png')) : static_asset('assets/img/default-blog.png') }}" loading="lazy" alt="{{ $blog->title }}"><span class="hqe-image-badge">{{ $blog->category?->category_name??'Editorial' }}</span><span class="hqe-read">{{ max(1,(int)ceil(str_word_count(strip_tags((string)$blog->description))/200)) }} min read</span></a><div class="hqe-article-copy"><small>{{ $blog->created_at?->format('F d, Y') }} &nbsp; • &nbsp; {{ $blog->category?->category_name??'Editorial' }}</small><h3><a href="{{ route('blog.details',$blog->slug) }}">{{ $blog->title }}</a></h3><p>{{ \Illuminate\Support\Str::limit(strip_tags((string)$blog->short_description),137) }}</p><div class="hqe-article-bottom"><span>{{ $data['featured_author'] }}</span><a href="{{ route('blog.details',$blog->slug) }}">{{ $data['article_button'] }} ›</a></div></div></article>@empty<div class="hqe-empty"><h3>{{ $data['article_empty_title'] }}</h3><p>{{ $data['article_empty_description'] }}</p><a href="{{ route('blog') }}">{{ $data['clear_filters'] }}</a></div>@endforelse</div><div class="hqe-pagination">{{ $blogs->links() }}</div>
+<section class="hqe-quote"><i class="las la-quote-right"></i><blockquote>“{{ $data['quote_text'] }}”</blockquote><small>{{ $data['quote_source'] }}</small></section>
+<section class="hqe-newsletter"><div><span class="hqe-kicker">{{ $data['newsletter_badge'] }}</span><h2>{{ $data['newsletter_title'] }}</h2><p>{{ $data['newsletter_description'] }}</p><div class="hqe-news-tags"><span><i class="las la-check-circle"></i> {{ $data['newsletter_assurance_1'] }}</span><span><i class="las la-lock"></i> {{ $data['newsletter_assurance_2'] }}</span></div></div><form action="{{ route('public.blog.subscribe') }}" method="POST">@csrf<label for="hqe-sub-email">{{ $data['newsletter_email_label'] }}</label><input id="hqe-sub-email" name="email" type="email" maxlength="254" required placeholder="{{ $data['newsletter_placeholder'] }}"><label class="hqe-checkbox"><input type="checkbox" name="consent" value="1" required> <span>{{ $data['newsletter_consent'] }}</span></label><button type="submit" class="hqe-button">{{ $data['newsletter_button'] }} <i class="las la-arrow-right"></i></button>@if(session('subscribe_status'))<p role="status">{{ session('subscribe_status') }}</p>@endif @error('email')<small class="text-danger">{{ $message }}</small>@enderror @error('consent')<small class="text-danger">{{ $message }}</small>@enderror</form></section>
+<section class="hqe-cta"><span class="hqe-kicker">{{ $data['cta_badge'] }}</span><h2>{{ $data['cta_title'] }}</h2><p>{{ $data['cta_description'] }}</p><div class="hqe-actions"><a class="hqe-button hqe-button-white" href="{{ url($data['cta_primary_link']) }}">{{ $data['cta_primary_text'] }} →</a><a class="hqe-button hqe-button-ghost" href="{{ url($data['cta_secondary_link']) }}">{{ $data['cta_secondary_text'] }}</a></div><small><i class="las la-lock"></i> {{ $data['cta_assurance'] }}</small></section>
+</main></div>
 @endsection

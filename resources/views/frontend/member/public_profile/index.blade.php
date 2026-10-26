@@ -1,5 +1,9 @@
-@extends('frontend.layouts.app')
-@section('content')
+@extends('frontend.layouts.member_panel')
+@section('panel_content')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-detail.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-gallery-20261024.css') }}?v=1">
+@include('frontend.member.public_profile.reference_detail')
+<div class="hm-public-legacy-profile" id="hm-public-legacy-profile">
     <section class="pt-6 bg-primary-grad text-white">
         <div class="container">
             <div class="row">
@@ -2182,6 +2186,7 @@
             </div>
         </div>
     </section>
+</div>
 @endsection
 
 @section('modal')
@@ -2242,6 +2247,7 @@
 @endsection
 
 @section('script')
+<script src="{{ static_asset('assets/js/hamqadam-public-gallery-20261024.js') }}?v=1" defer></script>
     <script type="text/javascript">
         var package_validity = {{ package_validity(Auth::user()->id) }};
         var user_id = {{ Auth::user()->id }}
@@ -2296,49 +2302,15 @@
 
         // Express Interest
         function express_interest(id) {
-            $.post('{{ route('user.remaining_package_value') }}', {
-                    _token: '{{ csrf_token() }}',
-                    id: user_id,
-                    colmn_name: 'remaining_interest'
-                },
-                function(data) {
-                    var remaining_interest = data;
-                    if (!package_validity || remaining_interest < 1) {
-                        $('.package_update_alert_modal').modal('show');
-                    } else {
-                        $('.confirm_modal').modal('show');
-                        $("#confirm_modal_title").html("{{ translate('Confirm Express Interest!') }}");
-                        $("#confirm_modal_content").html(
-                            "<p class='fs-14'>{{ translate('Coin Balance') }}: " +
-                            remaining_interest +
-                            " {{ translate('Coins') }}</p class='fs-12'><small class='text-danger'>{{ translate('**N.B. Expressing an interest will cost') }} " + express_interest_coin_charge + " {{ translate('coin(s)**') }}</small>"
-                        );
-                        $("#confirm_button").attr("onclick", "do_express_interest(" + id + ")");
-                    }
-                }
-            );
+            const memberId = Number(id);
+            if (!Number.isSafeInteger(memberId) || memberId < 1) return;
+            window.location.assign(@json(route('member.workflow.show', ['member' => '__MEMBER__'])).replace('__MEMBER__', String(memberId)));
         }
 
         function do_express_interest(id) {
+            // Older confirm dialogs must not bypass template preview and approval.
             $('.confirm_modal').modal('hide');
-            $("#interest_a_id_" + id).removeAttr("onclick");
-            $("#interest_id_" + id).html("{{ translate('Processing') }}..");
-            $.post('{{ route('express-interest.store') }}', {
-                    _token: '{{ csrf_token() }}',
-                    id: id
-                },
-                function(data) {
-                    if (data) {
-                        $("#interest_id_" + id).html("{{ translate('Interest Expressed') }}");
-                        $("#interest_id_" + id).attr("class", "d-block fs-13 text-white");
-                        AIZ.plugins.notify('success', '{{ translate('Interest Expressed Sucessfully') }}');
-                        location.reload();
-                    } else {
-                        $("#interest_id_" + id).html("{{ translate('Interest') }}");
-                        AIZ.plugins.notify('danger', '{{ translate('Something went wrong') }}');
-                    }
-                }
-            );
+            express_interest(id);
         }
 
         function show_shortlist_requirement(message) {

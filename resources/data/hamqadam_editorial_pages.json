@@ -1,0 +1,810 @@
+{
+  "about": {
+    "seo": {
+      "title": "About Us | Hamqadam",
+      "description": "Discover the purpose, philosophy and verification values behind Hamqadam."
+    },
+    "hero": {
+      "eyebrow": "SANCTUARY OF DIGNIFIED MATRIMONY",
+      "title": "Every person has a story.",
+      "subtitle": "Hamqadam is built to make matrimonial matchmaking more meaningful, purposeful, and trustworthy — rooted in family dignity, deep compatibility, and verified authenticity.",
+      "description": "Moving beyond superficial swiping and transactional biodatas, Hamqadam creates an intentional space where individuals and families unite on shared values, life goals, and generational respect.",
+      "primary_text": "Choose Your Hamqadam",
+      "primary_link": "/register",
+      "secondary_text": "Explore Our Story",
+      "secondary_link": "#our-origin",
+      "image": 0,
+      "image_fallback": "assets/img/hamqadam-luxury/hero-jewelry.jpg",
+      "image_badge_title": "Value-Based AI Matching",
+      "image_badge_subtitle": "96% deep alignment score",
+      "image_caption_title": "Private Sanctuary",
+      "image_caption_subtitle": "Where pure intentions meet lifelong companionship.",
+      "image_caption_tag": "Family Involvement • Confidential Profiles",
+      "stats": [
+        {
+          "value": "100%",
+          "label": "Verified ID Registry"
+        },
+        {
+          "value": "0 Swipes",
+          "label": "Intentional Introductions"
+        },
+        {
+          "value": "24/7",
+          "label": "Elder & Family Care"
+        }
+      ]
+    },
+    "purpose": {
+      "eyebrow": "THE PROBLEM & THE PURPOSE",
+      "title": "Why We Built Hamqadam",
+      "description": "Matrimony in our culture is not an impulsive transaction. It is the coming together of two hearts, two destinies, and two families. Yet modern matchmaking has become chaotic, impersonal, and unverified.",
+      "compare": [
+        {
+          "eyebrow": "The Traditional Reality",
+          "title": "Noisy, Unverified Directories",
+          "points": [
+            "Unverified accounts, fictitious bios, and phantom profiles causing distress to hopeful families.",
+            "Superficial metrics prioritizing caste labels and unrealistic demands over character and emotional maturity.",
+            "Public directories exposing personal contact information to unvetted strangers and commercial brokers.",
+            "Endless swipes engendered for ad views, treating sacred lifelong commitments like consumable games."
+          ]
+        },
+        {
+          "eyebrow": "The Hamqadam Difference",
+          "title": "A Dignified, Private Sanctuary",
+          "points": [
+            "100% CNIC & Live Selfie Verification: Every member is authenticated before they can view or contact anyone.",
+            "Holistic Personhood: Profiles narrate passions, worldview, intellectual aspirations, and domestic values.",
+            "Family Respect & Guardian Integration: Transparent elder involvement, consultation concierges, and verified wali channels.",
+            "Intelligent Ethical AI: Thoughtful recommendations model surface preferences alongside alignment, not addictive feeds."
+          ]
+        }
+      ],
+      "features": [
+        {
+          "icon": "award",
+          "title": "Purpose Over Product",
+          "description": "Meaningful lifelong unions, not addictive swipe queues. Every interaction is designed with marriage and lasting harmony as the only finish line."
+        },
+        {
+          "icon": "shield",
+          "title": "100% ID & Face Verification",
+          "description": "Zero fake profiles, zero impersonation. Rigorous government document validation and real-time biometric selfies ensure genuine matrimonial intent."
+        },
+        {
+          "icon": "users",
+          "title": "Respect for Family Dignity",
+          "description": "Matrimony is an honorable family alliance. We offer dedicated family concierge consultations, verified guardian accounts, and private viewing controls."
+        },
+        {
+          "icon": "heart",
+          "title": "Technology with Empathy",
+          "description": "AI matchmaking is tailored for authentic lifestyle, career aspirations, spiritual cadence, and psychological compatibility; not cold checklists."
+        }
+      ]
+    },
+    "origin": {
+      "eyebrow": "OUR ORIGIN",
+      "title": "“We did not start Hamqadam to build another dating app. We built Hamqadam because our siblings, children, and friends deserved a place where marriage was treated with reverence.”",
+      "description": "In a world accelerated by rapid micro-interactions, we paused to ask: what happened to intentional courtship? Hamqadam restores the timeless beauty of marriage consultations through the pinnacle of modern technology and absolute identity protection.",
+      "image": 0,
+      "image_fallback": "assets/img/bg.jpg",
+      "attribution": "Hamqadam Founding Council",
+      "attribution_detail": "Islamabad & Silicon Valley"
+    },
+    "philosophy": {
+      "eyebrow": "THE FOUNDATIONS OF OUR SANCTUARY",
+      "title": "Our Core Philosophy",
+      "description": "Four foundational convictions shape every algorithm we develop, every verification protocol we enforce, and every screen we design.",
+      "cards": [
+        {
+          "number": "01",
+          "tag": "Design Philosophy",
+          "title": "Apple Philosophy — Simplicity with Purpose",
+          "description": "We rigorously eliminate visual friction, noisy banners, and intrusive advertisements. Every button, every typography choice, and every white-space margin serves the human heart. Finding a life partner demands clear contemplation, not digital overstimulation.",
+          "footnote": "Clarity over Clutter • Calmness over Urgency"
+        },
+        {
+          "number": "02",
+          "tag": "Human Nuance",
+          "title": "Storytelling — Every Person Has a Story",
+          "description": "A human soul cannot be condensed into age, height, and caste. Instead of profiling via crude personal journeys, intellectual passions, career dreams, parenting values, and family traditions — enabling compatibility built on authentic character.",
+          "footnote": "Character Profiles • Intellectual & Spiritual Alignment"
+        },
+        {
+          "number": "03",
+          "tag": "Enduring Mission",
+          "title": "Start With WHY — Purpose Before Product",
+          "description": "We do not measure our success by daily active time spent on the app, but by meaningful unions formed and joyful marriages celebrated. Our business model rewards matches that graduate into lifelong homes, holding ourselves to ethical stewardship.",
+          "footnote": "Long-term Unions • Zero Transactional Gamification"
+        },
+        {
+          "number": "04",
+          "tag": "Next-Gen Tech",
+          "title": "Create the Future — Reinventing Matchmaking",
+          "description": "Pioneering intelligent compatibility models, automated toxicity filters, NADRA-aligned identity validation, and discreet privacy controls. We are modernizing Pakistani and South Asian matrimonial practices across the homeland and the global diaspora.",
+          "footnote": "Global Diaspora Access • Safe Identity Mitigation"
+        }
+      ]
+    },
+    "verification": {
+      "eyebrow": "VERIFICATION MESH",
+      "title": "How Our Trust Verification Functions",
+      "description": "Every profile undergoes a multi-layer verification check before appearing in partner searches.",
+      "steps": [
+        {
+          "number": "STEP 01",
+          "title": "Govt ID Match",
+          "description": "Front and back CNIC or Passport document validation via encrypted OCR parsing.",
+          "tag": "Identity Confirmed"
+        },
+        {
+          "number": "STEP 02",
+          "title": "Live Liveness Selfie",
+          "description": "Real-time facial liveness check prevents stock photos, filters, and synthetic avatars.",
+          "tag": "Biometric Match"
+        },
+        {
+          "number": "STEP 03",
+          "title": "Family & Guardian Link",
+          "description": "Optional elder verification with validated phone lines and dedicated family access.",
+          "tag": "Guardian Connected"
+        },
+        {
+          "number": "STEP 04",
+          "title": "Sanctuary Badge Issued",
+          "description": "Verified profiles receive the deep rose shield, unlocking end-to-end respectful communication.",
+          "tag": "Safe Exchange Active"
+        }
+      ]
+    },
+    "beliefs": {
+      "eyebrow": "TENETS & CREDO",
+      "title": "What We Believe",
+      "description": "Principles that govern our team, our code, and our community stewardship every single day.",
+      "items": [
+        {
+          "icon": "heart",
+          "title": "Meaningful Connections Matter",
+          "description": "Marriage is sacred. Casual encounters cannot satisfy the profound human desire for emotional safety, spiritual harmony, and an enduring home."
+        },
+        {
+          "icon": "lock",
+          "title": "Trust Comes First",
+          "description": "Without authentic identities and verifiable accountability, no real vulnerability is possible. We invest heavily in human verification because peace of mind is priceless."
+        },
+        {
+          "icon": "user-check",
+          "title": "Every Person Deserves to Be Understood",
+          "description": "We reject narrow prejudices. Each individual brings unique aspirations, personal histories, and familial contexts that deserve compassionate, open-hearted listening."
+        },
+        {
+          "icon": "comment",
+          "title": "Technology Should Simplify, Not Complicate",
+          "description": "Our interface fades into the background so meaningful conversations can emerge. We build tools that save hours of distraction and bring warmth back."
+        },
+        {
+          "icon": "users",
+          "title": "AI Should Support People, Not Replace Human Judgment",
+          "description": "Algorithms surface compatibility signals, but the final, heartfelt decision remains with the prospective partners and their trusted families.",
+          "tag": "Human-in-the-Loop Design"
+        }
+      ]
+    },
+    "trust_strip": [
+      {
+        "icon": "shield",
+        "value": "100% Verified",
+        "detail": "CNIC & ID Verified Community"
+      },
+      {
+        "icon": "lock",
+        "value": "256-Bit SSL",
+        "detail": "Bank-Grade Privacy Protection"
+      },
+      {
+        "icon": "headset",
+        "value": "Concierge Care",
+        "detail": "Dedicated Family Consultations"
+      }
+    ],
+    "cta": {
+      "eyebrow": "CHOOSE FOREVER • Rishton ki duniya",
+      "title": "Your story deserves a meaningful beginning.",
+      "description": "Step into a private sanctuary where intentions are respected, families are honored, and compatibility is cultivated with care.",
+      "primary_text": "Choose Your Hamqadam",
+      "primary_link": "/register",
+      "secondary_text": "Talk to Family Desk",
+      "secondary_link": "/contact-us/page"
+    }
+  },
+  "team": {
+    "seo": {
+      "title": "Our Team | Hamqadam",
+      "description": "Meet the counsellors, technology innovators and guardians behind Hamqadam."
+    },
+    "hero": {
+      "eyebrow": "THE GUARDIANS OF YOUR TRUST",
+      "title": "The Hearts & Minds Behind",
+      "accent": "Hamqadam",
+      "description": "Meet the matrimonial counselors, technology innovators, and community guardians dedicated to building Pakistan's most dignified and secure matchmaking sanctuary.",
+      "badges": [
+        {
+          "text": "Rishton ki duniya — Driven by Purpose"
+        },
+        {
+          "text": "100% CNIC & Physical Verification Oversight"
+        },
+        {
+          "text": "Helpline: +01 112 352 566"
+        }
+      ]
+    },
+    "practice": {
+      "title": "Our Dedicated Practice Groups",
+      "description": "Filter by functional expertise across ethics, security, algorithms, and family guidance.",
+      "all_label": "All Leadership",
+      "filters": [
+        {
+          "key": "Family",
+          "label": "Family & Matchmaking Advisors"
+        },
+        {
+          "key": "Technology",
+          "label": "AI & Technology"
+        },
+        {
+          "key": "Trust",
+          "label": "Trust & Verification Safety"
+        }
+      ],
+      "eyebrow": "EXECUTIVE CORE & ADVISORS",
+      "heading": "Guardians of Lifelong Companionship",
+      "status": "Active Nationwide Advisory Available",
+      "members": [
+        {
+          "initials": "FA",
+          "badge": "Founder",
+          "group": "All",
+          "name": "Dr. Farooq Al-Hassan",
+          "role": "Founder & Chief Matchmaking Counselor",
+          "bio": "22+ years guiding dignified Pakistani family matrimonies and intercultural unions. Pioneer of empathetic pre-marital guidance.",
+          "focus": "Intercultural & Traditional Unions; Family Mediation; Ethical Compatibility",
+          "location": "Islamabad / Lahore",
+          "action_text": "Book Consult",
+          "action_link": "/contact-us/page"
+        },
+        {
+          "initials": "FZ",
+          "badge": "Trust & Safety",
+          "group": "Trust",
+          "name": "Syeda Fatima Zahra",
+          "role": "Head of Community Trust & Family Verification",
+          "bio": "Expert in identity authentication, background verification, and guardian relations. Oversees multi-tier government credential review.",
+          "focus": "CNIC Document Verification; In-Person Guardian Liaison; Fraud Prevention",
+          "location": "Karachi",
+          "action_text": "Verify Direct",
+          "action_link": "/contact-us/page"
+        },
+        {
+          "initials": "BT",
+          "badge": "Technology",
+          "group": "Technology",
+          "name": "Bilal Ahmed Tariq",
+          "role": "VP of AI & Matchmaking Intelligence",
+          "bio": "Former Senior Data Scientist specializing in ethical recommendation systems and compatibility scoring architectures.",
+          "focus": "Ethical Machine Learning; Nuanced Value Matching; Privacy-Preserving AI",
+          "location": "Islamabad",
+          "action_text": "Core Architect",
+          "action_link": "/contact-us/page"
+        },
+        {
+          "initials": "MN",
+          "badge": "Member Safety",
+          "group": "Trust",
+          "name": "Maryam Nawazish",
+          "role": "Director of Member Safety & Anti-Harassment",
+          "bio": "Specialist in conversation toxicity prevention, photo privacy controls and community protection.",
+          "focus": "Safe Messaging Moderation; Profile Watermarking; Harassment Escalation",
+          "location": "Lahore",
+          "action_text": "24/7 Redress Lead",
+          "action_link": "/contact-us/page"
+        },
+        {
+          "initials": "KS",
+          "badge": "Family Liaison",
+          "group": "Family",
+          "name": "Kamran Siddiqui",
+          "role": "Head of Customer Support & Family Consultations",
+          "bio": "Lead coordinator for nationwide verified home visits and phone matrimonial consultations. Bridges parents, prospective candidates and advisers.",
+          "focus": "Home Matrimonial Meetings; Parental Concerns; Custom Package Guidance",
+          "location": "All Metros",
+          "action_text": "Connect",
+          "action_link": "/contact-us/page"
+        },
+        {
+          "initials": "ZK",
+          "badge": "Psychology",
+          "group": "Family",
+          "name": "Zainab Khan, PhD",
+          "role": "Family Psychologist & Compatibility Research Lead",
+          "bio": "Researcher on sustainable marital dynamics, emotional harmony and mutual career expectations. Directs holistic family consultations.",
+          "focus": "Pre-Marital Preparedness; Conflict Style Resolution; Career-Life Integration",
+          "location": "Islamabad",
+          "action_text": "Book Session",
+          "action_link": "/contact-us/page"
+        }
+      ]
+    },
+    "council": {
+      "eyebrow": "ETHICAL GOVERNANCE",
+      "title": "Our Matchmaking Advisory Council",
+      "description": "Respected community elders, retired legal experts, and marital counselors providing independent ethical oversight to ensure every platform feature upholds Islamic values and refined cultural traditions.",
+      "stats": [
+        {
+          "value": "100%",
+          "label": "Ethical Policy Review Before Algorithmic Rollout"
+        },
+        {
+          "value": "250+ yrs",
+          "label": "Combined Marital & Family Guidance Experience"
+        }
+      ],
+      "cards": [
+        {
+          "icon": "balance-scale",
+          "title": "Shariah & Cultural Alignment",
+          "description": "Reviewed by distinguished Islamic jurisprudence scholars to guarantee matrimonial intentions (Niyyah), guardian (Wali) inclusion, and sanctified privacy protocols.",
+          "footnote": "Chaired by Dr. Mufti Arshad (Lahore)"
+        },
+        {
+          "icon": "gavel",
+          "title": "Legal & Family Rights",
+          "description": "Retired judicial advisors evaluating Nikah terms, financial transparency guidance, cross-border documentation, and family protection laws.",
+          "footnote": "Led by Justice (R) S. Mehmood"
+        },
+        {
+          "icon": "user-friends",
+          "title": "Council of Elder Matrimonial Mentors",
+          "description": "Community representatives from Sindh, Punjab, Khyber Pakhtunkhwa, and Balochistan assuring every regional lineage and social sensitivity is honored with respect.",
+          "footnote": "Multilingual Council"
+        }
+      ]
+    },
+    "consult": {
+      "eyebrow": "DIRECT CONFIDENTIAL GUIDANCE",
+      "title": "Family Consultation & Advisor Support",
+      "description": "Prefer talking directly with our senior matrimonial counselors? We offer discreet, private consultations for individuals and parents across Islamabad, Lahore, and Karachi — either in person or via secure video link.",
+      "hotline_label": "National Matrimonial Helpline",
+      "hotline": "+01 112 352 566",
+      "availability": "Available 9:00 AM – 9:00 PM PKT Daily",
+      "form_heading": "Schedule an Advisor Session",
+      "form_hint": "Select your preferred sanctuary location or video consultation.",
+      "name_label": "Guardian / Candidate Name",
+      "email_label": "Email Address",
+      "city_label": "City Office",
+      "advisor_label": "Preferred Advisor",
+      "phone_label": "Mobile / WhatsApp Number",
+      "submit_label": "Confirm Consultation Request",
+      "confidentiality": "100% Confidential • Strict Family Privacy",
+      "cities": [
+        {
+          "value": "Islamabad HQ",
+          "label": "Islamabad HQ"
+        },
+        {
+          "value": "Lahore",
+          "label": "Lahore"
+        },
+        {
+          "value": "Karachi",
+          "label": "Karachi"
+        },
+        {
+          "value": "Video Consultation",
+          "label": "Video Consultation"
+        }
+      ],
+      "advisors": [
+        {
+          "value": "Dr. Farooq Al-Hassan",
+          "label": "Dr. Farooq Al-Hassan"
+        },
+        {
+          "value": "Kamran Siddiqui",
+          "label": "Kamran Siddiqui"
+        },
+        {
+          "value": "Syeda Fatima Zahra",
+          "label": "Syeda Fatima Zahra"
+        }
+      ]
+    },
+    "cta": {
+      "title": "Begin your journey with partners who care.",
+      "description": "Let our counselors and verified platform safeguard your family's matrimonial search with integrity, mutual honor, and refined personal care.",
+      "primary_text": "Choose Your Hamqadam",
+      "primary_link": "/register",
+      "secondary_text": "Learn How We Verify Members",
+      "secondary_link": "/about-us#verification"
+    }
+  },
+  "privacy": {
+    "seo": {
+      "title": "Privacy Policy | Hamqadam",
+      "description": "Learn how Hamqadam protects member privacy and safeguards identity information."
+    },
+    "hero": {
+      "eyebrow": "TRUST & PRIVACY FIRST",
+      "updated": "Last updated: February 2026",
+      "title": "Hamqadam Privacy Policy",
+      "description": "Your privacy is sacred. Learn how we safeguard your personal data, identity documents, and matrimonial preferences with bank-grade encryption in a sanctuary built for lifelong devotion.",
+      "score_title": "SANCTUARY TRUST SCORE",
+      "score_badge": "100% Guaranteed",
+      "metrics": [
+        {
+          "value": "256-Bit",
+          "label": "AES Vault"
+        },
+        {
+          "value": "Zero Ads",
+          "label": "Never Sold"
+        },
+        {
+          "value": "Ensure",
+          "label": "On Demand"
+        }
+      ]
+    },
+    "stripe": [
+      {
+        "icon": "shield",
+        "text": "Data Protection Architecture: Fully Operational"
+      },
+      {
+        "icon": "check",
+        "text": "NADRA CNIC Safe Vault"
+      },
+      {
+        "icon": "lock",
+        "text": "Dual-Officer Clearance"
+      },
+      {
+        "icon": "certificate",
+        "text": "ISO/IEC 27001 Standard"
+      }
+    ],
+    "sidebar": {
+      "title": "Table of Contents",
+      "count_label": "7 Protocols",
+      "officer_heading": "DIRECT TRUST OFFICER",
+      "officer_text": "Purely direct phone and service concierge? Speak confidentially.",
+      "officer_phone": "+01 112 352 566"
+    },
+    "sections": [
+      {
+        "num": "01",
+        "nav": "Information We Collect",
+        "title": "Information We Collect",
+        "intro": "To curate genuine, safe matrimonial opportunities without the hazards of superficial dating platforms, Hamqadam gathers deliberate personal information solely designated for dignified matchmaking.",
+        "cards": [
+          {
+            "title": "Personal & Lineage Context",
+            "description": "Legal name, age, gender, marital history, mother tongue, sectarian school of thought, caste/sub-caste, parental preferences, and current living arrangements."
+          },
+          {
+            "title": "Academic & Professional",
+            "description": "Highest verified degrees, institution (e.g. LUMS, NUST, King Edward, PU), career sector, organization name, and verified income brackets."
+          },
+          {
+            "title": "Family Architecture",
+            "description": "Parent and guardian professions, number of children, existing siblings, education, and family expectations for mutual household respect."
+          },
+          {
+            "title": "Verification Crypts",
+            "description": "Government CNIC/NICOP/Passport and live selfie photographs, face camera biometrics, and phone number SMS OTP timestamps."
+          }
+        ],
+        "notice": "Sanctuary Pledge: We operate strictly on an intentional life-partnership framework. We never scrape external address books, social media graph connections, or unapproved device telemetry."
+      },
+      {
+        "num": "02",
+        "nav": "Identity Safeguards (CNIC / Selfie)",
+        "title": "Identity Documents Safeguards (CNIC & Selfie)",
+        "intro": "Hamqadam enforces Pakistan's most stringent identity verification standard. To maintain 100% genuine members and prevent catfishing or fraudulent proposals, identity validation is strictly contained within air-gapped security boundaries.",
+        "cards": [
+          {
+            "title": "Identity Vault Architecture",
+            "description": "Live Selfie / CNIC → Isolated AES Vault → Compliance Audit"
+          }
+        ],
+        "notice": "No Public Exposure: Your CNIC numbers, scanned identity images and verification selfie scores are never visible to other users, matches, or third parties under any circumstances.",
+        "bullets": [
+          "Restricted Physical Access: Only government-compliance vetted verification officers can access the encrypted vault during account validation sessions.",
+          "Automated Watermarking: All uploaded proof documents receive an indelible cryptographic watermark stating Hamqadam Internal Matrimonial Audit Only."
+        ]
+      },
+      {
+        "num": "03",
+        "nav": "Visibility & Photo Privacy Controls",
+        "title": "Profile Visibility & Photo Privacy Controls",
+        "intro": "Dignity begins with complete control over your public presence. Hamqadam affords granular choice over every photograph and familial dimension of your proposal.",
+        "cards": [
+          {
+            "title": "Photo Blur by Choice",
+            "description": "Display your portrait with an intentional aesthetic frosted veil before secure mutual validation."
+          },
+          {
+            "title": "Contact Shield",
+            "description": "Direct phone numbers and WhatsApp access remain 100% masked until both prospective families mutually agree to private communication."
+          },
+          {
+            "title": "Incognito Browsing",
+            "description": "Explore prospective candidate profiles without triggering visit notifications or displaying your identity, subject to eligibility."
+          },
+          {
+            "title": "Family-Managed Profiles",
+            "description": "When a parent, brother, or sister manages the account, the primary contact recipient is routed exclusively to the designated family elder to safeguard candidate boundaries."
+          }
+        ]
+      },
+      {
+        "num": "04",
+        "nav": "AI Processing & Data Protection",
+        "title": "Responsible AI Processing & Data Protection",
+        "intro": "Our AI Matchmaking engine evaluates compatibility across lifestyle tenets, cultural harmony, education, and mutual life vision. This intelligence is strictly encapsulated.",
+        "cards": [
+          {
+            "title": "Zero Public Model Training",
+            "description": "Your biographical notes, interests, and private contact details are never exported to public-language models. Our closed-loop algorithms operate strictly within secure instances."
+          },
+          {
+            "title": "Non-Intrusive Behavioral Scoring",
+            "description": "Match predictions derive exclusively from attributes you explicitly specify. We reject manipulative psychological scoring and external tracking."
+          }
+        ],
+        "notice": "Database Salt & Hashes: Argon2id for passwords, AES-GCM for profile-sensitive metadata. Audited Monthly."
+      },
+      {
+        "num": "05",
+        "nav": "Zero-Spam & Sharing Restrictions",
+        "title": "Zero-Spam & Zero-Harassment Protocol",
+        "intro": "Hamqadam does not operate programmatic advertising networks. We never sell, lease, or syndicate member contact databases to commercial brokers, marketing agencies, or unrelated real estate/financial providers.",
+        "cards": [
+          {
+            "title": "No Unsolicited Marketing",
+            "description": "Your phone number and email remain strictly shielded from account security alerts and legitimate match notifications you configure."
+          },
+          {
+            "title": "Immediate Harassment Ban",
+            "description": "Inappropriate conduct, unsanctioned photo solicitation or disrespect leads to immediate permanent hardware-level and CNIC banishment."
+          }
+        ]
+      },
+      {
+        "num": "06",
+        "nav": "Account Deletion & Right to Erasure",
+        "title": "Account Deletion & Right to Erasure",
+        "intro": "The supreme joy of Hamqadam is when you no longer need us. Whether you find your eternal companion through our sanctuary or decide to depart for any reason, your right to permanent oblivion is honored with speed.",
+        "cards": [
+          {
+            "title": "Stage 01 — One-Click Request",
+            "description": "Trigger account deletion directly in your Profile Settings or email our Data Protection team."
+          },
+          {
+            "title": "Stage 02 — Instant Unlisting",
+            "description": "Your bio, photos, and match records vanish from search matrices and public indices in real time."
+          },
+          {
+            "title": "Stage 03 — Vault Shredding",
+            "description": "Within 14 calendar days, identity photos, CNIC scans, and encrypted records undergo permanent zero-fill deletion, subject to legal obligations."
+          }
+        ],
+        "notice": "Celebrated your marriage? Mark your Hamqadam union in our Blessed Archive."
+      },
+      {
+        "num": "07",
+        "nav": "Data Protection Officer",
+        "title": "Contact Our Data Protection Officer",
+        "intro": "Office of Data Governance & Ethics — Independent Matrimonial Trust Ombudsman • Islamabad Head Office",
+        "cards": [
+          {
+            "title": "DIRECT EMAIL",
+            "description": "privacy@hamqadam.com"
+          },
+          {
+            "title": "DIRECT HELPLINE",
+            "description": "+01 112 352 566"
+          },
+          {
+            "title": "PHYSICAL REGISTRY",
+            "description": "Hamqadam Trust Tower, Blue Area, Sector G-7/1, Islamabad"
+          }
+        ],
+        "notice": "If you suspect unauthorized attempts to copy your photographs, fraudulent impersonation, or abusive identity-document usage, our dedicated Trust & Safety Officers will escalate containment immediately."
+      }
+    ],
+    "cta": {
+      "title": "Join a platform built around uncompromising trust.",
+      "description": "Where pure intentions meet companionship. Discover life partners whose values, heritage, and integrity align with your deepest hopes.",
+      "primary_text": "Choose Your Hamqadam",
+      "primary_link": "/register",
+      "secondary_text": "Explore Safety Center",
+      "secondary_link": "/about-us#verification"
+    }
+  },
+  "terms": {
+    "seo": {
+      "title": "Terms & Conditions | Hamqadam",
+      "description": "Read Hamqadam's account requirements, membership rules, privacy responsibilities and dispute processes."
+    },
+    "hero": {
+      "eyebrow": "Code of Dignity & Service",
+      "title": "Hamqadam Terms & Conditions",
+      "description": "The foundational agreement governing membership, authentic identity obligations, respectful conduct, and service provisions on Hamqadam.",
+      "badges": [
+        {
+          "text": "Effective Date: February 2026"
+        },
+        {
+          "text": "Strict Mandatory Verification Standards"
+        },
+        {
+          "text": "Jurisdiction: Islamabad, Pakistan"
+        }
+      ]
+    },
+    "sidebar": {
+      "title": "TABLE OF PROVISIONS",
+      "count_label": "8 Clauses",
+      "inquiry_title": "Legal Inquiries",
+      "inquiry_text": "Questions regarding our terms or compliance protocols? Reach our legal & compliance team directly.",
+      "inquiry_email": "legal@hamqadam.com",
+      "inquiry_phone": "+01 112 352 566",
+      "inquiry_address": "Islamabad, Pakistan",
+      "seal": "NADRA / CNIC Aligned Internal Protection • Pakistani family rights."
+    },
+    "sections": [
+      {
+        "num": "1.0",
+        "nav": "Bona Fide Matrimonial Intent",
+        "title": "Bona Fide Matrimonial Intent",
+        "intro": "Hamqadam ('Rishton ki duniya') is conceived and operated strictly as a sanctified platform dedicated solely to lawful, solemn matrimonial commitments. Registration is granted exclusively to individuals and families who seek lifelong marital partnerships grounded in dignity, Islamic and civic ethics, and mutual honor.",
+        "notice_title": "Absolute Zero Tolerance Directive",
+        "notice": "Casual dating, non-marital solicitation, escorting, commercial matchmaking, visa barter, deceptive matchmaking syndicates, or speculative relationships are forbidden. Any such activity results in irreversible, instant account termination and permanent hardware/CNIC blacklisting without refund.",
+        "closing": "By maintaining an active profile or creating a submission for a son, daughter, sibling, or charge under your guardianship, you solemnly certify that your intent remains purely matrimonial and compliant with local family jurisprudence."
+      },
+      {
+        "num": "2.0",
+        "nav": "Eligibility & Age of Consent",
+        "title": "Eligibility & Age of Consent",
+        "intro": "To register with Hamqadam, prospective brides and grooms must meet the minimum legal age of marriage recognized by the Child Marriage Restraint Act and applicable domestic laws.",
+        "bullets": [
+          "Minimum Age: 18 continuous years of age for female registrants, and 18 or 21 continuous years depending on provincial jurisdiction; verify current local law before publication.",
+          "Marital Capacity: Applicants must have the legal, physical, and psychological competence to contract a marriage without duress or coercion.",
+          "Family Representative Access: Profiles created on behalf of a son, daughter, brother, or sister remain bound to the verified consent of the candidate whose identity is represented."
+        ]
+      },
+      {
+        "num": "3.0",
+        "nav": "Mandatory Identity Verification",
+        "title": "Mandatory Identity Verification (100% CNIC / ID)",
+        "intro": "To maintain our sacred standard as the Sanctuary of Dignified Matrimony, Hamqadam enforces an uncompromised multi-layered verification system. An unverified account holds zero search visibility and cannot initiate member correspondence.",
+        "cards": [
+          {
+            "title": "CNIC / Passport Protocol",
+            "description": "Scanned valid government ID (National Identity Card / Passport). Uploaded proof is protected through encrypted access controls."
+          },
+          {
+            "title": "Live Biometric Liveness Check",
+            "description": "A real-time camera selfie verification reduces the risk of photograph substitution and impersonation."
+          }
+        ],
+        "closing": "All registrants warrant that declarations regarding university credentials, employment sector, income brackets, caste/sect, and previous marital statuses are completely accurate. Supplying forged documentation constitutes legal fraud."
+      },
+      {
+        "num": "4.0",
+        "nav": "Respectful Conduct & Dignity",
+        "title": "Code of Conduct & Dignity Rules",
+        "intro": "Every communication across Hamqadam — whether encrypted chat messages, voice introductions, or guardian inquiries — must preserve the highest standards of decorum, courtesy, and respect.",
+        "bullets": [
+          "Harassment & Pressure: Repeatedly messaging a recipient who has declined interest, making aggressive demands for private photos, or expressing unsolicited vulgar remarks is strictly forbidden.",
+          "Hate Speech & Sectarian Bias: Hamqadam welcomes diverse schools of thought, sects, and cultural traditions. Derogatory assertions targeting sectarian, linguistic, or ethnic backgrounds trigger account freezing.",
+          "AI Safety Monitoring: Proprietary natural language algorithms continuously review interactions for harassment flags, solicitations, or extortion indicators, escalating critical breaches to our Safety Desk."
+        ]
+      },
+      {
+        "num": "5.0",
+        "nav": "Membership Packages & Coins",
+        "title": "Membership Packages & Coins Policy",
+        "intro": "Hamqadam operates transparent matrimonial tiers structured to protect candidate privacy while fostering genuine matches. The platform implements an internal Coin System that governs interaction quotas and direct contact views.",
+        "table_headers": [
+          "Package",
+          "Coin Allowance",
+          "Gallery Limit",
+          "Direct Contact",
+          "Validity"
+        ],
+        "table_rows": [
+          [
+            "Free",
+            "25 Coins (Instant)",
+            "Up to 5 Photos",
+            "0 Contact Info Views",
+            "3650 Days"
+          ],
+          [
+            "Silver Plan",
+            "500 Coins",
+            "15 Photos",
+            "4 Contact Info Views",
+            "30 Days"
+          ],
+          [
+            "Gold Plan",
+            "1,000 Coins",
+            "25 Photos",
+            "1 Contact Info View",
+            "90 Days"
+          ],
+          [
+            "Platinum Plan",
+            "2,000 Coins",
+            "50 Photos",
+            "1 Contact Info View",
+            "180 Days"
+          ]
+        ],
+        "notice_title": "Coin Utility & Non-Refundability",
+        "notice": "Coins are consumptive digital utility tokens utilized to unlock direct communications, trigger priority matching algorithms, and submit guardian introductions. Coins possess no real-world monetary redemption value and cannot be exchanged for cash or transferred between accounts.",
+        "closing": "Contact Views: Unlocking verified telephone numbers and guardian coordinates requires the explicit bilateral mutual approval of the prospective member or their designated guardian."
+      },
+      {
+        "num": "6.0",
+        "nav": "Account Suspension & Reporting",
+        "title": "Account Suspension & Reporting",
+        "intro": "Hamqadam reserves the full unilateral prerogative to suspend, freeze, or terminate profiles reported for non-compliance. Our investigative procedure functions with high urgency.",
+        "cards": [
+          {
+            "title": "Immediate Freeze",
+            "description": "Upon receiving 2 distinct member reports or critical safety tickets, chat capabilities are instantly quarantined."
+          },
+          {
+            "title": "Documented Audit",
+            "description": "The Trust & Safety Desk investigates uploaded logs, reported messages, and cross-checks NADRA/CNIC records."
+          },
+          {
+            "title": "Definitive Resolution",
+            "description": "Guilty profiles face indefinite exclusion, blacklisting, or restitution of paid coins."
+          }
+        ]
+      },
+      {
+        "num": "7.0",
+        "nav": "Disclaimers & Liability Cap",
+        "title": "Disclaimers & Limitation of Liability",
+        "intro": "While Hamqadam enforces 100% ID and facial liveness verification to eliminate deceptive imposters, Hamqadam does not guarantee the emotional compatibility, moral fortitude, personal temperament, or ultimate marital success of any registered user.",
+        "notice_title": "Due Diligence Reminder",
+        "notice": "Families and candidates are strictly advised to carry out standard traditional and independent inquiries, family background checks, and safety verification before formalizing any matrimonial pact or exchanging personal assets.",
+        "closing": "To the fullest extent permitted under law, Hamqadam and its operators shall not be liable for any direct, indirect, punitive, or consequential damages resulting from off-platform meetings, unauthorized financial transfers between members, or personal disagreements."
+      },
+      {
+        "num": "8.0",
+        "nav": "Dispute Resolution & Law",
+        "title": "Dispute Resolution & Governing Law",
+        "intro": "These Terms & Conditions and any operational disputes arising out of the services rendered on Hamqadam shall be governed by, and construed in conformity with, the civil, penal, and matrimonial laws of the Islamic Republic of Pakistan.",
+        "closing": "Any legal proceeding, claim, or litigation not resolved amicably within thirty (30) days of formal written notification through our legal counsel shall fall under the sole exclusive jurisdiction of the competent courts of Islamabad, Pakistan."
+      }
+    ],
+    "cta": {
+      "eyebrow": "CHOOSE FOREVER",
+      "title": "Step into a dignified matrimonial community.",
+      "description": "Connect with verified prospective life partners backed by family values, authentic background verification, and respectful communication.",
+      "primary_text": "Choose Your Hamqadam",
+      "primary_link": "/register",
+      "secondary_text": "Contact Support",
+      "secondary_link": "/contact-us/page"
+    }
+  }
+}

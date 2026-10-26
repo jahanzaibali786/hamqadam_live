@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ExpressInterest extends Model
 {
     protected $fillable = [
+        'interaction_type',
         'user_id',
         'interested_by',
         'status',

@@ -34,6 +34,7 @@ use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PackagePaymentController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReferralSystemController;
 use App\Http\Controllers\ReligionController;
 use App\Http\Controllers\ReportedUserController;
 use App\Http\Controllers\RoleController;
@@ -45,6 +46,7 @@ use App\Http\Controllers\UpdateController;
 use App\Http\Controllers\V1PlatformConsoleController;
 use App\Http\Controllers\WebsiteDropdownDataController;
 use App\Http\Controllers\WalletController;
+use App\Http\Controllers\WalletWithdrawRequestController;
 
 /*
   |--------------------------------------------------------------------------
@@ -70,6 +72,24 @@ Route::get('/admin/login', [HomeController::class, 'admin_login'])->name('admin.
 
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function () {
+    // Referral rewards are an admin configuration feature, not a public route.
+    Route::get('/settings/referrals', [ReferralSystemController::class, 'set_referral_commission'])->name('admin.referrals.settings');
+    Route::post('/referral-rewards/settings', [ReferralSystemController::class, 'save_reward_settings'])
+        ->middleware('throttle:10,1')->name('admin.referrals.reward_settings');
+    Route::post('/referral-rewards/package-settings', [ReferralSystemController::class, 'save_package_reward_settings'])
+        ->middleware('throttle:10,1')->name('admin.referrals.package_reward_settings');
+    Route::get('/set-referral-commission', [ReferralSystemController::class, 'set_referral_commission'])->name('set_referral_commission');
+    Route::get('/referal/users', [ReferralSystemController::class, 'index'])->name('referals.users');
+    Route::get('/referal/earnings', [ReferralSystemController::class, 'referal_earnings_admin'])->name('referal.earnings_admin');
+    Route::resource('wallet-withdraw-requests', WalletWithdrawRequestController::class);
+    Route::post('/wallet-withdraw-request-details', [WalletWithdrawRequestController::class, 'wallet_withdraw_request_details'])->name('wallet_withdraw_request_details');
+    Route::get('/wallet-withdraw-request-accept/{id}', [WalletWithdrawRequestController::class, 'withdraw_request_accept'])->name('wallet_withdraw_request.accept');
+    Route::get('/wallet-withdraw-request-reject/{id}', [WalletWithdrawRequestController::class, 'withdraw_request_reject'])->name('wallet_withdraw_request.reject');
+
+    Route::get('/workflow-templates', [\App\Http\Controllers\Admin\WorkflowTemplateController::class, 'index'])->name('admin.workflow.templates');
+    Route::post('/workflow-templates', [\App\Http\Controllers\Admin\WorkflowTemplateController::class, 'save'])->name('admin.workflow.templates.create');
+    Route::post('/workflow-templates/{template}', [\App\Http\Controllers\Admin\WorkflowTemplateController::class, 'save'])->name('admin.workflow.templates.save');
+    Route::post('/workflow-templates/{template}/toggle', [\App\Http\Controllers\Admin\WorkflowTemplateController::class, 'toggle'])->name('admin.workflow.templates.toggle');
     Route::get('/dashboard', [HomeController::class, 'admin_dashboard'])->name('admin.dashboard');
     Route::get('/completion-center', [CompletionCenterController::class, 'index'])->name('admin.completion.index');
     Route::post('/completion-center/sponsored', [CompletionCenterController::class, 'storeSponsored'])->name('admin.completion.sponsored.store');
@@ -118,6 +138,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
     // Member Manage
     Route::resource('members', MemberController::class)->except(['destroy']);
+    Route::patch('/members/{id}/website-visibility', [MemberController::class, 'updateWebsiteVisibility'])->middleware('permission:edit_member')->name('members.website_visibility');
     Route::get('/member-activity', [UserActivityController::class, 'index'])->name('member.activity.index');
     Route::controller(MemberController::class)->group(function () {
         Route::get('/premium-members-list', 'premiumIndex')->name('premium.members.index');
@@ -198,6 +219,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
 
     Route::resource('/happy-story', HappyStoryController::class);
     Route::post('/happy-story/update-story-status',[HappyStoryController::class, 'approval_status'])->name('happy_story_approval.status');
+
+    Route::get('/website/public-content/{page}', [\App\Http\Controllers\Admin\PublicEditorialSettingsController::class, 'edit'])->whereIn('page', ['blogs','stories'])->middleware('permission:edit_pages')->name('website.public_editorial.edit');
+    Route::post('/website/public-content/{page}', [\App\Http\Controllers\Admin\PublicEditorialSettingsController::class, 'update'])->whereIn('page', ['blogs','stories'])->middleware('permission:edit_pages')->name('website.public_editorial.update');
 
     //Blog Section
     Route::resource('blog-category', BlogCategoryController::class)->except(['destroy']);
@@ -342,6 +366,26 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::get('/currency/destroy/{id}', 'destroy')->name('currency.destroy');
     });
 
+    Route::get('/website/login-page', [\App\Http\Controllers\Admin\LoginPageSettingsController::class, 'edit'])->middleware('permission:appearances')->name('website.login_page');
+    Route::post('/website/login-page', [\App\Http\Controllers\Admin\LoginPageSettingsController::class, 'update'])->middleware('permission:appearances')->name('website.login_page.update');
+
+    Route::get('/website/editorial/{page}', [\App\Http\Controllers\HamqadamEditorialController::class,'edit'])->whereIn('page', ['about','team','privacy','terms'])->middleware('permission:edit_pages')->name('website.editorial.edit');
+    Route::post('/website/editorial/{page}', [\App\Http\Controllers\HamqadamEditorialController::class,'update'])->whereIn('page', ['about','team','privacy','terms'])->middleware('permission:edit_pages')->name('website.editorial.update');
+
+    Route::get('/advisor-consultations', [\App\Http\Controllers\Admin\AdvisorConsultationController::class, 'index'])->middleware('permission:show_contact_us_queries')->name('admin.advisor_consultations.index');
+    Route::get('/advisor-consultations/{consultation}', [\App\Http\Controllers\Admin\AdvisorConsultationController::class, 'show'])->whereNumber('consultation')->middleware('permission:show_contact_us_queries')->name('admin.advisor_consultations.show');
+    Route::patch('/advisor-consultations/{consultation}', [\App\Http\Controllers\Admin\AdvisorConsultationController::class, 'update'])->whereNumber('consultation')->middleware('permission:show_contact_us_queries')->name('admin.advisor_consultations.update');
+
+    Route::get('/website/team-members', [\App\Http\Controllers\Admin\TeamMembersController::class,'index'])->middleware('permission:edit_pages')->name('website.team_members.index');
+    Route::get('/website/team-members/create', [\App\Http\Controllers\Admin\TeamMembersController::class,'create'])->middleware('permission:edit_pages')->name('website.team_members.create');
+    Route::get('/website/team-members/{member}/edit', [\App\Http\Controllers\Admin\TeamMembersController::class,'edit'])->whereNumber('member')->middleware('permission:edit_pages')->name('website.team_members.edit');
+    Route::post('/website/team-members', [\App\Http\Controllers\Admin\TeamMembersController::class,'store'])->middleware('permission:edit_pages')->name('website.team_members.store');
+    Route::patch('/website/team-members/{member}', [\App\Http\Controllers\Admin\TeamMembersController::class,'update'])->middleware('permission:edit_pages')->name('website.team_members.update');
+    Route::delete('/website/team-members/{member}', [\App\Http\Controllers\Admin\TeamMembersController::class,'destroy'])->middleware('permission:edit_pages')->name('website.team_members.destroy');
+
+    Route::post('/website/public-navigation/{area}', [\App\Http\Controllers\Admin\PublicNavigationController::class,'update'])->whereIn('area',['header','footer','footer_trust','footer_bottom'])->name('website.public_navigation.update');
+    Route::get('/website/home-content', [\App\Http\Controllers\Admin\HomePageContentController::class,'edit'])->middleware('permission:edit_pages')->name('website.home_content.edit');
+    Route::post('/website/home-content', [\App\Http\Controllers\Admin\HomePageContentController::class,'update'])->middleware('permission:edit_pages')->name('website.home_content.update');
     // website setting
     Route::group(['prefix' => 'website'], function () {
         Route::controller(SettingController::class)->group(function () {

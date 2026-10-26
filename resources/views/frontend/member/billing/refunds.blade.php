@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "Payments & Refunds", 'subtitle' => "View and submit payment review requests.", 'icon' => "la-file-invoice"])
+
 <div class="aiz-titlebar"><h1 class="h3">{{ translate('Payment & Refund Requests') }}</h1></div>
 <p class="text-muted">{{ translate('Review failed or completed payments in Payment History. Refund requests are reviewed by the team; submitting a request does not reverse a charge.') }}</p>
 @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif

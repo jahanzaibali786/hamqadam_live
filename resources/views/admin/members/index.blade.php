@@ -125,6 +125,7 @@
                                                 <i class="las la-ellipsis-v"></i>
                                             </button>
                                             <div class="dropdown-menu dropdown-menu-right">
+                                                @include('admin.members.partials.featured_option', ['member' => $member])
                                                 @can ('view_member_profile')
                                                     <a class="dropdown-item" href="{{ route('members.show', encrypt($member->id)) }}">{{translate('View')}}</a>
                                                 @endcan

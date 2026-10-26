@@ -82,7 +82,7 @@ class CallService
 
         }
 
-        $this->ensureCanCall($caller, $receiver, $thread);
+        $this->ensureCanCall($caller, $receiver, $thread, $type->value);
         if ($this->hasActiveCall($caller) || $this->hasActiveCall($receiver)) {
             $busyCall = $this->createCall($caller, $receiver, $thread, $type, CallStatus::Busy);
             $payload = $this->payload($busyCall->fresh(['caller', 'receiver', 'conversation']), $caller, 'User Busy');
@@ -524,8 +524,11 @@ private function threadForUser(User $user, int $threadId): ChatThread
 
     }
 
-    private function ensureCanCall(User $caller, User $receiver, ChatThread $thread): void
+    private function ensureCanCall(User $caller, User $receiver, ChatThread $thread, string $callType): void
     {
+        if (!app(\App\Services\MemberConnectionWorkflow::class)->canCall($caller->id, $receiver->id, $callType)) {
+            throw new \App\Exceptions\ApiException('Calls require accepted interest and both members’ permission.', 403, 'call_not_allowed');
+        }
         if ((int) $caller->id === (int) $receiver->id) {
             throw new ApiException(translate('You cannot call yourself.'), 422, 'invalid_call');
 

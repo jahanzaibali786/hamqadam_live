@@ -61,13 +61,17 @@ if (! $lang) {
     @endif
 
     <!-- Favicon -->
-    <link rel="icon" href="{{ uploaded_asset(get_setting('site_icon')) }}">
+    <link rel="icon" type="image/svg+xml" href="{{ static_asset('favicon.svg') }}?v=20261023">
 
     <!-- CSS -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Poppins:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="{{ static_asset('assets/css/vendors.css') }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/aiz-core.css?v=') }}{{ rand(1000,9999) }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-luxury.css?v=') }}{{ rand(1000,9999) }}">
+    <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-brand.css') }}?v=20261023">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-site-cms-20261024.css') }}?v=3">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-home-member-carousel-20261025.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-home-member-match-fixes-20261025.css') }}?v=1">
 
     @if (($lang?->rtl == 1 || in_array($locale, ['ur','ar'],true)))
         <link rel="stylesheet" href="{{ static_asset('assets/css/bootstrap-rtl.min.css') }}">
@@ -181,15 +185,19 @@ if (! $lang) {
       @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
     </style>
     <div
-        class="aiz-main-wrapper d-flex flex-column position-relative @if (Route::currentRouteName() != 'home') pt-8 pt-lg-10 @endif bg-white">
+        class="aiz-main-wrapper d-flex flex-column position-relative @if (Route::currentRouteName() != 'home' && !\Illuminate\Support\Facades\View::hasSection('member_dashboard_shell')) hq-public-interior-offset @endif bg-white">
 
-        @include('frontend.inc.header')
+        @unless(\Illuminate\Support\Facades\View::hasSection('member_dashboard_shell'))
+            @include('frontend.inc.header')
+        @endunless
 
         <div id="hamqadam-main-content" tabindex="-1" style="flex:1">
         @yield('content')
         </div>
 
-        @include('frontend.inc.footer')
+        @unless(\Illuminate\Support\Facades\View::hasSection('member_dashboard_shell'))
+            @include('frontend.inc.footer')
+        @endunless
     </div>
 
     @if (get_setting('show_cookies_agreement') == 'on')
@@ -418,6 +426,7 @@ if (! $lang) {
         </script>
     @endif
 
+    <script src="{{ static_asset('assets/js/hamqadam-home-team-20261024.js') }}?v=1" defer></script>
     @yield('script')
 
     @if (Auth::check() && Auth::user()->user_type == 'member')

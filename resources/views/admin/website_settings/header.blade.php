@@ -1,70 +1,14 @@
 @extends('admin.layouts.app')
 @section('content')
-<div class="aiz-titlebar text-left mt-2 mb-3">
-	<div class="row align-items-center">
-		<div class="col">
-			<h1 class="h3">{{ translate('Website Header') }}</h1>
-		</div>
-	</div>
-</div>
-<div class="row">
-	<div class="col-md-8 mx-auto">
-		<div class="card">
-			<div class="card-header">
-				<h6 class="mb-0">{{ translate('Header Setting') }}</h6>
-			</div>
-			<div class="card-body">
-				<form action="{{ route('settings.update') }}" method="POST" enctype="multipart/form-data">
-				@csrf
-					<div class="form-group row">
-						<label class="col-md-3 col-from-label">{{ translate('Header Logo') }}</label>
-						<div class="col-md-8">
-							<div class=" input-group " data-toggle="aizuploader" data-type="image">
-								<div class="input-group-prepend">
-									<div class="input-group-text bg-soft-secondary font-weight-medium">{{ translate('Browse') }}</div>
-								</div>
-								<div class="form-control file-amount">{{ translate('Choose File') }}</div>
-								<input type="hidden" name="types[]" value="header_logo">
-								<input type="hidden" name="header_logo" class="selected-files" value="{{ get_setting('header_logo') }}">
-							</div>
-							<div class="file-preview">
-							</div>
-						</div>
-					</div>
-					<div class="form-group row">
-              <label class="col-md-3 col-from-label">{{translate('Header Left Quick Link')}}</label>
-              <div class="col-md-3">
-                  <input type="hidden" name="types[]" value="header_left_quick_link1_text">
-                  <input type="text" name="header_left_quick_link1_text" class="form-control" placeholder="{{ translate('Text') }}" value="{{ get_setting('header_left_quick_link1_text') }}">
-              </div>
-							<div class="col-md-5">
-                  <input type="hidden" name="types[]" value="header_left_quick_link1">
-                  <input type="text" name="header_left_quick_link1" class="form-control" placeholder="{{ translate('Link') }}" value="{{ get_setting('header_left_quick_link1') }}">
-              </div>
-          </div>
-					<div class="form-group row">
-              <label class="col-md-3 col-from-label">{{translate('Helpline Number')}}</label>
-              <div class="col-md-8">
-                  <input type="hidden" name="types[]" value="header_helpline_no">
-                  <input type="text" name="header_helpline_no" class="form-control" placeholder="{{ translate('Help Line Number') }}" value="{{ get_setting('header_helpline_no') }}">
-              </div>
-          </div>
-					<div class="form-group row">
-						<label class="col-md-3 col-from-label">{{translate('Enable Sticky header?')}}</label>
-						<div class="col-md-8">
-							<label class="aiz-switch aiz-switch-success mb-0">
-								<input type="hidden" name="types[]" value="header_stikcy">
-								<input type="checkbox" name="header_stikcy" @if( get_setting('header_stikcy') == 'on') checked @endif>
-								<span></span>
-							</label>
-						</div>
-					</div>
-					<div class="text-right">
-						<button type="submit" class="btn btn-primary">{{ translate('Update') }}</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
+<div class="container-fluid" style="max-width:1050px"><h3>Public Website Header</h3><p>Edit the visible public navbar and top contact bar. These controls never change the admin header.</p>
+<div class="card mb-3"><div class="card-header"><strong>Branding & Top Bar</strong></div><div class="card-body"><form method="POST" action="{{ route('settings.update') }}">@csrf <div class="form-group"><label>Brand Name</label><input type="hidden" name="types[]" value="website_name"><input class="form-control" type="text" name="website_name" value="{{ get_setting('website_name') }}" placeholder="Brand Name"></div>
+<div class="form-group"><label>Brand Tagline</label><input type="hidden" name="types[]" value="site_motto"><input class="form-control" type="text" name="site_motto" value="{{ get_setting('site_motto') }}" placeholder="Brand Tagline"></div>
+<div class="form-group"><label>Helpline Number</label><input type="hidden" name="types[]" value="header_helpline_no"><input class="form-control" type="text" name="header_helpline_no" value="{{ get_setting('header_helpline_no') }}" placeholder="Helpline Number"></div>
+<div class="form-group"><label>Helpline Label</label><input type="hidden" name="types[]" value="hq_header_helpline_label"><input class="form-control" type="text" name="hq_header_helpline_label" value="{{ get_setting('hq_header_helpline_label') }}" placeholder="Helpline Label"></div>
+<div class="form-group"><label>Verification Badge Text</label><input type="hidden" name="types[]" value="hq_header_verified_text"><input class="form-control" type="text" name="hq_header_verified_text" value="{{ get_setting('hq_header_verified_text') }}" placeholder="Verification Badge Text"></div>
+<div class="form-group"><label>Language Text</label><input type="hidden" name="types[]" value="hq_header_language_text"><input class="form-control" type="text" name="hq_header_language_text" value="{{ get_setting('hq_header_language_text') }}" placeholder="Language Text"></div>
+<div class="form-group"><label>FAQ Link Text</label><input type="hidden" name="types[]" value="hq_header_faq_text"><input class="form-control" type="text" name="hq_header_faq_text" value="{{ get_setting('hq_header_faq_text') }}" placeholder="FAQ Link Text"></div>
+<div class="form-group"><label>Success Stories Link Text</label><input type="hidden" name="types[]" value="hq_header_stories_text"><input class="form-control" type="text" name="hq_header_stories_text" value="{{ get_setting('hq_header_stories_text') }}" placeholder="Success Stories Link Text"></div><button class="btn btn-primary">Save Branding & Top Bar</button></form></div></div>
+<div class="card mb-3"><div class="card-header"><strong>Website Navbar Links</strong></div><div class="card-body"><form method="POST" action="{{ route('website.public_navigation.update','header') }}">@csrf @foreach(\App\Support\PublicNavigation::items('header') as $row)<div class="row mb-2"><div class="col-md-5"><input class="form-control" name="labels[]" value="{{ $row['label'] }}" placeholder="Link label"></div><div class="col-md-7"><input class="form-control" name="links[]" value="{{ $row['url'] }}" placeholder="/page or HTTPS URL"></div></div>@endforeach @for($i=0;$i<4;$i++)<div class="row mb-2"><div class="col-md-5"><input class="form-control" name="labels[]" placeholder="Add label"></div><div class="col-md-7"><input class="form-control" name="links[]" placeholder="/link"></div></div>@endfor<button class="btn btn-primary">Save Website Navbar Links</button></form></div></div>
 </div>
 @endsection

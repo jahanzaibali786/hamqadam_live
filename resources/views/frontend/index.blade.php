@@ -7,64 +7,42 @@
         <div class="row align-items-center hq-design-hero-row">
             <div class="col-lg-6 col-xl-6">
                 <div class="hq-hero-copy">
-                    <span class="hq-home-kicker"><i class="las la-heart"></i> {{ translate('Sanctuary of Dignified Matrimony') }}</span>
-                    <h1>{{ translate('Find Your') }} <em>{{ translate('Perfect Partner') }}</em> {{ translate('With Trust & Care.') }}</h1>
-                    <p>{{ translate('Join thousands of happy couples on HamQadam, where meaningful relationships begin. Verified profiles, secure connections, and genuine matches tailored for you.') }}</p>
+                    <span class="hq-home-kicker"><i class="las la-heart"></i> {{ \App\Support\HomePageContent::get('hero_kicker') }}</span>
+                    <h1>{{ \App\Support\HomePageContent::get('hero_title_first') }} <em>{{ \App\Support\HomePageContent::get('hero_title_emphasis') }}</em> {{ \App\Support\HomePageContent::get('hero_title_last') }}</h1>
+                    <p>{{ \App\Support\HomePageContent::get('hero_description') }}</p>
                     <div class="hq-hero-actions">
                         @guest
-                            <a href="#home-register" class="btn btn-primary hq-hero-btn">{{ translate('Get Started') }} <i class="las la-arrow-right ml-1"></i></a>
+                            <a href="#home-register" class="btn btn-primary hq-hero-btn">{{ \App\Support\HomePageContent::get('hero_guest_button') }} <i class="las la-arrow-right ml-1"></i></a>
                         @else
-                            <a href="{{ route('member.listing') }}" class="btn btn-primary hq-hero-btn">{{ translate('Find Matches') }}</a>
+                            <a href="{{ route('member.listing') }}" class="btn btn-primary hq-hero-btn">{{ \App\Support\HomePageContent::get('hero_member_button') }}</a>
                         @endguest
-                        <a href="#how-it-works" class="btn hq-hero-btn hq-hero-btn-outline">{{ translate('Learn More') }}</a>
+                        <a href="#how-it-works" class="btn hq-hero-btn hq-hero-btn-outline">{{ \App\Support\HomePageContent::get('hero_secondary_button') }}</a>
                     </div>
                     <div class="hq-hero-stats">
-                        <div><i class="las la-certificate"></i><strong>{{ translate('Verified Members') }}</strong></div>
-                        <div><i class="las la-heart"></i><strong>{{ translate('Success Stories') }}</strong></div>
-                        <div><i class="las la-lock"></i><strong>{{ translate('Secure & Private') }}</strong></div>
+                        <div><i class="las la-certificate"></i><strong>{{ \App\Support\HomePageContent::get('hero_stat_one') }}</strong></div>
+                        <div><i class="las la-heart"></i><strong>{{ \App\Support\HomePageContent::get('hero_stat_two') }}</strong></div>
+                        <div><i class="las la-lock"></i><strong>{{ \App\Support\HomePageContent::get('hero_stat_three') }}</strong></div>
                     </div>
                 </div>
             </div>
             <div class="col-lg-6 col-xl-6 d-none d-lg-block">
                 @php
-                    $hero_female = \App\Models\User::where('user_type', 'member')
-                        ->where('approved', 1)
-                        ->where('blocked', 0)
-                        ->where('deactivated', 0)
-                        ->whereHas('member', function($q) {
-                            $q->where('gender', 2);
-                        })
-                        ->latest('id')
-                        ->first()
-                        ?? collect($new_members ?? [])->first(fn($u) => optional($u->member)->gender == 2)
-                        ?? collect($new_members ?? [])->first();
-
-                    $hero_male = \App\Models\User::where('user_type', 'member')
-                        ->where('approved', 1)
-                        ->where('blocked', 0)
-                        ->where('deactivated', 0)
-                        ->where('id', '!=', $hero_female?->id ?? 0)
-                        ->whereHas('member', function($q) {
-                            $q->where('gender', 1);
-                        })
-                        ->latest('id')
-                        ->first()
-                        ?? collect($premium_members ?? [])->first(fn($u) => optional($u->member)->gender == 1 && (!$hero_female || $u->id != $hero_female->id))
-                        ?? collect($new_members ?? [])->filter(fn($u) => !$hero_female || $u->id != $hero_female->id)->first()
-                        ?? $hero_female;
+                    $featured = collect($premium_members)->concat($new_members)->unique('id');
+                    $hero_female = $featured->first(fn($u) => (int) $u->member?->gender === 2);
+                    $hero_male = $featured->first(fn($u) => (int) $u->member?->gender === 1);
                 @endphp
                 <div class="hq-hero-visual" aria-hidden="true">
                     <div class="hq-match-float hq-match-float-top">
-                        <span class="hq-match-score">96% {{ translate('Match') }}</span>
-                        <span class="hq-match-verified"><i class="las la-shield-alt"></i> {{ translate('ID Verified') }}</span>
-                        <strong>{{ $hero_female ? $hero_female->first_name : translate('Laiba') }}</strong>
-                        <small>ID: {{ $hero_female ? ($hero_female->code ?: $hero_female->id) : '202609213' }} · {{ $hero_female?->member?->permanent_address?->city ?: ($hero_female?->member?->present_address?->city ?: 'Lahore') }}</small>
+                        <span class="hq-match-score">96% {{ \App\Support\HomePageContent::get('hero_match_label') }}</span>
+                        <span class="hq-match-verified"><i class="las la-shield-alt"></i> {{ \App\Support\HomePageContent::get('hero_verified_label') }}</span>
+                        <strong>{{ $hero_female ? $hero_female->first_name : \App\Support\HomePageContent::get('hero_female_fallback') }}</strong>
+                        <small>ID: {{ $hero_female ? ($hero_female->code ?: $hero_female->id) : '202609213' }} · {{ $hero_female?->member?->permanent_address?->city ?: ($hero_female?->member?->present_address?->city ?: \App\Support\HomePageContent::get('hero_fallback_city_female')) }}</small>
                     </div>
-                    <div class="hq-hero-photo-caption"><span>{{ translate('Private Sanctuary') }}</span><strong>{{ translate('Where pure intentions meet companionship.') }}</strong></div>
+                    <div class="hq-hero-photo-caption"><span>{{ \App\Support\HomePageContent::get('hero_sanctuary_label') }}</span><strong>{{ \App\Support\HomePageContent::get('hero_sanctuary_caption') }}</strong></div>
                     <div class="hq-match-float hq-match-float-bottom">
-                        <span class="hq-match-score">{{ $hero_male && $hero_male->membership == 2 ? translate('Premium Match') : translate('Verified Match') }}</span>
-                        <strong>{{ $hero_male ? $hero_male->first_name : translate('Ubaid') }}</strong>
-                        <small>ID: {{ $hero_male ? ($hero_male->code ?: $hero_male->id) : '202609201' }} · {{ $hero_male?->member?->permanent_address?->city ?: ($hero_male?->member?->present_address?->city ?: 'Islamabad') }}</small>
+                        <span class="hq-match-score">{{ $hero_male && $hero_male->membership == 2 ? \App\Support\HomePageContent::get('hero_premium_label') : \App\Support\HomePageContent::get('hero_standard_label') }}</span>
+                        <strong>{{ $hero_male ? $hero_male->first_name : \App\Support\HomePageContent::get('hero_male_fallback') }}</strong>
+                        <small>ID: {{ $hero_male ? ($hero_male->code ?: $hero_male->id) : '202609201' }} · {{ $hero_male?->member?->permanent_address?->city ?: ($hero_male?->member?->present_address?->city ?: \App\Support\HomePageContent::get('hero_fallback_city_male')) }}</small>
                     </div>
                 </div>
             </div>
@@ -73,39 +51,39 @@
         @if (get_setting('show_homepage_quick_search') !== 'off')
             <div class="hq-quick-search hq-design-search bg-white">
                 <div class="hq-quick-search-heading">
-                    <strong><i class="las la-user-friends"></i> {{ translate('Quick Partner Search') }}</strong>
-                    <span>{{ translate('Filter through verified prospective life partners') }}</span>
-                    <span class="hq-live-verify"><i class="las la-shield-alt"></i> {{ translate('Real-time Verification Active') }}</span>
+                    <strong><i class="las la-user-friends"></i> {{ \App\Support\HomePageContent::get('search_title') }}</strong>
+                    <span>{{ \App\Support\HomePageContent::get('search_subtitle') }}</span>
+                    <span class="hq-live-verify"><i class="las la-shield-alt"></i> {{ \App\Support\HomePageContent::get('search_verified') }}</span>
                 </div>
                 <form action="{{ route('member.listing') }}" method="get">
                     <div class="row gutters-10 align-items-end">
                         <div class="col-6 col-lg">
                             <div class="form-group mb-0">
-                                <label>{{ translate('Looking For') }}</label>
+                                <label>{{ \App\Support\HomePageContent::get('search_gender') }}</label>
                                 <select name="gender" class="form-control aiz-selectpicker" data-container="body">
-                                    <option value="">{{ translate('Any') }}</option>
-                                    <option value="2">{{ translate('Bride (Female)') }}</option>
-                                    <option value="1">{{ translate('Groom (Male)') }}</option>
+                                    <option value="">{{ \App\Support\HomePageContent::get('search_any') }}</option>
+                                    <option value="2">{{ \App\Support\HomePageContent::get('search_bride') }}</option>
+                                    <option value="1">{{ \App\Support\HomePageContent::get('search_groom') }}</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-6 col-lg">
                             <div class="form-group mb-0">
-                                <label>{{ translate('Age From') }}</label>
+                                <label>{{ \App\Support\HomePageContent::get('search_min_age') }}</label>
                                 <input type="number" min="18" name="age_from" class="form-control" placeholder="20">
                             </div>
                         </div>
                         <div class="col-6 col-lg">
                             <div class="form-group mb-0">
-                                <label>{{ translate('Age To') }}</label>
+                                <label>{{ \App\Support\HomePageContent::get('search_max_age') }}</label>
                                 <input type="number" min="18" name="age_to" class="form-control" placeholder="32">
                             </div>
                         </div>
                         <div class="col-6 col-lg">
                             <div class="form-group mb-0">
-                                <label>{{ translate('Religion & Sect') }}</label>
+                                <label>{{ \App\Support\HomePageContent::get('search_religion') }}</label>
                                 <select name="religion_id" class="form-control aiz-selectpicker" data-live-search="true" data-container="body">
-                                    <option value="">{{ translate('Any Religion') }}</option>
+                                    <option value="">{{ \App\Support\HomePageContent::get('search_any_religion') }}</option>
                                     @foreach ($religions as $religion)
                                         <option value="{{ $religion->id }}">{{ $religion->name }}</option>
                                     @endforeach
@@ -114,9 +92,9 @@
                         </div>
                         <div class="col-8 col-lg">
                             <div class="form-group mb-0">
-                                <label>{{ translate('Mother Language') }}</label>
+                                <label>{{ \App\Support\HomePageContent::get('search_language') }}</label>
                                 <select name="mother_tongue" class="form-control aiz-selectpicker" data-live-search="true" data-container="body">
-                                    <option value="">{{ translate('Any Language') }}</option>
+                                    <option value="">{{ \App\Support\HomePageContent::get('search_any_language') }}</option>
                                     @foreach ($mother_tongues as $mother_tongue_select)
                                         <option value="{{ $mother_tongue_select->id }}">{{ $mother_tongue_select->name }}</option>
                                     @endforeach
@@ -124,7 +102,7 @@
                             </div>
                         </div>
                         <div class="col-4 col-lg-auto">
-                            <button type="submit" class="btn btn-primary hq-search-submit"><i class="las la-search mr-1"></i>{{ translate('Search') }}</button>
+                            <button type="submit" class="btn btn-primary hq-search-submit"><i class="las la-search mr-1"></i>{{ \App\Support\HomePageContent::get('search_button') }}</button>
                         </div>
                     </div>
                 </form>
@@ -142,11 +120,11 @@
         <div class="container">
             <div class="hq-register-shell">
                 <div class="hq-register-intro">
-                    <span class="hq-reference-eyebrow"><i class="las la-coins"></i> {{ translate('Auspicious Welcome Gift') }}</span>
-                    <h2>{{ translate('Create Your Account') }}</h2>
-                    <p>{{ translate('Register now and get reward of') }} {{ $registrationRewardCoins }} {{ translate('coins from the') }} {{ $registrationPackage?->name ?? translate('Free plan') }} {{ translate('instantly upon verification.') }}</p>
+                    <span class="hq-reference-eyebrow"><i class="las la-coins"></i> {{ \App\Support\HomePageContent::get('registration_gift') }}</span>
+                    <h2>{{ \App\Support\HomePageContent::get('registration_title') }}</h2>
+                    <p>{{ \App\Support\HomePageContent::get('registration_reward_prefix') }} {{ $registrationRewardCoins }} {{ \App\Support\HomePageContent::get('registration_reward_mid') }} {{ $registrationPackage?->name ?? translate('Free plan') }} {{ \App\Support\HomePageContent::get('registration_reward_end') }}</p>
                     <div class="hq-register-steps" aria-hidden="true">
-                        <span class="active">01 {{ translate('Account') }}</span><span>02 {{ translate('Basic') }}</span><span>03 {{ translate('Religion') }}</span><span>04 {{ translate('Location') }}</span>
+                        <span class="active">01 {{ \App\Support\HomePageContent::get('registration_step_account') }}</span><span>02 {{ \App\Support\HomePageContent::get('registration_step_basic') }}</span><span>03 {{ \App\Support\HomePageContent::get('registration_step_religion') }}</span><span>04 {{ \App\Support\HomePageContent::get('registration_step_location') }}</span>
                     </div>
                 </div>
                 <div id="register-form-container" class="hq-register-form-card">
@@ -156,14 +134,14 @@
                         <div class="mb-3 d-none" id="registrationTermsBlock">
                             <label class="aiz-checkbox">
                                 <input type="checkbox" name="checkbox_example_1" required>
-                                <span class="opacity-60">{{ translate('By signing up you agree to our') }} <a href="{{ url('/terms-conditions') }}" target="_blank">{{ translate('terms and conditions') }}.</a></span>
+                                <span class="opacity-60">{{ \App\Support\HomePageContent::get('registration_terms_prefix') }} <a href="{{ url('/terms-conditions') }}" target="_blank">{{ \App\Support\HomePageContent::get('registration_terms_link') }}.</a></span>
                                 <span class="aiz-square-check"></span>
                             </label>
                         </div>
                         @error('checkbox_example_1')
                             <span class="invalid-feedback" role="alert">{{ $message }}</span>
                         @enderror
-                        <button type="submit" class="btn btn-block btn-primary round-btn d-none" id="createAccountBtn">{{ translate('Create Account') }}</button>
+                        <button type="submit" class="btn btn-block btn-primary round-btn d-none" id="createAccountBtn">{{ \App\Support\HomePageContent::get('registration_button') }}</button>
                     </form>
                 </div>
             </div>
@@ -178,24 +156,25 @@
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
                 <div class="text-center section-title mb-5">
-                    <h2 class="fw-600 mb-3 text-dark">{{ get_setting('premium_member_section_title') }}</h2>
-                    <p class="fw-400 fs-16 opacity-60">{{ get_setting('premium_member_section_sub_title') }}</p>
+                    <h2 class="fw-600 mb-3 text-dark">{{ \App\Support\HomePageContent::get('premium_title') }}</h2>
+                    <p class="fw-400 fs-16 opacity-60">{{ \App\Support\HomePageContent::get('premium_description') }}</p>
                 </div>
             </div>
         </div>
-        <div class="aiz-carousel gutters-10 half-outside-arrow" data-items="5" data-xl-items="4"
-            data-lg-items="4" data-md-items="3" data-sm-items="2" data-xs-items="1" data-dots='true'
-            data-infinite='true'>
+        <div class="hq-home-member-carousel-wrap"><div class="hq-home-carousel-controls"><button type="button" class="hq-home-carousel-prev" aria-label="Previous premium members"><i class="las la-chevron-left"></i></button><button type="button" class="hq-home-carousel-next" aria-label="Next premium members"><i class="las la-chevron-right"></i></button></div><div class="aiz-carousel gutters-10 half-outside-arrow hq-home-controlled-carousel" data-items="5" data-xl-items="4"
+            data-lg-items="4" data-md-items="3" data-sm-items="2" data-xs-items="1" data-dots='false' data-arrows='false' data-autoplay='true' data-infinite='true'>
             @foreach ($premium_members as $key => $member)
             <div class="carousel-box">
                 @include('frontend.inc.member_box_1', ['member' => $member])
             </div>
             @endforeach
-        </div>
+        </div></div>
     </div>
 </section>
 @endif
 
+
+@include('frontend.partials.home_team_carousel')
 
 <!-- Banner section 1 -->
 @if (get_setting('show_home_banner1_section') == 'on' && get_setting('home_banner1_images') != null)
@@ -306,20 +285,19 @@
         <div class="row">
             <div class="col-lg-10 col-xl-8 col-xxl-6 mx-auto">
                 <div class="text-center section-title mb-5">
-                    <h2 class="fw-600 mb-3 text-dark">{{ get_setting('new_member_section_title') }}</h2>
-                    <p class="fw-400 fs-16 opacity-60">{{ get_setting('new_member_section_sub_title') }}</p>
+                    <h2 class="fw-600 mb-3 text-dark">{{ \App\Support\HomePageContent::get('new_title') }}</h2>
+                    <p class="fw-400 fs-16 opacity-60">{{ \App\Support\HomePageContent::get('new_description') }}</p>
                 </div>
             </div>
         </div>
-        <div class="aiz-carousel gutters-10 half-outside-arrow" data-items="5" data-xl-items="4"
-            data-lg-items="4" data-md-items="3" data-sm-items="2" data-xs-items="1" data-dots='true'
-            data-infinite='true'>
+        <div class="hq-home-member-carousel-wrap"><div class="hq-home-carousel-controls"><button type="button" class="hq-home-carousel-prev" aria-label="Previous new members"><i class="las la-chevron-left"></i></button><button type="button" class="hq-home-carousel-next" aria-label="Next new members"><i class="las la-chevron-right"></i></button></div><div class="aiz-carousel gutters-10 half-outside-arrow hq-home-controlled-carousel" data-items="5" data-xl-items="4"
+            data-lg-items="4" data-md-items="3" data-sm-items="2" data-xs-items="1" data-dots='false' data-arrows='false' data-autoplay='true' data-infinite='true'>
             @foreach ($new_members as $key => $member)
             <div class="carousel-box">
                 @include('frontend.inc.member_box_1', ['member' => $member])
             </div>
             @endforeach
-        </div>
+        </div></div>
     </div>
 </section>
 @endif
@@ -366,7 +344,7 @@
             @endforeach
         </div>
         <div class="text-center mt-4">
-            <a href="{{ route('happy_stories') }}" class="btn btn-primary round-btn">{{ translate('View More') }}</a>
+            <a href="{{ route('happy_stories') }}" class="btn btn-primary round-btn">{{ \App\Support\HomePageContent::get('story_more') }}</a>
         </div>
     </div>
 </section>
@@ -397,58 +375,58 @@
                         <ul class="list-group list-group-raw fs-15 mb-5">
                             <li class="list-group-item py-2">
                                 <i class="las la-check text-success mr-2"></i>
-                                {{ $package->express_interest }} {{ translate('Coins') }}
+                                {{ $package->express_interest }} {{ \App\Support\HomePageContent::get('package_coins') }}
                             </li>
                             <li class="list-group-item py-2">
                                 <i class="las la-check text-success mr-2"></i>
-                                {{ $package->photo_gallery }} {{ translate('Gallery Photo Upload') }}
+                                {{ $package->photo_gallery }} {{ \App\Support\HomePageContent::get('package_gallery') }}
                             </li>
                             <li class="list-group-item py-2">
                                 <i class="las la-check text-success mr-2"></i>
-                                {{ $package->contact }} {{ translate('Contact Info View') }}
+                                {{ $package->contact }} {{ \App\Support\HomePageContent::get('package_contacts') }}
                             </li>
                             <li class="list-group-item py-2 text-line-through">
                                 @if ($package->auto_profile_match == 0)
                                 <i class="las la-times text-danger mr-2"></i>
-                                <del class="opacity-60">{{ translate('Show Auto Profile Match') }}</del>
+                                <del class="opacity-60">{{ \App\Support\HomePageContent::get('package_auto_match') }}</del>
                                 @else
                                 <i class="las la-check text-success mr-2"></i>
-                                {{ translate('Show Auto Profile Match') }}
+                                {{ \App\Support\HomePageContent::get('package_auto_match') }}
                                 @endif
                             </li>
                             <li class="list-group-item py-2 text-line-through">
                                 @if ($package->auto_horoscope_profile_match == 0)
                                 <i class="las la-times text-danger mr-2"></i>
-                                <del class="opacity-60">{{ translate('Show Auto Horoscope Profile Match') }}</del>
+                                <del class="opacity-60">{{ \App\Support\HomePageContent::get('package_horoscope') }}</del>
                                 @else
                                 <i class="las la-check text-success mr-2"></i>
-                                {{ translate('Show Auto Horoscope Profile Match') }}
+                                {{ \App\Support\HomePageContent::get('package_horoscope') }}
                                 @endif
                             </li>
                         </ul>
                         <div class="mb-5 text-dark text-center">
                             @if ($package->id == 1)
-                            <span class="display-4 fw-600 lh-1 mb-0">{{ translate('Free') }}</span>
+                            <span class="display-4 fw-600 lh-1 mb-0">{{ \App\Support\HomePageContent::get('package_free') }}</span>
                             @else
                             <span
                                 class="display-4 fw-600 lh-1 mb-0">{{ single_price($package->price) }}</span>
                             @endif
                             <span class="text-secondary d-block">{{ $package->validity }}
-                                {{ translate('Days') }}</span>
+                                {{ \App\Support\HomePageContent::get('package_days') }}</span>
                         </div>
                         <div class="text-center mb-3">
                             @if ($package->id != 1)
                             @if (Auth::check())
                             <a href="{{ route('package_payment_methods', encrypt($package->id)) }}"
                                 type="submit"
-                                class="btn btn-primary round-btn">{{ translate('Purchase This Package') }}</a>
+                                class="btn btn-primary round-btn">{{ \App\Support\HomePageContent::get('packages_purchase') }}</a>
                             @else
                             <button type="submit" onclick="loginModal()"
-                                class="btn btn-primary round-btn">{{ translate('Purchase This Package') }}</button>
+                                class="btn btn-primary round-btn">{{ \App\Support\HomePageContent::get('packages_purchase') }}</button>
                             @endif
                             @else
                             <a href="javascript:void(0);"
-                                class="btn btn-light round-btn"><del>{{ translate('Purchase This Package') }}</del></a>
+                                class="btn btn-light round-btn"><del>{{ \App\Support\HomePageContent::get('packages_purchase') }}</del></a>
                             @endif
                         </div>
                     </div>
@@ -530,14 +508,14 @@
                         @endif
                         <p class="opacity-70 mb-4">{{ $blog->short_description }}</p>
                         <a href="{{ route('blog.details', $blog->slug) }}"
-                            class="btn btn-soft-primary round-btn">{{ translate('View More') }}</a>
+                            class="btn btn-soft-primary round-btn">{{ \App\Support\HomePageContent::get('story_more') }}</a>
                     </div>
                 </div>
             </div>
             @endforeach
         </div>
         <div class="text-center mt-4">
-            <a href="{{ route('blog') }}" class="btn btn-primary round-btn">{{ translate('View More') }}</a>
+            <a href="{{ route('blog') }}" class="btn btn-primary round-btn">{{ \App\Support\HomePageContent::get('story_more') }}</a>
         </div>
     </div>
 </section>
@@ -551,6 +529,35 @@
 @endsection
 
 @section('script')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+ document.querySelectorAll('.hq-home-member-carousel-wrap').forEach(function (wrap) {
+  const carousel = wrap.querySelector('.hq-home-controlled-carousel');
+  if (!carousel || typeof window.jQuery === 'undefined') return;
+  const $carousel = window.jQuery(carousel);
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const slides = carousel.querySelectorAll('.carousel-box').length;
+  const syncAutoplay = function () {
+    if (!$carousel.hasClass('slick-initialized')) return;
+    const visible = Number($carousel.slick('slickGetOption', 'slidesToShow')) || 1;
+    const enabled = !reduceMotion && slides > visible;
+    $carousel.slick('slickSetOption', {
+      autoplay: enabled, autoplaySpeed: 4500, pauseOnHover: true, pauseOnFocus: true
+    }, false);
+    if (enabled) $carousel.slick('slickPlay'); else $carousel.slick('slickPause');
+  };
+  $carousel.on('init reInit breakpoint', function () { window.requestAnimationFrame(syncAutoplay); });
+  if ($carousel.hasClass('slick-initialized')) syncAutoplay();
+  window.addEventListener('load', syncAutoplay, { once: true });
+  wrap.querySelector('.hq-home-carousel-prev')?.addEventListener('click', function () {
+   if ($carousel.hasClass('slick-initialized')) $carousel.slick('slickPrev');
+  });
+  wrap.querySelector('.hq-home-carousel-next')?.addEventListener('click', function () {
+   if ($carousel.hasClass('slick-initialized')) $carousel.slick('slickNext');
+  });
+ });
+});
+</script>
     <script type="text/javascript">
         function loginModal() {
             $('#LoginModal').modal();

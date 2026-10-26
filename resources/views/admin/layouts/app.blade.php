@@ -17,8 +17,7 @@
     <title>{{ get_setting('website_name') . ' | ' . get_setting('site_motto') }}</title>
 
     <!-- Favicon -->
-    <link name="favicon" type="image/x-icon" href="{{ uploaded_asset(get_setting('site_icon')) }}"
-        rel="shortcut icon" />
+    <link rel="icon" type="image/svg+xml" href="{{ static_asset('favicon.svg') }}?v=20261023">
 
     <!-- google font -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700">
@@ -28,6 +27,8 @@
 
     <!-- aiz core css -->
     <link rel="stylesheet" href="{{ static_asset('assets/css/aiz-core.css?v=') }}{{ rand(1000,9999) }}">
+    <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-brand.css') }}?v=20261023">
+    <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-admin-sidebar-accordion-20261026.css') }}?v=2">
 
     @if (\App\Models\Language::where('code', Session::get('locale', Config::get('app.locale')))->first()->rtl == 1)
         <link rel="stylesheet" href="{{ static_asset('assets/css/bootstrap-rtl.min.css') }}">
@@ -132,7 +133,7 @@
         </script>
     @endif
 
-    <script defer src="{{ static_asset('assets/js/hamqadam-admin-active-sidebar.js') }}?v=2"></script>
+    <script defer src="{{ static_asset('assets/js/hamqadam-admin-active-sidebar.js') }}?v=20261026-2"></script>
     @yield('script')
 
 

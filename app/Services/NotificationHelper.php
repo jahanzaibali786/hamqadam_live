@@ -59,17 +59,15 @@ class NotificationHelper
         User $sender,
         int $interestId,
     ): void {
-        $senderName = trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''));
+        $name = trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''));
 
-        self::createAndPush(
-            recipient: $recipient,
-            type: 'interest',
-            title: 'New Interest',
-            message: "$senderName is interested in you!",
-            notifyBy: $sender->id,
-            infoId: $interestId,
-            route: '/interests',
-        );
+        self::event($recipient, 'interest_received', [
+            'event_id' => (string) $interestId,
+            'info_id' => $interestId,
+            'notify_by' => $sender->id,
+            'sender_name' => $name,
+            'name' => $name,
+        ]);
     }
 
     public static function interestAccepted(
@@ -79,15 +77,13 @@ class NotificationHelper
     ): void {
         $name = trim(($accepter->first_name ?? '') . ' ' . ($accepter->last_name ?? ''));
 
-        self::createAndPush(
-            recipient: $recipient,
-            type: 'interest_accepted',
-            title: 'Interest Accepted',
-            message: "$name accepted your interest!",
-            notifyBy: $accepter->id,
-            infoId: $interestId,
-            route: '/interests',
-        );
+        self::event($recipient, 'interest_accepted', [
+            'event_id' => (string) $interestId,
+            'info_id' => $interestId,
+            'notify_by' => $accepter->id,
+            'matched_user_name' => $name,
+            'name' => $name,
+        ]);
     }
 
     public static function interestRejected(
@@ -115,17 +111,15 @@ class NotificationHelper
         User $sender,
         int $proposalId,
     ): void {
-        $senderName = trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''));
+        $name = trim(($sender->first_name ?? '') . ' ' . ($sender->last_name ?? ''));
 
-        self::createAndPush(
-            recipient: $recipient,
-            type: 'proposal',
-            title: 'New Proposal',
-            message: "$senderName sent you a proposal!",
-            notifyBy: $sender->id,
-            infoId: $proposalId,
-            route: '/proposals',
-        );
+        self::event($recipient, 'proposal_received', [
+            'event_id' => (string) $proposalId,
+            'info_id' => $proposalId,
+            'notify_by' => $sender->id,
+            'sender_name' => $name,
+            'name' => $name,
+        ]);
     }
 
     public static function proposalAccepted(
@@ -135,15 +129,13 @@ class NotificationHelper
     ): void {
         $name = trim(($accepter->first_name ?? '') . ' ' . ($accepter->last_name ?? ''));
 
-        self::createAndPush(
-            recipient: $recipient,
-            type: 'proposal_accepted',
-            title: 'Proposal Accepted',
-            message: "$name accepted your proposal!",
-            notifyBy: $accepter->id,
-            infoId: $proposalId,
-            route: '/proposals',
-        );
+        self::event($recipient, 'proposal_accepted', [
+            'event_id' => (string) $proposalId,
+            'info_id' => $proposalId,
+            'notify_by' => $accepter->id,
+            'matched_user_name' => $name,
+            'name' => $name,
+        ]);
     }
 
     public static function proposalRejected(
@@ -525,11 +517,12 @@ class NotificationHelper
 
             $emailRequired = in_array('email', $channels, true);
             $emailOptional = in_array('email_optional', $channels, true);
-            if (($emailRequired || ($emailOptional && $preferences->email_enabled)) && ! self::alreadyDelivered($recipient->id, $eventKey, $eventId, 'email') && filled($recipient->email)) {
+            if (($emailRequired || $emailOptional) && $preferences->email_enabled && ! self::alreadyDelivered($recipient->id, $eventKey, $eventId, 'email') && filled($recipient->email)) {
                 try {
+                    [$emailSubject, $emailBody] = self::connectionEmail($eventKey, $recipient, $context, $title, $message);
                     NotificationFacade::route('mail', $recipient->email)->notify(new EmailNotification(
-                        $title,
-                        '<p>' . e($message) . '</p><p><a href="' . e(url($deepLink)) . '">Open Hamqadam</a></p>',
+                        $emailSubject,
+                        '<p>' . implode('</p><p>', array_map('e', $emailBody)) . '</p><p><a href="' . e(url($deepLink)) . '">Open Hamqadam</a></p>',
                     ));
                     self::logDelivery($recipient, $notificationId, $eventKey, $eventId, 'email', 'sent', $deepLink, $context);
                 } catch (\Throwable $e) {
@@ -540,6 +533,44 @@ class NotificationHelper
         } catch (\Throwable $e) {
             Log::warning('Failed to deliver notification event.', ['user_id' => $recipient->id, 'event_key' => $eventKey, 'error' => $e->getMessage()]);
         }
+    }
+
+    private static function connectionEmail(string $eventKey, User $recipient, array $context, string $defaultSubject, string $defaultBody): array
+    {
+        $firstName = trim((string) ($recipient->first_name ?: 'there'));
+        $matchedName = trim((string) ($context['matched_user_name'] ?? 'the member'));
+        $senderName = trim((string) ($context['sender_name'] ?? 'A member'));
+        return match ($eventKey) {
+            'interest_received' => ['You’ve Received a New Interest on Hamqadam', [
+                'Hi ' . $firstName . ',',
+                'Someone has expressed interest in your profile on Hamqadam.',
+                'Visit their profile to learn more and choose whether to accept or decline the request.',
+                'Your next meaningful connection could start here.',
+                'Hamqadam — Choose Forever',
+            ]],
+            'interest_accepted' => ['Your Interest Has Been Accepted!', [
+                'Hi ' . $firstName . ',',
+                'Great news! Your interest in ' . $matchedName . ' has been accepted.',
+                'You can now start a conversation through Hamqadam chat and, where enabled, audio or video calls.',
+                'Take your time to get to know each other and explore whether your values and expectations align.',
+                'Hamqadam — Choose Forever',
+            ]],
+            'proposal_received' => ['A Marriage Proposal Awaits Your Response', [
+                'Hi ' . $firstName . ',',
+                $senderName . ' has sent you a marriage proposal through Hamqadam.',
+                'You can review the proposal, understand their intentions, and accept or decline when you feel comfortable.',
+                'There is no need to rush. Take the time you need to make an informed decision.',
+                'Hamqadam — Choose Forever',
+            ]],
+            'proposal_accepted' => ['Your Marriage Proposal Has Been Accepted', [
+                'Hi ' . $firstName . ',',
+                'Congratulations! Your marriage proposal to ' . $matchedName . ' has been accepted.',
+                'You can now discuss the next steps together, including a family introduction or meeting, at a mutually comfortable time.',
+                'We wish you both the best as you explore this meaningful connection.',
+                'Hamqadam — Choose Forever',
+            ]],
+            default => [$defaultSubject, [$defaultBody]],
+        };
     }
 
     private static function alreadyDelivered(int $userId, string $eventKey, string $eventId, string $channel): bool

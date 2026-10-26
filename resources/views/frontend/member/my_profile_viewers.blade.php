@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "Profile Viewers", 'subtitle' => "See who viewed your profile and who you visited.", 'icon' => "la-eye"])
+
 @php
     $user = auth()->user();
     $remainingFullProfileViews = (int) get_remaining_package_value($user->id, 'remaining_profile_viewer_view');
@@ -7,7 +9,7 @@
     $activeTab = $activeTab ?? request('tab', 'received');
 @endphp
 
-<div class="card">
+<div class="card hm-pink-viewer-tabs">
     <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-3">
         <h5 class="mb-0 h6">{{ translate('Profile Views') }}</h5>
         <div class="btn-group" role="tablist" aria-label="Profile view tabs">

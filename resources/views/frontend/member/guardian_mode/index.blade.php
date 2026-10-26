@@ -1,6 +1,8 @@
 @extends('frontend.layouts.member_panel')
 
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "Guardian Mode & Family", 'subtitle' => "Manage family permissions and safe introductions.", 'icon' => "la-user-shield"])
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="fs-20 fw-700 mb-0">{{ translate('Guardian Mode & Family') }}</h1>
         <form method="POST" action="{{ route('guardian_mode.toggle') }}">

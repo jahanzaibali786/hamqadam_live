@@ -1,8 +1,9 @@
 <div class="aiz-sidebar-wrap">
     <div class="aiz-sidebar left c-scrollbar">
         <div class="aiz-side-nav-logo-wrap">
-            <a href="{{ route('admin.dashboard') }}" class="d-block">
-                <img src="{{ uploaded_asset(get_setting('system_logo')) }}" class="img-fluid">
+            <a href="{{ route('admin.dashboard') }}" class="hq-admin-brand">
+                <img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true">
+                <span>{{ get_setting('website_name') ?: 'Hamqadam' }}</span>
             </a>
         </div>
         <div class="aiz-side-nav-wrap">
@@ -19,6 +20,13 @@
                     <a href="{{ route('admin.dashboard') }}" class="aiz-side-nav-link">
                         <i class="las la-home aiz-side-nav-icon"></i>
                         <span class="aiz-side-nav-text">{{ translate('Dashboard') }}</span>
+                    </a>
+                </li>
+
+                <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.workflow.templates') }}" class="aiz-side-nav-link {{ request()->routeIs('admin.workflow.templates*') ? 'active' : '' }}">
+                        <i class="las la-envelope-open-text aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">Interest & Proposal Templates</span>
                     </a>
                 </li>
 
@@ -426,6 +434,11 @@
                 </li>
                 @endcan
 
+                @can('edit_pages')
+                <li class="aiz-side-nav-item"><a href="{{ route('website.public_editorial.edit','blogs') }}" class="aiz-side-nav-link"><i class="las la-newspaper aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Blog Page Design</span></a></li>
+                <li class="aiz-side-nav-item"><a href="{{ route('website.public_editorial.edit','stories') }}" class="aiz-side-nav-link"><i class="las la-heart aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Success Stories Design</span></a></li>
+                @endcan
+
                 <!--Blog System-->
                 @if (auth()->user()->can('show_blog_categories') ||
                 auth()->user()->can('show_blogs'))
@@ -483,6 +496,9 @@
                     </a>
                     <ul class="aiz-side-nav-list level-2">
                         @can('show_contact_us_queries')
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.advisor_consultations.index') }}" class="aiz-side-nav-link"><i class="las la-calendar-check aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Advisor Consultations</span></a></li>
+                        @endcan
+                        @can('show_contact_us_queries')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('contact-us.index') }}"
                                 class="aiz-side-nav-link {{ areActiveRoutes(['contact-us.index', 'contact-us.show']) }}">
@@ -515,8 +531,7 @@
 
 
                 @if (addon_activation('referral_system'))
-                @if (auth()->user()->can('set_referral_commission') ||
-                auth()->user()->can('view_refferal_users') ||
+                @if (auth()->user()->can('view_refferal_users') ||
                 auth()->user()->can('view_refferal_earnings') ||
                 auth()->user()->can('manage_wallet_withdraw_requests'))
                 <li class="aiz-side-nav-item">
@@ -529,14 +544,6 @@
                         <span class="aiz-side-nav-arrow"></span>
                     </a>
                     <ul class="aiz-side-nav-list level-2">
-                        @can('set_referral_commission')
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('set_referral_commission') }}" class="aiz-side-nav-link">
-                                <span
-                                    class="aiz-side-nav-text">{{ translate('Set Referral Comission') }}</span>
-                            </a>
-                        </li>
-                        @endcan
                         @can('view_refferal_users')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('referals.users') }}" class="aiz-side-nav-link">
@@ -710,10 +717,13 @@
                 </li>
                 @endcan
 
+                @can('edit_pages')
+                <li class="aiz-side-nav-item"><a href="{{ route('website.team_members.index') }}" class="aiz-side-nav-link {{ areActiveRoutes(['website.team_members.index']) }}"><i class="las la-users aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Our Team Members</span></a></li>
+                @endcan
                 <!-- Website Setup -->
                 @if (auth()->user()->can('header') ||
                 auth()->user()->can('footer') ||
-                auth()->user()->can('show_all_pages') ||
+                auth()->user()->can('edit_pages') ||
                 auth()->user()->can('appearances'))
                 <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
@@ -736,11 +746,16 @@
                             </a>
                         </li>
                         @endcan
-                        @can('show_all_pages')
+                        @can('edit_pages')
+                        <li class="aiz-side-nav-item"><a href="{{ route('website.home_content.edit') }}" class="aiz-side-nav-link {{ areActiveRoutes(['website.home_content.edit']) }}"><span class="aiz-side-nav-text">Home Page Content</span></a></li>
+                        @foreach(['about'=>'About Us','team'=>'Our Team','privacy'=>'Privacy Policy','terms'=>'Terms & Conditions'] as $hqKey=>$hqLabel)
+                        <li class="aiz-side-nav-item"><a class="aiz-side-nav-link" href="{{ route('website.editorial.edit',$hqKey) }}"><span class="aiz-side-nav-text">{{ $hqLabel }}</span></a></li>
+                        @endforeach
+                        @endcan
+                        @can('appearances')
                         <li class="aiz-side-nav-item">
-                            <a href="{{ route('custom-pages.index') }}"
-                                class="aiz-side-nav-link {{ areActiveRoutes(['website.pages', 'custom-pages.create', 'custom-pages.edit']) }}">
-                                <span class="aiz-side-nav-text">{{ translate('Pages') }}</span>
+                            <a href="{{ route('website.login_page') }}" class="aiz-side-nav-link {{ areActiveRoutes(['website.login_page']) }}">
+                                <span class="aiz-side-nav-text">{{ translate('Login Page') }}</span>
                             </a>
                         </li>
                         @endcan
@@ -762,7 +777,9 @@
 
 
                 <!-- General settings -->
-                @if (auth()->user()->can('general_settings') || auth()->user()->can('coin_charge_settings') ||
+                @if (in_array(auth()->user()->user_type, ['admin', 'staff'], true) ||
+                auth()->user()->can('general_settings') ||
+                auth()->user()->can('coin_charge_settings') ||
                 auth()->user()->can('show_languages') ||
                 auth()->user()->can('show_currencies') ||
                 auth()->user()->can('payment_methods') ||
@@ -792,6 +809,12 @@
                             </a>
                         </li>
                         @endcan
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('admin.referrals.settings') }}"
+                               class="aiz-side-nav-link {{ request()->routeIs('admin.referrals.settings', 'set_referral_commission') ? 'active' : '' }}">
+                                <span class="aiz-side-nav-text">Referral Settings</span>
+                            </a>
+                        </li>
                         @can('show_languages')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('languages.index') }}"

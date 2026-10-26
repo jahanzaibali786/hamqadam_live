@@ -100,6 +100,24 @@ class MemberController extends Controller
         ];
     }
 
+    public function updateWebsiteVisibility(Request $request, int $id)
+    {
+        abort_unless(auth()->user()->can('edit_member'), 403);
+        $data = $request->validate(['display_on_website' => ['required', 'boolean']]);
+        $member = User::where('user_type', 'member')->findOrFail($id);
+        if ((bool) $data['display_on_website'] && (
+            !$member->approved || $member->blocked || $member->deactivated ||
+            !$member->member || $member->member->hide_profile ||
+            $member->profile_privacy_setting?->invisible_mode
+        )) {
+            return back()->withErrors(['display_on_website' => 'Only approved, active and publicly visible member profiles can be featured.']);
+        }
+        $member->display_on_website = (bool) $data['display_on_website'];
+        $member->save();
+
+        return back()->with('success', 'Homepage visibility updated.');
+    }
+
     public function premiumIndex(Request $request)
     {
 
@@ -371,16 +389,20 @@ class MemberController extends Controller
     public function verification_form()
     {
         $user = auth()->user();
-        if ($user->verification_info == null) {
-            return view('frontend.member.member_verifiction_form', compact('user'));
-        } else {
-            flash(translate('Sorry! You have sent verification request already.'))->error();
-            return back();
-        }
+        $verificationRequest = ProfileVerificationRequest::where('user_id', $user->id)
+            ->with('documents')->latest('id')->first();
+        $verificationAttempts = AiVerificationAttempt::where('user_id', $user->id)
+            ->latest('id')->limit(5)->get();
+        return view('frontend.member.member_verifiction_form',
+            compact('user', 'verificationRequest', 'verificationAttempts'));
     }
 
     public function verification_info_store(Request $request)
     {
+        if (auth()->user()->verification_info !== null) {
+            return redirect()->route('member.verification')
+                ->withErrors(['verification' => 'A verification request has already been submitted.']);
+        }
         $data = array();
         $i = 0;
         foreach (json_decode(Setting::where('type', 'verification_form')->first()->value) as $key => $element) {
@@ -469,6 +491,7 @@ class MemberController extends Controller
     public function introduction_update(Request $request, $id)
     {
         $member = Member::findOrFail($id);
+        $request->validate(['introduction' => ['required', 'string', 'max:2500']]);
         $member->introduction = $request->introduction;
         if ($member->save()) {
             flash('Member introduction info has been updated successfully')->success();

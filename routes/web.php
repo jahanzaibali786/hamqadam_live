@@ -99,7 +99,7 @@ Route::controller(HomeController::class)->group(function () {
     Route::get('/email_change/callback', 'email_change_callback')->name('email_change.callback');
     Route::post('/password/reset/email/submit', 'reset_password_with_code')->name('password.update');
     Route::get('/users/login', 'login')->name('user.login');
-    Route::get('/happy-stories', 'happy_stories')->name('happy_stories');
+    Route::get('/happy-stories', [\App\Http\Controllers\PublicEditorialListingController::class, 'stories'])->name('happy_stories');
     Route::get('/story_details/{id}', 'story_details')->name('story_details');
     Route::get('/users/blocked', 'user_account_blocked')->name('user.blocked');
     Route::post('/registration/verification-code-send', 'sendRegVerificationCode')->name('verification_code_send');
@@ -141,9 +141,13 @@ Route::post('/language', [LanguageController::class, 'changeLanguage'])->name('l
 Route::get('/p/{user}', [ProfileShareController::class, 'show'])->whereNumber('user')->name('profile.share');
 Route::get('/packages', [PackageController::class, 'select_package'])->name('packages');
 
+// Email digest: explicit opt-in, throttle and confirmation.
+Route::post('/blog/subscribe', [\App\Http\Controllers\PublicBlogSubscribeController::class,'subscribe'])->middleware('throttle:5,1')->name('public.blog.subscribe');
+Route::get('/blog/unsubscribe/{token}', [\App\Http\Controllers\PublicBlogSubscribeController::class,'unsubscribe'])->name('public.blog.unsubscribe');
+
 //Blog
 Route::controller(BlogController::class)->group(function () {
-    Route::get('/blog', 'all_blog')->name('blog');
+    Route::get('/blog', [\App\Http\Controllers\PublicEditorialListingController::class, 'blogs'])->name('blog');
     Route::get('/blog/{slug}', 'blog_details')->name('blog.details');
     Route::get('/blog/description/{slug}', 'blog_description')->name('blog.description');
 });
@@ -219,13 +223,21 @@ Route::group(['middleware' => ['member', 'verified', 'manual.review']], function
 });
 
 
+// Profile details are accessible to authenticated approved members without a paid package.
+// Other discovery and paid actions retain the existing check.package middleware.
+Route::middleware(['auth', 'member', 'verified', 'manual.review', 'activated'])->group(function () {
+    Route::get('/member-profile/{id}', [HomeController::class, 'view_member_profile'])
+        ->whereNumber('id')->name('member_profile');
+});
+
 Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.review']], function () {
     Route::controller(HomeController::class)->middleware('activated')->group(function () {
         Route::post('/new-user-email', 'update_email')->name('user.change.email');
         Route::post('/new-user-verification', 'new_verify')->name('user.new.verify');
 
         Route::any('/member-listing', 'member_listing')->name('member.listing');
-        Route::get('/member-profile/{id}', 'view_member_profile')->name('member_profile');
+        Route::get('/active-members', 'member_listing')->defaults('listing_context', 'standalone')->name('members.public_listing');
+
 
         Route::post('/user/remaining_package_value', 'user_remaining_package_value')->name('user.remaining_package_value');
     });
@@ -282,6 +294,8 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
             Route::post('/chat/report', 'report_chat')->name('chat.report');
             Route::post('/chat/message/delete', 'delete_message')->name('chat.message.delete');
             Route::post('/chat/typing', 'typing_ping')->name('chat.typing');
+            Route::post('/chat/delivered', 'delivered_ping')->name('chat.web.delivered');
+            Route::post('/chat/presence', 'presence_ping')->name('chat.web.presence');
             Route::post('/chat/voice-reply', 'voice_reply')->name('chat.voice_reply');
             Route::post('/chat/disappear', 'set_disappear')->name('chat.disappear');
             Route::get('/chat/refresh/{id}', 'chat_refresh')->name('chat_refresh');
@@ -349,6 +363,18 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
 
         Route::resource('profile-viewers', ProfileViewerController::class);
         Route::get('/matched-profiles', [ProfileMatchController::class, 'myMatchedProfiles'])->name('my_matched_profiles');
+        Route::get('/matched-profiles/{member}/connection', [\App\Http\Controllers\MemberWorkflowController::class, 'show'])->whereNumber('member')->name('member.workflow.show');
+        Route::post('/matched-profiles/{member}/connection/interest', [\App\Http\Controllers\MemberWorkflowController::class, 'interest'])->whereNumber('member')->name('member.workflow.interest');
+        Route::post('/connection/interests/{interest}/respond', [\App\Http\Controllers\MemberWorkflowController::class, 'respondInterest'])->whereNumber('interest')->name('member.workflow.interest.respond');
+        Route::post('/matched-profiles/{member}/connection/proposal/generate', [\App\Http\Controllers\MemberWorkflowController::class, 'aiDraft'])->whereNumber('member')->middleware('throttle:3,1')->name('member.workflow.proposal.generate');
+        Route::post('/matched-profiles/{member}/connection/proposal', [\App\Http\Controllers\MemberWorkflowController::class, 'proposal'])->whereNumber('member')->name('member.workflow.proposal');
+        Route::post('/connection/proposals/{proposal}/respond', [\App\Http\Controllers\MemberWorkflowController::class, 'respondProposal'])->whereNumber('proposal')->name('member.workflow.proposal.respond');
+        Route::post('/connection/proposals/{proposal}/meetings', [\App\Http\Controllers\MemberWorkflowController::class, 'meeting'])->whereNumber('proposal')->name('member.workflow.meeting');
+        Route::post('/connection/meetings/{meeting}/notes', [\App\Http\Controllers\MemberWorkflowController::class, 'meetingNotes'])->whereNumber('meeting')->name('member.workflow.meeting.notes');
+        Route::post('/connection/proposals/{proposal}/relationship', [\App\Http\Controllers\MemberWorkflowController::class, 'relationshipStatus'])->whereNumber('proposal')->name('member.workflow.relationship');
+        Route::post('/connection/preferences', [\App\Http\Controllers\MemberWorkflowController::class, 'preferences'])->name('member.workflow.preferences');
+        Route::get('/matched-profiles/{member}/why', [\App\Http\Controllers\MemberMatchDetailController::class, 'show'])->whereNumber('member')->name('member.match.why');
+        Route::post('/matched-profiles/{member}/proposal', [\App\Http\Controllers\MemberMatchActionController::class, 'propose'])->whereNumber('member')->name('member.match.propose');
         Route::get('/horoscope-matched-profiles', [HoroscopeProfileMatchController::class, 'horoscopeMatchedProfiles'])->name('horoscope_matched_profiles');
         Route::get('/matched-refresh', [ProfileMatchController::class, 'matchedRefresh'])->name('match.refresh');
         Route::get('/horoscope-matched-refresh', [HoroscopeProfileMatchController::class, 'horoscopeMatchedRefresh'])->name('horoscope.match.refresh');
@@ -512,6 +538,7 @@ require __DIR__.'/referral.php';
     return back()->with('success', 'Your profile boost is active for 24 hours.');
 })->middleware('throttle:3,1')->name('member.profile_boost.activate');
 require __DIR__.'/hamqadam_step3.php';
+require __DIR__.'/member_reference.php';
 // Support routes are deployed separately on some older FTP mirrors. Do not
 // take down the entire application when that optional file is temporarily absent.
 $supportRoutesFile = __DIR__.'/support_tickets.php';
@@ -533,6 +560,14 @@ Route::get('/api-docs', function () {
         'app_url' => config('app.url'),
     ]);
 })->name('api.docs');
+
+Route::post('/our-team/consultation', [\App\Http\Controllers\HamqadamEditorialController::class,'consultation'])->middleware('throttle:3,1')->name('editorial.team.consult');
+
+// Curated CMS-managed editorial pages (before the catch-all slug route)
+Route::get('/about-us', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','about')->name('editorial.about');
+Route::get('/our-team', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','team')->name('editorial.team');
+Route::get('/privacy-policy', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','privacy')->name('editorial.privacy');
+Route::get('/terms-conditions', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','terms')->name('editorial.terms');
 
 //Custom page
 Route::get('/{slug}', [PageController::class, 'show_custom_page'])->name('custom-pages.show_custom_page');

@@ -1,405 +1,55 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
-    <?php
-        $user = Auth::user();
-        $col  = 4;
-        $profile_picture_privacy = get_setting('profile_picture_privacy');
-        $gallery_image_privacy = get_setting('gallery_image_privacy');
-        $recommendedPackage = \App\Support\RegistrationReward::nextRecommendedPackage($user->member?->package);
-        if($profile_picture_privacy == 'only_me'){
-            $col++;
-        }
-        elseif($gallery_image_privacy == 'only_me') {
-            $col++;
-        }
-    ?>
-        <?php
-        $badges = app(\App\Services\BadgeService::class)->payload($user);
-    ?>
-    <?php if (app(\App\Services\ClientScope\PremiumEntitlementService::class)->has($user, 'profile_boost')): ?>
-      <?php $boostStatus = app(\App\Services\ClientScope\ProfileBoostService::class)->current($user); ?>
-      <section class="alert alert-info"><h2 class="h6">{{ translate('Boost your profile') }}</h2>
-      <p>{{ $boostStatus['active'] ? translate('Your profile is currently boosted.') : translate('Appear above regular discovery results for 24 hours, once every seven days.') }}</p>
-      <?php if (!($boostStatus['active'])): ?><form method="POST" action="{{ route('member.profile_boost.activate') }}">@csrf<button class="btn btn-primary btn-sm">{{ translate('Activate premium boost') }}</button></form><?php endif; ?>
-      </section>
-    <?php endif; ?>
-    <div class="row gutters-5 mb-4">
-        <div class="col-md-6 mb-2">
-            <div class="bg-white border rounded p-3 h-100 d-flex align-items-center">
-                <i class="las la-check-circle la-2x text-success mr-3"></i>
-                <div><div class="fw-700">{{ translate('Verification Badge') }}</div><div class="fs-12 text-muted">{{ $badges['verification']['earned'] ? translate('Identity verified') : translate('Verification pending') }}</div></div>
-            </div>
-        </div>
-        <div class="col-md-6 mb-2">
-            <div class="bg-white border rounded p-3 h-100 d-flex align-items-center">
-                <i class="las la-shield-alt la-2x text-warning mr-3"></i>
-                <div>
-                    <div class="fw-700">{{ translate('Trust Badge') }}</div>
-                    <div class="fs-12 text-muted">
-                        {{ $badges['trust']['earned'] ? translate('7-day streak achieved') : translate('Complete a 7-day login streak') }}
-                        <span class="ml-1">({{ $badges['trust']['current_streak'] ?? 0 }}/{{ $badges['trust']['target_streak'] ?? 7 }} {{ translate('days') }})</span>
-                    </div>
-                    <div class="d-flex align-items-center mt-1" aria-label="{{ translate('Login streak') }}">
-                        <?php for ($fire = 1; $fire <= ($badges['trust']['target_streak'] ?? 7); $fire++): ?>
-                            <i class="las la-fire mr-1 {{ $fire <= ($badges['trust']['current_streak'] ?? 0) ? 'text-danger' : 'text-muted opacity-50' }}" title="{{ $fire <= ($badges['trust']['current_streak'] ?? 0) ? translate('Completed streak day') : translate('Streak day not completed') }}"></i>
-                        <?php endfor; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between">
-        <div class="mr-3">
-            <strong>{{ translate('AI matrimonial dashboard is available.') }}</strong>
-            <span>{{ translate('Check compatibility scores, verification status, proposals, safety, and AI activity.') }}</span>
-        </div>
-        <a href="{{ route('member.v1_dashboard') }}" class="btn btn-sm btn-primary mt-2 mt-md-0">{{ translate('Open AI Dashboard') }}</a>
-    </div>
-
-    {{-- ------------------------------------------------------------------ --}}
-    {{-- AI identity verification status.                                    --}}
-    {{-- Shown only while the member is not AI-verified. Registration never  --}}
-    {{-- blocks on the model, so this is the recovery path: model was down,   --}}
-    {{-- no usable photo on file, or the result came back MANUAL_REVIEW.      --}}
-    {{-- ------------------------------------------------------------------ --}}
-    <?php
-        $aiStatus = $user->member?->ai_verification_status ?? 'not_started';
-        $aiRecommendation = $user->member?->ai_verification_recommendation;
-        $aiAttempts = (int) ($user->member?->ai_verification_attempts ?? 0);
-        $aiVerified = $aiStatus === 'approved';
-        $aiMeta = match ($aiStatus) {
-            'approved'      => ['alert-success', 'la-check-circle',        translate('Your identity is verified by our AI check.')],
-            'rejected'      => ['alert-danger',  'la-times-circle',        translate('The automated identity check did not pass. Our team will review your documents.')],
-            'manual_review' => ['alert-warning', 'la-user-check',          translate('Your verification needs a manual review. Adding your CNIC and a selfie speeds this up.')],
-            'failed'        => ['alert-warning', 'la-exclamation-triangle',translate('The verification service could not be reached. Please try again.')],
-            'pending'       => ['alert-info',    'la-spinner',             translate('Identity verification is running in the background.')],
-            default         => ['alert-secondary','la-id-card',            translate('Your identity is not verified yet.')],
-        };
-    ?>
-
-    <?php
-        // Keep the dashboard renderable for legacy members or incomplete verification records.
-        $aiStatus = $aiStatus ?? 'not_started';
-        $aiRecommendation = $aiRecommendation ?? null;
-        $aiAttempts = (int) ($aiAttempts ?? 0);
-        $aiVerified = (bool) ($aiVerified ?? false);
-        $aiMeta = $aiMeta ?? [
-            'alert-secondary',
-            'la-id-card',
-            translate('Your identity is not verified yet.'),
-        ];
-    ?>
-    <?php if (!($aiVerified ?? false)): ?>
-        <div class="alert {{ $aiMeta[0] }} d-flex flex-wrap align-items-center justify-content-between">
-            <div class="mr-3">
-                <strong>
-                    <i class="la {{ $aiMeta[1] }}"></i>
-                    {{ translate('AI Identity Verification') }}
-                </strong>
-                <span class="d-block fs-13">{{ $aiMeta[2] }}</span>
-                <?php if ($aiAttempts > 0): ?>
-                    <span class="d-block fs-12 opacity-70">
-                        {{ translate('Attempts') }}: {{ $aiAttempts }}
-                        <?php if ($aiRecommendation): ?> &middot; {{ translate('Last result') }}: {{ $aiRecommendation }} <?php endif; ?>
-                        <?php if ($user->member?->ai_verification_last_attempt_at): ?>
-                            &middot; {{ $user->member->ai_verification_last_attempt_at->diffForHumans() }}
-                        <?php endif; ?>
-                    </span>
-                <?php endif; ?>
-            </div>
-            <div class="mt-2 mt-md-0 d-flex align-items-center">
-                <?php if (in_array($aiStatus, ['not_started', 'manual_review'])): ?>
-                    <a href="{{ route('member.verification') }}" class="btn btn-sm btn-outline-primary mr-2">
-                        {{ translate('Upload CNIC & Selfie') }}
-                    </a>
-                <?php else: ?>
-                    <span class="badge badge-inline badge-warning mr-2">{{ translate('Verification in progress') }}</span>
-                <?php endif; ?>
-                <form action="{{ route('member.ai_verification.run') }}" method="POST" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-sm btn-primary">
-                        <i class="la la-shield"></i>
-                        {{ $aiAttempts > 0 ? translate('Retry Verification') : translate('Verify My Identity') }}
-                    </button>
-                </form>
-            </div>
-        </div>
-    <?php endif; ?>
-
-    <div class="row gutters-5 mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="bg-white border rounded p-3 h-100">
-                <div class="text-muted fs-12 mb-1">{{ translate('Current Coin Balance') }}</div>
-                <div class="h3 fw-700 text-primary-grad mb-1">{{ (int) ($user->member?->remaining_interest ?? 0) }}</div>
-                <div class="fs-12 opacity-70">{{ translate('Coins received from the active package') }}</div>
-                <a href="{{ route('package_usage_history') }}" class="btn btn-link p-0 mt-2 fs-12">{{ translate('View usage history') }}</a>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="bg-white border rounded p-3 h-100">
-                <div class="text-muted fs-12 mb-1">{{ translate('Profile View Balance') }}</div>
-                <div class="h3 fw-700 text-primary-grad mb-1">{{ (int) ($user->member?->remaining_profile_viewer_view ?? 0) }}</div>
-                <div class="fs-12 opacity-70">{{ translate('Remaining profile detail views') }}</div>
-                <a href="{{ route('package_usage_history') }}" class="btn btn-link p-0 mt-2 fs-12">{{ translate('See profile-view usage') }}</a>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="bg-white border rounded p-3 h-100">
-                <div class="text-muted fs-12 mb-1">{{ translate('Current Package') }}</div>
-                <div class="h5 fw-600 mb-1">{{ $user->member?->package?->name ?? translate('No active package') }}</div>
-                <div class="fs-12 opacity-70">
-                    {{ translate('Package expiry') }}:
-                    <?php if ($user->member?->package_validity && package_validity($user->id)): ?>
-                        {{ $user->member->package_validity }}
-                    <?php else: ?>
-                        <span class="text-danger">{{ translate('Expired') }}</span>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="bg-white border rounded p-3 h-100">
-                <div class="text-muted fs-12 mb-1">{{ translate('Package Entitlements') }}</div>
-                <div class="fs-12 mb-1">{{ translate('Interest') }}: {{ (int) ($user->member?->remaining_interest ?? 0) }}</div>
-                <div class="fs-12 mb-1">{{ translate('Contact Views') }}: {{ (int) ($user->member?->remaining_contact_view ?? 0) }}</div>
-                <div class="fs-12">{{ translate('Gallery Uploads') }}: {{ (int) ($user->member?->remaining_photo_gallery ?? 0) }}</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row gutters-5 row-cols-xl-{{ $col }} row-cols-2">
-        <div class="col mx-auto mb-3" >
-            <div class="bg-light rounded overflow-hidden text-center p-3">
-                <i class="la la-heart-o la-2x mb-3 text-primary-grad"></i>
-                <div class="h4 fw-700 text-primary-grad">{{ get_remaining_package_value($user->id,'remaining_interest') }}</div>
-                <div class="opacity-50">{{ translate('Coin') }} <br> {{ translate('Balance') }}</div>
-            </div>
-        </div>
-        <div class="col mx-auto mb-3" >
-            <div class="bg-light rounded overflow-hidden text-center p-3">
-                <i class="las la-phone la-2x mb-3 text-primary-grad"></i>
-                <div class="h4 fw-700 text-primary-grad">{{ get_remaining_package_value($user->id,'remaining_contact_view') }}</div>
-                <div class="opacity-50 ">{{ translate('Remaining') }} <br> {{ translate('Contact View') }}</div>
-            </div>
-        </div>
-        <div class="col mx-auto mb-3" >
-            <div class="bg-light rounded overflow-hidden text-center p-3">
-                <i class="las la-phone la-2x mb-3 text-primary-grad"></i>
-                <div class="h4 fw-700 text-primary-grad">{{ get_remaining_package_value($user->id,'remaining_profile_viewer_view') }}</div>
-                <div class="opacity-50 ">{{ translate('Remaining') }} <br> {{ translate('Profile Viewer View') }}</div>
-            </div>
-        </div>
-        <div class="col mx-auto mb-3" >
-            <div class="bg-light rounded overflow-hidden text-center p-3">
-                <i class="las la-image la-2x mb-3 text-primary-grad"></i>
-                <div class="h4 fw-700 text-center text-primary-grad">{{ get_remaining_package_value($user->id,'remaining_photo_gallery') }}</div>
-                <div class="opacity-50 text-center">{{ translate('Remaining') }} <br> {{ translate('Gallery Image Upload') }}</div>
-            </div>
-        </div>
-        <?php if ($profile_picture_privacy == 'only_me'): ?>
-        <div class="col mx-auto mb-3" >
-            <div class="bg-light rounded overflow-hidden text-center p-3">
-                <i class="las la-user-circle la-2x mb-3 text-primary-grad"></i>
-                <div class="h4 fw-700 text-primary-grad">{{ get_remaining_package_value($user->id,'remaining_profile_image_view') }}</div>
-                <div class="opacity-50 ">{{ translate('Remaining') }} <br> {{ translate('Profile Picture View') }}</div>
-            </div>
-        </div>
-        <?php endif; ?>
-        <?php if ($gallery_image_privacy == 'only_me'): ?>
-        <div class="col mx-auto mb-3" >
-            <div class="bg-light rounded overflow-hidden text-center p-3">
-                <i class="las la-images la-2x mb-3 text-primary-grad"></i>
-                <div class="h4 fw-700 text-center text-primary-grad">{{ get_remaining_package_value($user->id,'remaining_gallery_image_view') }}</div>
-                <div class="opacity-50 text-center">{{ translate('Remaining') }} <br> {{ translate('Gallery Images View') }}</div>
-            </div>
-        </div>
-        <?php endif; ?>
-    </div>
-
-    <div class="row gutters-5">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="fs-16 mb-0">{{  translate('Current package') }}</h2>
-                </div>
-                <?php if ($user->member->current_package_id != null): ?>
-                    <div class="card-body">
-                        <div class="text-center mb-4 mt-3">
-                            <img class="mw-100 mx-auto mb-4" src="{{ uploaded_asset($user->member->package->image) }}" height="130">
-                            <h5 class="mb-3 h5 fw-600">{{$user->member->package->name}}</h5>
-                        </div>
-                        <ul class="list-group list-group-raw fs-15 mb-4 pb-4 border-bottom">
-                            <li class="list-group-item py-2">
-                                <i class="las la-check text-success mr-2"></i>
-                                {{ $user->member->package->express_interest }} {{ translate('Coins') }}
-                            </li>
-                            <li class="list-group-item py-2">
-                                <i class="las la-check text-success mr-2"></i>
-                                {{ $user->member->package->photo_gallery }} {{ translate('Gallery Photo Upload') }}
-                            </li>
-                            <li class="list-group-item py-2">
-                                <i class="las la-check text-success mr-2"></i>
-                                {{ $user->member->package->contact }} {{ translate('Contact Info View') }}
-                            </li>
-                            <li class="list-group-item py-2">
-                                <i class="las la-check text-success mr-2"></i>
-                                {{ $user->member->package->profile_viewers_view }} {{ translate('Profile Viewer View') }}
-                            </li>
-                            <?php if ($profile_picture_privacy == 'only_me'): ?>
-                                <li class="list-group-item py-2">
-                                    <i class="las la-check text-success mr-2"></i>
-                                    {{ $user->member->package->profile_image_view }} {{ translate('Profile Image View') }}
-                                </li>
-                            <?php endif; ?>
-                            <?php if ($gallery_image_privacy == 'only_me'): ?>
-                                <li class="list-group-item py-2">
-                                    <i class="las la-check text-success mr-2"></i>
-                                    {{ $user->member->package->gallery_image_view }} {{ translate('Gallery Image View') }}
-                                </li>
-                            <?php endif; ?>
-                            <li class="list-group-item py-2 text-line-through">
-                                <?php if ( $user->member->package->auto_profile_match == 0 ): ?>
-                                    <i class="las la-times text-danger mr-2"></i>
-                                    <del class="opacity-60">{{ translate('Show Auto Profile Match') }}</del>
-                                <?php else: ?>
-                                    <i class="las la-check text-success mr-2"></i>
-                                    {{ translate('Show Auto Profile Match') }}
-                                <?php endif; ?>
-                            </li>
-                            <li class="list-group-item py-2 text-line-through">
-                                <?php if ( $user->member->package->auto_horoscope_profile_match == 0 ): ?>
-                                    <i class="las la-times text-danger mr-2"></i>
-                                    <del class="opacity-60">{{ translate('Show Auto Horoscope Profile Match') }}</del>
-                                <?php else: ?>
-                                    <i class="las la-check text-success mr-2"></i>
-                                    {{ translate('Show Auto Horoscope Profile Match') }}
-                                <?php endif; ?>
-                            </li>
-                        </ul>
-                        <h4 class="fs-18 mb-3">
-                        {{ translate('Package expiry date') }}:
-                        <?php if (package_validity($user->id)): ?>
-                            {{ $user->member->package_validity }}
-                        <?php else: ?>
-                            <span class="text-danger">{{translate('Expired')}}</span>
-                        <?php endif; ?>
-                        </h4>
-                        <a href="{{ route('packages') }}" class="btn btn-success d-inline-block">{{ translate('Upgrade Package') }}</a>
-
-                        <?php if ($recommendedPackage): ?>
-                            <div class="alert alert-primary mt-4 mb-0 text-left">
-                                <div class="fw-700 mb-1">{{ translate('Recommended Next Package') }}: {{ $recommendedPackage->name }}</div>
-                                <div class="fs-13 opacity-80 mb-2">
-                                    {{ translate('Unlock more coins and premium discovery features with this package.') }}
-                                </div>
-                                <a href="{{ route('package_payment_methods', encrypt($recommendedPackage->id)) }}" class="btn btn-sm btn-primary">
-                                    {{ translate('View Recommended Package') }}
-                                </a>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php else: ?>
-                    <div class="card mb-0 p-5 h-20 d-flex align-items-center justify-content-center">
-                            {{ translate('No Package Available') }} 
-                            <div class="mt-2">
-                                <a href="{{ route('packages') }}"
-                                    class="btn btn-sm btn-primary">{{ translate('Purchase a Package') }}</a>
-                            </div>    
-                    </div>   
-                <?php endif; ?>    
-            </div>
-        </div>
-        <div class="col-md-6">
-            <?php if (get_setting('member_verification') && $user->approved == 0): ?>
-                <div class="card mb-0 p-5 h-15 d-flex align-items-center justify-content-center mb-2">
-                    <?php if (in_array($user->member?->ai_verification_status ?? 'not_started', ['pending', 'submitted', 'under_review', 'processing'])): ?>
-                        <div class="my-n4 py-1 text-center">
-                            <img src="{{ static_asset('assets/img/non_verified.png') }}" alt=""
-                                class="w-xxl-130px w-90px d-block">
-                            <span class="badge badge-inline badge-warning">{{ translate('Verification in progress') }}</span>
-                        </div>
-                    <?php elseif ($user->approved == 0): ?>
-                        <div class="my-n4 py-1 text-center">
-                            <img src="{{ static_asset('assets/img/non_verified.png') }}" alt=""
-                                class="w-xxl-130px w-90px d-block">
-                            <a href="{{ route('member.verification') }}"
-                                class="btn btn-sm btn-primary">{{ translate('Verify Now') }}</a>
-                        </div>
-                    <?php else: ?>
-                        <div class="my-2 py-1">
-                            <img src="{{ static_asset('assets/img/verified.png') }}" alt="" width="">
-                        </div>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
-            
-            {{-- Phase 6A: shallow, balanced Blade structures to avoid the legacy nested conditional parser failure. --}}
-            <?php if ($user->member?->current_package_id): ?>
-                <div class="card mb-3">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h2 class="fs-16 mb-0">{{ translate('Matched profile') }}</h2>
-                        <a href="{{ route('my_matched_profiles') }}" aria-label="{{ translate('View all matches') }}" class="text-dark"><i class="las la-arrow-right"></i></a>
-                    </div>
-                    <div class="card-body">
-                        <?php if ($user->member?->auto_profile_match): ?>
-                            <?php $profileSuggestions = $similar_profiles ?? collect(); ?>
-                            <?php $__hamqadam_forelse_1 = false; foreach ($profileSuggestions as $suggestion): $__hamqadam_forelse_1 = true; ?>
-                                <?php $candidate = $suggestion->user; ?>
-                                <?php if ($candidate): ?>
-                                    <?php $fallbackAvatar = $candidate->member?->gender == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png'; ?>
-                                    <a href="{{ route('member_profile', $suggestion->match_id) }}" class="text-reset border rounded row no-gutters align-items-center mb-3">
-                                        <div class="col-auto"><img src="{{ show_profile_picture($candidate) && $candidate->photo ? uploaded_asset($candidate->photo) : static_asset($fallbackAvatar) }}" class="img-fit size-100px" alt="{{ $candidate->first_name }} {{ $candidate->last_name }}" loading="lazy"></div>
-                                        <div class="col p-3">
-                                            <h3 class="h6 text-truncate">{{ $candidate->first_name }} {{ $candidate->last_name }}</h3>
-                                            <span class="small text-muted">{{ $candidate->member?->birthday ? \Carbon\Carbon::parse($candidate->member->birthday)->age.' '.translate('yrs') : '' }}</span>
-                                        </div>
-                                    </a>
-                                <?php endif; ?>
-                            <?php endforeach; if (!$__hamqadam_forelse_1): ?>
-                                <p class="alert alert-info mb-0">{{ translate('No matched profile found. Complete your partner preferences to improve matches.') }}</p>
-                            <?php endif; ?>
-                        <?php else: ?>
-                            <p class="alert alert-info mb-0">{{ translate('Upgrade your package for auto match making') }}</p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-                <div class="card mb-3">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h2 class="fs-16 mb-0">{{ translate('Horoscope Matched profile') }}</h2>
-                        <a href="{{ route('horoscope_matched_profiles') }}" aria-label="{{ translate('View horoscope matches') }}" class="text-dark"><i class="las la-arrow-right"></i></a>
-                    </div>
-                    <div class="card-body">
-                        <?php if ($user->member?->auto_horoscope_profile_match): ?>
-                            <?php $horoscopeSuggestions = $similar_horoscope_profiles ?? collect(); ?>
-                            <?php $__hamqadam_forelse_2 = false; foreach ($horoscopeSuggestions as $suggestion): $__hamqadam_forelse_2 = true; ?>
-                                <?php $candidate = $suggestion->user; ?>
-                                <?php if ($candidate): ?>
-                                    <?php $fallbackAvatar = $candidate->member?->gender == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png'; ?>
-                                    <a href="{{ route('member_profile', $suggestion->match_id) }}" class="text-reset border rounded row no-gutters align-items-center mb-3">
-                                        <div class="col-auto"><img src="{{ show_profile_picture($candidate) && $candidate->photo ? uploaded_asset($candidate->photo) : static_asset($fallbackAvatar) }}" class="img-fit size-100px" alt="{{ $candidate->first_name }} {{ $candidate->last_name }}" loading="lazy"></div>
-                                        <div class="col p-3"><h3 class="h6 text-truncate">{{ $candidate->first_name }} {{ $candidate->last_name }}</h3></div>
-                                    </a>
-                                <?php endif; ?>
-                            <?php endforeach; if (!$__hamqadam_forelse_2): ?>
-                                <p class="alert alert-info mb-0">{{ translate('No matched horoscope profile found. Complete horoscope information to improve results.') }}</p>
-                            <?php endif; ?>
-                        <?php else: ?>
-                            <p class="alert alert-info mb-0">{{ translate('Upgrade your package for auto horoscope match making') }}</p>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-
+@php
+ $me=auth()->user();$member=$me->member;$pct=max(0,min(100,(int)($member?->profile_completion_percentage??0)));
+ $top=$dashboardTopMatch;$best=$top?->matchedUser;$bestScore=$top?max(0,min(100,round($top->match_percentage))):0;
+ $avatar=$me->photo?uploaded_asset($me->photo):static_asset('assets/img/avatar-place.png');
+ $verified=app(\App\Services\BadgeService::class)->isVerified($member);
+ $myAddress=$me->addresses?->firstWhere('type','present');
+@endphp
+<div class="hm-ref26 hm-dash26">
+@if($errors->has('proposal'))<div class="alert alert-danger">{{ $errors->first('proposal') }}</div>@endif
+@if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+ <header class="hm-dash26-welcome"><div><h1>Welcome back, <span>{{ $me->first_name }}!</span> 👋</h1><p>Let's find meaningful connections for your future.</p></div><div class="hm-dash26-quote"><i class="las la-quote-left"></i><strong>Every person has a story.<br>Find yours.</strong><img src="{{ static_asset('assets/img/member-reference-couple.svg') }}" alt=""></div></header>
+ <div class="hm-dash26-upper">
+  <div class="hm-dash26-left">
+   <div class="hm-dash26-stats">
+    <a href="{{ route('member.verification') }}"><i class="las la-check-circle green"></i><span>Profile Status<strong>{{ $verified?'Verified':'Pending' }}</strong><small>Identity verification</small></span></a>
+    <a href="{{ route('wallet.index') }}"><i class="las la-coins gold"></i><span>Coin Balance<strong>{{ number_format((int)($member?->remaining_interest??0)) }}</strong><small>View Usage</small></span></a>
+    <a href="{{ route('member.reference.packages') }}"><i class="las la-crown pink"></i><span>Current Package<strong>{{ $member?->package?->name??'Free' }}</strong><small>Upgrade Now</small></span></a>
+    <a href="{{ route('profile-viewers.index') }}"><i class="las la-eye purple"></i><span>Profile Views<strong>{{ number_format($dashboardViewerCount) }}</strong><small>This month</small></span></a>
+    <a href="{{ route('my_matched_profiles') }}"><i class="las la-heart pink"></i><span>Matches<strong>{{ number_format($dashboardMatchCount) }}</strong><small>AI suggested</small></span></a>
+   </div>
+   <section class="hm-ref26-card hm-dash26-recommend"><div class="hm-ref26-section-head"><h2>Recommended Matches For You</h2><a href="{{ route('my_matched_profiles') }}">View All</a></div><div class="hm-dash26-profiles">
+    @forelse($dashboardMatches as $match)
+    @php
+     $person=$match->matchedUser;$related=$person->member;$fallback=static_asset(($related?->gender??1)==1?'assets/img/avatar-place.png':'assets/img/female-avatar-place.png');
+     $photo=$person->photo&&show_profile_picture($person)?uploaded_asset($person->photo):$fallback;
+     $loc=$person->addresses->firstWhere('type','present');
+     $already=\App\Models\ProfileViewer::where('user_id',$person->id)->where('viewed_by',$me->id)->exists();
+     $canView=get_setting('full_profile_show_according_to_membership')!=1||$already||(package_validity($me->id)&&(int)get_remaining_package_value($me->id,'remaining_profile_viewer_view')>0);
+    @endphp
+    <article class="hm-dash26-person"><a href="{{ $canView?route('member_profile',$person->id):route('member.reference.packages') }}" class="hm-dash26-photo"><img src="{{ $photo }}" onerror="this.onerror=null;this.src='{{ $fallback }}'" loading="lazy" alt="{{ $person->first_name }} profile">
+     <span class="hm-dash26-heart"><i class="las la-heart"></i></span></a>
+     @php($matchActions=\App\Support\MemberMatchCardActions::between(auth()->user(),$person))
+     @include('frontend.member.partials.match_dropdown',['person'=>$person,'detailUrl'=>$detailUrl ?? route('member_profile',$person->id),'matchActions'=>$matchActions])
+     <strong>{{ $person->first_name }}@if($related?->birthday), {{ \Carbon\Carbon::parse($related->birthday)->age }}@endif</strong>
+     <small>{{ $loc?->city?->name??'Location not provided' }}</small><p><i class="las la-briefcase"></i> {{ $related?->job_title??'Profession not provided' }}</p><div><b><i class="las la-heart"></i> {{ round($match->match_percentage) }}% Match</b></div>
+     @php($detailUrl=$canView?route('member_profile',$person->id):route('member.reference.packages'))
+     @include('frontend.member.partials.match_actions',['person'=>$person,'detailUrl'=>$detailUrl,'matchActions'=>$matchActions])
+    </article>
+    @empty <p class="hm-ref26-empty">No compatible profiles are available yet. <a href="{{ route('profile_settings') }}">Update your preferences</a>.</p>@endforelse
+   </div></section>
+  </div>
+  <aside class="hm-ref26-card hm-dash26-profile"><img class="hm-dash26-avatar" src="{{ $avatar }}" alt="My profile"><h2>{{ $me->first_name }} {{ $me->last_name }} @if($verified)<span>✓ Verified</span>@endif</h2><p>{{ $member?->birthday?\Carbon\Carbon::parse($member->birthday)->age.' years · ':'' }}{{ $myAddress?->city?->name??'Location not provided' }}</p><p><i class="las la-briefcase"></i> {{ $member?->job_title??'Profession not provided' }}</p><a class="hm-ref26-primary" href="{{ route('profile_settings') }}"><i class="las la-edit"></i> Edit Profile</a><div class="hm-dash26-completion"><b>Profile Completion <span>{{ $pct }}%</span></b><div class="hm-ref26-track"><i style="width:{{ $pct }}%"></i></div><div class="hm-dash26-checks">@foreach([['Basic Information',filled($member?->birthday)],['Photos',filled($me->photo)],['Family Details',filled($member?->family_bio)],['Lifestyle Preferences',filled($member?->hobbies)],['Education & Career',filled($member?->job_title)],['Verification',$verified]] as $row)<span><i class="las {{ $row[1]?'la-check-circle':'la-circle' }}"></i>{{ $row[0] }}</span>@endforeach</div></div></aside>
+ </div>
+ <div class="hm-dash26-bottom">
+  <section class="hm-ref26-card"><div class="hm-ref26-section-head"><h2>Recent Activity</h2><a href="{{ route('frontend.notifications') }}">View All <i class="las la-angle-right"></i></a></div>@forelse($dashboardActivity as $notification)<div class="hm-dash26-activity"><i class="las la-bell"></i><div><strong>{{ \Illuminate\Support\Str::limit((string)data_get($notification->data,'message',data_get($notification->data,'title','Account update')),85) }}</strong><small>{{ $notification->created_at?->diffForHumans() }}</small></div></div>@empty<p class="hm-ref26-empty">No recent account activity.</p>@endforelse</section>
+  <section class="hm-ref26-card"><div class="hm-ref26-section-head"><h2>Your Compatibility Insights</h2><a href="{{ route('client.scope.portal') }}">See Details</a></div>@if($top)<div class="hm-dash26-compat"><div><div class="hm-dash26-ring" style="--progress:{{ $bestScore }}"><strong>{{ $bestScore }}%</strong></div><b>{{ $bestScore>=80?'High':'Potential' }} Compatibility</b><p>{{ \Illuminate\Support\Str::limit((string)($top->compatibility_explanation?:'Matching based on your preferences'),95) }}</p></div><ul>@forelse(array_slice((array)($top->compatibility_reasons??[]),0,5) as $reason)<li><i class="las la-check"></i> {{ is_string($reason)?\Illuminate\Support\Str::limit($reason,55):'Shared preference' }}</li>@empty<li>Review your shared preferences.</li>@endforelse</ul></div><a class="hm-ref26-primary" href="{{ route('client.scope.portal') }}">View Full Compatibility</a>@else<p class="hm-ref26-empty">Complete your preferences to view compatibility.</p>@endif</section>
+  <section class="hm-ref26-card"><div class="hm-ref26-section-head"><h2>Quick Actions</h2></div><div class="hm-dash26-actions">@foreach([['Search Profiles','member.listing','la-search'],['Send Interest','my_matched_profiles','la-heart'],['Messages','all.messages','la-comment-dots'],['Shortlist','my_shortlists','la-bookmark'],['Profile Boost','member.reference.packages','la-rocket'],['Buy Coins','custom_coins.form','la-coins'],['My Packages','member.reference.packages','la-crown'],['Earn Coins','member.referrals.index','la-gift'],['Help & Support','client.scope.support','la-headset']] as $a)<a href="{{ route($a[1]) }}"><i class="las {{ $a[2] }}"></i><span>{{ $a[0] }}</span></a>@endforeach</div></section>
+  <section class="hm-ref26-card"><div class="hm-ref26-section-head"><h2>Happy Stories</h2><a href="{{ route('member.reference.stories') }}">View All</a></div>@forelse($dashboardStories as $story)@php($photos=array_values(array_filter(explode(',',(string)$story->photos))))<a class="hm-dash26-story" href="{{ route('member.reference.story.details',\App\Support\StoryPublicId::encode((int)$story->id)) }}"><img src="{{ count($photos)?uploaded_asset($photos[0]):static_asset('assets/img/placeholder.jpg') }}" alt=""><div><p>{{ \Illuminate\Support\Str::limit(strip_tags((string)$story->details),135) }}</p><b>{{ $story->title }}</b></div></a>@empty<p class="hm-ref26-empty">No approved stories yet.</p>@endforelse</section>
+  <section class="hm-ref26-card"><div class="hm-ref26-section-head"><h2>Latest Blogs &amp; Articles</h2><a href="{{ route('member.reference.blogs') }}">View All</a></div><div class="hm-dash26-blogs">@forelse($dashboardBlogs as $blog)<a href="{{ route('member.reference.blog.details',$blog->slug) }}"><img src="{{ $blog->banner?uploaded_asset($blog->banner):static_asset('assets/img/default-blog.png') }}" alt=""><b>{{ $blog->title }}</b></a>@empty<p class="hm-ref26-empty">No published articles yet.</p>@endforelse</div></section>
+  <section class="hm-ref26-card hm-dash26-upgrade"><i class="las la-crown"></i><div><h2>Upgrade to Premium</h2><p>Unlock more matches, advanced filters and premium features.</p><a class="hm-ref26-primary" href="{{ route('member.reference.packages') }}">View Plans <i class="las la-arrow-right"></i></a></div></section>
+ </div>
+</div>
 @endsection
-
-
-
-
-
-
-
-

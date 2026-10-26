@@ -1,6 +1,6 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
-<main class="container py-5" style="max-width:700px"><h1 class="h3">User satisfaction survey</h1>
+<main class="container py-4 hm-satisfaction-page" style="max-width:800px"><div class="card hm-satisfaction-card"><div class="card-body p-4 p-lg-5"><h1 class="h3">User satisfaction survey</h1>
   @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
   @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
   <p>How likely are you to recommend Hamqadam to someone you know?</p>
@@ -12,5 +12,5 @@
   <div class="form-group"><label for="comment">Additional feedback (optional)</label><textarea id="comment" name="comment" class="form-control" rows="4" maxlength="1500">{{ old('comment') }}</textarea></div>
   <button class="btn btn-primary" type="submit">Submit feedback</button>
   </form><p class="mt-3 small text-muted">Limited to one response every 30 days.</p>
-</main>
+</div></div></main>
 @endsection

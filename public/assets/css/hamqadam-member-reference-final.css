@@ -1,0 +1,38 @@
+/* Hamqadam 2026 member reference continuation */
+.hm-reference{--accent:#a84469;--wine:#a84469;--line:#f8f6f7;color:#45364a;font-size:13px}
+.hm-reference .hm-reference-heading{margin:0 0 24px}.hm-reference .hm-ref-kicker{display:block;color:var(--accent);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:750;margin-bottom:8px}
+.hm-reference .hm-reference-heading h1{font-family:Georgia,serif;font-size:clamp(27px,3vw,37px);font-weight:750;color:#382739;margin:0 0 7px}
+.hm-reference .hm-reference-heading p{color:#8b7d8d;margin:0}
+.hm-reference .hm-ref-layout{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(250px,.9fr);align-items:start;gap:22px}
+.hm-reference .hm-ref-white{border:1px solid var(--line);background:#fff;border-radius:14px;padding:24px;margin-bottom:18px;box-shadow:0 7px 20px rgba(77,31,56,.035)}
+.hm-reference .hm-ref-white h2{font-size:17px;color:#423343;font-weight:750;margin:0 0 15px}
+.hm-reference .hm-ref-section-title{border-bottom:1px solid #ede7ea;padding-bottom:14px;margin-bottom:19px;display:flex;justify-content:space-between;flex-wrap:wrap;align-items:center}
+.hm-reference .hm-ref-section-title h2{margin:0}.hm-reference .hm-ref-section-title span{color:#978998;font-size:12px}
+.hm-reference .hm-ref-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.hm-reference label{font-size:12px;font-weight:650;color:#655467}.hm-reference label .form-control{margin-top:7px;border-radius:9px;background:white;border-color:#e9dfe8;min-height:42px}
+.hm-reference .hm-ref-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none!important;color:white!important;background:linear-gradient(135deg,#9f1239,#67051f)!important;border:1px solid #a84469;border-radius:9px;font-size:12px;font-weight:700;padding:12px 18px;cursor:pointer}
+.hm-reference .hm-ref-cta:disabled{opacity:.5;cursor:not-allowed}
+.hm-reference .hm-ref-entry{padding:13px 0;border-bottom:1px solid #ede7ea;display:flex;flex-direction:column;gap:4px}
+.hm-reference .hm-ref-entry:last-child{border:0}.hm-reference .hm-ref-entry b{color:#514252}.hm-reference .hm-ref-entry span,.hm-reference .hm-ref-entry small{color:#8f8191}
+.hm-reference .hm-ref-help{border-radius:12px;background:#f8f6f7;color:#a84469;padding:22px}.hm-reference .hm-ref-help>i{font-size:28px;color:#a84469}.hm-reference .hm-ref-help b{display:block;margin:9px 0}
+.hm-reference .hm-ref-plans{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px}
+.hm-reference .hm-ref-plan{border:1px solid #ede7ea;background:white;border-radius:14px;padding:24px;text-align:center;display:flex;flex-direction:column;min-height:400px}
+.hm-reference .hm-ref-plan.is-current{border:2px solid #a84469;box-shadow:0 8px 25px #e6337820}
+.hm-reference .hm-ref-plan-icon{border-radius:50%;background:#f8f6f7;color:#a84469;width:58px;height:58px;display:grid;place-items:center;font-size:25px;margin:0 auto 14px}
+.hm-reference .hm-ref-plan h2{font-size:20px;font-weight:750}.hm-reference .hm-ref-price{font-size:25px;font-weight:800;color:#a84469}.hm-reference .hm-ref-plan p{color:#988798;font-size:12px}
+.hm-reference .hm-ref-plan ul{list-style:none;text-align:left;padding:0;margin:10px 0 20px;flex:1}.hm-reference .hm-ref-plan li{padding:9px 0;border-bottom:1px solid #ede7ea;font-size:12px}.hm-reference .hm-ref-plan li i{color:#32a886;margin-right:5px}
+.hm-reference .hm-ref-plan-current{color:#29946e;font-weight:800;padding:13px}
+.hm-reference .hm-ref-json{white-space:pre-wrap;overflow-wrap:anywhere;background:#f8f6f7;padding:10px;border:1px solid #ede7ea;border-radius:7px;max-height:300px;overflow:auto;font-size:11px}
+.hm-reference .hm-ref-search{display:flex;gap:12px;margin-bottom:23px}.hm-reference .hm-ref-search .form-control{border-radius:10px;flex:1}
+.hm-reference .hm-ref-articles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px}.hm-reference .hm-ref-article{background:white;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.hm-reference .hm-ref-article>a{display:block;height:195px;background:#f8f6f7;overflow:hidden}.hm-reference .hm-ref-article img{width:100%;height:100%;object-fit:cover}
+.hm-reference .hm-ref-article>div:not(.hm-ref-story-placeholder){padding:20px}.hm-reference .hm-ref-article small{color:#a84469}.hm-reference .hm-ref-article h2{font-size:17px;line-height:1.4;margin:9px 0}.hm-reference .hm-ref-article h2 a{color:#49374a;text-decoration:none}
+.hm-reference .hm-ref-article p{line-height:1.7;color:#8a7f8b}.hm-reference .hm-ref-article-link{color:#a84469;font-weight:750}
+.hm-reference .hm-ref-story-top{display:flex;align-items:center;gap:22px;background:linear-gradient(110deg,#f8f6f7,#fff);padding:25px;border-radius:14px;margin-bottom:24px;border:1px solid #ede7ea}
+.hm-reference .hm-ref-story-top>i{font-size:47px;color:#a84469}.hm-reference .hm-ref-story-top h2{font-size:20px}.hm-reference .hm-ref-story-top .hm-ref-cta{margin-left:auto;white-space:nowrap}
+.hm-reference .hm-ref-story-placeholder{height:195px;display:grid;place-items:center;color:#a84469;font-size:45px}
+.hm-reference .hm-ref-settings-list>a{display:flex;align-items:center;gap:14px;padding:17px 5px;border-bottom:1px solid #ede7ea;text-decoration:none!important;color:#47384b}
+.hm-reference .hm-ref-settings-list>a>i:first-child{color:#a84469;font-size:24px;width:30px}.hm-reference .hm-ref-settings-list>a div{flex:1}.hm-reference .hm-ref-settings-list>a b{display:block}.hm-reference .hm-ref-settings-list>a small{display:block;color:#918290;margin-top:4px}
+@media(max-width:1199px){.hm-reference .hm-ref-plans{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:850px){.hm-reference .hm-ref-layout{grid-template-columns:1fr}.hm-reference .hm-ref-articles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:570px){.hm-reference .hm-ref-plans,.hm-reference .hm-ref-articles,.hm-reference .hm-ref-fields{grid-template-columns:1fr}.hm-reference .hm-ref-white{padding:16px}.hm-reference .hm-ref-story-top{flex-wrap:wrap}.hm-reference .hm-ref-story-top .hm-ref-cta{margin-left:0;width:100%}}

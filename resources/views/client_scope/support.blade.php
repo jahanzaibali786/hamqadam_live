@@ -1,5 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
+@include('frontend.member.partials.design_header', ['title' => "Support & Feedback", 'subtitle' => "Contact our team and track your requests.", 'icon' => "la-headset"])
+
 <main class="container py-5"><h1 class="h3">Support Center</h1>
 @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
 @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif

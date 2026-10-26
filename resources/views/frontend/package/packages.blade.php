@@ -1,5 +1,7 @@
 @extends('frontend.layouts.app')
 @section('content')
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-four-pages-20261024.css') }}?v=1">
+<div class="hq-ref24 hq-ref24-packages">
 @php
     $registrationPackage = \App\Support\RegistrationReward::registrationPackage();
     $effectiveUser = Auth::user();
@@ -37,7 +39,7 @@
 <section class="hq-package-page hq-reference-package-page py-5">
     <div class="container">
         <div class="hq-reference-notice mb-4 text-left">
-            <div class="fw-700 mb-1">{{ translate('Hamqadam Packages') }}</div>
+            <div class="fw-700 mb-1">{{ translate('Standard National Rates • No Hidden Charges') }}</div>
             <div class="fs-13">
                 {{ translate('The') }} {{ $registrationPackage?->name ?? translate('registration package') }} {{ translate('package is applied automatically after registration.') }}
             </div>
@@ -232,6 +234,7 @@
         </div>
     </div>
 </section>
+</div>
 @endsection
 
 @section('modal')

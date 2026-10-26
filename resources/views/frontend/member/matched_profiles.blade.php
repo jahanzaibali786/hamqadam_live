@@ -1,217 +1,99 @@
 @extends('frontend.layouts.member_panel')
+
 @section('panel_content')
-    <div class="card">
-        @php
-          $canRefresh = true;
-          if(Auth::user()->match_refresh_updated_at){
-            $nextRefresh = \Carbon\Carbon::parse(Auth::user()->match_refresh_updated_at)->addMinutes(30);
-            if($nextRefresh->isFuture()){
-                $canRefresh = false;
-            }
-          }
-        @endphp
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="mb-0 h6">{{ translate('Matched Profiles') }}</h5>
-          @if($canRefresh)
-              <a href="{{ route('match.refresh') }}"
-                class="btn btn-soft-primary btn-icon btn-circle btn-sm"
-                title="{{ translate('Refresh') }}">
-                  <i class="las la-sync"></i>
-              </a>
-          @else
-              <button class="btn btn-soft-secondary btn-icon btn-circle btn-sm"
-                      disabled
-                      title="{{ translate('You can refresh after 30 minutes') }}">
-                  <i class="las la-sync"></i>
-              </button>
-          @endif
+<div class="hm-four">
+    @if ($errors->has('proposal'))
+        <div class="alert alert-danger">{{ $errors->first('proposal') }}</div>
+    @endif
+
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    <header class="hm-four-head">
+        <div>
+            <h1><i class="las la-user-friends"></i> Matched Profiles</h1>
+            <p>People who are a great match based on your profile and preferences.</p>
         </div>
-        <div class="card-body">
-            <table class="table aiz-table mb-0">
-              <thead>
-                  <tr>
-                      <th>#</th>
-                      <th>{{translate('Image')}}</th>
-                      <th>{{translate('Name')}}</th>
-                      <th data-breakpoints="lg">{{translate('Compatibility')}}</th>
-                      <th data-breakpoints="lg">{{translate('Age')}}</th>
-                      @if(get_setting('member_spiritual_and_social_background_section') == 'on')
-                        <th data-breakpoints="lg">{{translate('Religion')}}</th>
-                      @endif
-                      @if(get_setting('member_present_address_section') == 'on')
-                        <th data-breakpoints="lg">{{translate('Location')}}</th>
-                      @endif
-                      @if(get_setting('member_language_section') == 'on')
-                        <th data-breakpoints="lg">{{translate('Mother  Tongue')}}</th>
-                      @endif
-                      <th class="text-right" data-breakpoints="lg">{{translate('Options')}}</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  @foreach ($matchedProfiles as $key => $matchedProfile)
-                      @php $matchedUser = $matchedProfile->matchedUser ?: $matchedProfile->user; @endphp
-                      @if($matchedUser != null)
-                      <tr>
-                          <td>{{ ($key+1) + ($matchedProfiles->currentPage() - 1)*$matchedProfiles->perPage() }}</td>
-                          <td>
-                            <a
-                              @if(get_setting('full_profile_show_according_to_membership') == 1 && Auth::user()->membership == 1)
-                                  href="javascript:void(0);" onclick="package_update_alert()"
-                              @else
-                                  href="{{ route('member_profile', $matchedUser->id) }}"
-                              @endif
-                              class="text-reset c-pointer"
-                            >
-                                @if(uploaded_asset($matchedUser->photo) != null)
-                                    <img class="img-fit w-45px h-45px" src="{{ uploaded_asset($matchedUser->photo) }}" alt="{{translate('photo')}}">
-                                @else
-                                    <img class="img-fit w-45px h-45px" src="{{ static_asset('assets/img/avatar-place.png') }}" alt="{{translate('photo')}}">
-                                @endif
-                            </a>
-                          </td>
-                          <td>
-                              <a
-                                @if(get_setting('full_profile_show_according_to_membership') == 1 && Auth::user()->membership == 1)
-                                    href="javascript:void(0);" onclick="package_update_alert()"
-                                @else
-                                    href="{{ route('member_profile', $matchedUser->id) }}"
-                                @endif
-                                class="text-reset c-pointer"
-                              >
-                                {{ $matchedUser->first_name.' '.$matchedUser->last_name }}
-                            </a>
-                          </td>
-                          <td>
-                            <div class="d-flex align-items-center">
-                              <span class="badge badge-inline badge-primary mr-2">{{ (int) $matchedProfile->match_percentage }}%</span>
-                              <div class="progress flex-grow-1" style="height: 6px; min-width: 90px;">
-                                <div class="progress-bar bg-primary" style="width: {{ (int) $matchedProfile->match_percentage }}%"></div>
-                              </div>
+        <aside>Better matches lead to brighter futures.</aside>
+    </header>
+
+    <div class="hm-four-layout">
+        <main>
+            <nav class="hm-four-tabs" aria-label="Match filters">
+                <a class="{{ !request('tab') || request('tab') === 'all' ? 'active' : '' }}" href="{{ route('my_matched_profiles') }}">All Matches ({{ $matchedProfiles->total() }})</a>
+                <a class="{{ request('tab') === 'high' ? 'active' : '' }}" href="{{ route('my_matched_profiles', ['tab' => 'high']) }}">High Compatibility</a>
+                <a class="{{ request('tab') === 'new' ? 'active' : '' }}" href="{{ route('my_matched_profiles', ['tab' => 'new']) }}">New Matches</a>
+                <a class="{{ request('tab') === 'recent' ? 'active' : '' }}" href="{{ route('my_matched_profiles', ['tab' => 'recent']) }}">Recently Active</a>
+            </nav>
+
+            <div class="hm-four-matches">
+                @forelse ($matchedProfiles as $match)
+                    @php
+                        $person = $match->matchedUser;
+                    @endphp
+
+                    @if ($person)
+                        @php
+                            $member = $person->member;
+                            $fallback = static_asset(($member?->gender ?? 1) == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png');
+                            $photo = $person->photo && show_profile_picture($person) ? uploaded_asset($person->photo) : $fallback;
+                            $allowed = get_setting('full_profile_show_according_to_membership') != 1 || auth()->user()->membership != 1;
+                            $detailUrl = $allowed ? route('member_profile', $person->id) : route('member.reference.packages');
+                            $matchActions = \App\Support\MemberMatchCardActions::between(auth()->user(), $person);
+                        @endphp
+
+                        <article class="hm-four-profile">
+                            <div class="hm-four-photo">
+                                <img src="{{ $photo }}" alt="{{ $person->first_name }}" loading="lazy"
+                                     onerror="this.onerror=null;this.src='{{ $fallback }}'">
+                                <b>{{ round($match->match_percentage) }}% Match</b>
                             </div>
-                            <div class="fs-11 opacity-70 mt-1">
-                              {{ $matchedProfile->compatibility_explanation ?: translate('Preference-based compatibility match') }}
+                            @include('frontend.member.partials.match_dropdown', [
+                                'person' => $person,
+                                'detailUrl' => $detailUrl,
+                                'matchActions' => $matchActions
+                            ])
+                            <div>
+                                <h2>{{ $person->first_name }} {{ $person->last_name }}</h2>
+                                <p><i class="las la-map-marker"></i>{{ $person->addresses->firstWhere('type', 'present')?->city?->name ?? 'Location not provided' }}</p>
+                                <p><i class="las la-briefcase"></i>{{ $member?->job_title ?? 'Profession not provided' }}</p>
+                                <p><i class="las la-graduation-cap"></i>{{ $person->education->last()?->degree ?? 'Education not provided' }}</p>
+                                @include('frontend.member.partials.match_actions', [
+                                    'person' => $person,
+                                    'detailUrl' => $detailUrl,
+                                    'matchActions' => $matchActions
+                                ])
                             </div>
-                          </td>
-                          <td>{{ \Carbon\Carbon::parse($matchedUser->member->birthday)->age }}</td>
-                          @if(get_setting('member_spiritual_and_social_background_section') == 'on')
-                          <td>
-                            @if(!empty($matchedUser->spiritual_backgrounds->religion_id))
-                                {{ $matchedUser->spiritual_backgrounds->religion->name }}
-                            @endif
-                          </td>
-                          @endif
-                          @if(get_setting('member_present_address_section') == 'on')
-                          <td>
-                            @php
-                                $present_address = $matchedUser->addresses?->where('type','present')->first();
-                            @endphp
-                            @if(!empty($present_address->country_id))
-                                {{ $present_address->country->name }}
-                            @endif
-                          </td>
-                          @endif
-                          @if(get_setting('member_language_section') == 'on')
-                          <td>
-                            @if($matchedUser->member->mothere_tongue != null)
-                                {{ \App\Models\MemberLanguage::where('id',$matchedUser->member->mothere_tongue)->first()->name }}
-                            @endif
-                          </td>
-                          @endif
-                          <td class="text-right">
-                              @php
-                                $expressed_interest = \App\Models\ExpressInterest::where('user_id', $matchedUser->id)->where('interested_by',Auth::user()->id)->first();
-                                $received_expressed_interest = \App\Models\ExpressInterest::where('user_id', Auth::user()->id)
-                                                                ->where('interested_by', $matchedUser->id)
-                                                                ->first();
-                              @endphp
-                              @if(empty($expressed_interest) && empty($received_expressed_interest))
-                                <a href="javascript:void(0);" onclick="express_interest({{ $matchedUser->id }})" id="interest_a_id_{{ $matchedUser->id }}" class="btn btn-soft-primary btn-icon btn-circle btn-sm" title="{{ translate('Express Interest') }}">
-                                    <i class="las la-heart"></i>
-                                </a>
-                              @elseif($received_expressed_interest)
-                                @if($received_expressed_interest->status == 0)
-                                  <a href="{{ route('interest_requests') }}" class="btn btn-soft-success btn-icon btn-circle btn-sm" title="{{ translate('Response to Interest') }}">
-                                    <i class="las la-heart"></i>
-                                  </a>
-                                @else
-                                  <a href="javascript:void(0);" class="btn btn-soft-success btn-icon btn-circle btn-sm" title="{{ translate('You Accepted Interest of This Member') }}">
-                                    <i class="las la-heart"></i>
-                                  </a>
-                                @endif
-                              @else
-                                <a href="javascript:void(0);" class="btn btn-soft-success btn-icon btn-circle btn-sm" title="{{ translate('Interest Expressed') }}">
-                                    <i class="las la-heart"></i>
-                                </a>
-                              @endif
-                          </td>
-                      </tr>
+                        </article>
                     @endif
-
-                  @endforeach
-              </tbody>
-            </table>
-            <div class="aiz-pagination">
-                {{ $matchedProfiles->links() }}
+                @empty
+                    <p class="hm-four-empty">No compatible profiles match these filters.</p>
+                @endforelse
             </div>
-        </div>
+
+            {{ $matchedProfiles->links() }}
+        </main>
+
+        <aside>
+            <section class="hm-four-panel">
+                <h2>Match Insights</h2>
+                <div class="hm-four-insight">♥ <strong>{{ $matchedProfiles->total() }}</strong><small>Matching profiles in current filter</small></div>
+                <a href="{{ route('client.scope.portal') }}">View Compatibility Analysis →</a>
+            </section>
+            <section class="hm-four-panel">
+                <h2>Filters</h2>
+                <form action="{{ route('my_matched_profiles') }}" method="GET">
+                    <input type="hidden" name="tab" value="{{ request('tab', 'all') }}">
+                    <label>Search Matches<input name="search" placeholder="Name" value="{{ request('search') }}"></label>
+                    <label>Minimum Age<input type="number" name="min_age" min="18" max="90" value="{{ request('min_age', 20) }}"></label>
+                    <label>Maximum Age<input type="number" name="max_age" min="18" max="90" value="{{ request('max_age', 35) }}"></label>
+                    <label class="hm-four-check"><input type="checkbox" name="verified" value="1" @checked(request('verified'))> Verified Profiles Only</label>
+                    <button type="submit">Apply Filters</button>
+                </form>
+            </section>
+            <section class="hm-four-promo"><a href="{{ route('member.reference.packages') }}">Upgrade to Premium →</a></section>
+        </aside>
     </div>
-@endsection
-
-@section('modal')
-  @include('modals.confirm_modal')
-  @include('modals.package_update_alert_modal')
-@endsection
-
-@section('script')
-<script type="text/javascript">
-
-  //package Validity
-  var package_validity = false;
-  @if(package_validity(Auth::user()->id))
-      package_validity = true;
-  @endif
-
-  function express_interest(id)
-  {
-    var user_id = {{ Auth::user()->id }}
-    $.post('{{ route('user.remaining_package_value') }}', {_token:'{{ csrf_token() }}', id:user_id, colmn_name:'remaining_interest' }, function(data){
-        var remaining_interest = data;
-        if(!package_validity || remaining_interest < 1){
-            $('.package_update_alert_modal').modal('show');
-        }
-        else{
-          $('.confirm_modal').modal('show');
-          $("#confirm_modal_title").html("{{ translate('Confirm Express Interest') }}");
-          $("#confirm_modal_content").html("<p class='fs-14'>{{translate('Coin Balance')}}: "+remaining_interest+" {{translate('Coins')}}</p><small class='text-danger fs-12'>{{translate('**N.B. Expressing an interest will cost 1 coin**')}}</small>");
-          $("#confirm_button").attr("onclick","do_express_interest("+id+")");
-        }
-    });
-  }
-
-  function do_express_interest(id){
-    $('.confirm_modal').modal('hide');
-    $("#interest_a_id_"+id).removeAttr("onclick");
-    $.post('{{ route('express-interest.store') }}',
-      {
-        _token: '{{ csrf_token() }}',
-        id: id
-      },
-      function (data) {
-        if (data) {
-          $("#interest_a_id_"+id).attr("class","btn btn-soft-success btn-icon btn-circle btn-sm");
-          $("#interest_a_id_"+id).attr("title","{{ translate('Interest Expressed') }}");
-          AIZ.plugins.notify('success', '{{translate('Interest Expressed Sucessfully')}}');
-        }
-        else {
-            AIZ.plugins.notify('danger', '{{translate('Something went wrong')}}');
-        }
-      }
-    );
-  }
-
-  function package_update_alert(){
-    $('.package_update_alert_modal').modal('show');
-  }
-
-</script>
+</div>
 @endsection

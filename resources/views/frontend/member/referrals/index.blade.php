@@ -1,61 +1,38 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
-<div class="container-fluid py-3">
-    <h1 class="h3 mb-3">{{ translate('Refer Friends & Earn Coins') }}</h1>
-    @if(session('success'))<div class="alert alert-success" role="status">{{ session('success') }}</div>@endif
-    <div class="row mb-3">
-        <div class="col-md-4 mb-2"><div class="card h-100"><div class="card-body"><div class="text-muted">{{ translate('Referred members') }}</div><div class="h2">{{ $summary['total_referrals'] }}</div></div></div></div>
-        <div class="col-md-4 mb-2"><div class="card h-100"><div class="card-body"><div class="text-muted">{{ translate('Rewarded referrals') }}</div><div class="h2">{{ $summary['rewarded_referrals'] }}</div></div></div></div>
-        <div class="col-md-4 mb-2"><div class="card h-100"><div class="card-body"><div class="text-muted">{{ translate('Coins earned') }}</div><div class="h2">{{ $summary['coins_earned'] }}</div></div></div></div>
-    </div>
-    <div class="card mb-4"><div class="card-body">
-        <h2 class="h5">{{ translate('Invite with your referral link') }}</h2>
-        <p>{{ translate('Earn coins when a referred member completes registration, verifies their email and meets the reward eligibility rules.') }}</p>
-        <label for="referral-code">{{ translate('Your referral code') }}</label>
-        <input id="referral-code" class="form-control mb-2" readonly value="{{ $summary['referral_code'] }}">
-        <label for="referral-share-url">{{ translate('Your referral link') }}</label>
-        <div class="input-group"><input id="referral-share-url" class="form-control" readonly value="{{ $summary['referral_url'] }}"><div class="input-group-append"><button class="btn btn-primary" type="button" id="copy-referral-url">{{ translate('Copy') }}</button></div></div>
-        <span id="copy-referral-message" class="small text-muted" role="status"></span>
-        @if(!$summary['reward_rule']['active'])
-            <div class="alert alert-info mt-3">{{ translate('Referral coin rewards are not enabled by the administrator yet. Your referrals are still tracked.') }}</div>
-        @else
-            <p class="mt-3 mb-0">{{ $summary['reward_rule']['coins_per_referral'] }} {{ translate('coins per eligible referral') }}. {{ translate('Maximum rewarded referrals') }}: {{ $summary['reward_rule']['max_rewards_per_member'] }}.</p>
-        @endif
-    </div></div>
-    <div class="card mb-4"><div class="card-body">
-        <h2 class="h5">{{ translate('Referred members') }}</h2>
-        <div class="table-responsive"><table class="table"><thead><tr><th>{{ translate('Member') }}</th><th>{{ translate('Joined') }}</th><th>{{ translate('Email verification') }}</th><th>{{ translate('Reward') }}</th></tr></thead><tbody>
-        @forelse($referrals as $person)
-            @php($paid = in_array((int)$person->id, $rewardedIds, true))
-            <tr><td>{{ $person->first_name }} {{ $person->last_name }}</td><td>{{ $person->created_at?->format('d M Y') }}</td><td>{{ $person->email_verified_at ? translate('Verified') : translate('Pending') }}</td><td>{{ $paid ? translate('Credited') : translate('Pending eligibility') }}</td></tr>
-        @empty <tr><td colspan="4">{{ translate('No referrals yet.') }}</td></tr>
-        @endforelse
-        </tbody></table></div>{{ $referrals->links() }}
-    </div></div>
-    <div class="card mb-4"><div class="card-body">
-        <h2 class="h5">{{ translate('Referral coin reward history') }}</h2>
-        <div class="table-responsive"><table class="table"><thead><tr><th>{{ translate('Date') }}</th><th>{{ translate('Reward') }}</th><th>{{ translate('Reference') }}</th></tr></thead><tbody>
-        @forelse($history as $reward)
-            <tr><td>{{ $reward->created_at?->format('d M Y H:i') }}</td><td>+{{ $reward->coins }} {{ translate('coins') }}</td><td>#{{ $reward->reference_id }}</td></tr>
-        @empty <tr><td colspan="3">{{ translate('No rewards credited yet.') }}</td></tr>
-        @endforelse
-        </tbody></table></div>{{ $history->links() }}
-    </div></div>
-    @if($commissions->isNotEmpty())
-      <div class="card"><div class="card-body"><h2 class="h5">{{ translate('Legacy wallet referral commissions') }}</h2><p class="small text-muted">{{ translate('Wallet commissions are shown separately from coin rewards.') }}</p><div class="table-responsive"><table class="table"><tbody>
-        @foreach($commissions as $commission)<tr><td>{{ $commission->created_at?->format('d M Y') }}</td><td>{{ $commission->amount ?? $commission->balance ?? '-' }}</td></tr>@endforeach
-      </tbody></table></div></div></div>
-    @endif
+@php
+ $rule=$summary['reward_rule'];$earned=(int)$summary['coins_earned'];
+ $total=(int)$summary['total_referrals'];$rewarded=(int)$summary['rewarded_referrals'];
+ $pending=(int)$summary['pending_referrals'];
+ $url=$summary['referral_url'];
+@endphp
+<div class="hm-ref26 hm-referral26">
+ <header class="hm-referral26-head"><div class="hm-referral26-title"><i class="las la-users"></i><div><h1>Referral Program</h1><p>Invite friends and earn coins. Help others find their perfect match.</p></div></div><div class="hm-referral26-quote"><i class="las la-quote-left"></i> More people,<br> more happy stories. <img src="{{ static_asset('assets/img/member-reference-couple.svg') }}" alt=""></div></header>
+ @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+ <div class="hm-referral26-grid">
+  <main>
+   <section class="hm-referral26-hero"><div><h2>Earn Coins by Inviting Friends</h2><p>Share your unique link and earn coins when your friends join Hamqadam and meet the verified referral criteria.</p><a class="hm-ref26-primary" href="#hm-referral26-link">Invite Now <i class="las la-arrow-right"></i></a></div><div class="hm-referral26-hero-art"><i class="las la-gift"></i><i class="las la-coins"></i><strong>Invite<br>Earn<br>Connect</strong></div></section>
+   <section class="hm-ref26-card hm-referral26-link" id="hm-referral26-link"><h2><i class="las la-link"></i> Your Referral Link</h2><p>Share your link with friends on WhatsApp, Facebook or anywhere.</p><div class="hm-referral26-share"><input id="referral-share-url" value="{{ $url }}" readonly aria-label="Referral link"><button type="button" id="copy-referral-url"><i class="las la-copy"></i> Copy Link</button></div><div class="hm-referral26-social"><a href="https://api.whatsapp.com/send?text={{ urlencode('Join Hamqadam: '.$url) }}" target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp"><i class="lab la-whatsapp"></i></a><a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($url) }}" target="_blank" rel="noopener noreferrer" aria-label="Share on Facebook"><i class="lab la-facebook"></i></a><a href="mailto:?subject={{ rawurlencode('Join Hamqadam') }}&body={{ rawurlencode($url) }}" aria-label="Share by email"><i class="las la-envelope"></i></a></div><small id="copy-referral-message" role="status"></small></section>
+   <div class="hm-referral26-reward-steps"><article><i class="las la-user-plus"></i><b>Friend Signs Up</b><small>Referral tracked on registration</small></article><article><i class="las la-id-card"></i><b>Completes Registration</b><small>Eligibility checks apply</small></article><article><i class="las la-crown"></i><b>You Earn Coins</b><small>{{ $rule['active']?$rule['coins_per_referral'].' registration coins':'Registration rewards disabled' }}</small></article></div>
+   <section class="hm-ref26-card" style="margin:12px 0;padding:17px"><h2>Two Ways to Earn Referral Coins</h2><div class="d-flex flex-wrap justify-content-between" style="gap:15px"><div><strong>Registration Reward</strong><p>{{ $rule['active']?$rule['coins_per_referral'].' coins after eligible registration':'Currently disabled' }}</p></div><div><strong>Paid Package Activation Reward</strong><p>{{ $summary['package_reward_rule']['active']?$summary['package_reward_rule']['coins_per_activation'].' coins for the first non-Basic paid package':'Currently disabled' }}</p></div></div><small>Package rewards are credited to the referring member after confirmed paid activation, once per referred member. Basic/free packages are excluded.</small></section>
+   @unless($rule['active'] || $summary['package_reward_rule']['active'])<p class="hm-referral26-notice">Coin rewards are not currently enabled by the administrator. Referrals continue to be tracked.</p>@endunless
+   <section class="hm-ref26-card hm-referral26-table"><div class="hm-ref26-section-head"><h2><i class="las la-users"></i> Recent Referrals</h2><a href="{{ route('my_referred_users') }}">View All</a></div><div class="hm-referral26-overflow"><table><thead><tr><th>#</th><th>Name</th><th>Join Date</th><th>Profile Status</th><th>Registration</th><th>Package Activation</th><th>Status</th></tr></thead><tbody>@forelse($referrals as $person)@php($paid=in_array((int)$person->id,$rewardedIds,true))<tr><td>{{ $referrals->firstItem()+$loop->index }}</td><td><span class="hm-referral26-name"><img src="{{ static_asset('assets/img/avatar-place.png') }}" onerror="this.onerror=null;this.src='{{ static_asset('assets/img/avatar-place.png') }}'" alt="">{{ $person->first_name }} {{ $person->last_name }}</span></td><td>{{ $person->created_at?->format('d M Y') }}</td><td>{{ $person->email_verified_at?'Email verified':'Verification pending' }}</td><td>{{ $paid?'Credited':'—' }}</td><td>{{ in_array((int)$person->id,$packageRewardedIds,true)?'Credited':'—' }}</td><td><span class="hm-referral26-status {{ $paid?'paid':'' }}">{{ $paid?'Credited':'Pending' }}</span></td></tr>@empty<tr><td colspan="7">No referrals yet. Share your link to invite friends.</td></tr>@endforelse</tbody></table></div>{{ $referrals->links() }}</section>
+   <section class="hm-ref26-card hm-referral26-history"><div class="hm-ref26-section-head"><h2>Referral Reward History</h2><a href="{{ route('my_referral_earnings') }}">View History</a></div><div class="hm-referral26-overflow"><table><thead><tr><th>Credited</th><th>Coins</th><th>Reward Type</th><th>Referral Reference</th></tr></thead><tbody>@forelse($history as $reward)<tr><td>{{ $reward->created_at?->format('d M Y H:i') }}</td><td>+{{ $reward->coins }} Coins</td><td>{{ $reward->event_key === 'referral_package_activated' ? 'Paid Package' : 'Registration' }}</td><td>#{{ $reward->reference_id }}</td></tr>@empty<tr><td colspan="4">No credited rewards yet.</td></tr>@endforelse</tbody></table></div>{{ $history->links() }}</section>
+  </main>
+  <aside>
+   <section class="hm-ref26-card hm-referral26-earnings"><div class="hm-ref26-section-head"><h2><i class="las la-wallet"></i> Your Earnings</h2><a href="{{ route('my_referral_earnings') }}">View Earning History</a></div><p>Total Coins Earned</p><strong><i class="las la-coins"></i> {{ number_format($earned) }} Coins</strong><p>Registration: {{ number_format($summary['registration_coins_earned']) }} coins · Paid packages: {{ number_format($summary['package_coins_earned']) }} coins</p><div class="hm-referral26-metrics"><span><b>{{ $total }}</b><small>From Signups</small></span><span><b>{{ $rewarded }}</b><small>Rewarded</small></span><span><b>{{ $pending }}</b><small>Pending</small></span></div></section>
+   <section class="hm-ref26-card hm-referral26-stats"><h2><i class="las la-chart-bar"></i> Referral Statistics</h2><div><span><i class="las la-paper-plane"></i><strong>{{ $total }}</strong><small>Total Invites</small></span><span><i class="las la-users"></i><strong>{{ $total }}</strong><small>Signed Up</small></span><span><i class="las la-check-circle"></i><strong>{{ $rewarded }}</strong><small>Rewarded Referrals</small></span><span><i class="las la-clock"></i><strong>{{ $pending }}</strong><small>Pending Eligibility</small></span></div></section>
+   <section class="hm-ref26-card hm-referral26-steps"><h2><i class="las la-question-circle"></i> How It Works?</h2>@foreach([['Share Your Link','Invite friends using the unique link above.'],['They Sign Up','Your friend joins through your referral.'],['Eligibility Review','Their registration and verification are checked.'],['You Earn Coins','Coins are credited according to active rules.']] as $step)<div><b>{{ $loop->iteration }}</b><span><strong>{{ $step[0] }}</strong><small>{{ $step[1] }}</small></span></div>@endforeach</section>
+   <section class="hm-referral26-cta"><i class="las la-gift"></i><div><b>Invite More, Earn More!</b><small>Share your unique referral link with friends.</small></div><a href="#hm-referral26-link" aria-label="Invite now"><i class="las la-arrow-right"></i></a></section>
+  </aside>
+ </div>
 </div>
 @endsection
 @section('script')
 <script>
-document.getElementById('copy-referral-url')?.addEventListener('click', function () {
-    const input = document.getElementById('referral-share-url');
-    const message = document.getElementById('copy-referral-message');
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(input.value).then(() => { message.textContent = 'Link copied.'; }, () => { input.select(); message.textContent = 'Select and copy the link.'; });
-    } else { input.select(); message.textContent = 'Select and copy the link.'; }
+document.getElementById('copy-referral-url')?.addEventListener('click',async()=>{
+ const el=document.getElementById('referral-share-url'),msg=document.getElementById('copy-referral-message');
+ try{if(!navigator.clipboard||!window.isSecureContext)throw Error('unsupported');await navigator.clipboard.writeText(el.value);msg.textContent='Referral link copied.';}catch(_){el.select();msg.textContent='Link selected. Press Ctrl+C to copy.';}
 });
 </script>
 @endsection
