@@ -360,6 +360,9 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
         Route::post('/matched-profiles/{member}/connection/proposal/generate', [\App\Http\Controllers\MemberWorkflowController::class, 'aiDraft'])->whereNumber('member')->middleware('throttle:3,1')->name('member.workflow.proposal.generate');
         Route::post('/matched-profiles/{member}/connection/proposal', [\App\Http\Controllers\MemberWorkflowController::class, 'proposal'])->whereNumber('member')->name('member.workflow.proposal');
         Route::post('/connection/proposals/{proposal}/respond', [\App\Http\Controllers\MemberWorkflowController::class, 'respondProposal'])->whereNumber('proposal')->name('member.workflow.proposal.respond');
+        Route::post('/connection/proposals/{proposal}/meetings', [\App\Http\Controllers\MemberWorkflowController::class, 'meeting'])->whereNumber('proposal')->name('member.workflow.meeting');
+        Route::post('/connection/meetings/{meeting}/notes', [\App\Http\Controllers\MemberWorkflowController::class, 'meetingNotes'])->whereNumber('meeting')->name('member.workflow.meeting.notes');
+        Route::post('/connection/proposals/{proposal}/relationship', [\App\Http\Controllers\MemberWorkflowController::class, 'relationshipStatus'])->whereNumber('proposal')->name('member.workflow.relationship');
         Route::post('/connection/preferences', [\App\Http\Controllers\MemberWorkflowController::class, 'preferences'])->name('member.workflow.preferences');
         Route::get('/matched-profiles/{member}/why', [\App\Http\Controllers\MemberMatchDetailController::class, 'show'])->whereNumber('member')->name('member.match.why');
         Route::post('/matched-profiles/{member}/proposal', [\App\Http\Controllers\MemberMatchActionController::class, 'propose'])->whereNumber('member')->name('member.match.propose');
