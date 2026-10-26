@@ -16,6 +16,7 @@
                 <button type="submit" class="hm-match-menu-item" role="menuitem"><i class="las la-heart"></i> Send Interest / Proposal</button>
             </form>
         @endif
+        <a class="hm-match-menu-item" role="menuitem" href="{{ route('member.workflow.show', $targetId) }}"><i class="las la-envelope-open"></i> Interest & Proposal Workflow</a>
         <a class="hm-match-menu-item" role="menuitem" href="{{ $detailUrl }}"><i class="las la-user"></i> View Profile</a>
         <a class="hm-match-menu-item" role="menuitem" href="{{ route('member.match.why', $targetId) }}"><i class="las la-magic"></i> Why This Match</a>
         @if ($status === 1)
