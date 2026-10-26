@@ -272,6 +272,7 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::get('/members/{member}', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'state'])->whereNumber('member')->name('state');
     Route::post('/members/{member}/interest', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'interest'])->whereNumber('member')->middleware('throttle:10,1')->name('interest');
     Route::post('/interests/{interest}/respond', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'respondInterest'])->whereNumber('interest')->name('interest.respond');
+    Route::post('/members/{member}/proposal/generate', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'aiDraft'])->whereNumber('member')->middleware('throttle:3,1')->name('proposal.generate');
     Route::post('/members/{member}/proposal', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'proposal'])->whereNumber('member')->middleware('throttle:10,1')->name('proposal');
     Route::post('/proposals/{proposal}/respond', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'respondProposal'])->whereNumber('proposal')->name('proposal.respond');
     Route::get('/communication-preferences', [\App\Http\Controllers\Api\V1\Workflow\ConnectionWorkflowController::class, 'preferences'])->name('preferences');
