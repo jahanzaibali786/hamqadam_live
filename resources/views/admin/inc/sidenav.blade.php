@@ -531,8 +531,7 @@
 
 
                 @if (addon_activation('referral_system'))
-                @if (auth()->user()->can('set_referral_commission') ||
-                auth()->user()->can('view_refferal_users') ||
+                @if (auth()->user()->can('view_refferal_users') ||
                 auth()->user()->can('view_refferal_earnings') ||
                 auth()->user()->can('manage_wallet_withdraw_requests'))
                 <li class="aiz-side-nav-item">
@@ -545,14 +544,6 @@
                         <span class="aiz-side-nav-arrow"></span>
                     </a>
                     <ul class="aiz-side-nav-list level-2">
-                        @can('set_referral_commission')
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('set_referral_commission') }}" class="aiz-side-nav-link">
-                                <span
-                                    class="aiz-side-nav-text">{{ translate('Set Referral Comission') }}</span>
-                            </a>
-                        </li>
-                        @endcan
                         @can('view_refferal_users')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('referals.users') }}" class="aiz-side-nav-link">
@@ -794,7 +785,9 @@
                 auth()->user()->can('email_templates') ||
                 auth()->user()->can('third_party_settings') ||
                 auth()->user()->can('chat_realtime_settings') ||
-                auth()->user()->can('social_media_login_settings'))
+                auth()->user()->can('social_media_login_settings') ||
+                auth()->user()->user_type === 'admin' ||
+                auth()->user()->can('set_referral_commission'))
                 <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
                         <i class="las la-cog aiz-side-nav-icon"></i>
@@ -816,6 +809,14 @@
                             </a>
                         </li>
                         @endcan
+                        @if (auth()->user()->user_type === 'admin' || auth()->user()->can('set_referral_commission'))
+                        <li class="aiz-side-nav-item">
+                            <a href="{{ route('admin.referrals.settings') }}"
+                               class="aiz-side-nav-link {{ areActiveRoutes(['admin.referrals.settings', 'set_referral_commission']) }}">
+                                <span class="aiz-side-nav-text">{{ translate('Referral Settings') }}</span>
+                            </a>
+                        </li>
+                        @endif
                         @can('show_languages')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('languages.index') }}"

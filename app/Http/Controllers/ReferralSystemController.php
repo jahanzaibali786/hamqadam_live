@@ -17,9 +17,16 @@ class ReferralSystemController extends Controller
     {
     }
 
+    private function authorizeRewardSettings(): void
+    {
+        $user = auth()->user();
+        abort_unless($user && ($user->user_type === 'admin' || $user->can('set_referral_commission')), 403);
+    }
+
     /** Admin referral settings and referral overview. */
     public function set_referral_commission()
     {
+        $this->authorizeRewardSettings();
         return $this->adminDashboard();
     }
 
@@ -43,6 +50,7 @@ class ReferralSystemController extends Controller
 
     public function save_reward_settings(Request $request)
     {
+        $this->authorizeRewardSettings();
         $data = $request->validate([
             'coin_reward' => ['required','integer','between:0,1000'],
             'max_per_user' => ['required','integer','between:1,10000'],
@@ -60,6 +68,7 @@ class ReferralSystemController extends Controller
 
     public function save_package_reward_settings(Request $request)
     {
+        $this->authorizeRewardSettings();
         $data=$request->validate([
             'coin_reward'=>['required','integer','between:0,1000'],
             'max_per_user'=>['required','integer','between:1,10000'],
