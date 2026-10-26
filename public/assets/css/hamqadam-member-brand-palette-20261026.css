@@ -40,3 +40,20 @@
 .hm-member-app .hm-member-workspace :is(input,textarea,select,.form-control):focus{
  border-color:#e9dfe5!important;outline:0!important;box-shadow:none!important
 }
+
+/* Specific wallet payment cards: visible contrast on neutral card surfaces. */
+.hm-member-app .hm-wallet-2026 .hm-wallet-choices .hm-wallet-buy,
+.hm-member-app .hm-wallet-2026 .hm-wallet-choices .hm-wallet-buy.primary,
+.hm-member-app .hm-wallet-2026 .hm-wallet-payments .hm-pink-button{
+ background:linear-gradient(135deg,#9f1239,#67051f)!important;
+ background-color:#9f1239!important;color:#fff!important;
+ border:1px solid #9f1239!important;box-shadow:0 3px 10px #67051f20;
+}
+.hm-member-app .hm-wallet-2026 .hm-wallet-choices .hm-wallet-buy:hover{filter:brightness(1.1)}
+.hm-member-app .hm-detail .hm-detail-action-primary,
+.hm-member-app .hm-blog-26 .hm-blog-featured a,
+.hm-member-app .hm-blog-26 .hm-blog-panel form button{
+ background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff!important;
+}
+.hm-member-app .hm-blog-26 .hm-blog-cats a.active,
+.hm-member-app .hm-detail :is(.hm-detail-score strong,.hm-detail-panel h2 i){color:#a84469!important}
