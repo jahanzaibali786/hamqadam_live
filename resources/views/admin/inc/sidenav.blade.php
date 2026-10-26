@@ -24,6 +24,13 @@
                 </li>
 
                 <li class="aiz-side-nav-item">
+                    <a href="{{ route('admin.workflow.templates') }}" class="aiz-side-nav-link {{ request()->routeIs('admin.workflow.templates*') ? 'active' : '' }}">
+                        <i class="las la-envelope-open-text aiz-side-nav-icon"></i>
+                        <span class="aiz-side-nav-text">Interest & Proposal Templates</span>
+                    </a>
+                </li>
+
+                <li class="aiz-side-nav-item">
                     <a href="{{ route('admin.v1_platform') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.v1_platform']) }}">
                         <i class="las la-robot aiz-side-nav-icon"></i>
                         <span class="aiz-side-nav-text">{{ translate('AI Platform') }}</span>
