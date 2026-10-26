@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Services\Referral\ReferralRewardService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class ReferralSystemController extends Controller
 {
@@ -37,6 +38,9 @@ class ReferralSystemController extends Controller
 
     private function adminDashboard()
     {
+        if (! Schema::hasTable('reward_rules') || ! Schema::hasTable('reward_transactions')) {
+            return response()->view('admin.referral.setup_required', [], 503);
+        }
         return view('admin.referral.index', [
             'referrals' => User::with('member')->whereNotNull('referred_by')->latest()->paginate(20),
             'rewardRule' => $this->rewards->rule(),
@@ -51,6 +55,7 @@ class ReferralSystemController extends Controller
     public function save_reward_settings(Request $request)
     {
         $this->authorizeRewardSettings();
+        abort_unless(Schema::hasTable('reward_rules') && Schema::hasTable('reward_transactions'), 503, 'Referral reward tables require migration.');
         $data = $request->validate([
             'coin_reward' => ['required','integer','between:0,1000'],
             'max_per_user' => ['required','integer','between:1,10000'],
@@ -69,6 +74,7 @@ class ReferralSystemController extends Controller
     public function save_package_reward_settings(Request $request)
     {
         $this->authorizeRewardSettings();
+        abort_unless(Schema::hasTable('reward_rules') && Schema::hasTable('reward_transactions'), 503, 'Referral reward tables require migration.');
         $data=$request->validate([
             'coin_reward'=>['required','integer','between:0,1000'],
             'max_per_user'=>['required','integer','between:1,10000'],
