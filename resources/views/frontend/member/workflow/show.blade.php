@@ -42,7 +42,7 @@ $sender=(int)$interest?->interested_by===(int)auth()->id();
           <label for="hm-proposal-source">Message source</label><select id="hm-proposal-source" name="source"><option value="static">Static / My own message</option><option value="ai" disabled>AI (available when configured)</option></select>
           <label for="hm-proposal-message">Editable message & preview</label><textarea id="hm-proposal-message" data-template-preview="proposal" name="message" rows="9" required minlength="20" maxlength="5000">{{ $proposal?->status==='draft'?$proposal->message:'' }}</textarea>
           <label class="hm-connection-check"><input type="checkbox" name="approved" value="1" required> I have reviewed and approve this exact text.</label>
-          <div class="hm-connection-buttons"><button type="submit" name="send" value="draft" formnovalidate>Save Draft</button><button type="submit" name="send" value="yes">Send Proposal</button></div>
+          <div class="hm-connection-buttons"><button type="submit" name="send" value="draft" >Save Draft</button><button type="submit" name="send" value="yes">Send Proposal</button></div>
         </form>
       @endif
     </section>
