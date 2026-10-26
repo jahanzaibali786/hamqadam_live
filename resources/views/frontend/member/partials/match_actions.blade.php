@@ -5,6 +5,7 @@
     $thread = $matchActions['thread'];
 @endphp
 <div class="hm-match-controls">
+    <a class="hm-match-send" href="{{ route('member.workflow.show', $targetId) }}"><i class="las la-heart"></i> Send Interest / Proposal</a>
     @if (!$interest)
         <form action="{{ route('member.match.propose', $targetId) }}" method="POST" class="hm-match-send-form">
             @csrf
