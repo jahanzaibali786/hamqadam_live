@@ -30,12 +30,13 @@ class ReferralSystemController extends Controller
 
     private function adminDashboard()
     {
-        return view('admin.referrals.index', [
+        return view('admin.referral.index', [
             'referrals' => User::with('member')->whereNotNull('referred_by')->latest()->paginate(20),
             'rewardRule' => $this->rewards->rule(),
+            'packageRewardRule' => RewardRule::where('event_key', \App\Services\Referral\PaidPackageReferralRewardService::EVENT)->first(),
             'totalReferrals' => User::whereNotNull('referred_by')->count(),
-            'totalCoins' => (int) RewardTransaction::where('event_key', ReferralRewardService::EVENT)->sum('coins'),
-            'rewardHistory' => RewardTransaction::where('event_key', ReferralRewardService::EVENT)
+            'totalCoins' => (int) RewardTransaction::whereIn('event_key',[ReferralRewardService::EVENT,\App\Services\Referral\PaidPackageReferralRewardService::EVENT])->sum('coins'),
+            'rewardHistory' => RewardTransaction::whereIn('event_key',[ReferralRewardService::EVENT,\App\Services\Referral\PaidPackageReferralRewardService::EVENT])
                 ->latest()->limit(25)->get(),
         ]);
     }
@@ -57,6 +58,23 @@ class ReferralSystemController extends Controller
         return back()->with('success', 'Referral reward settings saved. Eligible rewards will be reconciled by scheduler.');
     }
 
+    public function save_package_reward_settings(Request $request)
+    {
+        $data=$request->validate([
+            'coin_reward'=>['required','integer','between:0,1000'],
+            'max_per_user'=>['required','integer','between:1,10000'],
+            'active'=>['nullable','boolean'],
+        ]);
+        RewardRule::updateOrCreate(['event_key'=>\App\Services\Referral\PaidPackageReferralRewardService::EVENT],[
+            'title'=>'First qualifying paid package activation referral',
+            'coin_reward'=>(int)$data['coin_reward'],
+            'max_per_user'=>(int)$data['max_per_user'],
+            'active'=>$request->boolean('active') && (int)$data['coin_reward']>0,
+            'conditions'=>['paid_only'=>true,'exclude_registration_basic'=>true,'once_per_referred_user'=>true],
+        ]);
+        return back()->with('success','Paid package referral reward settings saved.');
+    }
+
     public function referal_earnings_admin()
     {
         return view('admin.referrals.index', [
@@ -64,7 +82,7 @@ class ReferralSystemController extends Controller
             'rewardRule' => $this->rewards->rule(),
             'totalReferrals' => User::whereNotNull('referred_by')->count(),
             'totalCoins' => (int) RewardTransaction::where('event_key', ReferralRewardService::EVENT)->sum('coins'),
-            'rewardHistory' => RewardTransaction::where('event_key', ReferralRewardService::EVENT)->latest()->limit(25)->get(),
+            'rewardHistory' => RewardTransaction::whereIn('event_key',[ReferralRewardService::EVENT,\App\Services\Referral\PaidPackageReferralRewardService::EVENT])->latest()->limit(25)->get(),
         ]);
     }
 
@@ -79,10 +97,11 @@ class ReferralSystemController extends Controller
             ->whereIn('reference_id', $referrals->getCollection()->pluck('id'))->pluck('reference_id')
             ->map(fn ($id) => (int) $id)->all();
         $history = RewardTransaction::where('user_id', $member->id)
-            ->where('event_key', ReferralRewardService::EVENT)->latest()->paginate(15, ['*'], 'rewards_page');
+            ->whereIn('event_key',[ReferralRewardService::EVENT, \App\Services\Referral\PaidPackageReferralRewardService::EVENT])->latest()->paginate(15, ['*'], 'rewards_page');
         $commissions = Wallet::where('user_id', $member->id)
             ->where('payment_method', 'reffered_commission')->latest()->limit(10)->get();
-        return view('frontend.member.referrals.index', compact('summary','referrals','history','commissions','rewardedIds'));
+        $packageRewardedIds=RewardTransaction::where('user_id',$member->id)->where('event_key',\App\Services\Referral\PaidPackageReferralRewardService::EVENT)->where('reference_type','referred_user')->whereIn('reference_id',$referrals->getCollection()->pluck('id'))->pluck('reference_id')->map(fn($id)=>(int)$id)->all();
+        return view('frontend.member.referrals.index', compact('summary','referrals','history','commissions','rewardedIds','packageRewardedIds'));
     }
 
     public function my_referred_users(Request $request)
