@@ -28,7 +28,53 @@ class ReferralSystemController extends Controller
     public function set_referral_commission()
     {
         $this->authorizeRewardSettings();
-        return $this->adminDashboard();
+
+        // The settings page must be usable independently of the report:
+        // dashboard reward-history queries used to fail the entire screen
+        // when schema migrations were pending or old tables were incomplete.
+        $rewardRule = null;
+        $packageRewardRule = null;
+        $issues = [];
+
+        try {
+            $required = [
+                'reward_rules' => ['id', 'event_key', 'coin_reward', 'max_per_user', 'active'],
+                'reward_transactions' => ['id', 'user_id', 'event_key', 'reference_type', 'reference_id', 'coins'],
+            ];
+            foreach ($required as $table => $columns) {
+                if (! \Illuminate\Support\Facades\Schema::hasTable($table)) {
+                    $issues[] = "Missing {$table} table.";
+                    continue;
+                }
+                foreach ($columns as $column) {
+                    if (! \Illuminate\Support\Facades\Schema::hasColumn($table, $column)) {
+                        $issues[] = "Missing {$table}.{$column} column.";
+                    }
+                }
+            }
+            if ($issues === []) {
+                $rewardRule = RewardRule::query()
+                    ->where('event_key', ReferralRewardService::EVENT)->first();
+                $packageRewardRule = RewardRule::query()
+                    ->where('event_key', \App\Services\Referral\PaidPackageReferralRewardService::EVENT)->first();
+            }
+        } catch (\Throwable $exception) {
+            \Illuminate\Support\Facades\Log::error('Referral settings read failed', [
+                'user_id' => auth()->id(),
+                'error' => $exception->getMessage(),
+                'exception' => $exception,
+            ]);
+            $issues[] = 'The database could not be read. Check the Laravel error log.';
+        }
+
+        // Always render a usable admin page with an explicit diagnostic.
+        // Sending HTTP 503 here can be reduced to a blank page by proxies.
+        return response()->view('admin.referral.settings', [
+            'rewardRule' => $rewardRule,
+            'packageRewardRule' => $packageRewardRule,
+            'databaseReady' => $issues === [],
+            'setupIssues' => $issues,
+        ], 200)->header('Cache-Control', 'private, no-store');
     }
 
     public function index()
