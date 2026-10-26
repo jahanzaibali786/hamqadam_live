@@ -39,7 +39,8 @@ $sender=(int)$interest?->interested_by===(int)auth()->id();
         <form action="{{route('member.workflow.proposal',$person->id)}}" method="POST">@csrf
           <label for="hm-proposal-template">Proposal template</label><select id="hm-proposal-template" name="template_id" data-template-select="proposal"><option value="">Write your own</option>@foreach($proposalTemplates as $template)<option value="{{$template->id}}" data-copy="{{$template->complete_message}}">{{$template->title}}</option>@endforeach</select>
           <label for="hm-proposal-language">Language</label><select name="language" id="hm-proposal-language"><option value="en">English</option><option value="ur">Urdu</option></select>
-          <label for="hm-proposal-source">Message source</label><select id="hm-proposal-source" name="source"><option value="static">Static / My own message</option><option value="ai" disabled>AI (available when configured)</option></select>
+          <label for="hm-proposal-source">Message source</label><select id="hm-proposal-source" name="source"><option value="static">Static / My own message</option><option value="ai">AI-generated draft</option></select>
+          <div class="hm-connection-ai"><label for="hm-proposal-intention">Your intentions for AI drafting</label><textarea id="hm-proposal-intention" placeholder="Describe your genuine intentions and whether you wish to mention family introduction." rows="3" minlength="10" maxlength="700"></textarea><button type="button" id="hm-ai-generate">Generate / Regenerate AI Draft</button><p id="hm-ai-status" role="status" aria-live="polite">AI drafts require an enabled provider. Static templates always remain available.</p></div>
           <label for="hm-proposal-message">Editable message & preview</label><textarea id="hm-proposal-message" data-template-preview="proposal" name="message" rows="9" required minlength="20" maxlength="5000">{{ $proposal?->status==='draft'?$proposal->message:'' }}</textarea>
           <label class="hm-connection-check"><input type="checkbox" name="approved" value="1" required> I have reviewed and approve this exact text.</label>
           <div class="hm-connection-buttons"><button type="submit" name="send" value="draft" >Save Draft</button><button type="submit" name="send" value="yes">Send Proposal</button></div>
@@ -61,6 +62,28 @@ $sender=(int)$interest?->interested_by===(int)auth()->id();
 <script>
 document.addEventListener('DOMContentLoaded',()=>{const root=document.querySelector('.hm-connection');if(!root)return;
  root.querySelectorAll('[data-template-select]').forEach(select=>select.addEventListener('change',()=>{const area=root.querySelector('[data-template-preview="'+select.dataset.templateSelect+'"]');if(area)area.value=select.selectedOptions[0]?.dataset.copy||'';}));
+ const aiButton=root.querySelector('#hm-ai-generate');
+ aiButton?.addEventListener('click',async()=>{
+   const intention=root.querySelector('#hm-proposal-intention')?.value.trim()||'';
+   const status=root.querySelector('#hm-ai-status');
+   const language=root.querySelector('#hm-proposal-language')?.value||'en';
+   if(intention.length<10){status.textContent='Please describe your intention in at least 10 characters.';return;}
+   aiButton.disabled=true;status.textContent='Generating a draft for your review…';
+   try {
+     const response=await fetch(@json(route('member.workflow.proposal.generate',$person->id)),{
+       method:'POST',credentials:'same-origin',
+       headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':@json(csrf_token())},
+       body:JSON.stringify({language,intention})
+     });
+     const result=await response.json();
+     if(!response.ok||!result.draft)throw new Error(result.message||result.errors?.ai?.[0]||'Provider unavailable');
+     root.querySelector('#hm-proposal-message').value=result.draft;
+     root.querySelector('#hm-proposal-source').value='ai';
+     root.querySelector('input[name=approved][type=checkbox]').checked=false;
+     status.textContent='Draft generated. Please edit or preview it and approve the final wording before sending.';
+   } catch(e){status.textContent='AI unavailable. Choose a static template or write your own message.';}
+   finally{aiButton.disabled=false;}
+ });
  const dialog=root.querySelector('#hm-locked-proposal');
  root.querySelector('[data-locked-proposal]')?.addEventListener('click',()=>dialog.showModal());
  root.querySelector('[data-close-dialog]')?.addEventListener('click',()=>dialog.close());
