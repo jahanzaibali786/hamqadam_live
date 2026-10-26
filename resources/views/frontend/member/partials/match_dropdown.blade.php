@@ -11,11 +11,9 @@
     </button>
     <div class="hm-match-menu-panel" role="menu" aria-label="Actions for {{ $matchActions['display_name'] }}" hidden>
         @if (!$interest)
-            <form method="POST" action="{{ route('member.match.propose', $targetId) }}">
-                @csrf
-                <button type="submit" class="hm-match-menu-item" role="menuitem"><i class="las la-heart"></i> Send Interest / Proposal</button>
-            </form>
+            <a href="{{ route('member.workflow.show', $targetId) }}" class="hm-match-menu-item" role="menuitem"><i class="las la-heart"></i> Send Interest</a>
         @endif
+        <a class="hm-match-menu-item" role="menuitem" href="{{ route('member.workflow.show', $targetId) }}"><i class="las la-envelope-open"></i> Interest & Proposal Workflow</a>
         <a class="hm-match-menu-item" role="menuitem" href="{{ $detailUrl }}"><i class="las la-user"></i> View Profile</a>
         <a class="hm-match-menu-item" role="menuitem" href="{{ route('member.match.why', $targetId) }}"><i class="las la-magic"></i> Why This Match</a>
         @if ($status === 1)

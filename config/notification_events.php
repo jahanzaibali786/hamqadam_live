@@ -44,8 +44,8 @@ $add('profile_viewed', '', '', [], '/profile-views');
 $add('profile_shortlisted', '', '', [], '/shortlists');
 $add('relevant_profile_recommendation', 'New Possibilities for You', 'We found new profiles that may be relevant to what you are looking for.', ['push', 'email_optional'], '/members');
 
-$add('interest_received', 'Someone Is Interested', ':name has expressed interest in you.', ['push', 'email'], '/interests');
-$add('interest_accepted', 'Your Interest Was Accepted', ':name accepted your interest. One step closer to something meaningful.', ['push', 'email'], '/interests');
+$add('interest_received', 'Someone is interested in you! 💗', 'A user is interested in your profile on Hamqadam. Review their profile and decide whether you\'d like to connect.', ['push', 'email'], '/interest/requests');
+$add('interest_accepted', 'Your Interest Was Accepted! 💗', 'Your interest has been accepted. You can now chat and connect through audio or video calls on Hamqadam.', ['push', 'email'], '/my-interests');
 $add('interest_declined', 'Not Every Story Aligns', ':name declined your interest. Keep your heart open to the possibilities ahead.', ['push'], '/members');
 $add('mutual_interest', 'It’s a Match', 'You and :name both showed interest. Sometimes two stories simply find each other.', ['push', 'email'], '/matches');
 $add('match_created', 'A New Connection Begins', 'You have a new match with :name on Hamqadam. Take the next step when you are ready.', ['push', 'email'], '/matches');
@@ -53,8 +53,13 @@ $add('match_reminder', 'A Connection Is Waiting', 'You have a meaningful connect
 $add('got_match', 'A Meaningful Match', 'You confirmed a successful match with :name. Every beautiful journey begins with a connection.', ['push'], '/matches');
 $add('match_success', 'Your Story Found a Connection', 'Congratulations on your successful match with :name. May this be the beginning of something beautiful.', ['push', 'email'], '/matches');
 
-$add('proposal_received', 'A New Proposal', 'You have received a proposal from :name. Take a moment to discover their story.', ['push', 'email'], '/proposals');
-$add('proposal_accepted', 'A New Chapter Begins', ':name has accepted your proposal. May this connection grow into something meaningful.', ['push', 'email'], '/proposals');
+$add('proposal_received', 'You’ve Received a Marriage Proposal 💍', ':name has sent you a marriage proposal on Hamqadam. Review the details and respond when you\'re ready.', ['push', 'email'], '/interest/requests');
+$add('workflow_family_meeting_scheduled', 'Family Meeting Scheduled', 'A family meeting has been scheduled. Review the meeting details securely in Hamqadam.', ['push','email'], '/interest/requests');
+$add('workflow_family_meeting_reminder_24', 'Family Meeting Tomorrow', 'Your planned family meeting is approaching. Check the meeting details in Hamqadam.', ['push','email_optional'], '/interest/requests');
+$add('workflow_family_meeting_reminder_1', 'Family Meeting in One Hour', 'Your family meeting is coming up in about one hour. See the latest information in Hamqadam.', ['push','email_optional'], '/interest/requests');
+$add('workflow_interest_reminder', 'An Interest Is Awaiting Your Response', 'You have a pending interest to review when you are ready.', ['push'], '/interest/requests');
+$add('workflow_proposal_reminder', 'A Proposal Is Awaiting Your Response', 'A marriage proposal is awaiting your decision. Please respond when you are comfortable.', ['push'], '/interest/requests');
+$add('proposal_accepted', 'Your Proposal Has Been Accepted! 💍', 'Your proposal has been accepted. You can now move forward with a family discussion and plan the next step together.', ['push', 'email'], '/interest/requests');
 $add('proposal_declined', 'Every Story Has Its Path', ':name has declined your proposal. Keep exploring meaningful possibilities.', ['push'], '/members');
 $add('proposal_expiring', 'Your Proposal Is Waiting', 'A proposal from :name is approaching its response deadline.', ['push', 'email'], '/proposals');
 $add('proposal_expired', 'Proposal Expired', 'Your proposal to :name has expired. New possibilities are still waiting.', ['push'], '/members');
