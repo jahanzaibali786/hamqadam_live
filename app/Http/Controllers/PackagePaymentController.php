@@ -333,6 +333,7 @@ class PackagePaymentController extends Controller
         $package_payment->payment_details = $payment_details;
         $package_payment->offline_payment = 2;
         $package_payment->save();
+        app(\App\Services\Referral\PaidPackageReferralRewardService::class)->award($package_payment);
 
         if ($package_payment->coupon_id) {
             PaymentCoupon::whereKey($package_payment->coupon_id)->increment('used_count');
@@ -506,6 +507,7 @@ class PackagePaymentController extends Controller
         if ($member->save()) {
             $package_payment->payment_status = 'Paid';
             $package_payment->save();
+            app(\App\Services\Referral\PaidPackageReferralRewardService::class)->award($package_payment);
 
             if ($package_payment->coupon_id) {
                 PaymentCoupon::whereKey($package_payment->coupon_id)->increment('used_count');
