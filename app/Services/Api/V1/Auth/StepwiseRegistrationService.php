@@ -145,6 +145,7 @@ class StepwiseRegistrationService
         }
 
         $this->validate(1, $data);
+        $this->validateAllSteps($data);
 
         return DB::transaction(function () use ($data, $deviceData, $request): IssuedTokenData {
             $user = User::create([
@@ -668,6 +669,11 @@ class StepwiseRegistrationService
 
     private function validate(int $step, array $data): void
     {
+        $this->makeValidator($step, $data)->validate();
+    }
+
+    private function makeValidator(int $step, array $data): \Illuminate\Validation\Validator
+    {
         $validator = Validator::make($data, $this->rules($step));
 
         if ($step === 5) {
@@ -683,7 +689,31 @@ class StepwiseRegistrationService
             });
         }
 
-        $validator->validate();
+        return $validator;
+    }
+
+    /**
+     * Validates every step up front and reports ALL failing fields in one 422,
+     * so the app can list every screen that needs fixing instead of revealing
+     * them one submission at a time. Steps 4 and 6 are left to the per-step
+     * pass because their city/caste ids can be resolved from typed names there.
+     */
+    private function validateAllSteps(array $data): void
+    {
+        $errors = [];
+        for ($step = 2; $step <= self::TOTAL_STEPS; $step++) {
+            if (in_array($step, [4, 6], true)) {
+                continue;
+            }
+            $validator = $this->makeValidator($step, $data);
+            if ($validator->fails()) {
+                $errors = array_merge($errors, $validator->errors()->toArray());
+            }
+        }
+
+        if ($errors !== []) {
+            throw \Illuminate\Validation\ValidationException::withMessages($errors);
+        }
     }
 
     private function rules(int $step): array
