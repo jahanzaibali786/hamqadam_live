@@ -29,6 +29,7 @@ class ProposalService
         $this->expireOverdueProposals($user);
 
         $query = ExpressInterest::query()
+            ->where('interaction_type','proposal')
             ->with(['sender', 'recipient'])
             ->latest();
 
@@ -67,6 +68,10 @@ class ProposalService
             throw new ApiException('This member is not accepting proposals right now.', 409, ApiErrorCode::Conflict->value);
         }
 
+        if (!app(\App\Services\MemberConnectionWorkflow::class)->canCommunicate($sender->id, $recipientId)) {
+            throw new ApiException('Send Interest First. Proposal sending requires an accepted interest.', 409, 'interest_not_accepted');
+        }
+
         if ($this->hasActiveProposal($sender->id, $recipientId)) {
             throw new ApiException('A proposal already exists between these members.', 409, ApiErrorCode::Conflict->value);
         }
@@ -98,6 +103,7 @@ class ProposalService
             $proposal = ExpressInterest::create([
                 'user_id' => $recipientId,
                 'interested_by' => $sender->id,
+                'interaction_type' => 'proposal',
                 'status' => ProposalStatus::Pending,
                 'initial_note' => $note,
                 'expires_at' => now()->addDays($expiryDays),
@@ -458,7 +464,7 @@ class ProposalService
 
     private function proposalForParticipant(User $actor, int $proposalId): ExpressInterest
     {
-        $proposal = ExpressInterest::with(['sender', 'recipient', 'events.actor', 'notes.user'])->find($proposalId);
+        $proposal = ExpressInterest::with(['sender', 'recipient', 'events.actor', 'notes.user'])->where('interaction_type','proposal')->find($proposalId);
 
         if (! $proposal || ! in_array($actor->id, [(int) $proposal->interested_by, (int) $proposal->user_id], true)) {
             throw new ApiException('Proposal not found.', 404, ApiErrorCode::NotFound->value);
@@ -490,7 +496,7 @@ class ProposalService
 
     private function expireOverdueProposals(User $user): void
     {
-        ExpressInterest::where('status', ProposalStatus::Pending->value)
+        ExpressInterest::where('interaction_type','proposal')->where('status', ProposalStatus::Pending->value)
             ->whereNotNull('expires_at')
             ->where('expires_at', '<', now())
             ->where(function ($query) use ($user) {
@@ -530,7 +536,7 @@ class ProposalService
 
     private function hasActiveProposal(int $firstUserId, int $secondUserId): bool
     {
-        return ExpressInterest::whereIn('status', [ProposalStatus::Pending->value, ProposalStatus::Accepted->value])
+        return ExpressInterest::where('interaction_type','proposal')->whereIn('status', [ProposalStatus::Pending->value, ProposalStatus::Accepted->value])
             ->where(function ($query) use ($firstUserId, $secondUserId) {
                 $query->where(function ($scope) use ($firstUserId, $secondUserId) {
                     $scope->where('interested_by', $firstUserId)->where('user_id', $secondUserId);
