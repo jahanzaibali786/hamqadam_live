@@ -82,7 +82,7 @@ class ChatController extends Controller
         $chat_blocked_by_me = (int) $chat_thread->blocked_by_user === (int) Auth::id();
         $chat_blocked_by_other = ! empty($chat_thread->blocked_by_user) && ! $chat_blocked_by_me;
         $chat_blocker_name = $chat_thread->blocked_by ? trim(($chat_thread->blocked_by->first_name ?? '') . ' ' . ($chat_thread->blocked_by->last_name ?? '')) : null;
-        $can_send_message = ! $chat_is_blocked && $chat_partner && app(\App\Services\MemberConnectionWorkflow::class)->canCommunicate(Auth::id(), $chat_partner->id);
+        $can_send_message = ! $chat_is_blocked && $chat_partner && app(\App\Services\MemberConnectionWorkflow::class)->canCommunicate(Auth::id(), (int) $chat_partner->id, $chat_thread);
         $call_logs = Call::with(['caller', 'receiver'])
             ->where('conversation_id', $chat_thread->id)
             ->latest()
@@ -151,8 +151,9 @@ class ChatController extends Controller
         $chat_thread = ChatThread::findOrFail((int) $request->chat_thread_id);
         $this->ensureParticipant($chat_thread);
         $otherId=(int)($chat_thread->sender_user_id===Auth::id() ? $chat_thread->receiver_user_id : $chat_thread->sender_user_id);
-        if (!app(\App\Services\MemberConnectionWorkflow::class)->canCommunicate(Auth::id(),$otherId)) {
-            return response()->json(['message'=>'Chat requires accepted interest.'],403);
+        $denial=app(\App\Services\MemberConnectionWorkflow::class)->communicationDenialReason((int) Auth::id(),$otherId,$chat_thread);
+        if ($denial !== null) {
+            return response()->json(['message'=>$denial],403);
         }
         if ($this->isBlocked($chat_thread)) {
             return response()->json([
@@ -362,9 +363,9 @@ class ChatController extends Controller
     {
         $chat_thread = ChatThread::findOrFail((int) $request->chat_thread_id);
         $this->ensureParticipant($chat_thread);
-        if ($this->isBlocked($chat_thread)) {
-            return response()->json(['message' => translate('This chat is blocked.')], 403);
-        }
+        $otherId=(int)((int)$chat_thread->sender_user_id === (int)Auth::id() ? $chat_thread->receiver_user_id : $chat_thread->sender_user_id);
+        $denial=app(\App\Services\MemberConnectionWorkflow::class)->communicationDenialReason((int)Auth::id(),$otherId,$chat_thread);
+        if ($denial !== null) return response()->json(['message'=>$denial],403);
         $request->validate([
             'voice' => ['required', 'file', 'max:20480', 'mimes:mp3,wav,m4a,aac,ogg,webm'],
             'duration' => ['nullable', 'numeric', 'min:0'],
