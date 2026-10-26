@@ -77,9 +77,10 @@ class ReferralSystemController extends Controller
 
     public function referal_earnings_admin()
     {
-        return view('admin.referrals.index', [
+        return view('admin.referral.index', [
             'referrals' => User::whereNotNull('referred_by')->latest()->paginate(20),
             'rewardRule' => $this->rewards->rule(),
+            'packageRewardRule' => RewardRule::where('event_key', \App\Services\Referral\PaidPackageReferralRewardService::EVENT)->first(),
             'totalReferrals' => User::whereNotNull('referred_by')->count(),
             'totalCoins' => (int) RewardTransaction::where('event_key', ReferralRewardService::EVENT)->sum('coins'),
             'rewardHistory' => RewardTransaction::whereIn('event_key',[ReferralRewardService::EVENT,\App\Services\Referral\PaidPackageReferralRewardService::EVENT])->latest()->limit(25)->get(),
