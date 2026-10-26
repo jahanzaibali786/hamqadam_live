@@ -3,7 +3,7 @@
 #main-menu .aiz-side-nav-link{min-height:42px;height:auto;line-height:1.4;align-items:center}
 #main-menu .aiz-side-nav-text{min-width:0;overflow-wrap:break-word;word-break:normal}
 #main-menu .level-2,#main-menu .level-3{position:static;overflow:hidden}
-#main-menu .level-2:not(.mm-show),#main-menu .level-3:not(.mm-show){display:none!important;height:0!important;visibility:hidden!important}
+#main-menu .level-2:not(.mm-show):not(.mm-collapsing),#main-menu .level-3:not(.mm-show):not(.mm-collapsing){display:none!important;height:0!important;visibility:hidden!important}
 #main-menu .level-2.mm-show,#main-menu .level-3.mm-show{height:auto!important;visibility:visible!important;display:block!important}
 #main-menu .mm-collapsing{position:relative;height:0;overflow:hidden;transition:height .2s ease}
 #main-menu .level-2 .aiz-side-nav-link{padding-top:10px;padding-bottom:10px;white-space:normal}
