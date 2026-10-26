@@ -51,89 +51,11 @@ class ProposalService
 
     public function create(User $sender, int $recipientId, ?string $note = null): ExpressInterest
     {
-        if ($sender->id === $recipientId) {
-            throw new ApiException('You cannot send a proposal to yourself.', 422, ApiErrorCode::ValidationFailed->value);
-        }
-
-        $recipient = User::where('user_type', 'member')->whereKey($recipientId)->first();
-        if (! $recipient) {
-            throw new ApiException('The selected member was not found.', 404, ApiErrorCode::NotFound->value);
-        }
-
-        if ($this->isIgnoredBetween($sender->id, $recipientId)) {
-            throw new ApiException('This member is not available for proposals.', 409, ApiErrorCode::Conflict->value);
-        }
-
-        if ($recipient->profile_privacy_setting?->do_not_disturb) {
-            throw new ApiException('This member is not accepting proposals right now.', 409, ApiErrorCode::Conflict->value);
-        }
-
-        if (!app(\App\Services\MemberConnectionWorkflow::class)->canCommunicate($sender->id, $recipientId)) {
-            throw new ApiException('Send Interest First. Proposal sending requires an accepted interest.', 409, 'interest_not_accepted');
-        }
-
-        if ($this->hasActiveProposal($sender->id, $recipientId)) {
-            throw new ApiException('A proposal already exists between these members.', 409, ApiErrorCode::Conflict->value);
-        }
-
-        if (! $sender->member || (int) $sender->member->remaining_interest <= 0) {
-            throw new ApiException('Please upgrade your package to send more proposals.', 402, 'package_limit_exceeded');
-        }
-
-        // Proposals cost the same as interests: 3 coins (admin-configurable).
-        $coinCost = (int) feature_coin_cost('proposal', 3);
-        $balanceCheck = (int) ($sender->member->remaining_interest ?? 0);
-        if ($balanceCheck < $coinCost) {
-            throw new ApiException(
-                'You need '.$coinCost.' coin(s) to send a proposal and you currently have '.$balanceCheck.'.',
-                402,
-                'insufficient_coins'
-            );
-        }
-
-        $proposal = DB::transaction(function () use ($sender, $recipientId, $note, $coinCost) {
-            $member = $sender->member()->lockForUpdate()->first();
-            $member->remaining_interest = max(0, (int) $member->remaining_interest - $coinCost);
-            $member->save();
-            $expiryDays = max(1, (int) (get_setting('proposal_expiry_days') ?: 14));
-            $compatibility = ProfileMatch::where('user_id', $sender->id)
-                ->where('match_id', $recipientId)
-                ->value('match_percentage');
-
-            $proposal = ExpressInterest::create([
-                'user_id' => $recipientId,
-                'interested_by' => $sender->id,
-                'interaction_type' => 'proposal',
-                'status' => ProposalStatus::Pending,
-                'initial_note' => $note,
-                'expires_at' => now()->addDays($expiryDays),
-                'compatibility_snapshot' => $compatibility,
-            ]);
-
-            // Every coin movement must show up in Coin & Feature Usage.
-            PackageUsage::record(
-                $sender->id,
-                'proposal',
-                'Proposal Sent',
-                $coinCost,
-                ExpressInterest::class,
-                $proposal->id,
-                'Used '.$coinCost.' coin(s) to send a proposal.'
-            );
-
-            $this->recordEvent($proposal, $sender, 'proposal_sent', $note);
-
-            return $proposal->load(['sender', 'recipient', 'events.actor', 'notes.user']);
-        });
-
-        // Outside the transaction: a notification that fails must not undo the
-        // proposal, and the recipient should not be told about one that was
-        // rolled back. Until this existed the whole proposal flow was silent -
-        // no push and no notification row - so the member only found out by
-        // opening the app and looking at the list.
-        NotificationHelper::proposalReceived($recipient, $sender, (int) $proposal->id);
-
-        return $proposal;
+        throw new ApiException(
+            'Marriage proposals require a reviewed, approved message. Use /api/v1/connection-workflow/members/{member}/proposal.',
+            409,
+            'proposal_approval_required'
+        );
     }
 
     public function accept(User $actor, int $proposalId, ?string $note = null): ExpressInterest
