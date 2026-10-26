@@ -526,6 +526,9 @@ private function threadForUser(User $user, int $threadId): ChatThread
 
     private function ensureCanCall(User $caller, User $receiver, ChatThread $thread): void
     {
+        if (!app(\App\Services\MemberConnectionWorkflow::class)->canCall($caller->id, $receiver->id, $thread->getAttribute('workflow_call_type') ?: 'audio')) {
+            throw new \App\Exceptions\ApiException('Calls require accepted interest and both members’ permission.', 403, 'call_not_allowed');
+        }
         if ((int) $caller->id === (int) $receiver->id) {
             throw new ApiException(translate('You cannot call yourself.'), 422, 'invalid_call');
 
