@@ -1,0 +1,34 @@
+/* Web chat receipts and presence. Uses the existing Hamqadam wine palette. */
+.hm-member-app .hm-message-meta{display:flex;align-items:center;justify-content:flex-end;gap:5px;min-height:17px;margin-top:4px;color:#7b7480;font-size:10px}
+.hm-member-app .hm-message-meta .time{margin:0!important;font-size:10px;white-space:nowrap}
+.hm-member-app .hm-msg-status{display:inline-flex;align-items:center;gap:3px;line-height:1;white-space:nowrap;color:#88818d;font-size:14px}
+.hm-member-app .hm-msg-status svg{width:21px;height:15px;display:block;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.hm-member-app .hm-msg-status[data-status="sent"] svg{width:15px}
+.hm-member-app .hm-msg-status[data-status="read"]{color:#a84469}
+.hm-member-app .hm-msg-status[data-status="delivered"]{color:#777981}
+.hm-member-app .hm-msg-status .hm-msg-status-word{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.hm-member-app .hm-chat-status-header{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px}
+.hm-member-app .hm-chat-status-header .hm-chat-presence{display:block;font-size:11px;line-height:1.3;color:#746c80;margin:0}
+.hm-member-app .hm-chat-presence.is-online{color:#168a61}
+.hm-member-app .hm-chat-presence.is-typing{color:#a84469;font-weight:700}
+.hm-member-app .hm-chat-typing{display:flex;align-items:center;gap:7px;padding:8px 16px;font-size:11px;color:#a84469;border-top:1px solid #f8eef3;background:#fff;min-height:30px}
+.hm-member-app .hm-chat-typing[hidden]{display:none!important}
+.hm-member-app .hm-chat-typing-dots{display:inline-flex;gap:3px;align-items:center}
+.hm-member-app .hm-chat-typing-dots i{display:inline-block;width:5px;height:5px;border-radius:50%;background:#a84469;animation:hm-typing-pulse 1.15s infinite ease-in-out}
+.hm-member-app .hm-chat-typing-dots i:nth-child(2){animation-delay:.15s}
+.hm-member-app .hm-chat-typing-dots i:nth-child(3){animation-delay:.3s}
+@keyframes hm-typing-pulse{0%,65%,100%{opacity:.3;transform:translateY(0)}35%{opacity:1;transform:translateY(-3px)}}
+@media(prefers-reduced-motion:reduce){.hm-member-app .hm-chat-typing-dots i{animation:none}}
+/* Keep the pre-existing base border, remove only the browser/Bootstrap focus border and blue glow.
+   Scope everything to the member dashboard so public/admin interfaces are not altered. */
+.hm-member-app :is(input,textarea,select,.form-control,.custom-select):focus,
+.hm-member-app :is(input,textarea,select,.form-control,.custom-select):focus-visible,
+.hm-member-app :is(.input-group,.form-group,.form-control-wrap):focus-within{
+    outline:0!important;outline-offset:0!important;box-shadow:none!important;
+    border-color:#e9dfe5!important
+}
+.hm-member-app :is(input,textarea,select,.form-control,.custom-select):focus{caret-color:#9f1239}
+.hm-member-app .hm-member-workspace :is(input,textarea,select):focus-visible{background-color:#fdf9fb}
+.hm-member-app input[type=checkbox]:focus,.hm-member-app input[type=radio]:focus{box-shadow:none!important;outline:0!important}
+.hm-member-app :is(button,a,[role=button]):focus-visible{outline:0!important;box-shadow:none!important;text-decoration:underline;text-decoration-color:#a84469;text-underline-offset:3px}
+.hm-member-app .hm-messages-reference #message:focus{border:0!important;background:transparent!important}
