@@ -57,6 +57,33 @@ $sender=(int)$interest?->interested_by===(int)auth()->id();
       <label>Video calls <select name="allow_video_calls"><option value="1" @selected($prefs?->allow_video_calls!==false)>Allowed</option><option value="0" @selected($prefs?->allow_video_calls===false)>Disabled</option></select></label><button type="submit">Save Preferences</button>
     </form>
   </section>
+  @if($proposal?->status==='accepted')
+    <section class="hm-connection-card">
+      <h2><i class="las la-users"></i> Family Discussion & Meeting Planning</h2>
+      <p>With your proposal accepted, you may introduce families and schedule a mutually comfortable meeting.</p>
+      <form method="POST" action="{{route('member.workflow.meeting',$proposal->id)}}">@csrf
+        <label for="hm-meeting-type">Meeting type</label><select name="meeting_type" id="hm-meeting-type"><option value="family">Family introduction</option><option value="virtual">Virtual meeting</option><option value="in_person">In person</option></select>
+        <label for="hm-meeting-time">Date and time</label><input class="form-control" type="datetime-local" name="scheduled_at" id="hm-meeting-time" required>
+        <label>Duration (minutes)</label><input class="form-control" name="duration_minutes" type="number" min="10" max="180" value="30" required>
+        <label>Location</label><input class="form-control" name="location" maxlength="255" placeholder="Only share with mutual consent">
+        <label>Video meeting URL (optional)</label><input class="form-control" name="meeting_url" type="url" maxlength="500">
+        <label>Notes / agenda</label><textarea name="notes" maxlength="2000" rows="3"></textarea>
+        <button type="submit">Schedule Family Meeting</button>
+      </form>
+      <h3>Scheduled Meetings</h3>
+      @forelse($meetings as $meeting)
+        <div class="hm-connection-status"><strong>{{ucwords(str_replace('_',' ',$meeting->meeting_type))}}</strong> — {{ $meeting->scheduled_at?->format('d M Y, h:i A') }} ({{ $meeting->status ?: 'scheduled' }})</div>
+        <form method="POST" action="{{route('member.workflow.meeting.notes',$meeting->id)}}">@csrf<label for="hm-meeting-note-{{$meeting->id}}">Meeting notes / follow-up</label><textarea id="hm-meeting-note-{{$meeting->id}}" name="notes" maxlength="2000" rows="3" required>{{ $meeting->notes }}</textarea><button type="submit">Save Follow-up Notes</button></form>
+      @empty <p>No family meetings scheduled yet.</p>
+      @endforelse
+      <h3>Relationship Milestone</h3><p>Submit the next milestone for moderation. Neither member's status is made public automatically.</p>
+      <form method="POST" action="{{route('member.workflow.relationship',$proposal->id)}}">@csrf
+        <label>Status</label><select name="status"><option value="engaged">Engaged</option><option value="nikah">Nikah</option><option value="married">Married</option><option value="cancelled">Cancelled</option></select>
+        <label>Effective date</label><input class="form-control" name="status_date" type="date" value="{{now()->toDateString()}}">
+        <label>Notes</label><textarea name="notes" maxlength="2000" rows="2"></textarea><button type="submit">Submit Status for Review</button>
+      </form>
+    </section>
+  @endif
   <dialog id="hm-locked-proposal"><h2>Send Interest First</h2><p>Before sending a proposal, you need to express your interest in this profile.</p><p>Send an interest request first. Once your interest is accepted, you can send a personalized marriage proposal.</p><div class="hm-connection-buttons"><button type="button" data-go-interest>Send Interest</button><button type="button" class="secondary" data-close-dialog>Cancel</button></div></dialog>
 </div>
 <script>
