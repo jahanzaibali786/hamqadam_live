@@ -70,6 +70,10 @@ Route::get('/admin/login', [HomeController::class, 'admin_login'])->name('admin.
 
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function () {
+    Route::get('/workflow-templates', [\App\Http\Controllers\Admin\WorkflowTemplateController::class, 'index'])->name('admin.workflow.templates');
+    Route::post('/workflow-templates', [\App\Http\Controllers\Admin\WorkflowTemplateController::class, 'save'])->name('admin.workflow.templates.create');
+    Route::post('/workflow-templates/{template}', [\App\Http\Controllers\Admin\WorkflowTemplateController::class, 'save'])->name('admin.workflow.templates.save');
+    Route::post('/workflow-templates/{template}/toggle', [\App\Http\Controllers\Admin\WorkflowTemplateController::class, 'toggle'])->name('admin.workflow.templates.toggle');
     Route::get('/dashboard', [HomeController::class, 'admin_dashboard'])->name('admin.dashboard');
     Route::get('/completion-center', [CompletionCenterController::class, 'index'])->name('admin.completion.index');
     Route::post('/completion-center/sponsored', [CompletionCenterController::class, 'storeSponsored'])->name('admin.completion.sponsored.store');
