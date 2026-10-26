@@ -94,94 +94,11 @@ class InterestController extends ApiController
      */
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'user_id' => ['required', 'integer', Rule::exists('users', 'id')],
-            'initial_note' => ['sometimes', 'nullable', 'string', 'max:1000'],
-            'priority' => ['sometimes', 'boolean'],
-        ]);
-
-        $sender = $request->user();
-
-        if ((int) $data['user_id'] === (int) $sender->id) {
-            return $this->error('You cannot express interest in yourself.', 422, 'self_interest');
-        }
-
-        $recipient = User::where('user_type', 'member')
-            ->where('approved', 1)->where('blocked', 0)->where('deactivated', 0)
-            ->find($data['user_id']);
-
-        if (! $recipient) {
-            return $this->error('This member is not available.', 404, 'member_unavailable');
-        }
-
-        // An interest already in flight either way blocks a duplicate charge.
-        $existing = ExpressInterest::where(function ($q) use ($sender, $recipient) {
-            $q->where('interested_by', $sender->id)->where('user_id', $recipient->id);
-        })->orWhere(function ($q) use ($sender, $recipient) {
-            $q->where('interested_by', $recipient->id)->where('user_id', $sender->id);
-        })->whereIn('status', [ProposalStatus::Pending->value, ProposalStatus::Accepted->value])
-            ->latest('id')
-            ->first();
-
-        if ($existing) {
-            return $this->error(
-                $existing->status === ProposalStatus::Accepted
-                    ? 'You are already connected with this member.'
-                    : 'An interest between you and this member is already pending.',
-                409,
-                'interest_exists'
-            );
-        }
-
-        $priority = (bool) ($data['priority'] ?? false);
-        $featureFlags = (array) ($sender->member?->package?->feature_flags ?? []);
-        // `feature_flags` is stored as a JSON OBJECT ({"ai_matching": true, ...}),
-        // so `in_array()` — which scans VALUES, not keys — could never find a
-        // flag name and rejected Super Like for every member, on every plan.
-        // Admin rows may also hold a plain list, so accept both shapes.
-        if ($priority && ! app(\App\Services\ClientScope\PremiumEntitlementService::class)->has($sender, 'priority_interest')) {
-            return $this->error('Priority Interest / Super Like is not included in your current plan.', 403, 'plan_feature_required');
-        }
-
-        $cost = $priority
-            ? (int) feature_coin_cost('priority_interest', 5)
-            : (int) feature_coin_cost('express_interest', 3);
-        $balance = (int) ($sender->member?->remaining_interest ?? 0);
-
-        if ($balance < $cost) {
-            return $this->error(
-                'You need '.$cost.' coin(s) to send an interest and have '.$balance.'. Upgrade your package to continue.',
-                402,
-                'insufficient_coins'
-            );
-        }
-
-        if (! $this->interests->store($recipient->id)) {
-            return $this->error('Interest could not be sent. Please try again.', 422, 'interest_failed');
-        }
-
-        $interest = ExpressInterest::with('user.member')
-            ->where('interested_by', $sender->id)->where('user_id', $recipient->id)
-            ->latest('id')->first();
-
-        if ($interest) {
-            if (array_key_exists('initial_note', $data) && $data['initial_note'] !== null) {
-                $interest->initial_note = $data['initial_note'];
-            }
-            if ($priority) {
-                $interest->is_priority = true;
-                $interest->priority_expires_at = now()->addDays(7);
-            }
-            $interest->save();
-            PackageUsage::record($sender->id, $priority ? 'priority_interest' : 'express_interest', $priority ? 'Priority Interest / Super Like' : 'Express Interest', $cost, ExpressInterest::class, $interest->id);
-            AnalyticsEvent::create(['user_id'=>$sender->id,'event_name'=>$priority ? 'priority_interest_sent' : 'interest_sent','feature_key'=>$priority ? 'priority_interest' : 'interest','metadata'=>['recipient_id'=>$recipient->id],'occurred_at'=>now()]);
-        }
-
-        return $this->success([
-            'interest' => $interest ? (new InterestResource($interest))->resolve($request) : null,
-            'coins_spent' => $cost,
-            'coin_balance' => $this->balance($sender->fresh('member')),
-        ], 'Interest sent successfully.', 201);
+        return $this->error(
+            'Select and approve an active interest template using /api/v1/connection-workflow/members/{member}/interest.',
+            409,
+            'interest_template_approval_required'
+        );
     }
 
     /** POST /interests/{interest}/accept */
@@ -192,7 +109,7 @@ class InterestController extends ApiController
             return $model;
         }
 
-        if (! $this->interests->accept($model->id)) {
+        if (!app(\App\Services\MemberConnectionWorkflow::class)->respondInterest($request->user(),$model,true)) {
             return $this->error('Interest could not be accepted.', 422, 'accept_failed');
         }
 
@@ -209,7 +126,7 @@ class InterestController extends ApiController
             return $model;
         }
 
-        if (! $this->interests->reject($model->id)) {
+        if (!app(\App\Services\MemberConnectionWorkflow::class)->respondInterest($request->user(),$model,false)) {
             return $this->error('Interest could not be rejected.', 422, 'reject_failed');
         }
 
@@ -254,6 +171,7 @@ class InterestController extends ApiController
     private function pendingForRecipient(Request $request, int $id): ExpressInterest|JsonResponse
     {
         $model = ExpressInterest::with('sender.member')
+            ->where('interaction_type','interest')
             ->where('user_id', $request->user()->id)
             ->find($id);
 
