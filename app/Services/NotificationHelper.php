@@ -471,9 +471,7 @@ class NotificationHelper
         }
             $notificationId = null;
             if ($preferences->in_app_enabled && ! self::alreadyDelivered($recipient->id, $eventKey, $eventId, 'in_app')) {
-                $notificationId = (string) Str::uuid();
-                DB::table('notifications')->insert([
-                    'id' => $notificationId,
+                $row = [
                     'type' => $eventKey,
                     'category' => self::categoryFor($eventKey),
                     'notifiable_type' => User::class,
@@ -492,7 +490,17 @@ class NotificationHelper
                     'read_at' => null,
                     'created_at' => now(),
                     'updated_at' => now(),
-                ]);
+                ];
+                // Older databases keep `notifications.id` as an auto-increment
+                // BIGINT; newer ones use a UUID. Writing a UUID into a BIGINT
+                // column raised "Data truncated for column 'id'" and silently
+                // dropped every in-app notification.
+                if (self::notificationIdIsUuid()) {
+                    $notificationId = (string) Str::uuid();
+                    DB::table('notifications')->insert(['id' => $notificationId] + $row);
+                } else {
+                    $notificationId = (string) DB::table('notifications')->insertGetId($row);
+                }
                 self::logDelivery($recipient, $notificationId, $eventKey, $eventId, 'in_app', 'sent', $deepLink, $context);
             }
 
@@ -533,6 +541,21 @@ class NotificationHelper
         } catch (\Throwable $e) {
             Log::warning('Failed to deliver notification event.', ['user_id' => $recipient->id, 'event_key' => $eventKey, 'error' => $e->getMessage()]);
         }
+    }
+
+    private static function notificationIdIsUuid(): bool
+    {
+        static $isUuid = null;
+        if ($isUuid === null) {
+            try {
+                $type = strtolower((string) \Illuminate\Support\Facades\Schema::getColumnType('notifications', 'id'));
+                $isUuid = in_array($type, ['string', 'char', 'varchar', 'guid', 'uuid'], true);
+            } catch (\Throwable $e) {
+                $isUuid = false;
+            }
+        }
+
+        return $isUuid;
     }
 
     private static function connectionEmail(string $eventKey, User $recipient, array $context, string $defaultSubject, string $defaultBody): array
