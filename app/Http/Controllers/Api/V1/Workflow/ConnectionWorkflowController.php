@@ -29,14 +29,14 @@ class ConnectionWorkflowController extends Controller
     public function state(Request $request, int $member): JsonResponse
     {
         $person=User::where('user_type','member')->findOrFail($member);$viewer=$request->user();
-        $interest=ExpressInterest::where(function($q) use ($viewer,$member){
+        $interest=ExpressInterest::where('interaction_type','interest')->where(function($q) use ($viewer,$member){
             $q->where(fn($x)=>$x->where('interested_by',$viewer->id)->where('user_id',$member))
               ->orWhere(fn($x)=>$x->where('interested_by',$member)->where('user_id',$viewer->id));
         })->latest('id')->first();
         $proposal=MarriageProposal::where(function($q) use($viewer,$member){
             $q->where(fn($x)=>$x->where('sender_id',$viewer->id)->where('recipient_id',$member))
               ->orWhere(fn($x)=>$x->where('sender_id',$member)->where('recipient_id',$viewer->id));
-        })->latest('id')->first();
+        })->where(fn($q)=>$q->where('status','!=','draft')->orWhere('sender_id',$viewer->id))->latest('id')->first();
         return response()->json(['data'=>[
             'member_id'=>$person->id,
             'interest'=>$interest?->only(['id','status','initial_note','responded_at']),
