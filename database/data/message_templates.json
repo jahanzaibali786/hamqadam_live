@@ -1,0 +1,242 @@
+[
+ {
+  "type": "interest",
+  "title": "Simple & Sincere",
+  "opening": "Your profile caught my attention.",
+  "body": "I would be happy to connect and learn more about you.",
+  "closing": "Looking forward to a positive connection.",
+  "display_order": 1
+ },
+ {
+  "type": "interest",
+  "title": "Meaningful Connection",
+  "opening": "Some connections are worth exploring.",
+  "body": "Your profile seems interesting, and I would like to take the first step toward getting to know you.",
+  "closing": "Wishing you a wonderful day.",
+  "display_order": 2
+ },
+ {
+  "type": "interest",
+  "title": "Respectful Interest",
+  "opening": "I came across your profile and found it interesting.",
+  "body": "I would appreciate the opportunity to connect if you feel the same.",
+  "closing": "With respect and best wishes.",
+  "display_order": 3
+ },
+ {
+  "type": "interest",
+  "title": "A Thoughtful Beginning",
+  "opening": "Every meaningful journey begins with a small step.",
+  "body": "I would like to express my interest in your profile and see where this connection may lead.",
+  "closing": "May this be the start of something meaningful.",
+  "display_order": 4
+ },
+ {
+  "type": "interest",
+  "title": "Values & Compatibility",
+  "opening": "A strong connection often begins with shared values.",
+  "body": "Your profile encouraged me to reach out and explore the possibility of compatibility.",
+  "closing": "Wishing you the best in your search.",
+  "display_order": 5
+ },
+ {
+  "type": "interest",
+  "title": "Warm & Friendly",
+  "opening": "Your profile left a positive impression on me.",
+  "body": "I would love the opportunity to connect and learn more about your interests and expectations.",
+  "closing": "Hope we get the chance to connect.",
+  "display_order": 6
+ },
+ {
+  "type": "interest",
+  "title": "Serious Intentions",
+  "opening": "I am here with sincere intentions of finding a life partner.",
+  "body": "Your profile caught my attention, and I would like to explore whether we may be compatible.",
+  "closing": "Thank you for considering my interest.",
+  "display_order": 7
+ },
+ {
+  "type": "interest",
+  "title": "A New Possibility",
+  "opening": "Sometimes, a promising future starts with a simple introduction.",
+  "body": "I would like to connect with you and see whether our expectations align.",
+  "closing": "Wishing you happiness and clarity in your search.",
+  "display_order": 8
+ },
+ {
+  "type": "interest",
+  "title": "Elegant & Concise",
+  "opening": "I found your profile worth getting to know.",
+  "body": "I would be glad to connect and explore a potential match.",
+  "closing": "Best wishes for your journey ahead.",
+  "display_order": 9
+ },
+ {
+  "type": "interest",
+  "title": "Compatibility First",
+  "opening": "Finding the right partner starts with understanding one another.",
+  "body": "I would welcome the chance to learn about your values and what you seek in a life partner.",
+  "closing": "I hope we find common ground.",
+  "display_order": 10
+ },
+ {
+  "type": "interest",
+  "title": "Positive First Step",
+  "opening": "Your profile stood out to me in a positive way.",
+  "body": "I would like to express my interest and give us an opportunity to connect.",
+  "closing": "Here's to the possibility of a meaningful connection.",
+  "display_order": 11
+ },
+ {
+  "type": "interest",
+  "title": "Honest & Direct",
+  "opening": "I would like to get to know you with genuine intentions.",
+  "body": "Your profile seems aligned with what I am looking for in a potential life partner.",
+  "closing": "I would be pleased if you considered connecting.",
+  "display_order": 12
+ },
+ {
+  "type": "interest",
+  "title": "Future-Focused",
+  "opening": "A lasting relationship begins with mutual understanding.",
+  "body": "I am interested in learning more about you and exploring the possibility of building a future together.",
+  "closing": "Wishing you success in finding the right match.",
+  "display_order": 13
+ },
+ {
+  "type": "interest",
+  "title": "Gentle & Respectful",
+  "opening": "I hope you are having a pleasant day.",
+  "body": "I came across your profile and would appreciate the opportunity to connect, if you are comfortable.",
+  "closing": "Thank you for your time and consideration.",
+  "display_order": 14
+ },
+ {
+  "type": "interest",
+  "title": "Purposeful Connection",
+  "opening": "I believe the right connection begins with sincerity and respect.",
+  "body": "I would like to express my interest in your profile and see if we could be a good match.",
+  "closing": "May your search lead you to the right person.",
+  "display_order": 15
+ },
+ {
+  "type": "proposal",
+  "title": "Sincere Marriage Intention",
+  "opening": "I believe a strong marriage begins with sincerity, trust, and mutual respect.",
+  "body": "After reviewing your profile, I would like to express my genuine interest in exploring a future together, should our values and expectations align.",
+  "closing": "I would welcome the opportunity to take this step forward together.",
+  "display_order": 1
+ },
+ {
+  "type": "proposal",
+  "title": "Building a Future Together",
+  "opening": "A meaningful partnership is built on understanding, commitment, and shared goals.",
+  "body": "I am interested in getting to know you with the intention of exploring a serious relationship that may lead to marriage.",
+  "closing": "I hope we can discuss this possibility with openness and respect.",
+  "display_order": 2
+ },
+ {
+  "type": "proposal",
+  "title": "Values & Understanding",
+  "opening": "I believe compatibility goes beyond a profile; it grows through shared values and understanding.",
+  "body": "Your profile has encouraged me to consider the possibility of a meaningful partnership, and I would like to explore our compatibility more seriously.",
+  "closing": "I would be glad to hear your thoughts when you feel comfortable.",
+  "display_order": 3
+ },
+ {
+  "type": "proposal",
+  "title": "A Thoughtful Next Step",
+  "opening": "Every lasting commitment begins with an honest conversation.",
+  "body": "I would like to take our connection to the next stage and explore whether we may be suitable life partners.",
+  "closing": "If you share this intention, we can discuss the next steps together.",
+  "display_order": 4
+ },
+ {
+  "type": "proposal",
+  "title": "Respectful Proposal",
+  "opening": "With respect for your choices and expectations, I would like to share my intention.",
+  "body": "I am interested in exploring a marriage-oriented connection with you and understanding whether our long-term goals are compatible.",
+  "closing": "Thank you for considering this proposal thoughtfully.",
+  "display_order": 5
+ },
+ {
+  "type": "proposal",
+  "title": "Family-Oriented Future",
+  "opening": "A life partnership is not only about two people, but also about building trust between families.",
+  "body": "If we find compatibility, I would be happy to discuss a family introduction and the possibility of taking this connection forward toward marriage.",
+  "closing": "I hope we can approach the next steps with mutual understanding.",
+  "display_order": 6
+ },
+ {
+  "type": "proposal",
+  "title": "Commitment & Clarity",
+  "opening": "I value clarity of intention when it comes to choosing a life partner.",
+  "body": "My intention is to explore a serious, respectful connection that could lead to marriage if we both feel compatible.",
+  "closing": "I welcome an honest conversation about our expectations.",
+  "display_order": 7
+ },
+ {
+  "type": "proposal",
+  "title": "A Partnership of Respect",
+  "opening": "I believe a happy marriage grows through kindness, patience, and mutual respect.",
+  "body": "I would like to explore whether we share the values and outlook needed to build a supportive life together.",
+  "closing": "It would be a privilege to learn more about your perspective.",
+  "display_order": 8
+ },
+ {
+  "type": "proposal",
+  "title": "Long-Term Compatibility",
+  "opening": "Choosing a life partner is an important decision that deserves care and understanding.",
+  "body": "I would like us to discuss our priorities, expectations, and future goals to determine whether we could be a suitable match.",
+  "closing": "I look forward to hearing your thoughts whenever you are ready.",
+  "display_order": 9
+ },
+ {
+  "type": "proposal",
+  "title": "Honest & Purposeful",
+  "opening": "I would like to approach this connection with honesty and clear intentions.",
+  "body": "I am interested in exploring the possibility of marriage and understanding whether we are aligned in our values, lifestyle, and future plans.",
+  "closing": "If you are comfortable, we can take the next step at a pace that suits us both.",
+  "display_order": 10
+ },
+ {
+  "type": "proposal",
+  "title": "A Shared Journey",
+  "opening": "The right partnership is one in which both people feel heard, respected, and supported.",
+  "body": "I would be pleased to explore whether we could build that kind of partnership together, with marriage as the intended goal if we are compatible.",
+  "closing": "I hope we can begin this discussion with an open mind.",
+  "display_order": 11
+ },
+ {
+  "type": "proposal",
+  "title": "Maturity & Mutual Choice",
+  "opening": "I believe an important decision like marriage should be made with maturity and mutual consent.",
+  "body": "I would like to share my sincere intention to explore a future together while giving both of us the space to understand our compatibility.",
+  "closing": "Your comfort and honest response are important to me.",
+  "display_order": 12
+ },
+ {
+  "type": "proposal",
+  "title": "Trust & Stability",
+  "opening": "Trust, responsibility, and understanding are qualities I value in a lasting relationship.",
+  "body": "I would like to explore whether our expectations for married life are compatible and whether we can move forward with confidence.",
+  "closing": "I would welcome a thoughtful conversation about our future goals.",
+  "display_order": 13
+ },
+ {
+  "type": "proposal",
+  "title": "Open Conversation",
+  "opening": "A good decision begins with an open and respectful conversation.",
+  "body": "I would like to discuss our expectations for marriage, family involvement, and the kind of future we hope to build.",
+  "closing": "If you are willing, we can decide the next steps together.",
+  "display_order": 14
+ },
+ {
+  "type": "proposal",
+  "title": "A Meaningful Commitment",
+  "opening": "I see marriage as a meaningful commitment grounded in respect, trust, and shared responsibility.",
+  "body": "With that intention, I would like to explore the possibility of becoming life partners, provided we both feel that this is the right match.",
+  "closing": "Thank you for considering this step; I respect whatever decision feels right for you.",
+  "display_order": 15
+ }
+]
