@@ -93,6 +93,8 @@ $add('plan_upgraded', 'Your Experience Just Got Better', 'Your plan has been upg
 $add('plan_downgraded', 'Plan Updated', 'Your plan has been downgraded successfully.', ['push', 'email'], '/packages', true);
 $add('subscription_cancelled', 'Subscription Cancelled', 'Your subscription has been cancelled successfully. Your account remains yours.', ['push', 'email'], '/packages', true);
 
+$add('referral_package_activation_reward', 'You Earned a Package Activation Reward!', 'Your referral activated the :plan package. :coins referral coins have been credited to your account.', ['push', 'email'], '/member/referrals');
+$add('referral_registration_reward', 'Your Registration Referral Reward Is Here', 'Your referral completed registration. :coins referral coins have been credited to your account.', ['push', 'email'], '/member/referrals');
 $add('referral_registered', 'Your Referral Joined Hamqadam', 'Your referral has successfully joined Hamqadam.', ['push'], '/referrals');
 $add('referral_reward', 'Your Referral Reward Is Here', 'You earned :coins Coins from your referral.', ['push'], '/rewards');
 $add('referral_milestone', 'Milestone Reached', 'Congratulations! You reached a referral milestone.', ['push'], '/rewards');

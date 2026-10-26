@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 class ReferralRewardService
 {
     public const EVENT = 'referral_verified';
+    public const PACKAGE_EVENT = 'referral_package_activated';
 
     public function rule(): ?RewardRule
     {
@@ -69,7 +70,7 @@ class ReferralRewardService
         if (! $rule || ! $rule->active || (int) $rule->coin_reward <= 0) return false;
         if (! $this->isEligible($referrer, $referred)) return false;
 
-        return DB::transaction(function () use ($referrer, $referred): bool {
+        $awarded=DB::transaction(function () use ($referrer, $referred): bool {
             // Serialise rewards per referrer, even when scheduler and web/API
             // requests arrive simultaneously.
             $member = Member::where('user_id', $referrer->id)->lockForUpdate()->first();
@@ -91,6 +92,20 @@ class ReferralRewardService
             $member->increment('remaining_interest', (int) $rule->coin_reward);
             return true;
         }, 3);
+        if ($awarded) {
+            try {
+                \App\Services\NotificationHelper::event($referrer, 'referral_registration_reward', [
+                    'event_id'=>'registration-referral-'.$referred->id,
+                    'info_id'=>$referred->id,
+                    'notify_by'=>$referred->id,
+                    'coins'=>(int)$rule->coin_reward,
+                    'deep_link'=>route('member.referrals.index',[],false),
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Registration referral notice failed', ['referrer_id'=>$referrer->id]);
+            }
+        }
+        return $awarded;
     }
 
     /** Reconcile a bounded page without rewarding unverified accounts. */
@@ -116,19 +131,31 @@ class ReferralRewardService
         $awarded = RewardTransaction::where('user_id', $referrer->id)
             ->where('event_key', self::EVENT);
         $count = (clone $awarded)->count();
+        $packageTransactions=RewardTransaction::where('user_id',$referrer->id)->where('event_key',self::PACKAGE_EVENT);
+        $packageCount=(clone $packageTransactions)->count();
+        $packageCoins=(int)(clone $packageTransactions)->sum('coins');
+        $packageRule=RewardRule::where('event_key',self::PACKAGE_EVENT)->first();
         return [
             'referral_code' => $code,
             'referral_url' => route('register', ['referral_code' => $code]),
             'total_referrals' => $total,
             'rewarded_referrals' => $count,
             'pending_referrals' => max(0, $total - $count),
-            'coins_earned' => (int) (clone $awarded)->sum('coins'),
+            'registration_coins_earned' => (int) (clone $awarded)->sum('coins'),
+            'package_coins_earned' => $packageCoins,
+            'package_activation_rewards' => $packageCount,
+            'coins_earned' => (int) (clone $awarded)->sum('coins') + $packageCoins,
             'remaining_coins' => (int) ($referrer->fresh('member')->member?->remaining_interest ?? 0),
             'reward_rule' => ($rule = $this->rule()) ? [
                 'active' => (bool)$rule->active, 'coins_per_referral' => (int)$rule->coin_reward,
                 'max_rewards_per_member' => (int)$rule->max_per_user,
             ] : ['active' => false, 'coins_per_referral' => 0, 'max_rewards_per_member' => 0],
-            'eligibility' => 'Approved, email-verified member with completed registration; no self/duplicate referrals.',
+            'package_reward_rule' => [
+                'active'=>(bool)($packageRule?->active ?? false),
+                'coins_per_activation'=>(int)($packageRule?->coin_reward ?? 0),
+                'max_rewards_per_member'=>(int)($packageRule?->max_per_user ?? 0),
+            ],
+            'eligibility' => 'Registration: verified eligible account. Package: first qualifying paid non-Basic package activation; once per referred member.',
         ];
     }
 }

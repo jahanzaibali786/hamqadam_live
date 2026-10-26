@@ -152,50 +152,15 @@
         @endif
 
         function express_interest(id) {
-            var user_id = {{ Auth::user()->id }}
-            $.post('{{ route('user.remaining_package_value') }}', {
-                _token: '{{ csrf_token() }}',
-                id: user_id,
-                colmn_name: 'remaining_interest'
-            }, function(data) {
-
-                var remaining_interest = data;
-                if (!package_validity || remaining_interest < 1) {
-                    $('.package_update_alert_modal').modal('show');
-                } else {
-                    $('.confirm_modal').modal('show');
-                    $("#confirm_modal_title").html("{{ translate('Confirm Express Interest!') }}");
-                    $("#confirm_modal_content").html(
-                        "<p class='fs-14'>{{ translate('Coin Balance') }}: " +
-                        remaining_interest +
-                        " {{ translate('Coins') }}</p><small class='text-danger fs-12' >{{ translate('**N.B. Expressing an interest will cost') }} " + express_interest_coin_charge + " {{ translate('coin(s)**') }}</small>"
-                    );
-                    $("#confirm_button").attr("onclick", "do_express_interest(" + id + ")");
-
-                }
-            });
+            const memberId = Number(id);
+            if (!Number.isSafeInteger(memberId) || memberId < 1) return;
+            window.location.assign(@json(route('member.workflow.show', ['member' => '__MEMBER__'])).replace('__MEMBER__', String(memberId)));
         }
 
         function do_express_interest(id) {
+            // Older confirm dialogs must not bypass template preview and approval.
             $('.confirm_modal').modal('hide');
-            $("#interest_a_id_" + id).removeAttr("onclick");
-            $("#interest_id_" + id).html("{{ translate('Processing') }}..");
-            $.post('{{ route('express-interest.store') }}', {
-                    _token: '{{ csrf_token() }}',
-                    id: id
-                },
-                function(data) {
-                    // console.log(data);
-                    if (data) {
-                        $("#interest_id_" + id).html("{{ translate('Interest Expressed') }}");
-                        $("#interest_id_" + id).attr("class", "d-block fs-10 opacity-60 text-primary");
-                        AIZ.plugins.notify('success', '{{ translate('Interest Expressed Sucessfully') }}');
-                    } else {
-                        $("#interest_id_" + id).html("{{ translate('Interest') }}");
-                        AIZ.plugins.notify('danger', '{{ translate('Something went wrong') }}');
-                    }
-                }
-            );
+            express_interest(id);
         }
 
         function show_shortlist_requirement(message) {
