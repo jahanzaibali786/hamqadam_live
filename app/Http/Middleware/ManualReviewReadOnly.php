@@ -61,7 +61,20 @@ class ManualReviewReadOnly
             'api.v1.notifications.preferences.update',
         ]);
 
+        // Email verification is part of finishing registration, not a profile
+        // action. AI verification can put a brand-new account into review
+        // seconds after register/complete, before the app has even asked for
+        // the code — blocking these left new members stuck with no way to
+        // verify their email.
+        $emailVerificationAllowed = $request->routeIs([
+            'api.v1.auth.register.request_otp',
+            'api.v1.auth.register.verify_otp',
+            'api.v1.auth.email.verification_code',
+            'api.v1.auth.email.verify',
+        ]);
+
         if ($profileSettingsRoute
+            || $emailVerificationAllowed
             || $helpCenterAllowed
             || $clientStateAllowed
             || ($request->isMethodSafe() && ! $legacyMutation)
