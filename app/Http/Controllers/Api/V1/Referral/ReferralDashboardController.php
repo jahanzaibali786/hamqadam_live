@@ -33,6 +33,7 @@ class ReferralDashboardController extends ApiController
             ->where('event_key', ReferralRewardService::EVENT)->where('reference_type','referred_user')
             ->whereIn('reference_id', $people->getCollection()->pluck('id'))->pluck('reference_id')
             ->map(fn ($id) => (int) $id)->all();
+        $packageRewarded=RewardTransaction::where('user_id',$user->id)->where('event_key',\App\Services\Referral\PaidPackageReferralRewardService::EVENT)->where('reference_type','referred_user')->whereIn('reference_id',$people->getCollection()->pluck('id'))->pluck('reference_id')->map(fn($id)=>(int)$id)->all();
         return $this->success([
             'referrals' => $people->getCollection()->map(static fn(User $person) => [
                 'id' => $person->id,
@@ -40,6 +41,8 @@ class ReferralDashboardController extends ApiController
                 'joined_at' => $person->created_at?->toISOString(),
                 'email_verified' => $person->email_verified_at !== null,
                 'reward_credited' => in_array((int)$person->id, $rewarded, true),
+                'registration_reward_credited'=>in_array((int)$person->id,$rewarded,true),
+                'package_activation_reward_credited'=>in_array((int)$person->id,$packageRewarded,true),
             ])->all(),
             'pagination' => ['page' => $people->currentPage(), 'last_page' => $people->lastPage(), 'total' => $people->total()],
             'summary' => $this->rewards->summary($user, false),
@@ -49,12 +52,12 @@ class ReferralDashboardController extends ApiController
     public function rewardHistory(Request $request): JsonResponse
     {
         $records = RewardTransaction::query()->where('user_id', $request->user()->id)
-            ->where('event_key', ReferralRewardService::EVENT)->latest('id')
+            ->whereIn('event_key',[ReferralRewardService::EVENT, \App\Services\Referral\PaidPackageReferralRewardService::EVENT])->latest('id')
             ->paginate(max(1,min(50,(int)$request->integer('per_page',15))));
         return $this->success([
             'transactions' => $records->getCollection()->map(static fn ($row) => [
                 'id' => $row->id, 'coins' => $row->coins,
-                'referred_user_id' => $row->reference_id,
+                'referred_user_id' => $row->reference_id,'reward_type'=>$row->event_key===\App\Services\Referral\PaidPackageReferralRewardService::EVENT?'paid_package_activation':'registration',
                 'created_at' => $row->created_at?->toISOString(),
             ])->all(),
             'pagination' => ['page' => $records->currentPage(), 'last_page' => $records->lastPage(), 'total' => $records->total()],
