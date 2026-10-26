@@ -22,8 +22,8 @@ class MemberConnectionWorkflowSpecificationTest extends TestCase
         $this->assertStringContainsString('Purposeful Connection', $seed);
         $this->assertStringContainsString('Sincere Marriage Intention', $seed);
         $this->assertStringContainsString('A Meaningful Commitment', $seed);
-        $this->assertSame(15, substr_count($seed, '["interest",'));
-        $this->assertSame(15, substr_count($seed, '["proposal",'));
+        $this->assertSame(15, substr_count($seed, '"interest",'));
+        $this->assertSame(15, substr_count($seed, '"proposal",'));
     }
 
     public function test_connection_service_checks_acceptance_before_chat_and_calls(): void
@@ -33,7 +33,7 @@ class MemberConnectionWorkflowSpecificationTest extends TestCase
         $this->assertStringContainsString('function canCommunicate', $service);
         $this->assertStringContainsString('function canCall', $service);
         $this->assertStringContainsString('function saveProposal', $service);
-        $this->assertStringContainsString("if (!$interest || !$this->canCommunicate", $service);
+        $this->assertStringContainsString('if (!$interest || !$this->canCommunicate', $service);
     }
 
     public function test_web_ui_has_locked_state_copy_and_requires_approval(): void
