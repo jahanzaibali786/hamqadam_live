@@ -266,6 +266,16 @@ document.addEventListener('DOMContentLoaded', function() {
   if (initial && typeof loadChats === 'function') initial.click();
 });
 </script>
+    <script>
+    window.hamqadamWebChatConfig = {
+        userId: {{ (int) Auth::id() }},
+        csrf: @json(csrf_token()),
+        delivered: @json(route('chat.web.delivered')),
+        presence: @json(route('chat.web.presence')),
+        typing: @json(route('chat.typing'))
+    };
+    </script>
+    <script src="{{ static_asset('assets/js/hamqadam-chat-receipts-20261026.js') }}?v=1" defer></script>
     <script type="text/javascript">
         function loadChats(el){
             $(".selected-chat").each(function() {
@@ -415,11 +425,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     var originalName = attachment.original_name || attachment.name || 'Attachment';
                     var extension = attachment.extension ? '.' + attachment.extension : '';
                     var sizeLabel = formatAttachmentSize(attachment.size);
+                    var safeUrl = /^https?:\/\//i.test(downloadUrl) && new URL(downloadUrl).origin === location.origin ? downloadUrl : '#';
+                    var safePreview = /^https?:\/\//i.test(attachment.preview_url || '') && new URL(attachment.preview_url).origin === location.origin ? attachment.preview_url : '';
 
                     if (attachment.type === 'image') {
-                        html += '<div class="mb-2 file-preview-item" title="' + escapeHtml(originalName) + '"><a href="' + escapeHtml(safeDownloadUrl) + '" target="_blank" rel="noopener" class="' + attachmentClass + '" data-attachment-id="' + attachmentId + '" data-download-url="' + escapeHtml(safeDownloadUrl) + '"><div class="thumb"><img src="' + attachmentPreviewUrl + '" class="img-fit"></div><div class="body"><h6 class="d-flex"><span class="text-truncate title">' + escapeHtml(originalName) + '</span><span class="ext">' + escapeHtml(extension) + '</span></h6><p>' + escapeHtml(sizeLabel) + '</p></div></a></div>';
+                        html += '<div class="mb-2 file-preview-item"><a href="' + escapeHtml(safeUrl) + '" target="_blank" rel="noopener"><div class="thumb"><img src="' + escapeHtml(safePreview) + '" class="img-fit" alt=""></div><div class="body"><span class="title">' + escapeHtml(originalName) + '</span></div></a></div>';
                     } else {
-                        html += '<div class="mb-2 file-preview-item" title="' + escapeHtml(originalName) + '"><a href="' + escapeHtml(safeDownloadUrl) + '" target="_blank" rel="noopener" class="' + attachmentClass + '" data-attachment-id="' + attachmentId + '" data-download-url="' + escapeHtml(safeDownloadUrl) + '"><div class="thumb"><i class="la la-file-text"></i></div><div class="body"><h6 class="d-flex"><span class="text-truncate title">' + escapeHtml(originalName) + '</span><span class="ext">' + escapeHtml(extension) + '</span></h6><p>' + escapeHtml(sizeLabel) + '</p></div></a></div>';
+                        html += '<div class="mb-2 file-preview-item"><a href="' + escapeHtml(safeUrl) + '" target="_blank" rel="noopener"><i class="las la-file-alt"></i> ' + escapeHtml(originalName) + ' (' + escapeHtml(sizeLabel) + ')</a></div>';
                     }
                 });
 
