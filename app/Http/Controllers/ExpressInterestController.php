@@ -180,113 +180,30 @@ class ExpressInterestController extends Controller
 
     public function accept_interest(Request $request)
     {
-        $interest = ExpressInterest::findOrFail($request->interest_id);
-        $interest->status = 1;
-        if ($interest->save()) {
-            // $existing_chat_thread = ChatThread::where('sender_user_id', $interest->interested_by)->where('receiver_user_id', $interest->user_id)->first();
-
-            $existing_chat_thread = ChatThread::where(function ($query) use ($interest) {
-                $query->where('sender_user_id', $interest->interested_by)->where('receiver_user_id', $interest->user_id);
-            })->orWhere(function ($query) use ($interest) {
-                $query->where('receiver_user_id', $interest->interested_by)->where('sender_user_id', $interest->user_id);
-            })->first();
-
-            if ($existing_chat_thread == null) {
-                $chat_thread                    = new ChatThread;
-                $chat_thread->thread_code       = $interest->interested_by . date('Ymd') . $interest->user_id;
-                $chat_thread->sender_user_id    = $interest->interested_by;
-                $chat_thread->receiver_user_id  = $interest->user_id;
-                $chat_thread->save();
-            }
-
-            $notify_user = User::where('id', $interest->interested_by)->first();
-
-            // Express Interest Store Notification for member
-            try {
-                $notify_type = 'accept_interest';
-                $id = unique_notify_id();
-                $notify_by = Auth::user()->id;
-                $info_id = $interest->id;
-                $message = Auth::user()->first_name . ' ' . Auth::user()->last_name . ' ' . translate(' has accepted your interest.');
-                $route = route('my_interests.index');
-
-                // fcm 
-                if (get_setting('firebase_push_notification') == 1) {
-                    $fcmTokens = User::where('id', $interest->interested_by)->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
-                    self::sendFirebaseNotification($fcmTokens, $notify_user, $notify_type, $message, $notify_by, $info_id);
-                }
-                // end of fcm
-
-                Notification::send($notify_user, new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route));
-            } catch (\Exception $e) {
-                // dd($e);
-            }
-
-            // Express Interest email send to member
-            if ($notify_user->email != null && get_email_template('email_on_accepting_interest', 'status')) {
-                EmailUtility::email_on_accept_request($notify_user, 'email_on_accepting_interest');
-            }
-
-            // Express Interest Send SMS to member
-            if ($notify_user->phone != null && addon_activation('otp_system') && (get_sms_template('accept_interest', 'status') == 1)) {
-                SmsUtility::sms_on_accept_request($notify_user, 'accept_interest');
-            }
-            flash(translate('Interest has been accepted successfully.'))->success();
-            return redirect()->route('interest_requests');
-        } else {
-            flash(translate('Sorry! Something went wrong.'))->error();
-            return back();
-        }
+        $data=$request->validate(['interest_id'=>'required|integer']);
+        $interest=ExpressInterest::where('interaction_type','interest')->findOrFail($data['interest_id']);
+        app(\App\Services\MemberConnectionWorkflow::class)->respondInterest(Auth::user(),$interest,true);
+        flash(translate('Interest has been accepted successfully.'))->success();
+        return redirect()->route('interest_requests');
     }
 
     public function reject_interest(Request $request)
     {
-        $interest = ExpressInterest::findOrFail($request->interest_id);
-
-        if (ExpressInterest::destroy($request->interest_id)) {
-
-            $notify_user = User::where('id', $interest->user_id)->first();
-            try {
-                $notify_type = 'reject_interest';
-                $id = unique_notify_id();
-                $notify_by = Auth::user()->id;
-                $info_id = $interest->id;
-                $message = Auth::user()->first_name . ' ' . Auth::user()->last_name . ' ' . translate(' has rejected your interest.');
-                $route = route('interest_requests');
-
-                // fcm 
-                if (get_setting('firebase_push_notification') == 1) {
-                    $fcmTokens = User::where('id', $interest->user_id)->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
-                    self::sendFirebaseNotification($fcmTokens, $notify_user, $notify_type, $message, $notify_by, $info_id);
-                }
-                // end of fcm
-
-                Notification::send($notify_user, new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route));
-            } catch (\Exception $e) {
-                // dd($e);
-            }
-
-            flash(translate('Interest has been rejected successfully.'))->success();
-            return redirect()->back();
-        } else {
-            flash(translate('Sorry! Something went wrong.'))->error();
-            return back();
-        }
+        $data=$request->validate(['interest_id'=>'required|integer']);
+        $interest=ExpressInterest::where('interaction_type','interest')->findOrFail($data['interest_id']);
+        app(\App\Services\MemberConnectionWorkflow::class)->respondInterest(Auth::user(),$interest,false);
+        flash(translate('Interest has been declined.'))->success();
+        return redirect()->route('interest_requests');
     }
 
     public function remove_interest(Request $request)
     {
-        $interest = ExpressInterest::where('user_id', Auth::id())
-            ->where('status', 1)
-            ->findOrFail($request->interest_id);
-
-        if (ExpressInterest::destroy($interest->id)) {
-            flash(translate('Accepted interest has been removed successfully.'))->success();
-            return redirect()->back();
-        }
-
-        flash(translate('Sorry! Something went wrong.'))->error();
-        return back();
+        $data=$request->validate(['interest_id'=>'required|integer']);
+        $interest=ExpressInterest::where('interaction_type','interest')->where('user_id',Auth::id())
+            ->where('status',1)->findOrFail($data['interest_id']);
+        $interest->status=\App\Enums\ProposalStatus::Cancelled;
+        $interest->save();
+        return redirect()->route('interest_requests')->with('success','Connection revoked.');
     }
 
     /**
