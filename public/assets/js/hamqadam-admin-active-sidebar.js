@@ -7,7 +7,7 @@ function boot(){
  const target=links.find(a=>a.classList.contains('active'))||links[0]||menu.querySelector('a.aiz-side-nav-link.active,li.mm-active > a.aiz-side-nav-link');
  if(!target)return;
  target.classList.add('active');target.setAttribute('aria-current','page');
- for(let p=target.parentElement;p&&p!==menu;p=p.parentElement){if(p.tagName==='LI')p.classList.add('mm-active');if(p.tagName==='UL'){p.classList.add('mm-show');p.style.display='block';p.style.height='auto';p.style.visibility='visible'}}
+ for(let p=target.parentElement;p&&p!==menu;p=p.parentElement){if(p.tagName==='LI')p.classList.add('mm-active');if(p.tagName==='UL'){p.classList.add('mm-show');p.removeAttribute('style')}}
  const scroll=()=>{let scroller=target.parentElement;while(scroller&&scroller!==document.body){const st=getComputedStyle(scroller);if(/auto|scroll/.test(st.overflowY)&&scroller.scrollHeight>scroller.clientHeight+3)break;scroller=scroller.parentElement}
  if(!scroller||scroller===document.body)scroller=document.querySelector('.aiz-side-nav-wrap')||document.querySelector('.aiz-sidebar.left');
  if(!scroller)return;
