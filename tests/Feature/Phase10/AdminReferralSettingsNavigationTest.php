@@ -8,9 +8,9 @@ class AdminReferralSettingsNavigationTest extends TestCase
         $sidebar = file_get_contents(resource_path('views/admin/inc/sidenav.blade.php'));
         $settings = substr($sidebar, strpos($sidebar, '<!-- General settings -->'));
         $this->assertStringContainsString("route('admin.referrals.settings')", $settings);
-        $this->assertStringContainsString("translate('Referral Settings')", $settings);
+        $this->assertStringContainsString('>Referral Settings</span>', $settings);
         $this->assertStringContainsString("user_type === 'admin'", $settings);
-        $this->assertStringContainsString("can('set_referral_commission')", $settings);
+        $this->assertStringNotContainsString("can('set_referral_commission')", $settings);
     }
     public function test_referral_reward_settings_routes_are_admin_only(): void
     {
@@ -19,6 +19,8 @@ class AdminReferralSettingsNavigationTest extends TestCase
         $this->assertStringContainsString("name('admin.referrals.settings')", $routes);
         $controller = file_get_contents(app_path('Http/Controllers/ReferralSystemController.php'));
         $this->assertStringContainsString('function authorizeRewardSettings()', $controller);
+        $this->assertStringContainsString("\$user->user_type === 'admin'", $controller);
+        $this->assertStringNotContainsString("\$user->can('set_referral_commission')", $controller);
         $this->assertGreaterThanOrEqual(3, substr_count($controller, '$this->authorizeRewardSettings()'));
     }
 }

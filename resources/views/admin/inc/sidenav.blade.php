@@ -777,7 +777,9 @@
 
 
                 <!-- General settings -->
-                @if (auth()->user()->can('general_settings') || auth()->user()->can('coin_charge_settings') ||
+                @if (auth()->user()->user_type === 'admin' ||
+                auth()->user()->can('general_settings') ||
+                auth()->user()->can('coin_charge_settings') ||
                 auth()->user()->can('show_languages') ||
                 auth()->user()->can('show_currencies') ||
                 auth()->user()->can('payment_methods') ||
@@ -785,9 +787,7 @@
                 auth()->user()->can('email_templates') ||
                 auth()->user()->can('third_party_settings') ||
                 auth()->user()->can('chat_realtime_settings') ||
-                auth()->user()->can('social_media_login_settings') ||
-                auth()->user()->user_type === 'admin' ||
-                auth()->user()->can('set_referral_commission'))
+                auth()->user()->can('social_media_login_settings'))
                 <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
                         <i class="las la-cog aiz-side-nav-icon"></i>
@@ -809,11 +809,12 @@
                             </a>
                         </li>
                         @endcan
-                        @if (auth()->user()->user_type === 'admin' || auth()->user()->can('set_referral_commission'))
+                        {{-- Referral reward configuration is admin-only, not permission-based. --}}
+                        @if (auth()->user()->user_type === 'admin')
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('admin.referrals.settings') }}"
-                               class="aiz-side-nav-link {{ areActiveRoutes(['admin.referrals.settings', 'set_referral_commission']) }}">
-                                <span class="aiz-side-nav-text">{{ translate('Referral Settings') }}</span>
+                               class="aiz-side-nav-link {{ request()->routeIs('admin.referrals.settings', 'set_referral_commission') ? 'active' : '' }}">
+                                <span class="aiz-side-nav-text">Referral Settings</span>
                             </a>
                         </li>
                         @endif
