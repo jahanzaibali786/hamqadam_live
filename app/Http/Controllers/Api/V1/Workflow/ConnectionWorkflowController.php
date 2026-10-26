@@ -71,6 +71,12 @@ class ConnectionWorkflowController extends Controller
         $proposal=$this->workflow->answerProposal($request->user(),$proposal,$data['decision']==='accept');
         return response()->json(['data'=>['id'=>$proposal->id,'status'=>$proposal->status,'family_stage'=>$proposal->family_stage]]);
     }
+    public function aiDraft(Request $request,int $member): JsonResponse
+    {
+        $data=$request->validate(['language'=>'required|in:en,ur','intention'=>'required|string|min:10|max:700']);
+        $draft=app(\App\Services\AiProposalDraftService::class)->generate($request->user(),User::findOrFail($member),$data['language'],$data['intention']);
+        return response()->json(['data'=>['draft'=>$draft,'requires_approval'=>true,'source'=>'ai']]);
+    }
     public function preferences(Request $request): JsonResponse
     {
         if($request->isMethod('get')){
