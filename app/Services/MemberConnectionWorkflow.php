@@ -19,20 +19,88 @@ class MemberConnectionWorkflow
         })->where('status',1)->latest('id')->first();
     }
 
-    public function canCommunicate(int $a, int $b): bool
+    /**
+     * Previously, accepted marriage proposals were stored in express_interests
+     * and were allowed to open a chat. The 2026-10-26 interaction_type backfill
+     * reclassified those rows to "proposal", while the new communication gate
+     * only searched "interest": already accepted members were then rejected.
+     *
+     * The compatibility path is intentionally narrow: an accepted legacy
+     * proposal must have an acceptance timestamp or acceptance event AND an existing
+     * chat between these same two members. Pending, declined and unaccepted
+     * proposals never unlock communication.
+     */
+    public function hasAcceptedConnection(int $a, int $b): bool
     {
-        if ($a === $b || !$this->interestBetween($a,$b)) return false;
-        if (\App\Models\IgnoredUser::where(function ($query) use ($a,$b) {
-            $query->where(fn ($q) => $q->where('ignored_by',$a)->where('user_id',$b))
-                ->orWhere(fn ($q) => $q->where('ignored_by',$b)->where('user_id',$a));
-        })->exists()) return false;
-        if (\App\Models\ChatThread::where(function ($query) use ($a,$b) {
-            $query->where(fn ($q) => $q->where('sender_user_id',$a)->where('receiver_user_id',$b))
-                ->orWhere(fn ($q) => $q->where('sender_user_id',$b)->where('receiver_user_id',$a));
-        })->where(function ($q) {
-            $q->whereNotNull('blocked_by_user')->orWhere('active',0);
-        })->exists()) return false;
-        return true;
+        if ($a === $b) return false;
+        if ($this->interestBetween($a, $b)) return true;
+
+        $pair = static function ($query) use ($a, $b): void {
+            $query->where(function ($both) use ($a, $b) {
+                $both->where(fn ($side) => $side->where('interested_by', $a)->where('user_id', $b))
+                    ->orWhere(fn ($side) => $side->where('interested_by', $b)->where('user_id', $a));
+            });
+        };
+
+        if (!ExpressInterest::query()->where('interaction_type', 'proposal')
+            ->where('status', \App\Enums\ProposalStatus::Accepted->value)
+            ->where($pair)
+            ->where(function ($query) {
+                $query->whereNotNull('responded_at')
+                    ->orWhereHas('events', fn ($event) => $event->where('event', 'proposal_accepted'));
+            })
+            ->exists()) {
+            return false;
+        }
+
+        return \App\Models\ChatThread::query()->where(function ($query) use ($a, $b) {
+            $query->where(fn ($side) => $side->where('sender_user_id', $a)->where('receiver_user_id', $b))
+                ->orWhere(fn ($side) => $side->where('sender_user_id', $b)->where('receiver_user_id', $a));
+        })->exists();
+    }
+
+    /**
+     * Null means messaging is permitted. Otherwise return a precise reason
+     * instead of misleading an accepted member with "interest not accepted".
+     * When a specific thread is supplied, inspect only that thread: a stale
+     * inactive conversation elsewhere between the pair must not block it.
+     */
+    public function communicationDenialReason(int $a, int $b, ?\App\Models\ChatThread $thread = null): ?string
+    {
+        if ($a === $b) return 'You cannot message your own profile.';
+        if (!$this->hasAcceptedConnection($a, $b)) {
+            return 'Chat requires an accepted interest. If your interest is already accepted, please contact support to review the connection record.';
+        }
+        if ($this->isBlocked($a, $b)) {
+            return 'Messaging is unavailable because one of these profiles is blocked or ignored.';
+        }
+
+        if ($thread) {
+            $participants = [(int) $thread->sender_user_id, (int) $thread->receiver_user_id];
+            if (!in_array($a, $participants, true) || !in_array($b, $participants, true)) {
+                return 'This conversation does not belong to the selected members.';
+            }
+            if ($thread->blocked_by_user !== null) {
+                return 'This conversation is blocked. Unblock it before sending messages.';
+            }
+            if ($thread->active !== null && (int) $thread->active === 0) {
+                return 'This conversation is inactive. Contact support if your connection is still accepted.';
+            }
+            return null;
+        }
+
+        if (\App\Models\ChatThread::query()->where(function ($query) use ($a, $b) {
+            $query->where(fn ($side) => $side->where('sender_user_id', $a)->where('receiver_user_id', $b))
+                ->orWhere(fn ($side) => $side->where('sender_user_id', $b)->where('receiver_user_id', $a));
+        })->whereNotNull('blocked_by_user')->exists()) {
+            return 'This conversation is blocked. Unblock it before sending messages.';
+        }
+        return null;
+    }
+
+    public function canCommunicate(int $a, int $b, ?\App\Models\ChatThread $thread = null): bool
+    {
+        return $this->communicationDenialReason($a, $b, $thread) === null;
     }
 
     public function canCall(int $a, int $b, string $type): bool

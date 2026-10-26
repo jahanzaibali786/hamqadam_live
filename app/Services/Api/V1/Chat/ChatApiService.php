@@ -115,8 +115,9 @@ class ChatApiService
         $thread = $this->threadForUser($user, $threadId);
         $this->ensureNotBlocked($thread);
         $otherId = (int) ($thread->sender_user_id === $user->id ? $thread->receiver_user_id : $thread->sender_user_id);
-        if (!app(\App\Services\MemberConnectionWorkflow::class)->canCommunicate($user->id, $otherId)) {
-            throw new \App\Exceptions\ApiException('Chat requires an accepted interest.', 403, 'interest_not_accepted');
+        $denial = app(\App\Services\MemberConnectionWorkflow::class)->communicationDenialReason((int)$user->id, $otherId, $thread);
+        if ($denial !== null) {
+            throw new \App\Exceptions\ApiException($denial, 403, 'chat_not_permitted');
         }
         $this->chargeSender($user);
         // Sending into a conversation you deleted un-deletes it on YOUR side
