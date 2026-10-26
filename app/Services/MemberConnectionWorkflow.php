@@ -26,7 +26,7 @@ class MemberConnectionWorkflow
      * only searched "interest": already accepted members were then rejected.
      *
      * The compatibility path is intentionally narrow: an accepted legacy
-     * proposal must have a recorded recipient-acceptance event AND an existing
+     * proposal must have an acceptance timestamp or acceptance event AND an existing
      * chat between these same two members. Pending, declined and unaccepted
      * proposals never unlock communication.
      */
@@ -45,7 +45,10 @@ class MemberConnectionWorkflow
         if (!ExpressInterest::query()->where('interaction_type', 'proposal')
             ->where('status', \App\Enums\ProposalStatus::Accepted->value)
             ->where($pair)
-            ->whereHas('events', fn ($query) => $query->where('event', 'proposal_accepted'))
+            ->where(function ($query) {
+                $query->whereNotNull('responded_at')
+                    ->orWhereHas('events', fn ($event) => $event->where('event', 'proposal_accepted'));
+            })
             ->exists()) {
             return false;
         }
