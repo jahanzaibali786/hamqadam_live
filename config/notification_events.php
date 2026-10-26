@@ -54,6 +54,9 @@ $add('got_match', 'A Meaningful Match', 'You confirmed a successful match with :
 $add('match_success', 'Your Story Found a Connection', 'Congratulations on your successful match with :name. May this be the beginning of something beautiful.', ['push', 'email'], '/matches');
 
 $add('proposal_received', 'You’ve Received a Marriage Proposal 💍', ':name has sent you a marriage proposal on Hamqadam. Review the details and respond when you\'re ready.', ['push', 'email'], '/interest/requests');
+$add('workflow_family_meeting_scheduled', 'Family Meeting Scheduled', 'A family meeting has been scheduled. Review the meeting details securely in Hamqadam.', ['push','email'], '/interest/requests');
+$add('workflow_family_meeting_reminder_24', 'Family Meeting Tomorrow', 'Your planned family meeting is approaching. Check the meeting details in Hamqadam.', ['push','email_optional'], '/interest/requests');
+$add('workflow_family_meeting_reminder_1', 'Family Meeting in One Hour', 'Your family meeting is coming up in about one hour. See the latest information in Hamqadam.', ['push','email_optional'], '/interest/requests');
 $add('workflow_interest_reminder', 'An Interest Is Awaiting Your Response', 'You have a pending interest to review when you are ready.', ['push'], '/interest/requests');
 $add('workflow_proposal_reminder', 'A Proposal Is Awaiting Your Response', 'A marriage proposal is awaiting your decision. Please respond when you are comfortable.', ['push'], '/interest/requests');
 $add('proposal_accepted', 'Your Proposal Has Been Accepted! 💍', 'Your proposal has been accepted. You can now move forward with a family discussion and plan the next step together.', ['push', 'email'], '/interest/requests');
