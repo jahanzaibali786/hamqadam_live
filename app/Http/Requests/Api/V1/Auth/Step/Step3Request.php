@@ -11,7 +11,7 @@ class Step3Request extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'about_me' => ['nullable', 'string', 'max:2000'],
+            'about_me' => ['nullable', 'string', 'max:2500'],
             'looking_for' => ['nullable', 'string', 'max:2000'],
             'life_values' => ['nullable', 'array'],
             'life_values.*' => ['string', 'max:100'],

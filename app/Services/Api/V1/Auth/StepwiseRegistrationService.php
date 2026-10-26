@@ -712,7 +712,7 @@ class StepwiseRegistrationService
             9 => ['height' => ['required', 'numeric', 'between:0,9.99'], 'diet' => ['required', Rule::in(['Vegetarian', 'Non-Vegetarian'])]],
             10 => ['annual_salary_range_id' => ['required', 'integer', 'exists:annual_salary_ranges,id'], 'annual_income' => ['nullable', 'numeric', 'min:0'], 'employment_status' => ['required', Rule::in(['government', 'private', 'civil', 'defence', 'self_employed', 'unemployed', 'retired'])], 'profession_category_id' => ['nullable', 'integer', 'exists:profession_categories,id'], 'profession_id' => ['nullable', 'integer', 'exists:professions,id'], 'job_title' => ['nullable', 'string', 'max:255'], 'organization' => ['nullable', 'string', 'max:255'], 'years_of_experience' => ['nullable', 'integer', 'min:0', 'max:50']],
             11 => ['profile_photo' => ['required', 'string'], 'additional_photos' => ['nullable', 'array'], 'additional_photos.*' => ['nullable', 'string']],
-            12 => ['about_me' => ['required', 'string', 'max:300']],
+            12 => ['about_me' => ['required', 'string', 'max:2500']],
             13 => ['cnic_number' => ['required', 'string', 'max:30'], 'cnic_front' => ['required', 'string'], 'cnic_back' => ['required', 'string'], 'selfie_verification' => ['required', 'string']],
             14 => ['hobbies' => ['nullable', 'string', 'max:500']],
             15 => ['father_occupation' => ['nullable', 'string', 'max:255'], 'mother_occupation' => ['nullable', 'string', 'max:255'], 'siblings_sisters' => ['nullable', 'integer', 'min:0'], 'siblings_brothers' => ['nullable', 'integer', 'min:0']],
