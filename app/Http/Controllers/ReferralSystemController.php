@@ -20,7 +20,7 @@ class ReferralSystemController extends Controller
     private function authorizeRewardSettings(): void
     {
         $user = auth()->user();
-        abort_unless($user && $user->user_type === 'admin', 403);
+        abort_unless(\App\Support\ReferralSettingsAccess::allows($user), 403);
     }
 
     /** Admin referral settings and referral overview. */

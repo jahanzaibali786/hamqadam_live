@@ -777,7 +777,7 @@
 
 
                 <!-- General settings -->
-                @if (auth()->user()->user_type === 'admin' ||
+                @if (\App\Support\ReferralSettingsAccess::allows(auth()->user()) ||
                 auth()->user()->can('general_settings') ||
                 auth()->user()->can('coin_charge_settings') ||
                 auth()->user()->can('show_languages') ||
@@ -810,7 +810,7 @@
                         </li>
                         @endcan
                         {{-- Referral reward configuration is admin-only, not permission-based. --}}
-                        @if (auth()->user()->user_type === 'admin')
+                        @if (\App\Support\ReferralSettingsAccess::allows(auth()->user()))
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('admin.referrals.settings') }}"
                                class="aiz-side-nav-link {{ request()->routeIs('admin.referrals.settings', 'set_referral_commission') ? 'active' : '' }}">
