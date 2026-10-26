@@ -1,13 +1,13 @@
 /* Homepage member carousels only: keep swipe scrolling but hide dots/scrollbars. */
 .hq-route-home .hq-home-member-carousel-wrap{position:relative}
 .hq-route-home .hq-home-carousel-controls{display:flex;justify-content:flex-end;gap:9px;margin:0 9px 10px}
-.hq-route-home .hq-home-carousel-controls button{width:39px;height:39px;border-radius:50%;background:#fff;border:1px solid #edc8da;color:#ad245e;cursor:pointer;display:grid;place-items:center}
-.hq-route-home .hq-home-carousel-controls button:hover,.hq-route-home .hq-home-carousel-controls button:focus-visible{background:#a51a59;color:white}
+.hq-route-home .hq-home-carousel-controls button{width:39px;height:39px;border-radius:50%;background:#fff;border:1px solid #edc8da;color:#a84469;cursor:pointer;display:grid;place-items:center}
+.hq-route-home .hq-home-carousel-controls button:hover,.hq-route-home .hq-home-carousel-controls button:focus-visible{background:#a84469;color:white}
 .hq-route-home .hq-home-controlled-carousel{scrollbar-width:none;-ms-overflow-style:none}
 .hq-route-home .hq-home-controlled-carousel::-webkit-scrollbar{display:none}
 .hq-route-home .hq-home-controlled-carousel .slick-dots{display:none!important}
-.hq-route-home .hq-home-public-photo{background:linear-gradient(135deg,#fae7f0,#f3e9f6);isolation:isolate}
-.hq-route-home .hq-member-photo-placeholder{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(135deg,#fff0f5,#f0e6f3);color:#b86188}
+.hq-route-home .hq-home-public-photo{background:linear-gradient(135deg,#f8f6f7,#f3e9f6);isolation:isolate}
+.hq-route-home .hq-member-photo-placeholder{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(135deg,#fff0f5,#f0e6f3);color:#a84469}
 .hq-route-home .hq-member-photo-placeholder i{font-size:64px;line-height:1}
 .hq-route-home .hq-member-photo-visible{position:relative;z-index:1;display:block;width:100%;height:100%;object-fit:cover;filter:none!important;transform:none!important}
 .hq-route-home .hq-member-photo-visible[hidden]{display:none!important}
