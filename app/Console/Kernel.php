@@ -12,6 +12,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('accounts:purge-deleted')->dailyAt('03:10');
+        $schedule->command('connections:remind-pending --limit=200')->hourly()->withoutOverlapping();
         // Hourly job enforces each user's configured reminder interval and maximum.
         $schedule->command('notifications:remind-unread --limit=500')->hourly()->withoutOverlapping();
         $schedule->command('referrals:award-verified --limit=500')->hourly()->withoutOverlapping();
