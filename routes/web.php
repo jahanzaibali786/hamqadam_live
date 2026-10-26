@@ -287,6 +287,8 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
             Route::post('/chat/report', 'report_chat')->name('chat.report');
             Route::post('/chat/message/delete', 'delete_message')->name('chat.message.delete');
             Route::post('/chat/typing', 'typing_ping')->name('chat.typing');
+            Route::post('/chat/delivered', 'delivered_ping')->name('chat.web.delivered');
+            Route::post('/chat/presence', 'presence_ping')->name('chat.web.presence');
             Route::post('/chat/voice-reply', 'voice_reply')->name('chat.voice_reply');
             Route::post('/chat/disappear', 'set_disappear')->name('chat.disappear');
             Route::get('/chat/refresh/{id}', 'chat_refresh')->name('chat_refresh');

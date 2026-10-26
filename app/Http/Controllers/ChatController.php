@@ -50,6 +50,7 @@ class ChatController extends Controller
     {
         $chat_thread = ChatThread::findOrFail($id);
         $this->ensureParticipant($chat_thread);
+        $this->markDeliveredForWeb($chat_thread);
         $readIds = [];
         foreach ($chat_thread->chats as $chat) {
             if ($chat->sender_user_id != Auth::user()->id && ! $chat->seen) {
@@ -112,6 +113,7 @@ class ChatController extends Controller
     {
         $chat_thread = ChatThread::findOrFail($id);
         $this->ensureParticipant($chat_thread);
+        $this->markDeliveredForWeb($chat_thread);
         $chats = $this->visibleChats($chat_thread)
             ->where('sender_user_id', '!=', Auth::user()->id)
             ->where('seen', 0)
@@ -396,6 +398,37 @@ class ChatController extends Controller
 
         return response()->json(['ok' => true]);
     }
+    public function delivered_ping(Request $request)
+    {
+        $data=$request->validate(['chat_thread_id'=>'required|integer']);
+        $thread=ChatThread::findOrFail($data['chat_thread_id']);
+        $this->ensureParticipant($thread);
+        $this->markDeliveredForWeb($thread);
+        return response()->json(['ok'=>true]);
+    }
+
+    public function presence_ping(Request $request)
+    {
+        $data=$request->validate(['chat_thread_id'=>'required|integer']);
+        $thread=ChatThread::findOrFail($data['chat_thread_id']);
+        $this->ensureParticipant($thread);
+        \Illuminate\Support\Facades\Cache::put('user-is-online-'.Auth::id(),true,now()->addSeconds(90));
+        Auth::user()->forceFill(['last_active_at'=>now()])->save();
+        $partner=$this->chatPartner($thread);
+        $online=$partner && \Illuminate\Support\Facades\Cache::has('user-is-online-'.$partner->id);
+        return response()->json(['online'=>(bool)$online,'last_seen'=>$partner?->last_active_at?->diffForHumans() ?? $partner?->last_login_at?->diffForHumans()]);
+    }
+
+    private function markDeliveredForWeb(ChatThread $thread): void
+    {
+        $ids=Chat::where('chat_thread_id',$thread->id)
+            ->where('sender_user_id','!=',Auth::id())
+            ->whereNull('delivered_at')->pluck('id')->all();
+        if (!$ids) return;
+        Chat::whereIn('id',$ids)->update(['delivered_at'=>now()]);
+        $this->broadcastSafely(new \App\Events\ChatMessageDelivered($thread->id,$ids,Auth::id(),now()->toISOString()));
+    }
+
     private function deleteColumnFor(ChatThread $thread, User $user): string
     {
         return (int) $thread->sender_user_id === (int) $user->id ? 'deleted_by_sender_at' : 'deleted_by_receiver_at';

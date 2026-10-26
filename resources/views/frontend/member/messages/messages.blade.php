@@ -54,7 +54,7 @@
                     @endif
 
                 @php $inlinePartnerLastSeen = Cache::has('user-is-online-' . $chat_thread->$user_to_show->id) ? null : optional($chat_thread->$user_to_show->last_active_at ?? $chat_thread->$user_to_show->last_login_at); @endphp
-                <div class="fs-11 text-muted chat-partner-presence-inline">
+                <div class="fs-11 text-muted chat-partner-presence-inline hm-chat-presence" id="hm-web-presence">
                     @if (Cache::has('user-is-online-' . $chat_thread->$user_to_show->id))
                         <span class="text-success fw-600">{{ translate('Online') }}</span>
                     @elseif($inlinePartnerLastSeen)
@@ -201,6 +201,7 @@
 
     </div>
 
+    <div class="hm-chat-typing" id="hm-web-typing" hidden aria-live="polite"><span class="hm-chat-typing-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>Typing a message…</span></div>
     <div class="chat-footer border-top p-3 attached-bottom bg-white">
 
         @if (!empty($chat_blocked_by_me))
