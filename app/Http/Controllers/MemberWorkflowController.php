@@ -50,7 +50,7 @@ class MemberWorkflowController extends Controller
     }
     public function proposal(Request $request, int $member)
     {
-        $data=$request->validate(['template_id'=>'nullable|integer','language'=>'required|in:en,ur','source'=>'required|in:static,ai','message'=>'required|string|min:20|max:5000','approved'=>'accepted','send'=>'required|in:yes,draft']);
+        $data=$request->validate(['template_id'=>'nullable|integer','language'=>'required|in:en,ur','source'=>'required|in:static,ai','message'=>'required|string|min:20|max:5000','approved'=>'required_if:send,yes|nullable|accepted','send'=>'required|in:yes,draft']);
         $this->workflow->saveProposal($request->user(),User::findOrFail($member),$data,$data['send']==='yes');
         return back()->with('success',$data['send']==='yes'?'Marriage proposal sent.':'Draft saved.');
     }
