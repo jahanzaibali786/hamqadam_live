@@ -53,6 +53,18 @@ class MemberWorkflowController extends Controller
         $this->workflow->answerProposal($request->user(),$proposal,$data['decision']==='accept');
         return back()->with('success','Proposal response recorded.');
     }
+    public function aiDraft(Request $request, int $member)
+    {
+        $data=$request->validate([
+            'language'=>'required|in:en,ur',
+            'intention'=>'required|string|min:10|max:700',
+        ]);
+        $draft=app(\App\Services\AiProposalDraftService::class)->generate(
+            $request->user(),User::findOrFail($member),$data['language'],$data['intention']
+        );
+        return response()->json(['draft'=>$draft,'source'=>'ai','requires_approval'=>true]);
+    }
+
     public function preferences(Request $request)
     {
         $data=$request->validate(['allow_audio_calls'=>'required|boolean','allow_video_calls'=>'required|boolean']);
