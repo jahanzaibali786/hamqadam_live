@@ -11,7 +11,7 @@ class MemberProfileBlogsWalletMatchedFixTest extends TestCase
         $blade=file_get_contents(resource_path('views/frontend/member/matched_profiles.blade.php'));
         $this->assertSame(1, substr_count($blade, '@forelse'));
         $this->assertSame(1, substr_count($blade, '@endforelse'));
-        $this->assertSame(2, substr_count($blade, '@if ('));
+        $this->assertSame(3, substr_count($blade, '@if ('));
         $this->assertSame(3, substr_count($blade, '@endif'));
         $this->assertStringNotContainsString('@endif@if', $blade);
         $this->assertStringContainsString('frontend.member.partials.match_actions', $blade);
