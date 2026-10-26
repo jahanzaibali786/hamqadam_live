@@ -5,6 +5,7 @@ use App\Http\Controllers\WalletWithdrawRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/settings/referrals', [ReferralSystemController::class, 'set_referral_commission'])->name('admin.referrals.settings');
     Route::get('/set-referral-commission', [ReferralSystemController::class, 'set_referral_commission'])->name('set_referral_commission');
     Route::get('/referal/users', [ReferralSystemController::class, 'index'])->name('referals.users');
     Route::get('/referal/earnings', [ReferralSystemController::class, 'referal_earnings_admin'])->name('referal.earnings_admin');
