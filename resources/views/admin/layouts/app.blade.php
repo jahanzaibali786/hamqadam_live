@@ -28,6 +28,7 @@
     <!-- aiz core css -->
     <link rel="stylesheet" href="{{ static_asset('assets/css/aiz-core.css?v=') }}{{ rand(1000,9999) }}">
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-brand.css') }}?v=20261023">
+    <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-admin-sidebar-accordion-20261026.css') }}?v=2">
 
     @if (\App\Models\Language::where('code', Session::get('locale', Config::get('app.locale')))->first()->rtl == 1)
         <link rel="stylesheet" href="{{ static_asset('assets/css/bootstrap-rtl.min.css') }}">
@@ -132,7 +133,7 @@
         </script>
     @endif
 
-    <script defer src="{{ static_asset('assets/js/hamqadam-admin-active-sidebar.js') }}?v=20261024-5"></script>
+    <script defer src="{{ static_asset('assets/js/hamqadam-admin-active-sidebar.js') }}?v=20261026-2"></script>
     @yield('script')
 
 
