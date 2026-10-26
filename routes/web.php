@@ -223,6 +223,13 @@ Route::group(['middleware' => ['member', 'verified', 'manual.review']], function
 });
 
 
+// Profile details are accessible to authenticated approved members without a paid package.
+// Other discovery and paid actions retain the existing check.package middleware.
+Route::middleware(['auth', 'member', 'verified', 'manual.review', 'activated'])->group(function () {
+    Route::get('/member-profile/{id}', [HomeController::class, 'view_member_profile'])
+        ->whereNumber('id')->name('member_profile');
+});
+
 Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.review']], function () {
     Route::controller(HomeController::class)->middleware('activated')->group(function () {
         Route::post('/new-user-email', 'update_email')->name('user.change.email');
@@ -230,7 +237,7 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
 
         Route::any('/member-listing', 'member_listing')->name('member.listing');
         Route::get('/active-members', 'member_listing')->defaults('listing_context', 'standalone')->name('members.public_listing');
-        Route::get('/member-profile/{id}', 'view_member_profile')->name('member_profile');
+
 
         Route::post('/user/remaining_package_value', 'user_remaining_package_value')->name('user.remaining_package_value');
     });
