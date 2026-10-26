@@ -172,8 +172,35 @@ class StepwiseRegistrationService
                 $this->markCompleted($member->fresh(), $step);
             }
 
+            $this->attachReferrer($user, $data['referral_code'] ?? null);
+
             return $this->tokens->issue($user->fresh('member'), $deviceData);
         });
+    }
+
+    /**
+     * Records who referred this member. An unknown, blank or self-owned code is
+     * ignored on purpose: a bad referral code must never block a registration.
+     * The reward itself is granted later by ReferralRewardService once the
+     * account is eligible.
+     */
+    private function attachReferrer(User $user, mixed $code): void
+    {
+        $code = trim((string) $code);
+        if ($code === '' || ! addon_activation('referral_system')) {
+            return;
+        }
+
+        $referrer = User::query()
+            ->where('user_type', 'member')
+            ->whereNotNull('code')
+            ->whereRaw('LOWER(code) = ?', [mb_strtolower($code)])
+            ->where('id', '!=', $user->id)
+            ->first();
+
+        if ($referrer) {
+            $user->forceFill(['referred_by' => $referrer->id])->save();
+        }
     }
 
     public function status(User $user): array
@@ -612,21 +639,21 @@ class StepwiseRegistrationService
     private function step17(User $user, array $data): void
     {
         PartnerExpectation::updateOrCreate(['user_id' => $user->id], [
-            'preferred_age_min' => $data['partner_age_min'],
-            'preferred_age_max' => $data['partner_age_max'],
-            'height_min' => $data['partner_height_min'],
-            'height_max' => $data['partner_height_max'],
-            'marital_status_id' => $data['partner_marital_status_id'],
-            'religion_id' => $data['partner_religion_id'],
-            'caste_id' => $data['partner_caste_id'],
-            'language_id' => $data['partner_language_id'],
-            'preferred_country_id' => $data['partner_country_id'],
+            'preferred_age_min' => $data['partner_age_min'] ?? null,
+            'preferred_age_max' => $data['partner_age_max'] ?? null,
+            'height_min' => $data['partner_height_min'] ?? null,
+            'height_max' => $data['partner_height_max'] ?? null,
+            'marital_status_id' => $data['partner_marital_status_id'] ?? null,
+            'religion_id' => $data['partner_religion_id'] ?? null,
+            'caste_id' => $data['partner_caste_id'] ?? null,
+            'language_id' => $data['partner_language_id'] ?? null,
+            'preferred_country_id' => $data['partner_country_id'] ?? null,
             'preferred_state_id' => $data['partner_state_id'] ?? null,
             'preferred_city_id' => $data['partner_city_id'] ?? null,
-            'education' => $data['partner_education'],
-            'profession' => $data['partner_profession'],
-            'income_min' => $data['partner_income_min'],
-            'income_max' => $data['partner_income_max'],
+            'education' => $data['partner_education'] ?? null,
+            'profession' => $data['partner_profession'] ?? null,
+            'income_min' => $data['partner_income_min'] ?? null,
+            'income_max' => $data['partner_income_max'] ?? null,
             'general' => isset($data['deal_breakers']) ? json_encode($data['deal_breakers']) : null,
         ]);
     }
