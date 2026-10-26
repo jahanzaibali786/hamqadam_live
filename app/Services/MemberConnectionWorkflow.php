@@ -22,11 +22,16 @@ class MemberConnectionWorkflow
     public function canCommunicate(int $a, int $b): bool
     {
         if ($a === $b || !$this->interestBetween($a,$b)) return false;
-        if (\App\Models\IgnoredUser::where(fn ($q) => $q->where('ignored_by',$a)->where('user_id',$b))
-            ->orWhere(fn ($q) => $q->where('ignored_by',$b)->where('user_id',$a))->exists()) return false;
-        if (\App\Models\ChatThread::where(fn ($q) => $q->where('sender_user_id',$a)->where('receiver_user_id',$b))
-            ->orWhere(fn ($q) => $q->where('sender_user_id',$b)->where('receiver_user_id',$a))
-            ->where(fn ($q) => $q->whereNotNull('blocked_by_user')->orWhere('active',0))->exists()) return false;
+        if (\App\Models\IgnoredUser::where(function ($query) use ($a,$b) {
+            $query->where(fn ($q) => $q->where('ignored_by',$a)->where('user_id',$b))
+                ->orWhere(fn ($q) => $q->where('ignored_by',$b)->where('user_id',$a));
+        })->exists()) return false;
+        if (\App\Models\ChatThread::where(function ($query) use ($a,$b) {
+            $query->where(fn ($q) => $q->where('sender_user_id',$a)->where('receiver_user_id',$b))
+                ->orWhere(fn ($q) => $q->where('sender_user_id',$b)->where('receiver_user_id',$a));
+        })->where(function ($q) {
+            $q->whereNotNull('blocked_by_user')->orWhere('active',0);
+        })->exists()) return false;
         return true;
     }
 
@@ -68,7 +73,7 @@ class MemberConnectionWorkflow
 
     public function respondInterest(User $actor, ExpressInterest $interest, bool $accept): ExpressInterest
     {
-        if ((int)$interest->user_id !== (int)$actor->id) abort(403);
+        if ((int)$interest->user_id !== (int)$actor->id || $interest->interaction_type !== 'interest') abort(403);
         DB::transaction(function () use ($interest,$accept) {
             $current = ExpressInterest::lockForUpdate()->findOrFail($interest->id);
             if ((int)($current->status instanceof \BackedEnum ? $current->status->value : $current->status) !== 0) {
@@ -115,7 +120,7 @@ class MemberConnectionWorkflow
 
     public function answerProposal(User $actor, MarriageProposal $proposal, bool $accept): MarriageProposal
     {
-        if ((int)$proposal->recipient_id !== (int)$actor->id) abort(403);
+        if ((int)$proposal->recipient_id !== (int)$actor->id || !$this->interestBetween($proposal->sender_id,$proposal->recipient_id)) abort(403);
         DB::transaction(function () use ($proposal,$accept) {
             $current=MarriageProposal::lockForUpdate()->findOrFail($proposal->id);
             if ($current->status!=='pending') throw ValidationException::withMessages(['proposal'=>'Proposal was already answered.']);
@@ -131,7 +136,9 @@ class MemberConnectionWorkflow
 
     private function isBlocked(int $a,int $b): bool
     {
-        return \App\Models\IgnoredUser::where(fn($q)=>$q->where('ignored_by',$a)->where('user_id',$b))
-            ->orWhere(fn($q)=>$q->where('ignored_by',$b)->where('user_id',$a))->exists();
+        return \App\Models\IgnoredUser::where(function ($query) use ($a,$b) {
+            $query->where(fn($q)=>$q->where('ignored_by',$a)->where('user_id',$b))
+                ->orWhere(fn($q)=>$q->where('ignored_by',$b)->where('user_id',$a));
+        })->exists();
     }
 }
