@@ -25,6 +25,7 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-match-actions-20261025.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-wine-theme-20261025.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-why-match-reference-20261025.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-chat-receipts-focus-20261026.css') }}?v=1">
 <script src="{{ static_asset('assets/js/hamqadam-match-card-menu-20261025.js') }}?v=1" defer></script>
 @php
     $memberShellUser = auth()->user();
