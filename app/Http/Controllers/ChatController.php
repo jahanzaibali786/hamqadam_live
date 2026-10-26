@@ -69,7 +69,7 @@ class ChatController extends Controller
         $chat_blocked_by_me = (int) $chat_thread->blocked_by_user === (int) Auth::id();
         $chat_blocked_by_other = ! empty($chat_thread->blocked_by_user) && ! $chat_blocked_by_me;
         $chat_blocker_name = $chat_thread->blocked_by ? trim(($chat_thread->blocked_by->first_name ?? '') . ' ' . ($chat_thread->blocked_by->last_name ?? '')) : null;
-        $can_send_message = ! $chat_is_blocked;
+        $can_send_message = ! $chat_is_blocked && $chat_partner && app(\App\Services\MemberConnectionWorkflow::class)->canCommunicate(Auth::id(), $chat_partner->id);
         $call_logs = Call::with(['caller', 'receiver'])
             ->where('conversation_id', $chat_thread->id)
             ->latest()
