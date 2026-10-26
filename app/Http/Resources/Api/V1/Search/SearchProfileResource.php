@@ -29,9 +29,12 @@ class SearchProfileResource extends JsonResource
              */
             'about_me' => filled(trim((string) $this->member?->introduction))
                 ? trim((string) $this->member->introduction)
-                : (filled(trim((string) $this->member?->ai_generated_bio))
-                    ? trim((string) $this->member->ai_generated_bio)
-                    : null),
+                : null,
+            // The AI-written bio, public like the member's own "About me":
+            // visible to every member regardless of any interest between them.
+            'ai_generated_bio' => filled(trim((string) $this->member?->ai_generated_bio))
+                ? trim((string) $this->member->ai_generated_bio)
+                : null,
             // Extended member card data, never private contact or verification documents.
             'job_title' => $this->career->first()?->designation ?? $this->member?->job_title,
             'education_institution_id' => $this->education->first()?->institution_id,
