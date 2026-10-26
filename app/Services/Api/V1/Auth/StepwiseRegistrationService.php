@@ -188,7 +188,7 @@ class StepwiseRegistrationService
     private function attachReferrer(User $user, mixed $code): void
     {
         $code = trim((string) $code);
-        if ($code === '' || ! addon_activation('referral_system')) {
+        if ($code === '') {
             return;
         }
 

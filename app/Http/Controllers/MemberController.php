@@ -627,6 +627,19 @@ class MemberController extends Controller
 
             $status = 'Approved';
 
+            // Verified now: pay the referrer's registration reward straight away
+            // (the service itself re-checks eligibility and never pays twice).
+            if ($user->referred_by) {
+                try {
+                    $referrer = User::find($user->referred_by);
+                    if ($referrer) {
+                        app(\App\Services\Referral\ReferralRewardService::class)->award($referrer, $user->fresh('member'));
+                    }
+                } catch (\Throwable $e) {
+                    \Log::warning('Referral reward on verification failed.', ['user_id' => $user->id, 'message' => $e->getMessage()]);
+                }
+            }
+
             if ($user->email != null) {
                 $subject = translate('Your Hamqadam verification is approved');
                 $message = '<p>'. e($user->first_name . ' ' . $user->last_name) . ',</p>'
