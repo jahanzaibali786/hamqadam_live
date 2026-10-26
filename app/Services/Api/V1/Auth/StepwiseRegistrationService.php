@@ -725,7 +725,7 @@ class StepwiseRegistrationService
                 'partner_marital_status_id' => ['required', 'integer', 'exists:marital_statuses,id'],
                 'partner_religion_id' => ['required', 'integer', 'exists:religions,id'],
                 'partner_caste_id' => ['required', 'integer', 'exists:castes,id'],
-                'partner_language_id' => ['required', 'integer', 'exists:member_languages,id'],
+                'partner_language_id' => ['nullable', 'integer', 'exists:member_languages,id'],
                 'partner_country_id' => ['required', 'integer', 'exists:countries,id'],
                 'partner_state_id' => ['nullable', 'integer', 'exists:states,id'],
                 'partner_city_id' => ['nullable', 'integer', 'exists:cities,id'],
