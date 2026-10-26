@@ -98,84 +98,14 @@ class ExpressInterestController extends Controller
      */
     public function store(Request $request)
     {
-        $interested_by_user = Auth::user();
-        $quotaUser = $interested_by_user;
-        $guardianLink = \App\Models\FamilyGuardianLink::where('guardian_user_id', $interested_by_user->id)
-            ->where('status', 'approved')
-            ->whereNull('revoked_at')
-            ->first();
-        if ($guardianLink) {
-            $quotaUser = \App\Models\User::find($guardianLink->profile_user_id) ?? $interested_by_user;
-        }
-
-        $interested_by_member = $quotaUser->member;
-        $coinCost = feature_coin_cost('express_interest', 1);
-
-        if ($interested_by_member && $interested_by_member->remaining_interest >= $coinCost) {
-            // Store express interest data
-            $express_interest                 = new ExpressInterest;
-            // Check interest does not shown on self
-            if ($request->id != $interested_by_user->id && $request->id != $quotaUser->id) {
-                $express_interest->user_id        = $request->id;
-                $express_interest->interested_by  = $quotaUser->id;
-                if ($express_interest->save()) {
-                    // Deduct interested by user's remaining express interest value
-                    $interested_by_member->remaining_interest -= $coinCost;
-                    $interested_by_member->save();
-
-                    PackageUsage::record(
-                        $quotaUser->id,
-                        'interest',
-                        'Express Interest',
-                        $coinCost,
-                        ExpressInterest::class,
-                        $express_interest->id,
-                        'Used ' . $coinCost . ' coin(s) to send express interest' . ($guardianLink ? ' (via Guardian ' . $interested_by_user->first_name . ')' : '') . '.'
-                    );
-
-                    $notify_user = User::where('id', $request->id)->first();
-
-                    // Express Interest Store Notification for member
-                    try {
-                        $notify_type = 'express_interest';
-                        $id = unique_notify_id();
-                        $notify_by = $interested_by_user->id;
-                        $info_id = $express_interest->id;
-                        $message = $interested_by_user->first_name . ' ' . $interested_by_user->last_name . ' ' . translate(' has Expressed Interest On You.');
-                        $route = route('interest_requests');
-
-                        // fcm 
-                        if (get_setting('firebase_push_notification') == 1) {
-                            $fcmTokens = User::where('id', $request->id)->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
-                            self::sendFirebaseNotification($fcmTokens, $notify_user, $notify_type, $message, $notify_by, $info_id);
-                        }
-                        // end of fcm
-
-                        Notification::send($notify_user, new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route));
-                    } catch (\Exception $e) {
-                        // dd($e);
-                    }
-
-                    // Express Interest email send to member
-                    if ($notify_user->email != null && get_email_template('email_on_express_interest', 'status')) {
-                        EmailUtility::email_on_request($notify_user, 'email_on_express_interest');
-                    }
-
-                    // Express Interest Send SMS to member
-                    if ($notify_user->phone != null && addon_activation('otp_system') && (get_sms_template('express_interest', 'status') == 1)) {
-                        SmsUtility::sms_on_request($notify_user, 'express_interest');
-                    }
-
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        $data=$request->validate(['id'=>'required|integer|exists:users,id']);
+        $actor=Auth::user();
+        $guardianLink=\App\Models\FamilyGuardianLink::where('guardian_user_id',$actor->id)
+            ->where('status','approved')->whereNull('revoked_at')->first();
+        $actingId=$guardianLink?->profile_user_id ?: $actor->id;
+        abort_if((int)$data['id']===(int)$actingId,422);
+        // Legacy one-click entry point cannot skip template preview and approval.
+        return redirect()->route('member.workflow.show',(int)$data['id']);
     }
 
     public function accept_interest(Request $request)
