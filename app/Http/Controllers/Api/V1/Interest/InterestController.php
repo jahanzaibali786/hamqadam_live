@@ -58,6 +58,9 @@ class InterestController extends ApiController
     {
         $interests = ExpressInterest::with(self::CARD_RELATIONS)
             ->where('interested_by', $request->user()->id)
+            // Members an admin deleted drop out of the list instead of leaving a
+            // card that opens to a 404.
+            ->whereHas('user', fn ($q) => $q->withoutTrashed())
             ->when($request->filled('status'), fn ($q) => $q->where('status', $this->statusValue($request->string('status')->toString())))
             ->latest('id')
             ->paginate(min((int) $request->integer('per_page', 15), 50));
@@ -74,6 +77,7 @@ class InterestController extends ApiController
     {
         $interests = ExpressInterest::with(self::CARD_RELATIONS)
             ->where('user_id', $request->user()->id)
+            ->whereHas('sender', fn ($q) => $q->withoutTrashed())
             ->when($request->filled('status'), fn ($q) => $q->where('status', $this->statusValue($request->string('status')->toString())))
             ->latest('id')
             ->paginate(min((int) $request->integer('per_page', 15), 50));
