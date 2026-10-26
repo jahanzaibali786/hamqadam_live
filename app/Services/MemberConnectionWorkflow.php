@@ -13,7 +13,7 @@ class MemberConnectionWorkflow
 {
     public function interestBetween(int $a, int $b): ?ExpressInterest
     {
-        return ExpressInterest::where(function ($query) use ($a, $b) {
+        return ExpressInterest::where('interaction_type','interest')->where(function ($query) use ($a, $b) {
             $query->where(fn ($q) => $q->where('interested_by',$a)->where('user_id',$b))
                 ->orWhere(fn ($q) => $q->where('interested_by',$b)->where('user_id',$a));
         })->where('status',1)->latest('id')->first();
@@ -49,7 +49,7 @@ class MemberConnectionWorkflow
         $interest = DB::transaction(function () use ($sender,$recipient,$template) {
             // Lock the two users in stable order to serialize opposite-direction requests.
             User::whereIn('id',[$sender->id,$recipient->id])->orderBy('id')->lockForUpdate()->get();
-            $exists = ExpressInterest::where(function ($q) use ($sender,$recipient) {
+            $exists = ExpressInterest::where('interaction_type','interest')->where(function ($q) use ($sender,$recipient) {
                 $q->where(fn ($side) => $side->where('interested_by',$sender->id)->where('user_id',$recipient->id))
                   ->orWhere(fn ($side) => $side->where('interested_by',$recipient->id)->where('user_id',$sender->id));
             })->whereIn('status',[0,1])->exists();
@@ -58,7 +58,7 @@ class MemberConnectionWorkflow
             $cost = max(0,(int) feature_coin_cost('express_interest',1));
             if (!$member || $member->remaining_interest < $cost) throw ValidationException::withMessages(['member'=>'Insufficient coins to send interest.']);
             $member->remaining_interest -= $cost; $member->save();
-            $interest = ExpressInterest::create(['user_id'=>$recipient->id,'interested_by'=>$sender->id,'status'=>0,'initial_note'=>$template->complete_message,'workflow_template_id'=>$template->id]);
+            $interest = ExpressInterest::create(['user_id'=>$recipient->id,'interested_by'=>$sender->id,'interaction_type'=>'interest','status'=>0,'initial_note'=>$template->complete_message,'workflow_template_id'=>$template->id]);
             if ($cost > 0) \App\Models\PackageUsage::record($sender->id,'interest','Express Interest',$cost,ExpressInterest::class,$interest->id,'Interest sent via managed template');
             return $interest;
         });
