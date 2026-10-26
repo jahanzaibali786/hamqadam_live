@@ -36,7 +36,7 @@ class PaidPackageReferralRewardService
             $referrerMember = Member::where('user_id',$referrer->id)->lockForUpdate()->first();
             if (!$referrerMember) return null;
             $rule = RewardRule::where('event_key',self::EVENT)->where('active',true)->first();
-            if (!$rule || (int)$rule->coin_reward <= 0 || (int)$rule->max_per_user <= 0) return null;
+            if (!$rule || (int)$rule->coin_reward <= 0 || (int)$rule->max_per_user === 0) return null;
             // One activation award per referred person, including retries,
             // payment callbacks and later purchases/upgrades.
             $existing = RewardTransaction::where('user_id',$referrer->id)
@@ -44,7 +44,8 @@ class PaidPackageReferralRewardService
                 ->where('reference_id',$buyer->id)->exists();
             if ($existing) return null;
             $count=RewardTransaction::where('user_id',$referrer->id)->where('event_key',self::EVENT)->count();
-            if ($count >= (int)$rule->max_per_user) return null;
+            $maximumRewards = (int) $rule->max_per_user;
+            if ($maximumRewards !== -1 && $count >= $maximumRewards) return null;
             RewardTransaction::create([
                 'user_id'=>$referrer->id,'reward_rule_id'=>$rule->id,
                 'event_key'=>self::EVENT,'reference_type'=>'referred_user',

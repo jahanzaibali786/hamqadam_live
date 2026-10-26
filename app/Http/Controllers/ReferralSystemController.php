@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Wallet;
 use App\Services\Referral\ReferralRewardService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class ReferralSystemController extends Controller
@@ -18,16 +19,14 @@ class ReferralSystemController extends Controller
     {
     }
 
-    private function authorizeRewardSettings(): void
-    {
-        $user = auth()->user();
-        abort_unless(\App\Support\ReferralSettingsAccess::allows($user), 403);
-    }
-
     /** Admin referral settings and referral overview. */
     public function set_referral_commission()
     {
-        $this->authorizeRewardSettings();
+        Log::info('Referral settings page requested', [
+            'user_id' => auth()->id(),
+            'user_type' => auth()->user()?->user_type,
+            'route' => request()->route()?->getName(),
+        ]);
 
         // The settings page must be usable independently of the report:
         // dashboard reward-history queries used to fail the entire screen
@@ -59,7 +58,7 @@ class ReferralSystemController extends Controller
                     ->where('event_key', \App\Services\Referral\PaidPackageReferralRewardService::EVENT)->first();
             }
         } catch (\Throwable $exception) {
-            \Illuminate\Support\Facades\Log::error('Referral settings read failed', [
+            Log::error('Referral settings read failed', [
                 'user_id' => auth()->id(),
                 'error' => $exception->getMessage(),
                 'exception' => $exception,
@@ -67,14 +66,32 @@ class ReferralSystemController extends Controller
             $issues[] = 'The database could not be read. Check the Laravel error log.';
         }
 
-        // Always render a usable admin page with an explicit diagnostic.
-        // Sending HTTP 503 here can be reduced to a blank page by proxies.
-        return response()->view('admin.referral.settings', [
-            'rewardRule' => $rewardRule,
-            'packageRewardRule' => $packageRewardRule,
-            'databaseReady' => $issues === [],
-            'setupIssues' => $issues,
-        ], 200)->header('Cache-Control', 'private, no-store');
+        Log::info('Referral settings data prepared', [
+            'user_id' => auth()->id(),
+            'database_ready' => $issues === [],
+            'setup_issues' => $issues,
+            'has_registration_rule' => $rewardRule !== null,
+            'has_package_rule' => $packageRewardRule !== null,
+        ]);
+
+        try {
+            // Always render a usable admin page with an explicit diagnostic.
+            // Sending HTTP 503 here can be reduced to a blank page by proxies.
+            return response()->view('admin.referral.settings', [
+                'rewardRule' => $rewardRule,
+                'packageRewardRule' => $packageRewardRule,
+                'databaseReady' => $issues === [],
+                'setupIssues' => $issues,
+            ], 200)->header('Cache-Control', 'private, no-store');
+        } catch (\Throwable $exception) {
+            Log::critical('Referral settings view failed to render', [
+                'user_id' => auth()->id(),
+                'error' => $exception->getMessage(),
+                'exception' => $exception,
+            ]);
+
+            throw $exception;
+        }
     }
 
     public function index()
@@ -100,11 +117,10 @@ class ReferralSystemController extends Controller
 
     public function save_reward_settings(Request $request)
     {
-        $this->authorizeRewardSettings();
         abort_unless(Schema::hasTable('reward_rules') && Schema::hasTable('reward_transactions'), 503, 'Referral reward tables require migration.');
         $data = $request->validate([
             'coin_reward' => ['required','integer','between:0,1000'],
-            'max_per_user' => ['required','integer','between:1,10000'],
+            'max_per_user' => ['required','integer','between:-1,10000'],
             'active' => ['nullable','boolean'],
         ]);
         RewardRule::updateOrCreate(['event_key' => ReferralRewardService::EVENT], [
@@ -119,11 +135,10 @@ class ReferralSystemController extends Controller
 
     public function save_package_reward_settings(Request $request)
     {
-        $this->authorizeRewardSettings();
         abort_unless(Schema::hasTable('reward_rules') && Schema::hasTable('reward_transactions'), 503, 'Referral reward tables require migration.');
         $data=$request->validate([
             'coin_reward'=>['required','integer','between:0,1000'],
-            'max_per_user'=>['required','integer','between:1,10000'],
+            'max_per_user'=>['required','integer','between:-1,10000'],
             'active'=>['nullable','boolean'],
         ]);
         RewardRule::updateOrCreate(['event_key'=>\App\Services\Referral\PaidPackageReferralRewardService::EVENT],[

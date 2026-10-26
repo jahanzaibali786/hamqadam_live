@@ -81,7 +81,8 @@ class ReferralRewardService
                 'reference_type' => 'referred_user', 'reference_id' => $referred->id];
             if (RewardTransaction::where($reference)->exists()) return false;
             $count = RewardTransaction::where('user_id', $referrer->id)->where('event_key', self::EVENT)->count();
-            if ($count >= (int) $rule->max_per_user) return false;
+            $maximumRewards = (int) $rule->max_per_user;
+            if ($maximumRewards !== -1 && $count >= $maximumRewards) return false;
             // Re-check ownership and verification within the same transaction.
             $fresh = User::with('member')->find($referred->id);
             if (! $fresh || ! $this->isEligible($referrer, $fresh)) return false;

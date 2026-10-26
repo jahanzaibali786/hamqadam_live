@@ -31,7 +31,8 @@ php artisan view:clear</pre>
               <input class="form-control" type="number" min="0" max="1000" name="coin_reward" id="ref-registration-coins" value="{{ $rewardRule?->coin_reward ?? 0 }}" required @disabled(!$databaseReady)>
             </div>
             <div class="form-group"><label for="ref-registration-limit">Maximum registration rewards per referrer</label>
-              <input class="form-control" type="number" min="1" max="10000" name="max_per_user" id="ref-registration-limit" value="{{ $rewardRule?->max_per_user ?? 25 }}" required @disabled(!$databaseReady)>
+              <input class="form-control" type="number" min="-1" max="10000" name="max_per_user" id="ref-registration-limit" value="{{ $rewardRule?->max_per_user ?? 25 }}" required @disabled(!$databaseReady)>
+              <small class="form-text text-muted">Set <strong>-1</strong> for unlimited registration referral rewards.</small>
             </div>
             <label><input type="checkbox" name="active" value="1" @checked($rewardRule?->active ?? false) @disabled(!$databaseReady)> Enable registration rewards</label>
             <button class="btn btn-primary btn-block mt-3" type="submit" @disabled(!$databaseReady)>Save Registration Reward</button>
@@ -50,7 +51,8 @@ php artisan view:clear</pre>
               <input class="form-control" type="number" min="0" max="1000" name="coin_reward" id="ref-package-coins" value="{{ $packageRewardRule?->coin_reward ?? 0 }}" required @disabled(!$databaseReady)>
             </div>
             <div class="form-group"><label for="ref-package-limit">Maximum package rewards per referrer</label>
-              <input class="form-control" type="number" min="1" max="10000" name="max_per_user" id="ref-package-limit" value="{{ $packageRewardRule?->max_per_user ?? 25 }}" required @disabled(!$databaseReady)>
+              <input class="form-control" type="number" min="-1" max="10000" name="max_per_user" id="ref-package-limit" value="{{ $packageRewardRule?->max_per_user ?? 25 }}" required @disabled(!$databaseReady)>
+              <small class="form-text text-muted">Set <strong>-1</strong> for unlimited paid-package activation referral rewards.</small>
             </div>
             <label><input type="checkbox" name="active" value="1" @checked($packageRewardRule?->active ?? false) @disabled(!$databaseReady)> Enable paid package rewards</label>
             <button class="btn btn-primary btn-block mt-3" type="submit" @disabled(!$databaseReady)>Save Package Activation Reward</button>
