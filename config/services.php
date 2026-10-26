@@ -20,6 +20,14 @@ return [
         'endpoint' => env('MAILGUN_ENDPOINT', 'api.mailgun.net'),
     ],
 
+    // Store pages the referral link sends phones to (see ReferralInviteController).
+    // Set APP_STORE_URL in .env once the iOS listing exists; until then iPhones
+    // fall back to the web registration page.
+    'mobile_app' => [
+        'play_store' => env('PLAY_STORE_URL', 'https://play.google.com/store/apps/details?id=com.app.hamqadam'),
+        'app_store' => env('APP_STORE_URL'),
+    ],
+
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
