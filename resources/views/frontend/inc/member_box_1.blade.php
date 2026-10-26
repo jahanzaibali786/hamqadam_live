@@ -2,8 +2,6 @@
     <a
         @if(!Auth::check())
             href="{{ route('login') }}"
-        @elseif(get_setting('full_profile_show_according_to_membership') == 1 && Auth::user()->membership == 1)
-            href="javascript:void(0);" onclick="package_update_alert()"
         @else
             href="{{ route('member_profile', $member->id) }}"
         @endif
