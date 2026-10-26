@@ -66,6 +66,7 @@ class NotificationHelper
             'info_id' => $interestId,
             'notify_by' => $sender->id,
             'sender_name' => $name,
+            'name' => $name,
         ]);
     }
 
@@ -81,6 +82,7 @@ class NotificationHelper
             'info_id' => $interestId,
             'notify_by' => $accepter->id,
             'matched_user_name' => $name,
+            'name' => $name,
         ]);
     }
 
@@ -116,6 +118,7 @@ class NotificationHelper
             'info_id' => $proposalId,
             'notify_by' => $sender->id,
             'sender_name' => $name,
+            'name' => $name,
         ]);
     }
 
@@ -131,6 +134,7 @@ class NotificationHelper
             'info_id' => $proposalId,
             'notify_by' => $accepter->id,
             'matched_user_name' => $name,
+            'name' => $name,
         ]);
     }
 
