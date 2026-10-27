@@ -26,7 +26,7 @@ use App\Models\User;
  *              Identity card); falls back to the AI pre-screen APPROVE
  *   phone    — the mobile OTP round completed (verification_code consumed)
  *   email    — email_verified_at is stamped
- *   profile  — the account carries the team's approval (admin reviewed)
+ *   profile  — a moderator approved the account's verification (admin reviewed)
  *   intent   — the profile was created on the member's behalf (wali/family)
  *
  * null means "no verdict yet" — clients must render a neutral state, never a
@@ -84,7 +84,10 @@ class TrustChecklist
             'liveness' => $faceMatch ?? ($aiApproved ? true : $inherited($hasSelfie)),
             'phone' => filled($user->phone) && blank($user->verification_code),
             'email' => filled($user->email_verified_at),
-            'profile' => (bool) $user->approved,
+            // `users.approved` is switched on automatically at registration (free
+            // package), so it says nothing about a human review. Only a moderator
+            // approving the documents sets verification_status = 'verified'.
+            'profile' => $member?->verification_status === 'verified',
             'intent' => filled($member?->on_behalves_id) && (int) $member->on_behalves_id > 0,
         ];
     }

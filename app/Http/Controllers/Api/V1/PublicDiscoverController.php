@@ -37,7 +37,10 @@ class PublicDiscoverController extends ApiController
             ->where('blocked', 0)
             ->where('deactivated', 0)
             ->when((bool) get_setting('search_only_approved'), fn ($q) => $q->where('approved', 1))
-            ->whereHas('member', fn ($q) => $q->where('hide_profile', 0))
+            // The guest preview only advertises verified members.
+            ->whereHas('member', fn ($q) => $q->where('hide_profile', 0)
+                ->where(fn ($v) => $v->where('verification_status', 'verified')
+                    ->orWhere('ai_verification_status', 'approved')))
             ->whereDoesntHave('profile_privacy_setting', fn ($q) => $q->where('invisible_mode', true));
 
         if ($search !== '') {
@@ -99,6 +102,9 @@ class PublicDiscoverController extends ApiController
             'total_members' => (int) User::where('user_type', 'member')
                 ->where('blocked', 0)
                 ->where('deactivated', 0)
+                ->whereHas('member', fn ($q) => $q->where('hide_profile', 0)
+                    ->where(fn ($v) => $v->where('verification_status', 'verified')
+                        ->orWhere('ai_verification_status', 'approved')))
                 ->count(),
         ]);
     }
