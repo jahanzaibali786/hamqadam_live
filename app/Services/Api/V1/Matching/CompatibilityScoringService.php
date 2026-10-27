@@ -13,6 +13,9 @@ use Illuminate\Support\Str;
 
 class CompatibilityScoringService
 {
+    /** Least comparable weight a score is divided by (guards thin data). */
+    private const MIN_COMPARABLE_WEIGHT = 40;
+
     private const DEFAULT_WEIGHTS = [
         'religion' => 20,
         'lifestyle' => 15,
@@ -81,14 +84,41 @@ class CompatibilityScoringService
         $breakdown = [];
         $reasons = [];
         $criteria = [];
-        $totalWeight = max(1, array_sum($weights));
+        $applicableWeight = 0;
 
         foreach ($weights as $key => $weight) {
             [$matched, $reason] = $this->evaluate($key, $user, $candidate);
+
+            // `null` = nothing to compare (no preference set, or no data on the
+            // profile). Such a criterion neither helps nor hurts: it is left out
+            // of the score entirely. Counting "no preference" as a match gave
+            // every pair the same inflated ~85%.
+            if ($matched === null) {
+                $breakdown[$key] = [
+                    'weight' => $weight,
+                    'matched' => null,
+                    'score' => 0,
+                    'applicable' => false,
+                ];
+                $criteria[] = [
+                    'criterion'          => $key,
+                    'score'              => 0,
+                    'weight'             => $weight,
+                    'weighted_score'     => 0,
+                    'status'             => 'not_applicable',
+                    'reason'             => $this->humanUnmetLabel($key) ?? $reason,
+                    'is_hard_constraint' => false,
+                    'applicable'         => false,
+                ];
+                continue;
+            }
+
+            $applicableWeight += $weight;
             $breakdown[$key] = [
                 'weight' => $weight,
                 'matched' => $matched,
                 'score' => $matched ? $weight : 0,
+                'applicable' => true,
             ];
 
             // Same criterion object shape the AI sidecar produces, so the app
@@ -116,7 +146,10 @@ class CompatibilityScoringService
         }
 
         $score = array_sum(array_column($breakdown, 'score'));
-        $percentage = (int) round(($score / $totalWeight) * 100);
+        // Scored over what could actually be compared, with a floor on the
+        // denominator so a pair that shares only one or two comparable facts
+        // cannot read as a near-perfect match.
+        $percentage = (int) round(($score / max($applicableWeight, self::MIN_COMPARABLE_WEIGHT)) * 100);
 
         $result = [
             'percentage' => min(100, max(0, $percentage)),
@@ -186,8 +219,8 @@ class CompatibilityScoringService
 
     private function matchesValue(mixed $expected, mixed $actual, string $reason): array
     {
-        if (blank($expected)) {
-            return [true, null];
+        if (blank($expected) || blank($actual)) {
+            return [null, null];
         }
 
         return [(string) $expected === (string) $actual, (string) $expected === (string) $actual ? $reason : null];
@@ -257,12 +290,8 @@ class CompatibilityScoringService
 
     private function matchesText(?string $expected, ?string $actual, string $reason): array
     {
-        if (blank($expected)) {
-            return [true, null];
-        }
-
-        if (blank($actual)) {
-            return [false, null];
+        if (blank($expected) || blank($actual)) {
+            return [null, null];
         }
 
         $matched = Str::contains(Str::lower($actual), Str::lower($expected))
@@ -273,8 +302,8 @@ class CompatibilityScoringService
 
     private function candidateHasText($collection, ?string $expected, string $reason): array
     {
-        if (blank($expected)) {
-            return [true, null];
+        if (blank($expected) || $collection->isEmpty()) {
+            return [null, null];
         }
 
         $matched = $collection->contains(function ($item) use ($expected) {
@@ -288,12 +317,12 @@ class CompatibilityScoringService
     private function incomeMatches($preference, User $candidate): array
     {
         if (blank($preference?->income_min) && blank($preference?->income_max)) {
-            return [true, null];
+            return [null, null];
         }
 
         $salaryRange = $candidate->member?->annualSalaryRange;
         if (! $salaryRange) {
-            return [false, null];
+            return [null, null];
         }
 
         $minOk = blank($preference->income_min) || (float) $salaryRange->max_salary >= (float) $preference->income_min;
@@ -306,11 +335,11 @@ class CompatibilityScoringService
     private function ageMatches($preference, User $candidate): array
     {
         if (blank($preference?->preferred_age_min) && blank($preference?->preferred_age_max)) {
-            return [true, null];
+            return [null, null];
         }
 
         if (! $candidate->member?->birthday) {
-            return [false, null];
+            return [null, null];
         }
 
         $age = Carbon::parse($candidate->member->birthday)->age;
@@ -328,7 +357,7 @@ class CompatibilityScoringService
             ->map(fn ($id) => (string) $id);
 
         if ($preferred->isEmpty() && blank($preference?->language_id)) {
-            return [true, null];
+            return [null, null];
         }
 
         $candidateLanguages = collect(json_decode((string) $candidate->member?->known_languages, true) ?: [])
@@ -348,7 +377,11 @@ class CompatibilityScoringService
     private function locationMatches($preference, User $candidate): array
     {
         if (blank($preference?->preferred_city_id) && blank($preference?->preferred_state_id) && blank($preference?->preferred_country_id)) {
-            return [true, null];
+            return [null, null];
+        }
+
+        if ($candidate->addresses->isEmpty()) {
+            return [null, null];
         }
 
         $matched = $candidate->addresses->contains(function ($address) use ($preference) {
@@ -374,13 +407,15 @@ class CompatibilityScoringService
 
         $shortlisted = Shortlist::where('shortlisted_by', $user->id)->where('user_id', $candidate->id)->exists();
 
-        return [true, $shortlisted ? 'You already shortlisted this profile.' : 'No negative behavior signals found.'];
+        // Absence of a negative signal is not evidence of compatibility.
+        return $shortlisted ? [true, 'You already shortlisted this profile.'] : [null, null];
     }
 
     private function personalityMatches(User $user, User $candidate): array
     {
-        if (! $this->featureEnabled('ai_match_personality_enabled')) {
-            return [true, null];
+        if (! $this->featureEnabled('ai_match_personality_enabled')
+            || $this->profileText($user) === '' || $this->profileText($candidate) === '') {
+            return [null, null];
         }
 
         $overlap = $this->traitOverlap($user, $candidate);
@@ -393,8 +428,9 @@ class CompatibilityScoringService
 
     private function emotionalCompatibilityMatches(User $user, User $candidate): array
     {
-        if (! $this->featureEnabled('ai_match_emotional_enabled')) {
-            return [true, null];
+        if (! $this->featureEnabled('ai_match_emotional_enabled')
+            || $this->profileText($user) === '' || $this->profileText($candidate) === '') {
+            return [null, null];
         }
 
         $userText = $this->profileText($user);
@@ -409,8 +445,9 @@ class CompatibilityScoringService
 
     private function communicationStyleMatches(User $user, User $candidate): array
     {
-        if (! $this->featureEnabled('ai_match_communication_enabled')) {
-            return [true, null];
+        if (! $this->featureEnabled('ai_match_communication_enabled')
+            || $this->profileText($user) === '' || $this->profileText($candidate) === '') {
+            return [null, null];
         }
 
         $userStyle = $this->communicationStyle($user);
@@ -422,11 +459,12 @@ class CompatibilityScoringService
 
     private function longTermCompatibilityMatches(User $user, User $candidate): array
     {
-        if (! $this->featureEnabled('ai_match_long_term_enabled')) {
-            return [true, null];
+        if (! $this->featureEnabled('ai_match_long_term_enabled')
+            || $this->profileText($user) === '' || $this->profileText($candidate) === '') {
+            return [null, null];
         }
 
-        $matched = $this->matchesText($user->member?->future_goals, $candidate->member?->future_goals, '')[0]
+        $matched = (bool) $this->matchesText($user->member?->future_goals, $candidate->member?->future_goals, '')[0]
             || $this->traitOverlap($user, $candidate) >= 2;
 
         return [$matched, $matched ? 'Long-term goals and profile values show promising alignment.' : null];
@@ -435,7 +473,7 @@ class CompatibilityScoringService
     private function mutualInterestMatches(User $user, User $candidate): array
     {
         if (! $this->featureEnabled('ai_match_mutual_interest_enabled')) {
-            return [true, null];
+            return [null, null];
         }
 
         $candidatePreference = $candidate->partner_expectations;
@@ -446,22 +484,20 @@ class CompatibilityScoringService
             ''
         )[0];
         $locationOk = $this->locationMatches($candidatePreference, $user)[0];
-        $matched = collect([$ageOk, $religionOk, $locationOk])->filter()->count() >= 2;
+        $checks = collect([$ageOk, $religionOk, $locationOk])->filter(fn ($v) => $v !== null);
+        if ($checks->isEmpty()) {
+            return [null, null];
+        }
+        $matched = $checks->filter()->count() >= min(2, $checks->count());
 
         return [$matched, $matched ? 'The candidate preferences also appear to fit your profile.' : null];
     }
 
     private function coldStartCoverageMatches(User $user, User $candidate): array
     {
-        if (! $this->featureEnabled('ai_match_cold_start_enabled')) {
-            return [true, null];
-        }
-
-        $userSignals = $this->availableSignalCount($user);
-        $candidateSignals = $this->availableSignalCount($candidate);
-        $matched = min($userSignals, $candidateSignals) >= (int) $this->setting('ai_match_cold_start_minimum_signals', 4);
-
-        return [$matched, $matched ? 'Enough profile data is available for a stable cold-start recommendation.' : null];
+        // Profile completeness says nothing about how well two people suit each
+        // other, so it no longer contributes to the score.
+        return [null, null];
     }
 
     private function buildExplanation(array $reasons, int $percentage): string
