@@ -29,6 +29,26 @@ class ProfileMatch extends Model
         'calculated_at',
     ];
 
+    /**
+     * Rows scored before this moment came from the old rule-based formula that
+     * counted "no preference" as a match (everyone ~85-100%). They are treated
+     * as stale so the live scorer recomputes them. Override with
+     * MATCH_SCORES_VALID_AFTER in .env.
+     */
+    public function isCurrent(): bool
+    {
+        $cutoff = config('services.matching.scores_valid_after', '2026-10-27 12:00:00');
+        $at = $this->calculated_at ?? $this->updated_at;
+
+        return $at !== null && $at->gte(\Carbon\Carbon::parse($cutoff));
+    }
+
+    /** A real pair is never a perfect 100: cap what members are shown. */
+    public static function displayPercentage(?int $value): ?int
+    {
+        return $value === null ? null : min(98, max(0, $value));
+    }
+
     protected $casts = [
         'score_breakdown' => 'array',
         'compatibility_reasons' => 'array',

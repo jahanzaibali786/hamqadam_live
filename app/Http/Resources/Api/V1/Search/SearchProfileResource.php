@@ -119,8 +119,10 @@ class SearchProfileResource extends JsonResource
             // letting them through shadowed the live AI model's real score.
             // `ai_match_percentage` is what the controller filled in from the
             // model for rows without a usable stored verdict.
-            'compatibility_percentage' => $this->storedInformativePercentage()
-                ?? $this->resource->getAttribute('ai_match_percentage'),
+            'compatibility_percentage' => \App\Models\ProfileMatch::displayPercentage(
+                $this->storedInformativePercentage()
+                    ?? $this->resource->getAttribute('ai_match_percentage')
+            ),
             'last_active_at' => $this->last_login_at ? Carbon::parse($this->last_login_at)->toISOString() : null,
             'created_at' => $this->created_at ? Carbon::parse($this->created_at)->toISOString() : null,
         ];
@@ -136,7 +138,7 @@ class SearchProfileResource extends JsonResource
     {
         $stored = $this->profile_match_for_viewer;
 
-        if ($stored === null || $stored->match_percentage === null) {
+        if ($stored === null || $stored->match_percentage === null || ! $stored->isCurrent()) {
             return null;
         }
 

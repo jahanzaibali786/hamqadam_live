@@ -164,13 +164,14 @@ class ProfileController extends ApiController
         // ten criteria. A percentage with no reasoning behind it is a leftover
         // from an older scoring run, so it must not out-rank the live model.
         $storedIsInformative = $stored
+            && $stored->isCurrent()
             && (! empty($stored->compatibility_explanation)
                 || ! empty($stored->score_breakdown));
 
         if ($stored && $storedIsInformative) {
             return $this->success([
                 'profile_id'                 => $candidate->id,
-                'compatibility_percentage'   => (int) $stored->match_percentage,
+                'compatibility_percentage'   => \App\Models\ProfileMatch::displayPercentage((int) $stored->match_percentage),
                 'compatibility_explanation'  => $stored->compatibility_explanation,
                 'compatibility_reasons'      => $stored->compatibility_reasons ?: [],
                 'score_breakdown'            => $stored->score_breakdown ?: [],
@@ -188,7 +189,7 @@ class ProfileController extends ApiController
         if ($sidecarResult['source'] === 'sidecar') {
             return $this->success([
                 'profile_id'                 => $candidate->id,
-                'compatibility_percentage'   => $sidecarResult['percentage'],
+                'compatibility_percentage'   => \App\Models\ProfileMatch::displayPercentage((int) $sidecarResult['percentage']),
                 'compatibility_explanation'  => $sidecarResult['explanation'],
                 'compatibility_reasons'      => $sidecarResult['reasons'],
                 'score_breakdown'            => $sidecarResult['breakdown'],
@@ -204,7 +205,7 @@ class ProfileController extends ApiController
 
         return $this->success([
             'profile_id'                 => $candidate->id,
-            'compatibility_percentage'   => $score['percentage'],
+            'compatibility_percentage'   => \App\Models\ProfileMatch::displayPercentage((int) $score['percentage']),
             'compatibility_explanation'  => $score['explanation'],
             'compatibility_reasons'      => $score['reasons'],
             'score_breakdown'            => $score['breakdown'],
