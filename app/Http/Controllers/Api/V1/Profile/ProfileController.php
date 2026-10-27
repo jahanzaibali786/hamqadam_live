@@ -205,7 +205,7 @@ class ProfileController extends ApiController
 
         return $this->success([
             'profile_id'                 => $candidate->id,
-            'compatibility_percentage'   => $score['percentage'],
+            'compatibility_percentage'   => \App\Models\ProfileMatch::displayPercentage((int) $score['percentage']),
             'compatibility_explanation'  => $score['explanation'],
             'compatibility_reasons'      => $score['reasons'],
             'score_breakdown'            => $score['breakdown'],
