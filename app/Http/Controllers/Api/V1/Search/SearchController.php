@@ -33,9 +33,33 @@ class SearchController extends ApiController
         }
 
         $this->attachAiScores($request->user(), $page);
+        $this->orderPageByScore($page, (string) $request->input('sort', ''));
 
         return SearchProfileResource::collection($page)
             ->additional(['success' => true])->response();
+    }
+
+    /**
+     * Highest match first within the page, once live scores are attached (the
+     * SQL ordering only knows stored rows). Unscored profiles sink.
+     */
+    private function orderPageByScore($page, string $sort): void
+    {
+        if (! in_array($sort, ['', 'compatibility', 'default'], true)) {
+            return;
+        }
+
+        $score = function ($user): int {
+            $stored = $user->profile_match_for_viewer;
+            $storedPct = ($stored && $stored->match_percentage !== null && $stored->isCurrent())
+                ? (int) $stored->match_percentage
+                : null;
+
+            return $storedPct ?? (int) ($user->getAttribute('ai_match_percentage') ?? -1);
+        };
+
+        $sorted = collect($page->items())->sortByDesc($score)->values();
+        $page->setCollection($sorted);
     }
 
     /**
@@ -92,7 +116,7 @@ class SearchController extends ApiController
     {
         $stored = $user->profile_match_for_viewer;
 
-        if ($stored === null || $stored->match_percentage === null) {
+        if ($stored === null || $stored->match_percentage === null || ! $stored->isCurrent()) {
             return false;
         }
 

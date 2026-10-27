@@ -75,4 +75,9 @@ return [
         'api_key'  => (string) env('MATCHMAKING_API_KEY', ''),
     ],
 
+
+    'matching' => [
+        'scores_valid_after' => env('MATCH_SCORES_VALID_AFTER', '2026-10-27 12:00:00'),
+    ],
+
 ];
