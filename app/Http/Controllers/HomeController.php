@@ -194,7 +194,8 @@ class HomeController extends Controller
             try {
                 app(\App\Services\Api\V1\Search\ProfileSearchService::class)->refreshStoredMatches($user);
             } catch (\Throwable $e) {
-                report($e);
+                // Logged explicitly: report() skips HTTP exceptions, which hid failures.
+                \Illuminate\Support\Facades\Log::warning('Stored matches refresh failed', ['user_id' => $user->id, 'error' => get_class($e).': '.$e->getMessage(), 'at' => $e->getFile().':'.$e->getLine()]);
             }
 
             $similar_profiles = ProfileMatch::orderBy('match_percentage', 'desc')
