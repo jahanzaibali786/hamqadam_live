@@ -6,6 +6,7 @@ namespace App\Services\Api\V1\Matching;
 
 use App\Models\User;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -42,11 +43,26 @@ class MatchmakingIntegrationService
      */
     private function request(): \Illuminate\Http\Client\PendingRequest
     {
-        $req = Http::timeout($this->timeout)->acceptJson();
+        // Fail fast: a slow or unreachable model must not hold a listing
+        // request for 30 s. Connect in 3 s, answer within the (short) timeout.
+        $req = Http::connectTimeout(3)->timeout($this->timeout)->acceptJson();
 
         return $this->apiKey !== ''
             ? $req->withHeaders(['X-API-Key' => $this->apiKey])
             : $req;
+    }
+
+    private const DOWN_KEY = 'matchmaking.sidecar_down';
+
+    /** True while the model is known to be failing (circuit breaker, 60 s). */
+    private function sidecarDown(): bool
+    {
+        return Cache::has(self::DOWN_KEY);
+    }
+
+    private function markSidecarDown(): void
+    {
+        Cache::put(self::DOWN_KEY, true, 60);
     }
 
     public static function bind(): void
@@ -119,20 +135,35 @@ class MatchmakingIntegrationService
 
         // One stateless call: the candidate pool travels with the request, so
         // concurrent users cannot overwrite each other's pool on the model side.
-        $res = $this->request()->post(
-            "{$this->baseUrl}/match" . ($query !== '' ? "?{$query}" : ''),
-            [
-                'logged_in_user' => $profile,
-                'users'          => array_map(
-                    fn (User $c): array => $this->toModelProfile($c),
-                    array_values($candidates),
-                ),
-            ],
-        );
+        if ($this->sidecarDown()) {
+            return null;
+        }
+
+        try {
+            $res = $this->request()->post(
+                "{$this->baseUrl}/match" . ($query !== '' ? "?{$query}" : ''),
+                [
+                    'logged_in_user' => $profile,
+                    'users'          => array_map(
+                        fn (User $c): array => $this->toModelProfile($c),
+                        array_values($candidates),
+                    ),
+                ],
+            );
+        } catch (\Throwable $e) {
+            $this->markSidecarDown();
+            Log::warning('Matchmaking sidecar unreachable', ['message' => $e->getMessage()]);
+
+            return null;
+        }
 
         $this->recordResponse($user, $res, 'matches');
 
         if (! $res->successful()) {
+            if ($res->serverError()) {
+                $this->markSidecarDown();
+            }
+
             return null;
         }
 
@@ -160,12 +191,43 @@ class MatchmakingIntegrationService
         $profile   = $this->toModelProfile($viewer);
         $candidateProfile = $this->toModelProfile($candidate);
 
-        $res = $this->request()->post("{$this->baseUrl}/match", [
-            'logged_in_user' => $profile,
-            'users'          => [$candidateProfile],
-        ]);
+        $unavailable = [
+            'source' => 'sidecar_error',
+            'percentage' => 0,
+            'breakdown' => [],
+            'reasons' => ['AI matchmaking sidecar returned an error — falling back to rule-based scoring.'],
+            'explanation' => 'Compatibility preview unavailable from the AI model.',
+            'calculated_at' => now()->toISOString(),
+        ];
+
+        if ($this->sidecarDown()) {
+            return $unavailable;
+        }
+
+        // The same pair is asked for again on every scroll / reopen: keep the
+        // model's answer for a few minutes instead of re-running it each time.
+        $cacheKey = "mm.preview.{$viewer->id}.{$candidate->id}";
+        if (is_array($cached = Cache::get($cacheKey))) {
+            return $cached;
+        }
+
+        try {
+            $res = $this->request()->post("{$this->baseUrl}/match", [
+                'logged_in_user' => $profile,
+                'users'          => [$candidateProfile],
+            ]);
+        } catch (\Throwable $e) {
+            $this->markSidecarDown();
+            Log::warning('Matchmaking sidecar unreachable', ['message' => $e->getMessage()]);
+
+            return $unavailable;
+        }
 
         $this->recordResponse($viewer, $res, 'preview', $candidate->id);
+
+        if ($res->serverError()) {
+            $this->markSidecarDown();
+        }
 
         if (! $res->successful()) {
             return [
@@ -194,7 +256,7 @@ class MatchmakingIntegrationService
         }
 
         // Map model output back onto the backend's existing response shape.
-        return [
+        $result = [
             'source' => 'sidecar',
             'percentage' => (int) ($match['match_score'] ?? 0),
             'breakdown' => $match['your_preferences_match']['criterion_matches'] ?? [],
@@ -202,6 +264,9 @@ class MatchmakingIntegrationService
             'explanation' => implode(' ', array_slice($match['match_reasons'] ?? [], 0, 4)),
             'calculated_at' => now()->toISOString(),
         ];
+        Cache::put($cacheKey, $result, 600);
+
+        return $result;
     }
 
     /**
