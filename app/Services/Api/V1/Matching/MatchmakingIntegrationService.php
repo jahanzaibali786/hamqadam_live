@@ -139,17 +139,33 @@ class MatchmakingIntegrationService
             return null;
         }
 
+        $url = "{$this->baseUrl}/match" . ($query !== '' ? "?{$query}" : '');
+        $users = array_map(
+            fn (User $c): array => $this->toModelProfile($c),
+            array_values($candidates),
+        );
+
         try {
-            $res = $this->request()->post(
-                "{$this->baseUrl}/match" . ($query !== '' ? "?{$query}" : ''),
-                [
-                    'logged_in_user' => $profile,
-                    'users'          => array_map(
-                        fn (User $c): array => $this->toModelProfile($c),
-                        array_values($candidates),
-                    ),
-                ],
-            );
+            $res = $this->request()->post($url, ['logged_in_user' => $profile, 'users' => $users]);
+
+            // One malformed candidate must not sink the whole ranking: drop
+            // the candidates the model's validation names and try once more.
+            if ($res->status() === 422) {
+                $bad = [];
+                foreach ((array) ($res->json('detail') ?? []) as $err) {
+                    $loc = $err['loc'] ?? [];
+                    if (($loc[1] ?? null) === 'users' && is_int($loc[2] ?? null)) {
+                        $bad[$loc[2]] = true;
+                    }
+                }
+                if ($bad !== []) {
+                    Log::warning('Matchmaking: skipped candidates the model rejected', [
+                        'user_ids' => array_map(fn ($i) => $users[$i]['user_id'] ?? null, array_keys($bad)),
+                    ]);
+                    $users = array_values(array_diff_key($users, $bad));
+                    $res = $this->request()->post($url, ['logged_in_user' => $profile, 'users' => $users]);
+                }
+            }
         } catch (\Throwable $e) {
             $this->markSidecarDown();
             Log::warning('Matchmaking sidecar unreachable', ['message' => $e->getMessage()]);
@@ -701,6 +717,14 @@ class MatchmakingIntegrationService
             $dealBreakers = $this->toStringList($pref->deal_breakers);
             if ($dealBreakers !== []) {
                 $result['deal_breakers'] = $dealBreakers;
+            }
+        }
+
+        // Members type ranges back to front (height 160–155). The model rejects
+        // the WHOLE request over one such row, which blanked every ranking.
+        foreach (['age_range' => ['min', 'max'], 'height_range' => ['min_cm', 'max_cm'], 'income_range' => ['min', 'max']] as $key => [$lo, $hi]) {
+            if (isset($result[$key][$lo], $result[$key][$hi]) && (float) $result[$key][$lo] > (float) $result[$key][$hi]) {
+                [$result[$key][$lo], $result[$key][$hi]] = [$result[$key][$hi], $result[$key][$lo]];
             }
         }
 
