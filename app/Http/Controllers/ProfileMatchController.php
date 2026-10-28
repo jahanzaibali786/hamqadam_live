@@ -220,7 +220,8 @@ class ProfileMatchController extends Controller
     try {
       app(\App\Services\Api\V1\Search\ProfileSearchService::class)->refreshStoredMatches($user);
     } catch (\Throwable $e) {
-      report($e);
+      // Logged explicitly: report() skips HTTP exceptions, which hid failures.
+      \Illuminate\Support\Facades\Log::warning('Stored matches refresh failed', ['user_id' => $user->id, 'error' => get_class($e).': '.$e->getMessage(), 'at' => $e->getFile().':'.$e->getLine()]);
     }
     // Saved match results are viewable even if auto-refresh is unavailable.
     // Recalculation continues to be restricted in matchedRefresh().
