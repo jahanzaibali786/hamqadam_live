@@ -131,16 +131,8 @@ class ProfileController extends ApiController
     public function compatibility(Request $request, int $profile): JsonResponse
     {
         $viewer = $request->user()->loadMissing('member', 'partner_expectations');
-        $candidate = User::with([
-            'member',
-            'addresses',
-            'education',
-            'career',
-            'physical_attributes',
-            'spiritual_backgrounds',
-            'lifestyles',
-            'partner_expectations',
-        ])
+        $viewer->loadMissing(MatchmakingIntegrationService::PROFILE_RELATIONS);
+        $candidate = User::with(MatchmakingIntegrationService::PROFILE_RELATIONS)
             ->where('user_type', 'member')
             ->where('approved', 1)
             ->whereKey($profile)
@@ -168,6 +160,23 @@ class ProfileController extends ApiController
             && (! empty($stored->compatibility_explanation)
                 || ! empty($stored->score_breakdown));
 
+        // The live model answers first, so this number matches the Discover
+        // card (which is ordered by the same model). A stored row is only the
+        // fallback when the model cannot answer.
+        $sidecarResult = $this->sidecar->compatibilityPreview($viewer, $candidate);
+
+        if ($sidecarResult['source'] === 'sidecar') {
+            return $this->success([
+                'profile_id'                 => $candidate->id,
+                'compatibility_percentage'   => \App\Models\ProfileMatch::displayPercentage((int) $sidecarResult['percentage']),
+                'compatibility_explanation'  => $sidecarResult['explanation'],
+                'compatibility_reasons'      => $sidecarResult['reasons'],
+                'score_breakdown'            => $sidecarResult['breakdown'],
+                'calculated_at'              => $sidecarResult['calculated_at'],
+                'source'                     => 'ai_sidecar',
+            ], 'Compatibility fetched successfully.');
+        }
+
         if ($stored && $storedIsInformative) {
             return $this->success([
                 'profile_id'                 => $candidate->id,
@@ -181,20 +190,6 @@ class ProfileController extends ApiController
                 // attribute reads as null rather than throwing, so guard it
                 // explicitly instead of pretending the answer is meaningful.
                 'model_version'              => ($stored->getAttribute('model_confidence') ?? null) ? 'ai_sidecar' : null,
-            ], 'Compatibility fetched successfully.');
-        }
-
-        $sidecarResult = $this->sidecar->compatibilityPreview($viewer, $candidate);
-
-        if ($sidecarResult['source'] === 'sidecar') {
-            return $this->success([
-                'profile_id'                 => $candidate->id,
-                'compatibility_percentage'   => \App\Models\ProfileMatch::displayPercentage((int) $sidecarResult['percentage']),
-                'compatibility_explanation'  => $sidecarResult['explanation'],
-                'compatibility_reasons'      => $sidecarResult['reasons'],
-                'score_breakdown'            => $sidecarResult['breakdown'],
-                'calculated_at'              => $sidecarResult['calculated_at'],
-                'source'                     => 'ai_sidecar',
             ], 'Compatibility fetched successfully.');
         }
 

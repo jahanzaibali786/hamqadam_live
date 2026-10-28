@@ -71,6 +71,8 @@ return [
 
     'matchmaking' => [
         'base_url' => rtrim((string) env('MATCHMAKING_BASE_URL', 'https://matchmaking.hamqadam.com'), '/'),
+        // How many of the newest matching profiles the model ranks per feed.
+        'rank_pool' => (int) env('MATCHMAKING_RANK_POOL', 200),
         'timeout'  => (int) env('MATCHMAKING_TIMEOUT', 8),
         'api_key'  => (string) env('MATCHMAKING_API_KEY', ''),
     ],

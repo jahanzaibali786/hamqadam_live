@@ -66,9 +66,25 @@ class ProfileSearchService
         if (\Illuminate\Support\Facades\Schema::hasTable('member_profile_boosts')) {
             $query->orderByRaw('CASE WHEN EXISTS (SELECT 1 FROM member_profile_boosts boost WHERE boost.user_id = users.id AND boost.ends_at > ?) THEN 1 ELSE 0 END DESC', [now()]);
         }
-        $this->applySorting($query, $viewer, $filters);
+        $aiScores = $this->ranksByMatch($filters) ? $this->rankPool($viewer, $query) : null;
+        if ($aiScores) {
+            // Best match first across the WHOLE pool, not just within a page.
+            $ids = implode(',', array_map('intval', array_keys($aiScores)));
+            $query->orderByRaw("FIELD(users.id, {$ids}) = 0")
+                ->orderByRaw("FIELD(users.id, {$ids})");
+        } else {
+            $this->applySorting($query, $viewer, $filters);
+        }
 
         $results = $query->paginate((int) ($filters['per_page'] ?? 20));
+
+        if ($aiScores) {
+            foreach ($results->items() as $user) {
+                if (isset($aiScores[$user->id])) {
+                    $user->setAttribute('ai_match_percentage', $aiScores[$user->id]);
+                }
+            }
+        }
 
         // Record the search so members can revisit it later. Default Discover
         // feed loads (no term, no filters — just per_page/sort/pagination)
@@ -500,6 +516,41 @@ class ProfileSearchService
         }
 
         return [(int) $value];
+    }
+
+    /** The default feed and "Best match" are ordered by the AI model. */
+    private function ranksByMatch(array $filters): bool
+    {
+        return in_array((string) ($filters['sort'] ?? ''), ['', 'default', 'compatibility'], true);
+    }
+
+    /**
+     * Scores the newest slice of the filtered pool with the matchmaking model
+     * in one call. Null when the model is unavailable — the feed then falls
+     * back to the normal sort instead of failing.
+     *
+     * @return array<int,int>|null  [user_id => score], best first
+     */
+    private function rankPool(User $viewer, $query): ?array
+    {
+        $limit = (int) config('services.matchmaking.rank_pool', 200);
+        $ids = (clone $query)->reorder()->latest('users.created_at')->limit($limit)->pluck('users.id')->all();
+        if ($ids === []) {
+            return null;
+        }
+
+        $sidecar = app(\App\Services\Api\V1\Matching\MatchmakingIntegrationService::class);
+        $viewer->loadMissing(\App\Services\Api\V1\Matching\MatchmakingIntegrationService::PROFILE_RELATIONS);
+        $candidates = User::with(\App\Services\Api\V1\Matching\MatchmakingIntegrationService::PROFILE_RELATIONS)
+            ->whereIn('id', $ids)->get()->all();
+
+        try {
+            return $sidecar->rankCandidates($viewer, $candidates) ?: null;
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
     }
 
     private function applySorting($query, User $viewer, array $filters): void
