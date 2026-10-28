@@ -55,7 +55,9 @@ class SearchController extends ApiController
                 ? (int) $stored->match_percentage
                 : null;
 
-            return $storedPct ?? (int) ($user->getAttribute('ai_match_percentage') ?? -1);
+            $live = $user->getAttribute('ai_match_percentage');
+
+            return $live !== null ? (int) $live : ($storedPct ?? -1);
         };
 
         $sorted = collect($page->items())->sortByDesc($score)->values();
@@ -82,7 +84,8 @@ class SearchController extends ApiController
         }
 
         $needScore = collect($page->items())
-            ->filter(fn ($user) => $this->storedScoreIsUsable($user) === false)
+            ->filter(fn ($user) => $user->getAttribute('ai_match_percentage') === null
+                && $this->storedScoreIsUsable($user) === false)
             ->values();
 
         if ($needScore->isEmpty()) {

@@ -180,6 +180,62 @@ class MatchmakingIntegrationService
         ];
     }
 
+    /** Relations toModelProfile() reads — eager-load these for a batch. */
+    public const PROFILE_RELATIONS = [
+        'member.annualSalaryRange',
+        'addresses',
+        'education.fieldOfStudy',
+        'education.degree',
+        'career',
+        'lifestyles',
+        'physical_attributes',
+        'partner_expectations',
+        'spiritual_backgrounds.religion',
+        'spiritual_backgrounds.sectMain',
+    ];
+
+    /**
+     * The model's mutual score for every candidate, best first:
+     * [candidate_id => score]. Null when the model cannot answer (down, or
+     * the viewer has nothing to score with), so the caller can fall back.
+     *
+     * Cached for a few minutes per viewer + pool: Discover pages through the
+     * same pool, and page 2 must not re-run the whole ranking.
+     *
+     * @param  array<User>  $candidates
+     * @return array<int,int>|null
+     */
+    public function rankCandidates(User $viewer, array $candidates): ?array
+    {
+        if ($candidates === []) {
+            return [];
+        }
+
+        $ids = array_map(fn (User $c): int => (int) $c->id, $candidates);
+        sort($ids);
+        $cacheKey = 'mm.rank.' . $viewer->id . '.' . md5(implode(',', $ids) . '|' . $viewer->updated_at);
+
+        $cached = Cache::get($cacheKey);
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        $result = $this->getMatches($viewer, $candidates);
+        if ($result === null || ! ($result['success'] ?? false)) {
+            return null;
+        }
+
+        $scores = [];
+        foreach ($result['matches'] as $m) {
+            $scores[(int) $m['candidate_id']] = (int) $m['match_score'];
+        }
+        arsort($scores);
+
+        Cache::put($cacheKey, $scores, 600);
+
+        return $scores;
+    }
+
     /**
      * One-shot helper for the compatibility preview endpoint
      * (/api/v1/profiles/{profile}/compatibility). Returns a flat
@@ -336,12 +392,16 @@ class MatchmakingIntegrationService
             'age'                 => $this->ageFromBirthday($member?->birthday),
             'height_cm'           => $this->cmFromFeet($user->physical_attributes?->height),
             'marital_status'      => $this->maritalStatusLabel($member?->marital_status_id),
-            'mother_tongue'       => $this->languageLabel($member?->mother_tongue),
+            // The column really is spelled `mothere_tongue`; reading
+            // `mother_tongue` returned null for every member.
+            'mother_tongue'       => $this->languageLabel($member?->mothere_tongue),
             'religion'            => $spiritual ? $spiritual->religion?->name : null,
-            'sect'                => $spiritual ? $spiritual->sect?->name : null,
+            // There is no `sect` relation (it silently read as null): the
+            // sect lives on sectMain.
+            'sect'                => $spiritual ? $spiritual->sectMain?->name : null,
             'religious_practice'  => $this->practiceLabel($spiritual?->personal_value),
-            'education'           => $education ? $this->educationLabel($education->degree) : null,
-            'education_field'     => $education ? $education->field_of_study?->name : null,
+            'education'           => $education ? $this->educationLevelOf($education) : null,
+            'education_field'     => $education ? $education->fieldOfStudy?->name : null,
             'profession'          => $career ? $this->professionLabel($career->designation) : null,
             'profession_category' => $career ? ($career->profession_category?->name ?? null) : null,
             'employment_status'   => $this->employmentLabel($member?->employment_status) ?? null,
@@ -505,15 +565,15 @@ class MatchmakingIntegrationService
             $result['country'] = [(string) $pref->preferred_country_id];
         }
 
+        // City and province go to separate fields: both used to be pushed
+        // into `location` (the model's city list), so a province id was
+        // compared against city ids and never matched.
         if ($pref->preferred_state_id) {
-            $result['location'] = [(string) $pref->preferred_state_id];
+            $result['state'] = [(string) $pref->preferred_state_id];
         }
 
         if ($pref->preferred_city_id) {
-            if (! isset($result['location'])) {
-                $result['location'] = [];
-            }
-            $result['location'][] = (string) $pref->preferred_city_id;
+            $result['location'] = [(string) $pref->preferred_city_id];
         }
 
         if ($pref->marital_status_id) {
@@ -787,6 +847,43 @@ class MatchmakingIntegrationService
             '5' => 'Judaism',
             '6' => 'Buddhism',
             default => (string) $id,
+        };
+    }
+
+    /**
+     * The model's education level for an education row. The structured
+     * `education_level_id` wins; otherwise the degree text is read by
+     * keyword ("BS Computer Science" → bachelors). Anything unrecognised is
+     * left out rather than sent as "unknown", which the model ranked below
+     * every minimum and so docked every candidate.
+     */
+    private function educationLevelOf($education): ?string
+    {
+        $byLevel = match ((int) ($education->education_level_id ?? 0)) {
+            1, 2 => 'high_school',
+            3, 4, 5 => 'diploma',
+            6 => 'bachelors',
+            7, 8 => 'masters',
+            9, 10 => 'doctorate',
+            default => null,
+        };
+        if ($byLevel !== null) {
+            return $byLevel;
+        }
+
+        $label = $this->educationLabel($education->degree);
+        if ($label !== null && $label !== 'unknown') {
+            return $label;
+        }
+
+        $d = strtolower((string) $education->degree);
+        return match (true) {
+            (bool) preg_match('/\b(phd|ph\.d|doctorate|postdoc)/', $d) => 'doctorate',
+            (bool) preg_match('/\b(ms|mphil|m\.?phil|masters?|ma|msc|mba|mcs|m\.?sc)\b/', $d) => 'masters',
+            (bool) preg_match('/\b(bs|bsc|ba|bba|bcs|be|bachelors?|graduat|b\.?sc|b\.?s|mbbs|llb|bds|pharm)/', $d) => 'bachelors',
+            (bool) preg_match('/\b(diploma|dae|associate|adp|certificate)/', $d) => 'diploma',
+            (bool) preg_match('/\b(matric|ssc|hssc|intermediate|fsc|fa|o.?level|a.?level)\b/', $d) => 'high_school',
+            default => null,
         };
     }
 
