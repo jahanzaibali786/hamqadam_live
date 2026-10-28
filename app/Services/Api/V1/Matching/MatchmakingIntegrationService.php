@@ -207,13 +207,26 @@ class MatchmakingIntegrationService
      */
     public function rankCandidates(User $viewer, array $candidates): ?array
     {
+        $details = $this->rankCandidatesWithReasons($viewer, $candidates);
+
+        return $details === null ? null : array_map(fn (array $d): int => $d['score'], $details);
+    }
+
+    /**
+     * Same ranking, with the model's reasons kept so it can be stored.
+     *
+     * @param  array<User>  $candidates
+     * @return array<int,array{score:int,reasons:array,breakdown:array,confidence:int,level:string,status:string}>|null
+     */
+    public function rankCandidatesWithReasons(User $viewer, array $candidates): ?array
+    {
         if ($candidates === []) {
             return [];
         }
 
         $ids = array_map(fn (User $c): int => (int) $c->id, $candidates);
         sort($ids);
-        $cacheKey = 'mm.rank.' . $viewer->id . '.' . md5(implode(',', $ids) . '|' . $viewer->updated_at);
+        $cacheKey = 'mm.rankd.' . $viewer->id . '.' . md5(implode(',', $ids) . '|' . $viewer->updated_at);
 
         $cached = Cache::get($cacheKey);
         if (is_array($cached)) {
@@ -227,9 +240,16 @@ class MatchmakingIntegrationService
 
         $scores = [];
         foreach ($result['matches'] as $m) {
-            $scores[(int) $m['candidate_id']] = (int) $m['match_score'];
+            $scores[(int) $m['candidate_id']] = [
+                'score'      => (int) $m['match_score'],
+                'reasons'    => $m['match_reasons'] ?? [],
+                'breakdown'  => $m['your_preferences_match']['criterion_matches'] ?? [],
+                'confidence' => (int) ($m['confidence_score'] ?? 0),
+                'level'      => (string) ($m['compatibility_level'] ?? ''),
+                'status'     => (string) ($m['match_status'] ?? ''),
+            ];
         }
-        arsort($scores);
+        uasort($scores, fn (array $a, array $b): int => $b['score'] <=> $a['score']);
 
         Cache::put($cacheKey, $scores, 600);
 

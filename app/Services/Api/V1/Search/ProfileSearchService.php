@@ -531,6 +531,60 @@ class ProfileSearchService
      *
      * @return array<int,int>|null  [user_id => score], best first
      */
+    /** Full model answers from the last rankPool() call (for storing). */
+    private ?array $lastRanking = null;
+
+    /**
+     * Rewrites the viewer's stored profile_matches from the live model, so
+     * the website (dashboard, Matched Profiles), which reads stored rows,
+     * shows the same people and percentages as the app. Runs at most every
+     * 30 minutes per member; when the model is down the old rows stay.
+     */
+    public function refreshStoredMatches(User $viewer, bool $force = false): bool
+    {
+        $fresh = \App\Models\ProfileMatch::where('user_id', $viewer->id)
+            ->where('calculated_at', '>=', now()->subMinutes(30))
+            ->exists();
+        if ($fresh && ! $force) {
+            return false;
+        }
+
+        $this->lastRanking = null;
+        $this->search($viewer, ['per_page' => 1]);
+        $ranking = $this->lastRanking;
+        if (! $ranking) {
+            return false;
+        }
+
+        $now = now();
+        $rows = [];
+        foreach ($ranking as $matchId => $r) {
+            $rows[] = [
+                'user_id'                   => $viewer->id,
+                'match_id'                  => $matchId,
+                'match_percentage'          => \App\Models\ProfileMatch::displayPercentage($r['score']),
+                'compatibility_reasons'     => json_encode(array_values($r['reasons'])),
+                'compatibility_explanation' => implode(' ', array_slice($r['reasons'], 0, 4)) ?: 'Scored by the AI matchmaking model.',
+                'score_breakdown'           => json_encode($r['breakdown']),
+                'confidence_score'          => max(0, min(100, $r['confidence'])),
+                'compatibility_level'       => $r['level'] ?: null,
+                'match_status'              => $r['status'] ?: null,
+                'calculated_at'             => $now,
+                'created_at'                => $now,
+                'updated_at'                => $now,
+            ];
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($viewer, $rows) {
+            \App\Models\ProfileMatch::where('user_id', $viewer->id)->delete();
+            foreach (array_chunk($rows, 100) as $chunk) {
+                \App\Models\ProfileMatch::insert($chunk);
+            }
+        });
+
+        return true;
+    }
+
     private function rankPool(User $viewer, $query): ?array
     {
         $limit = (int) config('services.matchmaking.rank_pool', 200);
@@ -545,7 +599,11 @@ class ProfileSearchService
             ->whereIn('id', $ids)->get()->all();
 
         try {
-            return $sidecar->rankCandidates($viewer, $candidates) ?: null;
+            $this->lastRanking = $sidecar->rankCandidatesWithReasons($viewer, $candidates) ?: null;
+
+            return $this->lastRanking === null
+                ? null
+                : array_map(fn (array $d): int => $d['score'], $this->lastRanking);
         } catch (\Throwable $e) {
             report($e);
 
