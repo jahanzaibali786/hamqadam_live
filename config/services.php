@@ -71,7 +71,7 @@ return [
 
     'matchmaking' => [
         'base_url' => rtrim((string) env('MATCHMAKING_BASE_URL', 'https://matchmaking.hamqadam.com'), '/'),
-        'timeout'  => (int) env('MATCHMAKING_TIMEOUT', 30),
+        'timeout'  => (int) env('MATCHMAKING_TIMEOUT', 8),
         'api_key'  => (string) env('MATCHMAKING_API_KEY', ''),
     ],
 

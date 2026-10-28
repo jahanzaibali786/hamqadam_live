@@ -187,7 +187,7 @@ class AppServiceProvider extends ServiceProvider
                 function () {
                     return new \App\Services\Api\V1\Matching\MatchmakingIntegrationService(
                         baseUrl: config('services.matchmaking.base_url', 'https://matchmaking.hamqadam.com'),
-                        timeout: (int) config('services.matchmaking.timeout', 30),
+                        timeout: (int) config('services.matchmaking.timeout', 8),
                         apiKey: (string) config('services.matchmaking.api_key', ''),
                     );
                 }
