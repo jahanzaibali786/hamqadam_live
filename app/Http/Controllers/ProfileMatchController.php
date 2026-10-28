@@ -215,33 +215,47 @@ class ProfileMatchController extends Controller
   public function myMatchedProfiles()
   {
     $user = auth()->user();
-    // Same live AI ranking as the app (stored rows are refreshed at most
-    // every 30 minutes; if the model is down the saved rows are shown).
-    try {
-      app(\App\Services\Api\V1\Search\ProfileSearchService::class)->refreshStoredMatches($user);
-    } catch (\Throwable $e) {
-      // Logged explicitly: report() skips HTTP exceptions, which hid failures.
-      \Illuminate\Support\Facades\Log::warning('Stored matches refresh failed', ['user_id' => $user->id, 'error' => get_class($e).': '.$e->getMessage(), 'at' => $e->getFile().':'.$e->getLine()]);
-    }
-    // Saved match results are viewable even if auto-refresh is unavailable.
-    // Recalculation continues to be restricted in matchedRefresh().
-    $matchedProfiles = ProfileMatch::query()->visibleToMember($user);
     $filter = request()->validate(['search'=>['nullable','string','max:80'],'min_age'=>['nullable','integer','between:18,90'],'max_age'=>['nullable','integer','between:18,90'],'verified'=>['nullable','boolean'],'tab'=>['nullable','in:all,high,new,recent']]);
+
+    // Exactly the app's Discover ranking (same service, same AI model score),
+    // so the website and the app always show the same people and the same %.
+    $ranked = null;
+    try {
+      $ranked = app(\App\Services\Api\V1\Search\ProfileSearchService::class)->rankedMatches($user);
+    } catch (\Throwable $e) {
+      \Illuminate\Support\Facades\Log::warning('Matched profiles: live ranking failed', ['user_id' => $user->id, 'error' => get_class($e).': '.$e->getMessage()]);
+    }
+
+    if ($ranked !== null) {
+      $age = fn ($u) => $u->member?->birthday ? \Carbon\Carbon::parse($u->member->birthday)->age : null;
+      $ranked = $ranked
+        ->when(($filter['tab']??'all')==='high', fn($c)=>$c->filter(fn($m)=>$m->match_percentage>=80))
+        ->when(($filter['tab']??'all')==='new', fn($c)=>$c->filter(fn($m)=>$m->matchedUser->created_at && $m->matchedUser->created_at->gte(now()->subDays(30))))
+        ->when(($filter['tab']??'all')==='recent', fn($c)=>$c->filter(fn($m)=>$m->matchedUser->last_active_at && \Carbon\Carbon::parse($m->matchedUser->last_active_at)->gte(now()->subDays(7))))
+        ->when(filled($filter['search']??null), fn($c)=>$c->filter(fn($m)=>str_contains(strtolower(trim($m->matchedUser->first_name.' '.$m->matchedUser->last_name)), strtolower($filter['search']))))
+        ->when(!empty($filter['verified']), fn($c)=>$c->filter(fn($m)=>$m->matchedUser->member?->verification_status==='verified' || $m->matchedUser->member?->ai_verification_status==='approved'))
+        ->when(isset($filter['min_age']), fn($c)=>$c->filter(fn($m)=>($age($m->matchedUser) ?? 0) >= (int) $filter['min_age']))
+        ->when(isset($filter['max_age']), fn($c)=>$c->filter(fn($m)=>($age($m->matchedUser) ?? 999) <= (int) $filter['max_age']))
+        ->values();
+
+      $perPage = 8;
+      $pageNo = \Illuminate\Pagination\Paginator::resolveCurrentPage();
+      $matchedProfiles = new \Illuminate\Pagination\LengthAwarePaginator(
+        $ranked->forPage($pageNo, $perPage)->values(), $ranked->count(), $perPage, $pageNo,
+        ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => request()->query()]
+      );
+
+      return view('frontend.member.matched_profiles', compact('matchedProfiles'));
+    }
+
+    // Model unavailable: show the last saved results instead of nothing.
+    $matchedProfiles = ProfileMatch::query()->visibleToMember($user);
     $matchedProfiles = $matchedProfiles
       ->when(($filter['tab']??'all')==='high',fn($q)=>$q->where('match_percentage','>=',80))
       ->when(($filter['tab']??'all')==='new',fn($q)=>$q->where('created_at','>=',now()->subDays(30)))
       ->when(($filter['tab']??'all')==='recent',fn($q)=>$q->whereHas('matchedUser',fn($u)=>$u->where('last_active_at','>=',now()->subDays(7))))
       ->when(filled($filter['search']??null),fn($q)=>$q->whereHas('matchedUser',fn($u)=>$u->where(fn($x)=>$x->where('first_name','like','%'.$filter['search'].'%')->orWhere('last_name','like','%'.$filter['search'].'%'))))
-      ->when(!empty($filter['verified']),fn($q)=>$q->whereHas('matchedUser.member',fn($m)=>$m->where(fn($x)=>$x->where('verification_status','verified')->orWhere('ai_verification_status','approved'))))
-      ->when(isset($filter['min_age']),fn($q)=>$q->whereHas('matchedUser.member',fn($m)=>$m->whereDate('birthday','<=',now()->subYears((int)$filter['min_age'])->format('Y-m-d'))))
-      ->when(isset($filter['max_age']),fn($q)=>$q->whereHas('matchedUser.member',fn($m)=>$m->whereDate('birthday','>=',now()->subYears((int)$filter['max_age']+1)->addDay()->format('Y-m-d'))))
-      ->with([
-        'matchedUser.member',
-        'matchedUser.spiritual_backgrounds.religion',
-        'matchedUser.addresses.country',
-        'matchedUser.addresses.city',
-        'matchedUser.education',
-      ])
+      ->with(['matchedUser.member','matchedUser.addresses.city','matchedUser.education'])
       ->orderBy('match_percentage', 'desc')
       ->paginate(8)->withQueryString();
 

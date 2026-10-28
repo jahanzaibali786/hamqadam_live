@@ -531,6 +531,35 @@ class ProfileSearchService
      *
      * @return array<int,int>|null  [user_id => score], best first
      */
+    /**
+     * The app's Discover ranking, as ProfileMatch-shaped objects for the
+     * website: same pool, same order, same AI model score. The web pages
+     * render these directly, so app and web can never drift apart.
+     * Null when the model cannot rank right now (caller falls back).
+     *
+     * @return \Illuminate\Support\Collection<int,\App\Models\ProfileMatch>|null
+     */
+    public function rankedMatches(User $viewer): ?\Illuminate\Support\Collection
+    {
+        $page = $this->search($viewer, ['per_page' => (int) config('services.matchmaking.rank_pool', 200)]);
+
+        $matches = collect($page->items())
+            ->filter(fn (User $u) => $u->getAttribute('ai_match_percentage') !== null)
+            ->map(function (User $u) {
+                $m = new \App\Models\ProfileMatch([
+                    'match_id'         => $u->id,
+                    'match_percentage' => \App\Models\ProfileMatch::displayPercentage((int) $u->getAttribute('ai_match_percentage')),
+                ]);
+                $m->setRelation('matchedUser', $u);
+
+                return $m;
+            })
+            ->filter(fn ($m) => $m->match_percentage > 0)
+            ->values();
+
+        return $matches->isEmpty() ? null : $matches;
+    }
+
     /** Full model answers from the last rankPool() call (for storing). */
     private ?array $lastRanking = null;
 
