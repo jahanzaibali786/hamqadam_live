@@ -215,6 +215,13 @@ class ProfileMatchController extends Controller
   public function myMatchedProfiles()
   {
     $user = auth()->user();
+    // Same live AI ranking as the app (stored rows are refreshed at most
+    // every 30 minutes; if the model is down the saved rows are shown).
+    try {
+      app(\App\Services\Api\V1\Search\ProfileSearchService::class)->refreshStoredMatches($user);
+    } catch (\Throwable $e) {
+      report($e);
+    }
     // Saved match results are viewable even if auto-refresh is unavailable.
     // Recalculation continues to be restricted in matchedRefresh().
     $matchedProfiles = ProfileMatch::query()->visibleToMember($user);

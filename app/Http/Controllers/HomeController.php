@@ -189,6 +189,14 @@ class HomeController extends Controller
                 return redirect()->route('guardian_panel.index');
             }
 
+            // The website reads stored matches; refresh them from the live
+            // model first so it shows the same people and % as the app.
+            try {
+                app(\App\Services\Api\V1\Search\ProfileSearchService::class)->refreshStoredMatches($user);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+
             $similar_profiles = ProfileMatch::orderBy('match_percentage', 'desc')
                 ->where('user_id', $user->id)
                 ->where('match_percentage', '>=', 50)
