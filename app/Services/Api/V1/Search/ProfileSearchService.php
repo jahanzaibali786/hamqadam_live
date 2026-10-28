@@ -553,6 +553,8 @@ class ProfileSearchService
         $this->search($viewer, ['per_page' => 1]);
         $ranking = $this->lastRanking;
         if (! $ranking) {
+            \Illuminate\Support\Facades\Log::info('Stored matches not refreshed: model gave no ranking', ['user_id' => $viewer->id]);
+
             return false;
         }
 
@@ -581,6 +583,7 @@ class ProfileSearchService
                 \App\Models\ProfileMatch::insert($chunk);
             }
         });
+        \Illuminate\Support\Facades\Log::info('Stored matches refreshed from the AI model', ['user_id' => $viewer->id, 'rows' => count($rows)]);
 
         return true;
     }
