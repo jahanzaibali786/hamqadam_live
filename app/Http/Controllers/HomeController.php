@@ -189,15 +189,6 @@ class HomeController extends Controller
                 return redirect()->route('guardian_panel.index');
             }
 
-            // The website reads stored matches; refresh them from the live
-            // model first so it shows the same people and % as the app.
-            try {
-                app(\App\Services\Api\V1\Search\ProfileSearchService::class)->refreshStoredMatches($user);
-            } catch (\Throwable $e) {
-                // Logged explicitly: report() skips HTTP exceptions, which hid failures.
-                \Illuminate\Support\Facades\Log::warning('Stored matches refresh failed', ['user_id' => $user->id, 'error' => get_class($e).': '.$e->getMessage(), 'at' => $e->getFile().':'.$e->getLine()]);
-            }
-
             $similar_profiles = ProfileMatch::orderBy('match_percentage', 'desc')
                 ->where('user_id', $user->id)
                 ->where('match_percentage', '>=', 50)
@@ -223,12 +214,25 @@ class HomeController extends Controller
 
             // Screenshot-aligned member dashboard: every figure and card is backed
             // by actual eligible matches, published content, and account records.
-            $dashboardMatchQuery = ProfileMatch::query()->visibleToMember($user);
-            $dashboardMatchCount = (clone $dashboardMatchQuery)->count();
-            $dashboardMatches = $dashboardMatchQuery
-                ->with(['matchedUser.member', 'matchedUser.addresses.city',
-                    'matchedUser.career', 'matchedUser.education'])
-                ->orderByDesc('match_percentage')->limit(6)->get();
+            // Same ranking the app shows on Discover (same service, same AI
+            // model score); saved rows only when the model cannot answer.
+            $ranked = null;
+            try {
+                $ranked = app(\App\Services\Api\V1\Search\ProfileSearchService::class)->rankedMatches($user);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Dashboard: live ranking failed', ['user_id' => $user->id, 'error' => get_class($e).': '.$e->getMessage()]);
+            }
+            if ($ranked !== null) {
+                $dashboardMatchCount = $ranked->count();
+                $dashboardMatches = $ranked->take(6)->values();
+            } else {
+                $dashboardMatchQuery = ProfileMatch::query()->visibleToMember($user);
+                $dashboardMatchCount = (clone $dashboardMatchQuery)->count();
+                $dashboardMatches = $dashboardMatchQuery
+                    ->with(['matchedUser.member', 'matchedUser.addresses.city',
+                        'matchedUser.career', 'matchedUser.education'])
+                    ->orderByDesc('match_percentage')->limit(6)->get();
+            }
             $dashboardTopMatch = $dashboardMatches->first();
             $dashboardViewerCount = ProfileViewer::where('user_id', $user->id)
                 ->where('created_at', '>=', now()->startOfMonth())->count();
