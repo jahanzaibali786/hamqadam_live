@@ -18,7 +18,7 @@
     $age = fn ($member) => !empty($member?->birthday) ? \Carbon\Carbon::parse($member->birthday)->age . ' years' : 'Age not provided';
     $education = fn ($user) => $user->education->last()?->degree ?: ($user->member?->degree?->name ?? 'Education not provided');
     $profession = fn ($user) => $user->member?->job_title ?: ($user->career->last()?->designation ?: 'Profession not provided');
-    $religion = fn ($user) => $user->spiritual_backgrounds?->religion?->name ?? 'Religion not provided';
+    $religion = fn ($user) => $user->spiritual_backgrounds->first()?->religion?->name ?? 'Religion not provided';
     $summary = trim((string) $match->compatibility_explanation) ?: 'Your compatibility is based on the matching preferences and profile information currently available.';
     $status = $matchActions['status'];
     $thread = $matchActions['thread'];
@@ -28,7 +28,7 @@
     $insights = [
         ['icon' => 'la-comment-dots', 'title' => 'Communication Style', 'value' => ($viewer->member?->communication_style && $person->member?->communication_style && strcasecmp($viewer->member->communication_style, $person->member->communication_style) === 0) ? 'You both prefer a similar communication style.' : 'Learn how each other prefers to communicate.'],
         ['icon' => 'la-users', 'title' => 'Family Values', 'value' => count($sharedValues) ? 'Shared values: ' . implode(', ', array_slice($sharedValues, 0, 2)) : 'Compare your family values as you get to know each other.'],
-        ['icon' => 'la-home', 'title' => 'Lifestyle Alignment', 'value' => ($viewer->lifestyles?->diet && $viewer->lifestyles?->diet === $person->lifestyles?->diet) ? 'You share similar dietary habits.' : 'Discuss day-to-day habits and lifestyle preferences.'],
+        ['icon' => 'la-home', 'title' => 'Lifestyle Alignment', 'value' => ($viewer->lifestyles->first()?->diet && $viewer->lifestyles?->diet === $person->lifestyles->first()?->diet) ? 'You share similar dietary habits.' : 'Discuss day-to-day habits and lifestyle preferences.'],
         ['icon' => 'la-map-marker', 'title' => 'Location Compatibility', 'value' => $viewerCity !== 'Location not provided' && $viewerCity === $candidateCity ? 'You are both based in ' . $viewerCity . '.' : 'Your locations: ' . $viewerCity . ' and ' . $candidateCity . '.'],
     ];
     $tabs = [
