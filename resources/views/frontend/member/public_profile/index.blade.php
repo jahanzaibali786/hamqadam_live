@@ -227,29 +227,9 @@
                                         $shortlist = \App\Models\Shortlist::where('user_id', $user->id)
                                             ->where('shortlisted_by', Auth::user()->id)
                                             ->first();
-                                        $can_shortlist = (!empty($do_expressed_interest) && $do_expressed_interest->status->value == 1)
-                                            || (!empty($received_expressed_interest) && $received_expressed_interest->status->value == 1);
-                                        if (empty($shortlist) && $can_shortlist) {
-                                            $shortlist_onclick = 1;
-                                            $shortlist_text = translate('Shortlist');
-                                            $shortlist_prompt = '';
-                                        } elseif (!empty($shortlist)) {
-                                            $shortlist_onclick = 0;
-                                            $shortlist_text = translate('Shortlisted');
-                                            $shortlist_prompt = '';
-                                        } else {
-                                            $shortlist_onclick = -1;
-                                            $shortlist_text = translate('Shortlist');
-                                            if (empty($do_expressed_interest) && empty($received_expressed_interest)) {
-                                                $shortlist_prompt = translate('Please express interest first before shortlisting this member.');
-                                            } elseif (!empty($do_expressed_interest) && $do_expressed_interest->status->value == 0) {
-                                                $shortlist_prompt = translate('Your interest request has been sent. Please wait for approval before shortlisting.');
-                                            } elseif (!empty($received_expressed_interest) && $received_expressed_interest->status->value == 0) {
-                                                $shortlist_prompt = translate('Please respond to the received interest before shortlisting this member.');
-                                            } else {
-                                                $shortlist_prompt = translate('Please wait for interest approval before shortlisting this member.');
-                                            }
-                                        }
+                                        $shortlist_onclick = $shortlist ? 0 : 1;
+                                        $shortlist_text = $shortlist ? translate('Shortlisted') : translate('Shortlist');
+                                        $shortlist_prompt = '';
                                     @endphp
                                     <a href="javascript:void(0);" id="shortlist_a_id_{{ $user->id }}"
                                         @if ($shortlist_onclick == 1) onclick="do_shortlist({{ $user->id }})"

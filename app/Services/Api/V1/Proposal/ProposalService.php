@@ -249,72 +249,11 @@ class ProposalService
 
     public function shortlist(User $actor, int $userId): Shortlist
     {
-        $target = $this->ensureTargetUser($actor, $userId);
-
-        if ($this->isShortlisted($actor, $userId)) {
-            throw new ApiException('This member is already in your shortlist.', 409, ApiErrorCode::Conflict->value);
+        $result=app(\App\Services\OpenShortlistService::class)->add($actor,$userId);
+        if ($result === null) {
+            throw new ApiException('This profile is unavailable to shortlist.',404,ApiErrorCode::NotFound->value);
         }
-
-        // QA requirement: shortlisting is INDEPENDENT of Interest/Proposal/Match
-        // status — a member may shortlist anyone they can see, at any time. It
-        // must not unlock chat or bypass privacy: chat still follows the
-        // existing acceptance rules, so this gate stays out of the way.
-
-        $coinCost = (int) feature_coin_cost('shortlist', 1);
-        $balance = (int) ($actor->member?->remaining_interest ?? 0);
-
-        if ($balance < $coinCost) {
-            throw new ApiException(
-                'You need '.$coinCost.' coin(s) to shortlist this member and you currently have '.$balance.'.',
-                402,
-                'insufficient_coins'
-            );
-        }
-
-        return DB::transaction(function () use ($actor, $target, $userId, $coinCost) {
-            $member = $actor->member()->lockForUpdate()->first();
-            $currentBalance = (int) ($member?->remaining_interest ?? 0);
-
-            if ($currentBalance < $coinCost) {
-                throw new ApiException(
-                    'You need '.$coinCost.' coin(s) to shortlist this member and you currently have '.$currentBalance.'.',
-                    402,
-                    'insufficient_coins'
-                );
-            }
-
-            $shortlist = Shortlist::create([
-                'user_id' => $userId,
-                'shortlisted_by' => $actor->id,
-            ]);
-
-            $member->remaining_interest = $currentBalance - $coinCost;
-            $member->save();
-
-            PackageUsage::record(
-                $actor->id,
-                'shortlist',
-                'Shortlist',
-                $coinCost,
-                Shortlist::class,
-                $shortlist->id,
-                'Used '.$coinCost.' coin(s) to shortlist member.'
-            );
-
-            try {
-                $notifyType = 'shortlist';
-                $notifyId = unique_notify_id();
-                $message = $actor->first_name.' '.$actor->last_name.' '.translate(' has shortlisted you.');
-                Notification::send(
-                    $target,
-                    new DbStoreNotification($notifyType, $notifyId, $actor->id, $shortlist->id, $message, route('my_shortlists'))
-                );
-            } catch (\Throwable $e) {
-                // Notification failure must not roll back the shortlist.
-            }
-
-            return $shortlist;
-        });
+        return Shortlist::where('shortlisted_by',$actor->id)->where('user_id',$userId)->firstOrFail();
     }
 
     public function isShortlisted(User $actor, int $userId): bool

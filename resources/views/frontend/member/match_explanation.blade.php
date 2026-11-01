@@ -96,8 +96,8 @@
             @if($status === 1)<a href="{{ $thread ? route('chat_view', $thread->id) : route('all.messages') }}"><i class="las la-comment-dots"></i> Start Conversation</a>
             @else <span class="hm-why26-action-disabled" title="Messaging becomes available after interest acceptance"><i class="las la-comment-dots"></i> Chat after acceptance</span>@endif
             @if($isShortlisted)<span class="hm-why26-action-disabled"><i class="las la-bookmark"></i> Already Shortlisted</span>
-            @elseif($status === 1)<button type="button" data-why-action="shortlist"><i class="las la-bookmark"></i> Add to Shortlist</button>
-            @else <span class="hm-why26-action-disabled" title="Shortlisting requires accepted interest"><i class="las la-bookmark"></i> Shortlist after acceptance</span>@endif
+            @else<button type="button" data-why-action="shortlist"><i class="las la-bookmark"></i> Add to Shortlist</button>
+            @endif
             <a href="{{ route('member.reference.packages') }}"><i class="las la-rocket"></i> Premium Features</a>
             <button type="button" data-why-action="share"><i class="las la-share-alt"></i> Share Profile</button>
             <form action="{{ route('reportusers.store') }}" method="POST" class="hm-why26-report">@csrf<input type="hidden" name="member_id" value="{{ $person->id }}"><input type="hidden" name="reason" value=""><button type="submit"><i class="las la-flag"></i> Report Profile</button></form>
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded',function(){
           .then(body=>{if(body.trim()!=='1')throw new Error('Action unavailable or insufficient coins');feedback.textContent=successText;const button=root.querySelector('[data-why-action="'+(formId.includes('block')?'block':'shortlist')+'"]');if(button)button.disabled=true;if(formId.includes('block'))window.location.href=@json(route('my_matched_profiles'));})
           .catch(()=>{feedback.textContent='Unable to complete this action. Please check your account or package.';});
     }
-    root.querySelector('[data-why-action=shortlist]')?.addEventListener('click',()=>sendAction('hm-why26-shortlist-form','Shortlisting may use coins. Continue?','Profile added to shortlist.'));
+    root.querySelector('[data-why-action=shortlist]')?.addEventListener('click',()=>sendAction('hm-why26-shortlist-form','Add this member to your shortlist?','Profile added to shortlist.'));
     root.querySelector('[data-why-action=block]')?.addEventListener('click',()=>sendAction('hm-why26-block-form','Block this member? The match will be hidden.','Member blocked.'));
     root.querySelector('[data-why-action=share]')?.addEventListener('click',async()=>{const url=@json(route('member_profile',$person->id));try{if(navigator.share){await navigator.share({title:@json($name),url});}else if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(url);feedback.textContent='Profile link copied.';}else{window.prompt('Copy this profile link:',url);}}catch(error){if(error.name!=='AbortError')feedback.textContent='Unable to share profile.';}});
 });

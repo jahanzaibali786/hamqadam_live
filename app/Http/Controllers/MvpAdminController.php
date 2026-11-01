@@ -102,7 +102,8 @@ class MvpAdminController extends Controller
 
     public function expertQuestions()
     {
-        $questions = ExpertQuestion::with('user')->latest()->paginate(20);
+        $questions = ExpertQuestion::with('user')->when(request('status'), fn ($q) => $q->where('status', request('status')))
+            ->latest()->paginate(20)->withQueryString();
 
         return view('admin.mvp.expert_questions', compact('questions'));
     }
