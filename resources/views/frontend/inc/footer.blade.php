@@ -15,6 +15,22 @@
                     <span class="hq-footer-brand-mark"><img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true"></span>{{ $referenceSiteName }}
                 </a>
                 <p>{{ get_setting('about_us_description') ? strip_tags(get_setting('about_us_description')) : translate('Find Your Perfect Partner With Trust & Care. Hamqadam is a dignified, secure matrimonial platform committed to verified profiles, family respect, and lasting lifelong unions.') }}</p>
+                <div class="hq-footer-social" aria-label="Social media and mobile applications" style="display:flex;flex-wrap:wrap;gap:10px;margin:14px 0">
+                    @foreach([
+                      ['hq_social_facebook','Facebook','lab la-facebook-f'],
+                      ['hq_social_instagram','Instagram','lab la-instagram'],
+                      ['hq_social_x','X','lab la-twitter'],
+                      ['hq_app_store_url','Apple App Store','lab la-apple'],
+                      ['hq_play_store_url','Google Play Store','lab la-google-play'],
+                    ] as [$setting,$label,$icon])
+                      @php($url=trim((string)get_setting($setting)))
+                      @if(filter_var($url,FILTER_VALIDATE_URL) && str_starts_with(strtolower($url),'https://'))
+                        <a href="{{ $url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ $label }}" title="{{ $label }}" style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid #a84469;border-radius:50%;color:#a84469">
+                            <i class="{{ $icon }}" aria-hidden="true" style="font-size:20px"></i>
+                        </a>
+                      @endif
+                    @endforeach
+                </div>
                 <div class="hq-footer-trust">
                     <span><i class="las la-shield-alt"></i>{{ get_setting('hq_footer_verified_label') ?: translate('100% Verified Profiles') }}</span>
                     <span><i class="las la-lock"></i>{{ get_setting('hq_footer_ssl_label') ?: translate('256-Bit SSL Protection') }}</span>
