@@ -13,7 +13,7 @@ class ShortlistFeatureTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_cannot_shortlist_without_mutual_interest_acceptance(): void
+    public function test_user_can_shortlist_without_interest_or_package_coins(): void
     {
         $sender = User::factory()->create([
             'user_type' => 'member',
@@ -40,14 +40,14 @@ class ShortlistFeatureTest extends TestCase
             ->post('/member/add-to-shortlist', ['id' => $recipient->id]);
 
         $response->assertOk();
-        $this->assertSame('0', (string) $response->content());
-        $this->assertDatabaseMissing('shortlists', [
+        $this->assertSame('1', (string) $response->content());
+        $this->assertDatabaseHas('shortlists', [
             'user_id' => $recipient->id,
             'shortlisted_by' => $sender->id,
         ]);
     }
 
-    public function test_user_can_shortlist_only_after_both_sides_accept_interest(): void
+    public function test_user_can_shortlist_after_accepted_interest_without_spending_coins(): void
     {
         $sender = User::factory()->create([
             'user_type' => 'member',
@@ -92,6 +92,6 @@ class ShortlistFeatureTest extends TestCase
             'shortlisted_by' => $sender->id,
         ]);
         $senderMember->refresh();
-        $this->assertSame(5, $senderMember->remaining_interest);
+        $this->assertSame(10, $senderMember->remaining_interest);
     }
 }
