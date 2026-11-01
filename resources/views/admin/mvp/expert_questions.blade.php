@@ -4,6 +4,11 @@
 <div class="aiz-titlebar mt-2 mb-4">
     <h1 class="h3">{{ translate('Ask Expert Moderation') }}</h1>
 </div>
+<form action="{{ route('admin.mvp.expert_questions') }}" method="GET" class="mb-3 d-flex align-items-center" style="gap:10px">
+ <label for="expert-status" class="mb-0">Status</label><select id="expert-status" name="status" class="form-control" style="max-width:230px">
+ <option value="">All Queries</option>@foreach(['pending','answered','rejected'] as $state)<option value="{{ $state }}" @selected(request('status')===$state)>{{ ucfirst($state) }}</option>@endforeach
+ </select><button class="btn btn-primary">Filter</button>
+ </form>
 <div class="card">
     <div class="card-body">
         @foreach ($questions as $question)
@@ -15,6 +20,7 @@
                     </div>
                     <small>{{ $question->created_at }}</small>
                 </div>
+                <div class="mt-2"><b>Member:</b> {{ $question->is_anonymous ? 'Anonymous (member #'.$question->user_id.')' : trim(($question->user?->first_name ?? '').' '.($question->user?->last_name ?? '')) }} · #{{ $question->id }}</div>
                 <h6 class="mt-2">{{ $question->question }}</h6>
                 <p class="text-muted">{{ $question->details }}</p>
                 <form action="{{ route('admin.mvp.expert_questions.answer', $question->id) }}" method="POST">
@@ -40,6 +46,7 @@
                 </form>
             </div>
         @endforeach
+        @if($questions->isEmpty()) <p class="p-3">No expert queries found for this filter.</p> @endif
         <div class="aiz-pagination">{{ $questions->links() }}</div>
     </div>
 </div>
