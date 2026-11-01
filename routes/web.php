@@ -230,6 +230,16 @@ Route::middleware(['auth', 'member', 'verified', 'manual.review', 'activated'])-
         ->whereNumber('id')->name('member_profile');
 });
 
+// Shortlisting is available to signed-in members regardless of package and coins.
+// Other package-gated features retain the existing check.package middleware.
+Route::middleware(['auth', 'member', 'verified', 'manual.review', 'activated'])->group(function () {
+    Route::controller(ShortlistController::class)->group(function () {
+        Route::get('/my-shortlists', 'index')->name('my_shortlists');
+        Route::post('/member/add-to-shortlist', 'create')->middleware('throttle:30,1')->name('member.add_to_shortlist');
+        Route::post('/member/remove-from-shortlist', 'remove')->middleware('throttle:30,1')->name('member.remove_from_shortlist');
+    });
+});
+
 Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.review']], function () {
     Route::controller(HomeController::class)->middleware('activated')->group(function () {
         Route::post('/new-user-email', 'update_email')->name('user.change.email');
@@ -314,13 +324,6 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
 
         Route::get('/member/ask-expert', [\App\Http\Controllers\MemberExpertQuestionController::class, 'index'])->name('member.expert.index');
         Route::post('/member/ask-expert', [\App\Http\Controllers\MemberExpertQuestionController::class, 'store'])->middleware('throttle:5,1')->name('member.expert.store');
-
-        // ShortList list, Add, Remove
-        Route::controller(ShortlistController::class)->group(function () {
-            Route::get('/my-shortlists', 'index')->name('my_shortlists');
-            Route::post('/member/add-to-shortlist', 'create')->name('member.add_to_shortlist');
-            Route::post('/member/remove-from-shortlist', 'remove')->name('member.remove_from_shortlist');
-        });
 
         // Ignore list, Add, Remove
         Route::controller(IgnoredUserController::class)->group(function () {
