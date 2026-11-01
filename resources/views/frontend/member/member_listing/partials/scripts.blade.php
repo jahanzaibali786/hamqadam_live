@@ -167,30 +167,8 @@
             AIZ.plugins.notify('danger', message || '{{ translate('Please express interest first and wait for approval before shortlisting.') }}');
         }
 
-        // Shortlist
-        function do_shortlist(id) {
-            $.post('{{ route('user.remaining_package_value') }}', {
-                    _token: '{{ csrf_token() }}',
-                    id: id,
-                    colmn_name: 'remaining_interest'
-                },
-                function(data) {
-                    var remaining_interest = data;
-                    if (!package_validity || remaining_interest < 5) {
-                        $('.package_update_alert_modal').modal('show');
-                    } else {
-                        $('.confirm_modal').modal('show');
-                        $("#confirm_modal_title").html("{{ translate('Confirm Shortlist!') }}");
-                        $("#confirm_modal_content").html(
-                            "<p class='fs-14'>{{ translate('Coin Balance') }}: " +
-                            remaining_interest +
-                            " {{ translate('Coins') }}</p><small class='text-danger fs-12'>{{ translate('**N.B. Shortlisting will cost') }} " + shortlist_coin_charge + " {{ translate('coin(s)**') }}</small>"
-                        );
-                        $("#confirm_button").attr("onclick", "do_shortlist_confirm(" + id + ")");
-                    }
-                }
-            );
-        }
+        // Shortlisting is free and independent of package or interest status.
+        function do_shortlist(id) { do_shortlist_confirm(id); }
 
         function do_shortlist_confirm(id) {
             $('.confirm_modal').modal('hide');
@@ -208,7 +186,7 @@
                         AIZ.plugins.notify('success', '{{ translate('You Have Shortlisted This Member.') }}');
                     } else {
                         $("#shortlist_id_" + id).html("{{ translate('Shortlist') }}");
-                        AIZ.plugins.notify('danger', '{{ translate('Please express interest first and wait for approval before shortlisting.') }}');
+                        AIZ.plugins.notify('danger', 'Unable to shortlist this profile or it is already saved.');
                     }
                 }
             );
