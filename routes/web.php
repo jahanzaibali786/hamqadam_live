@@ -312,6 +312,9 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
             Route::post('/{call}/missed', 'missed')->whereNumber('call')->name('missed');
         });
 
+        Route::get('/member/ask-expert', [\App\Http\Controllers\MemberExpertQuestionController::class, 'index'])->name('member.expert.index');
+        Route::post('/member/ask-expert', [\App\Http\Controllers\MemberExpertQuestionController::class, 'store'])->middleware('throttle:5,1')->name('member.expert.store');
+
         // ShortList list, Add, Remove
         Route::controller(ShortlistController::class)->group(function () {
             Route::get('/my-shortlists', 'index')->name('my_shortlists');
