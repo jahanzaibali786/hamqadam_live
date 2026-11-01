@@ -146,7 +146,7 @@
         // Express Interest
         var package_validity = false;
         var express_interest_coin_charge = {{ feature_coin_cost('express_interest', 1) }};
-        var shortlist_coin_charge = {{ feature_coin_cost('shortlist', 5) }};
+
         @if(package_validity(Auth::user()->id))
             package_validity = true;
         @endif
@@ -164,7 +164,7 @@
         }
 
         function show_shortlist_requirement(message) {
-            AIZ.plugins.notify('danger', message || '{{ translate('Please express interest first and wait for approval before shortlisting.') }}');
+            AIZ.plugins.notify('danger', message || 'This profile is unavailable to shortlist.');
         }
 
         // Shortlisting is free and independent of package or interest status.

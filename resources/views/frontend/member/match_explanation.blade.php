@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded',function(){
         const form=root.querySelector('#'+formId);const data=new FormData(form);
         fetch(form.action,{method:'POST',body:data,credentials:'same-origin',headers:{'X-Requested-With':'XMLHttpRequest'}})
           .then(res=>{if(!res.ok)throw new Error('Request failed');return res.text();})
-          .then(body=>{if(body.trim()!=='1')throw new Error('Action unavailable or insufficient coins');feedback.textContent=successText;const button=root.querySelector('[data-why-action="'+(formId.includes('block')?'block':'shortlist')+'"]');if(button)button.disabled=true;if(formId.includes('block'))window.location.href=@json(route('my_matched_profiles'));})
+          .then(body=>{if(body.trim()!=='1')throw new Error('This action is unavailable');feedback.textContent=successText;const button=root.querySelector('[data-why-action="'+(formId.includes('block')?'block':'shortlist')+'"]');if(button)button.disabled=true;if(formId.includes('block'))window.location.href=@json(route('my_matched_profiles'));})
           .catch(()=>{feedback.textContent='Unable to complete this action. Please check your account or package.';});
     }
     root.querySelector('[data-why-action=shortlist]')?.addEventListener('click',()=>sendAction('hm-why26-shortlist-form','Add this member to your shortlist?','Profile added to shortlist.'));
