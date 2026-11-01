@@ -90,6 +90,15 @@
                     </ul>
                 </li>
 
+                @if(in_array(auth()->user()->user_type, ['admin', 'staff'], true))
+                <li class="aiz-side-nav-item">
+                  <a href="{{ route('admin.mvp.expert_questions') }}" class="aiz-side-nav-link {{ request()->routeIs('admin.mvp.expert_questions*') ? 'active' : '' }}">
+                    <i class="las la-user-md aiz-side-nav-icon"></i>
+                    <span class="aiz-side-nav-text">Ask Expert Queries</span>
+                  </a>
+                </li>
+                @endif
+
                 <!-- Member Manage -->
                 <li class="aiz-side-nav-item">
                     <a href="#" class="aiz-side-nav-link">
