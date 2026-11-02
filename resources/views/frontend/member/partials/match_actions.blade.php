@@ -13,4 +13,5 @@
     @else
         <span class="hm-match-status">{{ $status === 0 ? 'Proposal Sent' : 'Proposal ' . ($interest->status?->label() ?? 'Closed') }}</span>
     @endif
+    @include('frontend.member.partials.profile_appreciations', ['person'=>$person])
 </div>
