@@ -19,9 +19,16 @@ use Illuminate\Support\Facades\DB;
  */
 class GiftAdminController extends ApiController
 {
+    private function authorizeAdmin(): void
+    {
+        $user = auth()->user();
+        abort_unless($user && ($user->user_type === 'admin' || ($user->user_type === 'staff' && $user->admin_identifier === 'subadmin')), 403);
+    }
+
     /** GET /admin/gifts — all gifts including inactive. */
     public function index(): JsonResponse
     {
+        $this->authorizeAdmin();
         return $this->success(
             Gift::orderBy('sort_order')->get(),
             'Gifts fetched successfully.'
@@ -31,6 +38,7 @@ class GiftAdminController extends ApiController
     /** POST /admin/gifts */
     public function store(Request $request): JsonResponse
     {
+        $this->authorizeAdmin();
         $data = $request->validate([
             'name' => ['required', 'string', 'max:60'],
             'slug' => ['required', 'string', 'max:60', 'unique:gifts,slug'],
@@ -48,6 +56,7 @@ class GiftAdminController extends ApiController
     /** PATCH /admin/gifts/{gift} — price, name, assets, sort order, active flag. */
     public function update(Request $request, Gift $gift): JsonResponse
     {
+        $this->authorizeAdmin();
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:60'],
             'thumbnail' => ['sometimes', 'string', 'max:255'],
@@ -66,6 +75,7 @@ class GiftAdminController extends ApiController
     /** DELETE /admin/gifts/{gift} — soft-disable by default keeps history intact. */
     public function destroy(Request $request, Gift $gift): JsonResponse
     {
+        $this->authorizeAdmin();
         // A gift with history must not disappear from members' gift lists —
         // deactivate instead of delete.
         if (GiftTransaction::where('gift_id', $gift->id)->exists() || true) {
@@ -78,6 +88,7 @@ class GiftAdminController extends ApiController
     /** GET /admin/gifts/stats — usage analytics. */
     public function stats(): JsonResponse
     {
+        $this->authorizeAdmin();
         return $this->success([
             'total_gifts_sent' => (int) GiftTransaction::where('status', 'sent')->count(),
             'total_coins_consumed' => (int) GiftTransaction::where('status', 'sent')->sum('coins'),

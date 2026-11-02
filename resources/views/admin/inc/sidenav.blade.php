@@ -23,6 +23,9 @@
                     </a>
                 </li>
 
+                @if(in_array(auth()->user()->user_type,['admin','staff'],true))
+                <li class="aiz-side-nav-item"><a href="{{ route('admin.gifts.index') }}" class="aiz-side-nav-link {{ request()->routeIs('admin.gifts.*')?'active':'' }}"><i class="las la-gift aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Virtual Gifts</span></a></li>
+                @endif
                 <li class="aiz-side-nav-item">
                     <a href="{{ route('admin.workflow.templates') }}" class="aiz-side-nav-link {{ request()->routeIs('admin.workflow.templates*') ? 'active' : '' }}">
                         <i class="las la-envelope-open-text aiz-side-nav-icon"></i>
