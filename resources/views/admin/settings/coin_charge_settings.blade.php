@@ -19,7 +19,7 @@
                                         <input type="number" min="0" name="feature_coin_cost_express_interest" class="form-control" value="{{ get_setting('feature_coin_cost_express_interest', 1) }}">
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">{{ translate('Shortlist') }}</label>
+                                        <label class="form-label">{{ translate('Shortlist (Free)') }}</label>
                                         <input type="hidden" name="types[]" value="feature_coin_cost_shortlist">
                                         <input type="number" min="0" name="feature_coin_cost_shortlist" class="form-control" value="{{ get_setting('feature_coin_cost_shortlist', 5) }}">
                                     </div>
@@ -39,7 +39,10 @@
                                         <input type="number" min="0" name="feature_coin_cost_gallery_image_view" class="form-control" value="{{ get_setting('feature_coin_cost_gallery_image_view', 1) }}">
                                     </div>
                                     <div class="col-md-6 mb-3">
-                                        <label class="form-label">{{ translate('Custom Coin Price (per coin)') }}</label>
+                                        <label class="form-label">Super Like (Coins)</label>
+<input type="hidden" name="types[]" value="feature_coin_cost_super_like">
+<input type="number" min="0" name="feature_coin_cost_super_like" class="form-control mb-3" value="{{ get_setting('feature_coin_cost_super_like', 10) }}">
+<label class="form-label">{{ translate('Custom Coin Price (per coin)') }}</label>
                                         <input type="hidden" name="types[]" value="custom_coin_unit_price">
                                         <input type="number" min="0.01" step="0.01" name="custom_coin_unit_price" class="form-control" value="{{ get_setting('custom_coin_unit_price', 1) }}">
                                         <small class="text-muted">{{ translate('Members can buy custom coins at this price per coin.') }}</small>

@@ -41,6 +41,8 @@ $add('ai_suggested_profile', 'Someone May Be Worth Discovering', 'Our AI found a
 $add('preference_match', 'A New Possibility', 'We found a new profile that matches your preferences. Some stories are worth discovering.', ['push'], '/ai-matches');
 $add('daily_ai_matches', 'Your Daily Matches Are Ready', 'We found new possibilities based on your preferences. Take a moment to discover them.', ['push', 'email_optional'], '/ai-matches');
 $add('profile_viewed', '', '', [], '/profile-views');
+$add('profile_liked', 'Someone Liked Your Profile', ':name liked your profile. You can view their profile and choose whether to like back or send interest.', ['push'], '/member/likes');
+$add('profile_super_liked', 'You Received a Super Like!', ':name sent you a Super Like. Review their highlighted profile and choose your next step.', ['push', 'email_optional'], '/member/super-likes');
 $add('profile_shortlisted', '', '', [], '/shortlists');
 $add('relevant_profile_recommendation', 'New Possibilities for You', 'We found new profiles that may be relevant to what you are looking for.', ['push', 'email_optional'], '/members');
 
