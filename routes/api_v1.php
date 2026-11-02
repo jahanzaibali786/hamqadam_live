@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\CompletionController;
 use App\Http\Controllers\Api\V1\Ai\AiController;
+use App\Http\Controllers\Api\V1\Appreciation\AppreciationController;
 use App\Http\Controllers\Api\V1\Admin\AdminOverviewController;
 use App\Http\Controllers\Api\V1\Chat\CallController;
 use App\Http\Controllers\Api\V1\Matching\SwipeController;
@@ -171,6 +172,14 @@ Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix(
     Route::post('/recalculate-async', [MatchController::class, 'recalculateAsync'])->middleware('throttle:10,1')->name('recalculate_async');
 
     Route::post('/feedback', [MatchController::class, 'feedback'])->middleware('throttle:60,1')->name('feedback');
+});
+
+// Like (free) / Super Like (coins) and the Profile Activity lists.
+Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('appreciations')->name('api.v1.appreciations.')->group(function () {
+    Route::get('/activity', [AppreciationController::class, 'activity'])->name('activity');
+    Route::get('/members/{member}', [AppreciationController::class, 'status'])->whereNumber('member')->name('status');
+    Route::post('/members/{member}/like', [AppreciationController::class, 'like'])->whereNumber('member')->middleware('throttle:60,1')->name('like');
+    Route::post('/members/{member}/super-like', [AppreciationController::class, 'superLike'])->whereNumber('member')->middleware('throttle:20,1')->name('super_like');
 });
 
 Route::middleware(['auth:sanctum', 'manual.review', 'member.activity'])->prefix('search')->name('api.v1.search.')->group(function () {
