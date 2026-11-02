@@ -37,7 +37,7 @@ class ProfileAppreciationService {
   return $result;
  }
  private function notify(User $actor,int $recipient,string $key,string $event): void {
-  try { $person=User::find($recipient); if($person)\\App\\Services\\NotificationHelper::event($person,$key,['event_id'=>$event,'notify_by'=>$actor->id,'info_id'=>$actor->id,'name'=>trim($actor->first_name.' '.$actor->last_name)]); }
-  catch(\\Throwable $error){\\Illuminate\\Support\\Facades\\Log::warning('Profile appreciation notification failed',['recipient'=>$recipient,'error'=>$error->getMessage()]);}
+  try { $person=User::find($recipient); if($person)\App\Services\NotificationHelper::event($person,$key,['event_id'=>$event,'notify_by'=>$actor->id,'info_id'=>$actor->id,'name'=>trim($actor->first_name.' '.$actor->last_name)]); }
+  catch(\Throwable $error){\Illuminate\Support\Facades\Log::warning('Profile appreciation notification failed',['recipient'=>$recipient,'error'=>$error->getMessage()]);}
  }
 }
