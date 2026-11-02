@@ -12,16 +12,18 @@ class ProfileAppreciationService {
  }
  public function toggleLike(User $actor,int $recipient): bool {
   if(!$this->eligible($actor,$recipient))throw ValidationException::withMessages(['member'=>'This profile is unavailable.']);
-  return DB::transaction(function()use($actor,$recipient){
+  $created=DB::transaction(function()use($actor,$recipient){
    User::whereKey($actor->id)->lockForUpdate()->firstOrFail();
    $query=ProfileLike::where('sender_id',$actor->id)->where('recipient_id',$recipient);
    if($query->exists()){$query->delete();return false;}
    ProfileLike::create(['sender_id'=>$actor->id,'recipient_id'=>$recipient]);return true;
   },3);
+  if($created)$this->notify($actor,$recipient,'profile_liked','like-'.$actor->id.'-'.$recipient);
+  return $created;
  }
  public function superLike(User $actor,int $recipient): array {
   if(!$this->eligible($actor,$recipient))throw ValidationException::withMessages(['member'=>'This profile is unavailable.']);
-  return DB::transaction(function()use($actor,$recipient){
+  $result=DB::transaction(function()use($actor,$recipient){
    $member=Member::where('user_id',$actor->id)->lockForUpdate()->firstOrFail();
    $previous=ProfileSuperLike::where('sender_id',$actor->id)->where('recipient_id',$recipient)->first();
    if($previous)return ['created'=>false,'balance'=>(int)$member->remaining_interest,'cost'=>(int)$previous->coins_charged];
@@ -31,5 +33,11 @@ class ProfileAppreciationService {
    if($cost){$member->decrement('remaining_interest',$cost);PackageUsage::record($actor->id,'super_like','Super Like',$cost,ProfileSuperLike::class,$record->id,'Super Liked member #'.$recipient);}
    return ['created'=>true,'balance'=>(int)$member->fresh()->remaining_interest,'cost'=>$cost];
   },3);
+  if($result['created'])$this->notify($actor,$recipient,'profile_super_liked','super-'.$actor->id.'-'.$recipient);
+  return $result;
+ }
+ private function notify(User $actor,int $recipient,string $key,string $event): void {
+  try { $person=User::find($recipient); if($person)\\App\\Services\\NotificationHelper::event($person,$key,['event_id'=>$event,'notify_by'=>$actor->id,'info_id'=>$actor->id,'name'=>trim($actor->first_name.' '.$actor->last_name)]); }
+  catch(\\Throwable $error){\\Illuminate\\Support\\Facades\\Log::warning('Profile appreciation notification failed',['recipient'=>$recipient,'error'=>$error->getMessage()]);}
  }
 }
