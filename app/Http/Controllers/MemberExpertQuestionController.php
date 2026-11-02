@@ -9,6 +9,7 @@ class MemberExpertQuestionController extends Controller
 {
     public function index(Request $request)
     {
+        app(\App\Services\AdvisorReplyUnreadService::class)->markRead((int)$request->user()->id);
         $questions=ExpertQuestion::where('user_id',$request->user()->id)->latest()->paginate(15);
         return view('frontend.member.ask_expert',compact('questions'));
     }
@@ -34,6 +35,7 @@ class MemberExpertQuestionController extends Controller
     public function conversation(Request $request,int $question)
     {
         $question=ExpertQuestion::where('user_id',$request->user()->id)->findOrFail($question);
+        app(\App\Services\AdvisorReplyUnreadService::class)->markRead((int)$request->user()->id);
         $messages=\App\Models\ExpertQuestionMessage::where('expert_question_id',$question->id)->oldest()->paginate(30);
         return view('frontend.member.expert_conversation',compact('question','messages'));
     }
