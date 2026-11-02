@@ -329,6 +329,8 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
         });
 
         Route::get('/member/ask-expert', [\App\Http\Controllers\MemberExpertQuestionController::class, 'index'])->name('member.expert.index');
+        Route::get('/member/ask-expert/{question}/conversation', [\App\Http\Controllers\MemberExpertQuestionController::class,'conversation'])->whereNumber('question')->name('member.expert.conversation');
+        Route::post('/member/ask-expert/{question}/conversation', [\App\Http\Controllers\MemberExpertQuestionController::class,'reply'])->whereNumber('question')->middleware('throttle:15,1')->name('member.expert.reply');
         Route::post('/member/ask-expert', [\App\Http\Controllers\MemberExpertQuestionController::class, 'store'])->middleware('throttle:5,1')->name('member.expert.store');
 
         // Ignore list, Add, Remove
