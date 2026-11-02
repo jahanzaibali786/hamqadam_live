@@ -7,7 +7,7 @@ class ProfileAppreciationService {
  public function eligible(User $actor,int $recipient): bool {
   if ($recipient<1 || $recipient===(int)$actor->id)return false;
   if (!User::whereKey($recipient)->where('user_type','member')->where('approved',1)->where('blocked',0)->where('deactivated',0)->whereHas('member',fn($q)=>$q->where(fn($s)=>$s->where('hide_profile',0)->orWhereNull('hide_profile')))->whereDoesntHave('profile_privacy_setting',fn($q)=>$q->where('invisible_mode',true))->exists())return false;
-  if (IgnoredUser::where(fn($q)=>$q->where('ignored_by',$actor->id)->where('user_id',$recipient))->orWhere(fn($q)=>$q->where('ignored_by',$recipient)->where('user_id',$actor->id))->exists())return false;
+  if (IgnoredUser::where(function($query)use($actor,$recipient){$query->where(fn($q)=>$q->where('ignored_by',$actor->id)->where('user_id',$recipient))->orWhere(fn($q)=>$q->where('ignored_by',$recipient)->where('user_id',$actor->id));})->exists())return false;
   return !HiddenProfileUser::where('user_id',$recipient)->where('hidden_from_user_id',$actor->id)->exists();
  }
  public function toggleLike(User $actor,int $recipient): bool {
