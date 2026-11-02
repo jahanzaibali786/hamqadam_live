@@ -230,6 +230,12 @@ Route::middleware(['auth', 'member', 'verified', 'manual.review', 'activated'])-
         ->whereNumber('id')->name('member_profile');
 });
 
+Route::middleware(['auth','member','verified','manual.review','activated'])->group(function(){
+ Route::post('/member/profiles/{member}/like',[\App\Http\Controllers\MemberAppreciationController::class,'like'])->whereNumber('member')->middleware('throttle:30,1')->name('member.profile.like');
+ Route::post('/member/profiles/{member}/super-like',[\App\Http\Controllers\MemberAppreciationController::class,'superLike'])->whereNumber('member')->middleware('throttle:10,1')->name('member.profile.superlike');
+ Route::get('/member/super-likes',[\App\Http\Controllers\MemberAppreciationController::class,'history'])->name('member.superlikes.history');
+});
+
 // Shortlisting is available to signed-in members regardless of package and coins.
 // Other package-gated features retain the existing check.package middleware.
 Route::middleware(['auth', 'member', 'verified', 'manual.review', 'activated'])->group(function () {
