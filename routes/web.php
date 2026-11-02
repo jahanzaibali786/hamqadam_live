@@ -236,7 +236,15 @@ Route::middleware(['auth','member','verified','manual.review','activated'])->gro
  Route::get('/member/super-likes',[\App\Http\Controllers\MemberAppreciationController::class,'history'])->name('member.superlikes.history');
 });
 
-// Shortlisting is available to signed-in members regardless of package and coins.
+// Virtual gifting shares the mobile GiftService and existing member coin wallet.
+Route::middleware(['auth','member','verified','manual.review','activated'])->prefix('member/gifts')->name('member.gifts.')->group(function () {
+ Route::get('/', [\App\Http\Controllers\MemberGiftController::class,'index'])->name('index');
+ Route::get('/send/{member}', [\App\Http\Controllers\MemberGiftController::class,'compose'])->whereNumber('member')->name('compose');
+ Route::post('/send', [\App\Http\Controllers\MemberGiftController::class,'send'])->middleware('throttle:10,1')->name('send');
+ Route::get('/transactions/{transaction}', [\App\Http\Controllers\MemberGiftController::class,'transaction'])->whereNumber('transaction')->name('transaction');
+});
+
+ // Shortlisting is available to signed-in members regardless of package and coins.
 // Other package-gated features retain the existing check.package middleware.
 Route::middleware(['auth', 'member', 'verified', 'manual.review', 'activated'])->group(function () {
     Route::controller(ShortlistController::class)->group(function () {
