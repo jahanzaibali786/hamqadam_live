@@ -38,8 +38,9 @@
                             $member = $person->member;
                             $fallback = static_asset(($member?->gender ?? 1) == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png');
                             $photo = $person->photo && show_profile_picture($person) ? uploaded_asset($person->photo) : $fallback;
-                            $allowed = get_setting('full_profile_show_according_to_membership') != 1 || auth()->user()->membership != 1;
-                            $detailUrl = $allowed ? route('member_profile', $person->id) : route('member.reference.packages');
+                            // Member profile details require login, not an upgrade.
+                            // Keep the same View Profile destination as the dashboard.
+                            $detailUrl = route('member_profile', $person->id);
                             $matchActions = \App\Support\MemberMatchCardActions::between(auth()->user(), $person);
                         @endphp
 
