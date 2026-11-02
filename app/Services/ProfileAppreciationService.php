@@ -23,7 +23,7 @@ class ProfileAppreciationService {
  }
  public function superLike(User $actor,int $recipient,int $quotedCost): array {
   if(!$this->eligible($actor,$recipient))throw ValidationException::withMessages(['member'=>'This profile is unavailable.']);
-  $result=DB::transaction(function()use($actor,$recipient){
+  $result=DB::transaction(function()use($actor,$recipient,$quotedCost){
    $member=Member::where('user_id',$actor->id)->lockForUpdate()->firstOrFail();
    $previous=ProfileSuperLike::where('sender_id',$actor->id)->where('recipient_id',$recipient)->first();
    if($previous)return ['created'=>false,'balance'=>(int)$member->remaining_interest,'cost'=>(int)$previous->coins_charged];
