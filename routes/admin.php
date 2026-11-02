@@ -72,6 +72,9 @@ Route::get('/admin/login', [HomeController::class, 'admin_login'])->name('admin.
 
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function () {
+    Route::get('/gifts', [\App\Http\Controllers\Admin\GiftCatalogWebController::class,'index'])->name('admin.gifts.index');
+    Route::post('/gifts', [\App\Http\Controllers\Admin\GiftCatalogWebController::class,'save'])->middleware('throttle:20,1')->name('admin.gifts.save');
+    Route::post('/gifts/{gift}/deactivate', [\App\Http\Controllers\Admin\GiftCatalogWebController::class,'deactivate'])->whereNumber('gift')->name('admin.gifts.deactivate');
     // Referral rewards are an admin configuration feature, not a public route.
     Route::get('/settings/referrals', [ReferralSystemController::class, 'set_referral_commission'])->name('admin.referrals.settings');
     Route::post('/referral-rewards/settings', [ReferralSystemController::class, 'save_reward_settings'])
