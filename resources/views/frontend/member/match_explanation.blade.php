@@ -1,6 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-why-match-20261026.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-why-match-ai-factors-20261102.css') }}?v=1">
 @php
     $score = max(0, min(100, (int) round((float) $match->match_percentage)));
     $name = trim(($person->first_name ?? '') . ' ' . ($person->last_name ?? '')) ?: 'Member';
