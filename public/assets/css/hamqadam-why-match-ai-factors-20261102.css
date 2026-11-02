@@ -1,9 +1,64 @@
-.hm-member-app .hm-why26-factor-subheading{font-size:13px;font-weight:700;color:#9f1239;margin:16px 0 9px}
-.hm-member-app .hm-why26-factor-dynamic{flex-wrap:wrap;row-gap:4px}
-.hm-member-app .hm-why26-factor-dynamic .hm-why26-factor-reason{flex:1 1 100%;color:#6f6272;font-size:11px;line-height:1.45;padding-left:29px}
-.hm-member-app .hm-why26-factor-dynamic .hm-why26-factor-warning{flex:1 1 100%;color:#9f1239;font-weight:700;padding-left:29px}
-.hm-member-app .hm-why26-appreciation{display:inline-flex;gap:7px;align-items:center}
-.hm-member-app .hm-why26-appreciation .hm-why26-thumb{display:inline-flex;justify-content:center;align-items:center;border:1px solid #ebdbe2;cursor:pointer;background:#fff;color:#a84469;padding:0}
-.hm-member-app .hm-why26-appreciation .hm-why26-thumb.is-active{background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff;border-color:#9f1239}
-.hm-member-app .hm-why26-appreciation .hm-why26-thumb:disabled{cursor:default;opacity:.75}
-.hm-member-app .hm-why26-appreciation .hm-why26-thumb:focus-visible{outline:2px solid #a84469;outline-offset:2px}
+/* Each criterion has its own full-width explanation row. */
+.hm-member-app .hm-why26 .hm-why26-factor-dynamic{
+ display:grid!important;grid-template-columns:26px minmax(0,1fr) auto!important;
+ column-gap:9px!important;row-gap:6px!important;align-items:center;
+ padding:12px 0!important;min-width:0;
+ border-bottom:1px solid #f1e9ee;
+}
+.hm-member-app .hm-why26 .hm-why26-factor-dynamic > i{grid-column:1;grid-row:1;font-size:18px}
+.hm-member-app .hm-why26 .hm-why26-factor-dynamic .hm-why26-factor-label{
+ grid-column:2;grid-row:1;min-width:0;white-space:normal!important;
+ word-break:normal!important;overflow-wrap:break-word!important;
+ font-size:12px;font-weight:700;line-height:1.45;
+}
+.hm-member-app .hm-why26 .hm-why26-factor-dynamic .hm-why26-factor-score{
+ grid-column:3;grid-row:1;font-size:12px;white-space:nowrap;text-align:right;
+}
+.hm-member-app .hm-why26 .hm-why26-factor-dynamic .hm-why26-track{
+ grid-column:2 / 4;grid-row:2;width:100%;min-width:0;height:8px;
+}
+.hm-member-app .hm-why26 .hm-why26-factor-dynamic .hm-why26-factor-reason,
+.hm-member-app .hm-why26 .hm-why26-factor-dynamic .hm-why26-factor-warning{
+ display:block;grid-column:2 / 4;grid-row:auto;min-width:0;
+ width:100%;padding:0!important;margin:0;
+ font-size:11px;line-height:1.55;white-space:normal!important;
+ overflow-wrap:break-word!important;word-break:normal!important;
+}
+.hm-member-app .hm-why26 .hm-why26-factor-dynamic .hm-why26-factor-reason{color:#6f6272}
+.hm-member-app .hm-why26 .hm-why26-factor-dynamic .hm-why26-factor-warning{color:#9f1239;font-weight:700}
+.hm-member-app .hm-why26 .hm-why26-factor-subheading{
+ font-size:13px;font-weight:800;color:#9f1239;line-height:1.5;
+ margin:17px 0 9px;overflow-wrap:normal;
+}
+/* Allocate full thumbnail cells, rather than two buttons inside one cell. */
+.hm-member-app .hm-why26 .hm-why26-member-actions{
+ display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));
+ gap:8px;align-items:stretch;
+}
+.hm-member-app .hm-why26 .hm-why26-member-actions > .hm-why26-thumb{
+ display:flex!important;align-items:center;justify-content:center;
+ min-width:0!important;width:100%!important;min-height:50px;
+ border-radius:8px;box-sizing:border-box;
+}
+.hm-member-app .hm-why26 .hm-why26-member-actions > button.hm-why26-thumb{
+ padding:0!important;border:1px solid #ebdbe2!important;
+ background:#faf0f4!important;color:#a84469!important;
+ cursor:pointer;font-size:21px!important;line-height:1!important;
+}
+.hm-member-app .hm-why26 .hm-why26-member-actions > button.hm-why26-thumb i{
+ display:block!important;font-size:22px!important;line-height:1!important;
+ color:inherit!important;margin:0!important;
+}
+.hm-member-app .hm-why26 .hm-why26-member-actions > button.hm-why26-thumb.is-active{
+ background:linear-gradient(135deg,#9f1239,#67051f)!important;
+ color:#fff!important;border-color:#9f1239!important;
+}
+.hm-member-app .hm-why26 .hm-why26-member-actions > button.hm-why26-thumb:disabled{opacity:.8}
+.hm-member-app .hm-why26 .hm-why26-member-actions > .hm-why26-more{
+ padding:4px!important;line-height:1.3;white-space:normal;
+}
+@media(max-width:620px){
+ .hm-member-app .hm-why26 .hm-why26-factor-dynamic{padding:11px 0!important}
+ .hm-member-app .hm-why26 .hm-why26-member-actions{gap:5px}
+ .hm-member-app .hm-why26 .hm-why26-member-actions > button.hm-why26-thumb i{font-size:20px!important}
+}
