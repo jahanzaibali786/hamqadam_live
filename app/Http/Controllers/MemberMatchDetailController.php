@@ -63,6 +63,11 @@ class MemberMatchDetailController extends Controller
                 'match_id' => $person->id,
                 'match_percentage' => $score ?? 0,
                 'score_breakdown' => $preview['breakdown'] ?? [],
+                'score_breakdown_their' => $preview['their_breakdown'] ?? [],
+                'mutual_matched_preferences' => $preview['mutual'] ?? [],
+                'one_sided_preferences' => $preview['one_sided'] ?? [],
+                'compatibility_concerns' => $preview['concerns'] ?? [],
+                'recommended_actions' => $preview['recommendations'] ?? [],
                 'compatibility_reasons' => $preview['reasons'] ?? [],
                 'compatibility_explanation' => $preview['explanation']
                     ?? 'Match insights are unavailable at the moment.',
@@ -80,42 +85,12 @@ class MemberMatchDetailController extends Controller
             ->where('user_id', $person->id)
             ->exists();
 
-        // A score breakdown can contain weighted rule matches, normalized
-        // percentages from an AI service, or absent factors. Never invent scores.
-        $groups = [
-            ['label' => 'Religion & Beliefs', 'icon' => 'la-moon', 'keys' => ['religion', 'prayer', 'faith']],
-            ['label' => 'Lifestyle & Habits', 'icon' => 'la-home', 'keys' => ['lifestyle', 'diet', 'habits']],
-            ['label' => 'Education & Career', 'icon' => 'la-graduation-cap', 'keys' => ['education', 'profession', 'career']],
-            ['label' => 'Family Orientation', 'icon' => 'la-users', 'keys' => ['family', 'values']],
-            ['label' => 'Personality Match', 'icon' => 'la-user', 'keys' => ['personality', 'behavior', 'emotional', 'communication']],
-            ['label' => 'Future Goals', 'icon' => 'la-bullseye', 'keys' => ['long_term', 'future', 'marriage_timeline']],
-        ];
-        $breakdown = (array) ($match->score_breakdown ?? []);
-        $factorScores = [];
-        foreach ($groups as $group) {
-            $scored = 0.0;
-            $possible = 0.0;
-            $standalone = [];
-            foreach ($breakdown as $key => $item) {
-                $normalizedKey = strtolower((string) $key);
-                if (!collect($group['keys'])->contains(fn ($keyword) => str_contains($normalizedKey, $keyword))) {
-                    continue;
-                }
-                if (is_array($item) && is_numeric($item['weight'] ?? null) && (float) $item['weight'] > 0 && is_numeric($item['score'] ?? null)) {
-                    $possible += (float) $item['weight'];
-                    $scored += max(0, min((float) $item['weight'], (float) $item['score']));
-                } elseif (is_array($item) && is_numeric($item['percentage'] ?? null)) {
-                    $standalone[] = max(0, min(100, (float) $item['percentage']));
-                } elseif (is_numeric($item)) {
-                    $standalone[] = max(0, min(100, (float) $item));
-                }
-            }
-            $group['score'] = $possible > 0
-                ? (int) round($scored / $possible * 100)
-                : (count($standalone) ? (int) round(array_sum($standalone) / count($standalone)) : null);
-            unset($group['keys']);
-            $factorScores[] = $group;
-        }
+        // Render exactly the evaluated criteria returned by the AI model.
+        // No placeholder percentages for unavailable categories.
+        $factorSections = \App\Support\AiMatchFactorPresenter::sections(
+            $match->score_breakdown,
+            $match->score_breakdown_their
+        );
 
         $readValues = static function ($raw): array {
             if (is_string($raw)) {
@@ -147,7 +122,7 @@ class MemberMatchDetailController extends Controller
 
         return view('frontend.member.match_explanation', compact(
             'match', 'viewer', 'person', 'matchActions', 'isShortlisted',
-            'factorScores', 'sharedInterests', 'sharedValues',
+            'factorSections', 'sharedInterests', 'sharedValues',
             'reasons', 'concerns', 'recommended'
         ));
     }

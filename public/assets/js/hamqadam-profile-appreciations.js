@@ -5,7 +5,7 @@ const csrf=shell.dataset.appreciationCsrf;
 async function send(url,payload={}){const response=await fetch(url,{method:'POST',credentials:'same-origin',headers:{'X-CSRF-TOKEN':csrf,'Accept':'application/json','Content-Type':'application/json'},body:JSON.stringify(payload)});let data={};try{data=await response.json()}catch{}if(!response.ok)throw Error(data?.errors?.coins?.[0]||data?.errors?.member?.[0]||data?.message||'Action failed');return data}
 document.addEventListener('click',async event=>{
  const btn=event.target.closest('[data-like-url],[data-super-url]');if(!btn||busy||btn.disabled)return;
- const name=btn.closest('.hm-profile-appreciations')?.dataset.memberName||'this member';
+ const name=btn.closest('[data-member-name]')?.dataset.memberName||'this member';
  const superLike=!!btn.dataset.superUrl;
  if(superLike){
   if(balance<cost){if(window.confirm('Super Like costs '+cost+' Coins. Available: '+balance+'. Add Coins?'))location.assign('/custom-coins');return;}

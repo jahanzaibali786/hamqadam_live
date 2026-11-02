@@ -1,0 +1,9 @@
+.hm-member-app .hm-why26-factor-subheading{font-size:13px;font-weight:700;color:#9f1239;margin:16px 0 9px}
+.hm-member-app .hm-why26-factor-dynamic{flex-wrap:wrap;row-gap:4px}
+.hm-member-app .hm-why26-factor-dynamic .hm-why26-factor-reason{flex:1 1 100%;color:#6f6272;font-size:11px;line-height:1.45;padding-left:29px}
+.hm-member-app .hm-why26-factor-dynamic .hm-why26-factor-warning{flex:1 1 100%;color:#9f1239;font-weight:700;padding-left:29px}
+.hm-member-app .hm-why26-appreciation{display:inline-flex;gap:7px;align-items:center}
+.hm-member-app .hm-why26-appreciation .hm-why26-thumb{display:inline-flex;justify-content:center;align-items:center;border:1px solid #ebdbe2;cursor:pointer;background:#fff;color:#a84469;padding:0}
+.hm-member-app .hm-why26-appreciation .hm-why26-thumb.is-active{background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff;border-color:#9f1239}
+.hm-member-app .hm-why26-appreciation .hm-why26-thumb:disabled{cursor:default;opacity:.75}
+.hm-member-app .hm-why26-appreciation .hm-why26-thumb:focus-visible{outline:2px solid #a84469;outline-offset:2px}
