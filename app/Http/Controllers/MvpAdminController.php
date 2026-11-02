@@ -122,6 +122,18 @@ class MvpAdminController extends Controller
         $entry=ExpertQuestion::findOrFail($question);
         \App\Models\ExpertQuestionMessage::create(['expert_question_id'=>$entry->id,'sender_id'=>$request->user()->id,'body'=>$data['body']]);
         $entry->update(['answer'=>$data['body'],'status'=>'answered','expert_name'=>trim($request->user()->first_name.' '.$request->user()->last_name)]);
+        try {
+            if ($entry->user) {
+                \App\Services\NotificationHelper::event($entry->user, 'advisor_expert_replied', [
+                    'event_id' => 'expert-reply-'.$entry->id.'-'.\App\Models\ExpertQuestionMessage::where('expert_question_id',$entry->id)->latest('id')->value('id'),
+                    'info_id' => $entry->id,
+                    'notify_by' => $request->user()->id,
+                    'deep_link' => route('member.expert.conversation',$entry->id,false),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Advisor reply notification failed',['question_id'=>$entry->id,'error'=>$e->getMessage()]);
+        }
         return back()->with('success','Advisor reply sent.');
     }
 

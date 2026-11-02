@@ -1,7 +1,7 @@
 @extends('frontend.layouts.member_panel')
 
 @section('panel_content')
-<div class="hm-four">
+<div class="hm-four hm-matched-card-page">
     @if ($errors->has('proposal'))
         <div class="alert alert-danger">{{ $errors->first('proposal') }}</div>
     @endif
@@ -27,7 +27,7 @@
                 <a class="{{ request('tab') === 'recent' ? 'active' : '' }}" href="{{ route('my_matched_profiles', ['tab' => 'recent']) }}">Recently Active</a>
             </nav>
 
-            <div class="hm-four-matches">
+            <div class="hm-four-matches hm-matched-card-grid">
                 @forelse ($matchedProfiles as $match)
                     @php
                         $person = $match->matchedUser;
@@ -44,7 +44,7 @@
                             $matchActions = \App\Support\MemberMatchCardActions::between(auth()->user(), $person);
                         @endphp
 
-                        <article class="hm-four-profile">
+                        <article class="hm-four-profile hm-matched-card">
                             <div class="hm-four-photo">
                                 <img src="{{ $photo }}" alt="{{ $person->first_name }}" loading="lazy"
                                      onerror="this.onerror=null;this.src='{{ $fallback }}'">

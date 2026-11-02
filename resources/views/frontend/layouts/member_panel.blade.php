@@ -28,6 +28,7 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-chat-receipts-focus-20261026.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-brand-palette-20261026.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-profile-appreciations.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-card-action-fix-20261102.css') }}?v=2">
 <script src="{{ static_asset('assets/js/hamqadam-profile-appreciations.js') }}?v=1" defer></script>
 <script src="{{ static_asset('assets/js/hamqadam-match-card-menu-20261025.js') }}?v=1" defer></script>
 @php

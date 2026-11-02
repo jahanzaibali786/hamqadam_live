@@ -204,6 +204,10 @@
                           @if($isActiveNav) aria-current="page" @endif>
                           <i class="las {{ $navItem[2] }} aiz-side-nav-icon" aria-hidden="true"></i>
                           <span class="aiz-side-nav-text">{{ $navItem[1] }}</span>
+                          @if($targetRoute==='member.expert.index')
+                            @php($advisorUnread = app(\App\Services\AdvisorReplyUnreadService::class)->unread((int)Auth::id()))
+                            @if($advisorUnread > 0)<span class="badge badge-primary ml-auto" aria-label="{{ $advisorUnread }} unread advisor replies">{{ $advisorUnread > 99 ? '99+' : $advisorUnread }}</span>@endif
+                          @endif
                           @if($targetRoute==='all.messages')
                             <span class="badge badge-primary badge-circle ml-auto unseen-chat-badge-sidebar" style="display:none">0</span>
                           @endif

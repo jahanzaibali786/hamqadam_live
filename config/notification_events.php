@@ -104,6 +104,7 @@ $add('achievement_unlocked', 'Achievement Unlocked', 'Congratulations! You reach
 $add('reward_expiring', 'Your Reward Is Waiting', 'Your reward is expiring soon. Make the most of it.', ['push', 'email_optional'], '/rewards');
 
 $add('support_ticket_created', 'We’ve Got You', 'Your support ticket has been created successfully. We’ll help you from here.', ['push', 'email'], '/support-ticket/history');
+$add('advisor_expert_replied', 'Your Advisor Replied', 'Your Hamqadam advisor has replied to your Ask Expert question.', ['push','email'], '/member/ask-expert');
 $add('support_agent_replied', 'Your Support Agent Replied', 'We have a response waiting for you.', ['push', 'email'], '/support-ticket/history');
 $add('support_ticket_updated', 'Your Ticket Has an Update', 'The status or expected resolution time of your support ticket has been updated.', ['push', 'email'], '/support-ticket/history');
 $add('support_ticket_resolved', 'We’ve Resolved Your Issue', 'Your support ticket has been resolved. We hope we made your journey easier.', ['push', 'email'], '/support-ticket/history');
