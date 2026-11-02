@@ -72,11 +72,7 @@
                                 <span class="aiz-side-nav-text">{{ translate('Proposal Meetings') }}</span>
                             </a>
                         </li>
-                        <li class="aiz-side-nav-item">
-                            <a href="{{ route('admin.mvp.expert_questions') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.mvp.expert_questions']) }}">
-                                <span class="aiz-side-nav-text">{{ translate('Expert Questions') }}</span>
-                            </a>
-                        </li>
+
                         <li class="aiz-side-nav-item">
                             <a href="{{ route('admin.mvp.community') }}" class="aiz-side-nav-link {{ areActiveRoutes(['admin.mvp.community']) }}">
                                 <span class="aiz-side-nav-text">{{ translate('Community Moderation') }}</span>
@@ -90,14 +86,7 @@
                     </ul>
                 </li>
 
-                @if(in_array(auth()->user()->user_type, ['admin', 'staff'], true))
-                <li class="aiz-side-nav-item">
-                  <a href="{{ route('admin.mvp.expert_questions') }}" class="aiz-side-nav-link {{ request()->routeIs('admin.mvp.expert_questions*') ? 'active' : '' }}">
-                    <i class="las la-user-md aiz-side-nav-icon"></i>
-                    <span class="aiz-side-nav-text">Ask Expert Queries</span>
-                  </a>
-                </li>
-                @endif
+
 
                 <!-- Member Manage -->
                 <li class="aiz-side-nav-item">
@@ -505,6 +494,7 @@
                     </a>
                     <ul class="aiz-side-nav-list level-2">
                         @can('show_contact_us_queries')
+                        <li class="aiz-side-nav-item"><a href="{{ route('admin.mvp.expert_questions') }}" class="aiz-side-nav-link {{ request()->routeIs('admin.mvp.expert_questions*') ? 'active' : '' }}"><i class="las la-comments aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Advisor Consultation — Expert Queries</span></a></li>
                         <li class="aiz-side-nav-item"><a href="{{ route('admin.advisor_consultations.index') }}" class="aiz-side-nav-link"><i class="las la-calendar-check aiz-side-nav-icon"></i><span class="aiz-side-nav-text">Advisor Consultations</span></a></li>
                         @endcan
                         @can('show_contact_us_queries')
