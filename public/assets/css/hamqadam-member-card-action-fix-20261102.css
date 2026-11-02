@@ -1,0 +1,52 @@
+/* Dedicated member-card layout rules. Loaded after the legacy 4-column and
+   four-button rules so labels never collapse into vertical text. */
+.hm-member-app .hm-four.hm-matched-card-page .hm-four-matches.hm-matched-card-grid {
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,325px),1fr))!important;
+  gap:16px!important;
+  align-items:stretch;
+}
+.hm-member-app .hm-four.hm-matched-card-page .hm-four-profile.hm-matched-card {
+  width:100%;min-width:0;display:flex;flex-direction:column;overflow:visible;
+  border-radius:12px;
+}
+.hm-member-app .hm-matched-card .hm-four-photo {height:190px;flex:none;overflow:hidden;border-radius:12px 12px 0 0}
+.hm-member-app .hm-matched-card > div:last-child {
+  display:flex;flex-direction:column;flex:1;min-width:0;padding:13px;
+}
+.hm-member-app .hm-matched-card .hm-appreciation-card-actions {margin-top:auto;padding-top:12px}
+.hm-member-app .hm-matched-card .hm-match-menu {z-index:4}
+.hm-member-app .hq-ref24-discovery .hq-discovery-card .hq-discovery-body {min-width:0}
+.hm-member-app .hq-ref24-discovery .hq-discovery-card .hm-appreciation-card-actions {margin-top:14px}
+.hm-member-app .hm-matched-card .hm-appreciation-card-actions,
+.hm-member-app .hq-ref24-discovery .hq-discovery-card .hm-appreciation-card-actions {
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:8px!important;width:100%;min-width:0;align-items:stretch;
+}
+.hm-member-app .hm-matched-card .hm-appreciation-card-actions > .hm-match-send,
+.hm-member-app .hq-ref24-discovery .hq-discovery-card .hm-appreciation-card-actions > .hm-match-send {
+  display:flex!important;align-items:center;justify-content:center;gap:5px;
+  box-sizing:border-box;width:100%!important;max-width:none!important;
+  min-width:0!important;min-height:44px!important;padding:9px 8px!important;
+  font-size:12px!important;line-height:1.4!important;
+  white-space:normal!important;word-break:normal!important;
+  overflow-wrap:normal!important;text-align:center;
+  background:linear-gradient(135deg,#9f1239,#67051f)!important;color:#fff!important;
+  border-radius:9px;
+}
+.hm-member-app .hm-matched-card .hm-appreciation-card-actions > .hm-match-send i,
+.hm-member-app .hq-ref24-discovery .hq-discovery-card .hm-appreciation-card-actions > .hm-match-send i {flex:0 0 auto}
+.hm-member-app .hm-matched-card .hm-appreciation-card-actions > .hm-profile-appreciations,
+.hm-member-app .hq-ref24-discovery .hq-discovery-card .hm-appreciation-card-actions > .hm-profile-appreciations {
+  grid-column:1/-1;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));
+  width:100%;margin:3px 0 0;gap:8px;min-width:0;
+}
+.hm-member-app .hm-matched-card .hm-profile-appreciations button,
+.hm-member-app .hq-ref24-discovery .hq-discovery-card .hm-profile-appreciations button {
+  min-width:0;min-height:42px;white-space:normal!important;word-break:normal!important;
+  line-height:1.35;overflow-wrap:normal!important;
+}
+@media(max-width:620px){
+ .hm-member-app .hm-four.hm-matched-card-page .hm-four-matches.hm-matched-card-grid {grid-template-columns:minmax(0,1fr)!important}
+ .hm-member-app .hm-matched-card .hm-four-photo {height:220px}
+}
