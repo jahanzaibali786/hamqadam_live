@@ -4,9 +4,11 @@ use App\Models\{User,Member,ProfileLike,ProfileSuperLike,PackageUsage,HiddenProf
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 class ProfileAppreciationService {
+ // Same visibility rules as search/matches: `approved` is only the "verified"
+ // filter there, so requiring it here made listed profiles un-likeable.
  public function eligible(User $actor,int $recipient): bool {
   if ($recipient<1 || $recipient===(int)$actor->id)return false;
-  if (!User::whereKey($recipient)->where('user_type','member')->where('approved',1)->where('blocked',0)->where('deactivated',0)->whereHas('member',fn($q)=>$q->where(fn($s)=>$s->where('hide_profile',0)->orWhereNull('hide_profile')))->whereDoesntHave('profile_privacy_setting',fn($q)=>$q->where('invisible_mode',true))->exists())return false;
+  if (!User::whereKey($recipient)->where('user_type','member')->where('blocked',0)->where('deactivated',0)->whereHas('member',fn($q)=>$q->where(fn($s)=>$s->where('hide_profile',0)->orWhereNull('hide_profile')))->whereDoesntHave('profile_privacy_setting',fn($q)=>$q->where('invisible_mode',true))->exists())return false;
   if (IgnoredUser::where(function($query)use($actor,$recipient){$query->where(fn($q)=>$q->where('ignored_by',$actor->id)->where('user_id',$recipient))->orWhere(fn($q)=>$q->where('ignored_by',$recipient)->where('user_id',$actor->id));})->exists())return false;
   return !HiddenProfileUser::where('user_id',$recipient)->where('hidden_from_user_id',$actor->id)->exists();
  }
