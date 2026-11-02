@@ -396,6 +396,7 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
         Route::post('/connection/proposals/{proposal}/relationship', [\App\Http\Controllers\MemberWorkflowController::class, 'relationshipStatus'])->whereNumber('proposal')->name('member.workflow.relationship');
         Route::post('/connection/preferences', [\App\Http\Controllers\MemberWorkflowController::class, 'preferences'])->name('member.workflow.preferences');
         Route::get('/matched-profiles/{member}/why', [\App\Http\Controllers\MemberMatchDetailController::class, 'show'])->whereNumber('member')->name('member.match.why');
+        Route::get('/matched-profiles/{member}/proposal', [\App\Http\Controllers\MemberMatchActionController::class, 'showProposal'])->whereNumber('member')->name('member.match.proposal.show');
         Route::post('/matched-profiles/{member}/proposal', [\App\Http\Controllers\MemberMatchActionController::class, 'propose'])->whereNumber('member')->name('member.match.propose');
         Route::get('/horoscope-matched-profiles', [HoroscopeProfileMatchController::class, 'horoscopeMatchedProfiles'])->name('horoscope_matched_profiles');
         Route::get('/matched-refresh', [ProfileMatchController::class, 'matchedRefresh'])->name('match.refresh');
