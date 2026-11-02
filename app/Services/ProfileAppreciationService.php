@@ -21,13 +21,14 @@ class ProfileAppreciationService {
   if($created)$this->notify($actor,$recipient,'profile_liked','like-'.$actor->id.'-'.$recipient);
   return $created;
  }
- public function superLike(User $actor,int $recipient): array {
+ public function superLike(User $actor,int $recipient,int $quotedCost): array {
   if(!$this->eligible($actor,$recipient))throw ValidationException::withMessages(['member'=>'This profile is unavailable.']);
   $result=DB::transaction(function()use($actor,$recipient){
    $member=Member::where('user_id',$actor->id)->lockForUpdate()->firstOrFail();
    $previous=ProfileSuperLike::where('sender_id',$actor->id)->where('recipient_id',$recipient)->first();
    if($previous)return ['created'=>false,'balance'=>(int)$member->remaining_interest,'cost'=>(int)$previous->coins_charged];
    $cost=max(0,(int)get_setting('feature_coin_cost_super_like',10));
+   if($quotedCost!==$cost)throw ValidationException::withMessages(['coins'=>'Super Like coin price changed. Refresh and confirm the current price.']);
    if((int)$member->remaining_interest<$cost)throw ValidationException::withMessages(['coins'=>'Insufficient coins. Please add coins to continue.']);
    $record=ProfileSuperLike::create(['sender_id'=>$actor->id,'recipient_id'=>$recipient,'coins_charged'=>$cost]);
    if($cost){$member->decrement('remaining_interest',$cost);PackageUsage::record($actor->id,'super_like','Super Like',$cost,ProfileSuperLike::class,$record->id,'Super Liked member #'.$recipient);}
