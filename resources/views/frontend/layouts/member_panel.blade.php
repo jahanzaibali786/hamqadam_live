@@ -27,12 +27,14 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-why-match-reference-20261025.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-chat-receipts-focus-20261026.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-brand-palette-20261026.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-profile-appreciations.css') }}?v=1">
+<script src="{{ static_asset('assets/js/hamqadam-profile-appreciations.js') }}?v=1" defer></script>
 <script src="{{ static_asset('assets/js/hamqadam-match-card-menu-20261025.js') }}?v=1" defer></script>
 @php
     $memberShellUser = auth()->user();
     $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
 @endphp
-<div class="hm-member-app" style="--hm-promo-art:url('{{ static_asset('assets/img/member-reference-couple.svg') }}')">
+<div class="hm-member-app" data-appreciation-cost="{{ (int)get_setting('feature_coin_cost_super_like',10) }}" data-appreciation-balance="{{ (int)(auth()->user()?->member?->remaining_interest ?? 0) }}" data-appreciation-csrf="{{ csrf_token() }}" style="--hm-promo-art:url('{{ static_asset('assets/img/member-reference-couple.svg') }}')">
   <header class="hm-member-topbar">
     <button type="button" class="hm-member-mobile-menu" aria-controls="hm-member-sidebar" aria-expanded="false" aria-label="Open dashboard navigation"><i class="las la-bars"></i></button>
     <a class="hm-member-topbar-brand" href="{{ route('home') }}" aria-label="Hamqadam Dashboard"><span class="hm-member-heart hm-member-heart-pair"><img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true"></span><span>Hamqadam<small>Risthon ki duniya</small></span></a>
