@@ -9,10 +9,9 @@
     $viewerFallback = static_asset(($viewer->member?->gender ?? 1) == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png');
     $photo = $person->photo && show_profile_picture($person) ? uploaded_asset($person->photo) : $fallback;
     $viewerPhoto = $viewer->photo ? uploaded_asset($viewer->photo) : $viewerFallback;
-    $canView = get_setting('full_profile_show_according_to_membership') != 1 ||
-        (package_validity($viewer->id) && (int) get_remaining_package_value($viewer->id, 'remaining_profile_viewer_view') > 0) ||
-        \App\Models\ProfileViewer::where('user_id', $person->id)->where('viewed_by', $viewer->id)->exists();
-    $detailUrl = $canView ? route('member_profile', $person->id) : route('member.reference.packages');
+    $detailUrl = route('member_profile', $person->id);
+    $liked = \App\Models\ProfileLike::where('sender_id', $viewer->id)->where('recipient_id', $person->id)->exists();
+    $superLiked = \App\Models\ProfileSuperLike::where('sender_id', $viewer->id)->where('recipient_id', $person->id)->exists();
     $candidateCity = $person->addresses->firstWhere('type', 'present')?->city?->name ?? 'Location not provided';
     $viewerCity = $viewer->addresses->firstWhere('type', 'present')?->city?->name ?? 'Location not provided';
     $age = fn ($member) => !empty($member?->birthday) ? \Carbon\Carbon::parse($member->birthday)->age . ' years' : 'Age not provided';
@@ -63,7 +62,10 @@
                         <p><i class="las la-graduation-cap"></i> {{ $education($person) }}</p>
                     </div>
                 </div>
-                <div class="hm-why26-thumbnails" aria-label="Member photographs"><span class="hm-why26-thumb"><img src="{{ $photo }}" alt="" loading="lazy"></span><span class="hm-why26-thumb"><img src="{{ $fallback }}" alt="" loading="lazy"></span><span class="hm-why26-thumb hm-why26-muted"><i class="las la-heart"></i></span><span class="hm-why26-thumb hm-why26-muted"><i class="las la-star"></i></span><a class="hm-why26-thumb hm-why26-more" href="{{ $detailUrl }}">View<br>profile</a></div>
+                <div class="hm-why26-thumbnails" aria-label="Member photographs"><span class="hm-why26-thumb"><img src="{{ $photo }}" alt="" loading="lazy"></span><span class="hm-why26-thumb"><img src="{{ $fallback }}" alt="" loading="lazy"></span><span class="hm-why26-appreciation" data-member-name="{{ $name }}">
+    <button type="button" class="hm-why26-thumb hm-appreciate-like {{ $liked ? 'is-active' : '' }}" data-like-url="{{ route('member.profile.like', $person->id) }}" aria-pressed="{{ $liked ? 'true' : 'false' }}" aria-label="{{ $liked ? 'Unlike' : 'Like' }} {{ $name }}" title="{{ $liked ? 'Unlike' : 'Like' }} (free)"><i class="{{ $liked ? 'las' : 'lar' }} la-heart"></i><span class="sr-only">{{ $liked ? 'Liked' : 'Like' }}</span></button>
+    <button type="button" class="hm-why26-thumb hm-appreciate-super {{ $superLiked ? 'is-active' : '' }}" data-super-url="{{ route('member.profile.superlike', $person->id) }}" @disabled($superLiked) aria-label="Super Like {{ $name }}" title="{{ $superLiked ? 'Super Liked' : 'Super Like' }} (coins)"><i class="las la-star"></i><span class="sr-only">{{ $superLiked ? 'Super Liked' : 'Super Like' }}</span></button>
+</span><a class="hm-why26-thumb hm-why26-more" href="{{ $detailUrl }}">View<br>profile</a></div>
             </article>
             <section class="hm-why26-score" aria-label="Compatibility score {{ $score }} percent">
                 <div class="hm-why26-score-ring" style="--hm-why26-score:{{ $score }};"><div><i class="las la-heart" aria-hidden="true"></i><strong>{{ $score }}%</strong></div></div>
@@ -112,7 +114,26 @@
         <section class="hm-why26-panel is-active" id="hm-why26-panel-overview" role="tabpanel" aria-labelledby="hm-why26-tab-overview">
             <div class="hm-why26-analysis-grid">
                 <section class="hm-why26-card hm-why26-factors"><h2>Key Matching Factors</h2>
-                    @foreach($factorScores as $factor)<div class="hm-why26-factor"><i class="las {{ $factor['icon'] }}"></i><span>{{ $factor['label'] }}</span><div class="hm-why26-track" role="meter" aria-label="{{ $factor['label'] }}" aria-valuemin="0" aria-valuemax="100" @if($factor['score'] !== null) aria-valuenow="{{ $factor['score'] }}" @else aria-valuetext="Not available" @endif><span style="width:{{ $factor['score'] ?? 0 }}%"></span></div><b>{{ $factor['score'] !== null ? $factor['score'].'%' : '—' }}</b></div>@endforeach
+                    @forelse($factorSections as $section)
+                        <h3 class="hm-why26-factor-subheading">{{ $section['label'] }}</h3>
+                        @foreach($section['items'] as $factor)
+                            <div class="hm-why26-factor hm-why26-factor-dynamic" title="{{ $factor['reason'] }}">
+                                <i class="las {{ $factor['icon'] }}"></i>
+                                <span>{{ $factor['label'] }}</span>
+                                <div class="hm-why26-track" role="meter" aria-label="{{ $section['label'] }}: {{ $factor['label'] }}" aria-valuemin="0" aria-valuemax="100"
+                                     @if($factor['score'] !== null) aria-valuenow="{{ $factor['score'] }}" @else aria-valuetext="Not evaluated" @endif>
+                                    <span style="width:{{ $factor['score'] ?? 0 }}%"></span>
+                                </div>
+                                <b>{{ $factor['score'] !== null ? $factor['score'].'%' : '—' }}</b>
+                                <small class="hm-why26-factor-reason">{{ $factor['reason'] ?: ucfirst(str_replace('_',' ', $factor['status'])) }}</small>
+                                @if($factor['hard_constraint'] && $factor['status']==='no_match')
+                                    <small class="hm-why26-factor-warning">Mandatory preference not met</small>
+                                @endif
+                            </div>
+                        @endforeach
+                    @empty
+                        <p class="hm-why26-empty">The AI model has not returned individual evaluated matching factors for this pair.</p>
+                    @endforelse
                 </section>
                 <section class="hm-why26-card hm-why26-summary"><div class="hm-why26-card-heading"><h2>AI Match Summary</h2>@if($match->ai_enhanced)<span>AI</span>@endif</div>
                     <p class="hm-why26-summary-text"><i class="las la-magic"></i>{{ $summary }}</p>
