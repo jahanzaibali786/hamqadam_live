@@ -8,7 +8,7 @@ document.addEventListener('click',async event=>{
  const name=btn.closest('.hm-profile-appreciations')?.dataset.memberName||'this member';
  const superLike=!!btn.dataset.superUrl;
  if(superLike){
-  if(balance<cost){if(window.confirm('Super Like costs '+cost+' Coins. Available: '+balance+'. Add Coins?'))location.assign('/wallet/custom-coins');return;}
+  if(balance<cost){if(window.confirm('Super Like costs '+cost+' Coins. Available: '+balance+'. Add Coins?'))location.assign('/custom-coins');return;}
   if(!window.confirm('Super Like '+name+'? Cost: '+cost+' Coins. Available: '+balance+'. Confirm Super Like – '+cost+' Coins'))return;
  }
  busy=true;btn.disabled=true;
