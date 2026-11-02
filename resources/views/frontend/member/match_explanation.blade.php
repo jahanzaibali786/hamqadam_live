@@ -1,7 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-why-match-20261026.css') }}?v=1">
-<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-why-match-ai-factors-20261102.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-why-match-ai-factors-20261102.css') }}?v=2">
 @php
     $score = max(0, min(100, (int) round((float) $match->match_percentage)));
     $name = trim(($person->first_name ?? '') . ' ' . ($person->last_name ?? '')) ?: 'Member';
@@ -63,10 +63,9 @@
                         <p><i class="las la-graduation-cap"></i> {{ $education($person) }}</p>
                     </div>
                 </div>
-                <div class="hm-why26-thumbnails" aria-label="Member photographs"><span class="hm-why26-thumb"><img src="{{ $photo }}" alt="" loading="lazy"></span><span class="hm-why26-thumb"><img src="{{ $fallback }}" alt="" loading="lazy"></span><span class="hm-why26-appreciation" data-member-name="{{ $name }}">
-    <button type="button" class="hm-why26-thumb hm-appreciate-like {{ $liked ? 'is-active' : '' }}" data-like-url="{{ route('member.profile.like', $person->id) }}" aria-pressed="{{ $liked ? 'true' : 'false' }}" aria-label="{{ $liked ? 'Unlike' : 'Like' }} {{ $name }}" title="{{ $liked ? 'Unlike' : 'Like' }} (free)"><i class="{{ $liked ? 'las' : 'lar' }} la-heart"></i><span class="sr-only">{{ $liked ? 'Liked' : 'Like' }}</span></button>
-    <button type="button" class="hm-why26-thumb hm-appreciate-super {{ $superLiked ? 'is-active' : '' }}" data-super-url="{{ route('member.profile.superlike', $person->id) }}" @disabled($superLiked) aria-label="Super Like {{ $name }}" title="{{ $superLiked ? 'Super Liked' : 'Super Like' }} (coins)"><i class="las la-star"></i><span class="sr-only">{{ $superLiked ? 'Super Liked' : 'Super Like' }}</span></button>
-</span><a class="hm-why26-thumb hm-why26-more" href="{{ $detailUrl }}">View<br>profile</a></div>
+                <div class="hm-why26-thumbnails hm-why26-member-actions" aria-label="Member photographs and reactions" data-member-name="{{ $name }}"><span class="hm-why26-thumb"><img src="{{ $photo }}" alt="" loading="lazy"></span><span class="hm-why26-thumb"><img src="{{ $fallback }}" alt="" loading="lazy"></span>
+                    <button type="button" class="hm-why26-thumb hm-appreciate-like {{ $liked ? 'is-active' : '' }}" data-like-url="{{ route('member.profile.like', $person->id) }}" aria-pressed="{{ $liked ? 'true' : 'false' }}" aria-label="{{ $liked ? 'Unlike' : 'Like' }} {{ $name }}" title="{{ $liked ? 'Unlike' : 'Like' }} (free)"><i class="{{ $liked ? 'las' : 'lar' }} la-heart"></i><span class="sr-only">{{ $liked ? 'Liked' : 'Like' }}</span></button>
+                    <button type="button" class="hm-why26-thumb hm-appreciate-super {{ $superLiked ? 'is-active' : '' }}" data-super-url="{{ route('member.profile.superlike', $person->id) }}" @disabled($superLiked) aria-label="Super Like {{ $name }}" title="{{ $superLiked ? 'Super Liked' : 'Super Like' }} (coins)"><i class="las la-star"></i><span class="sr-only">{{ $superLiked ? 'Super Liked' : 'Super Like' }}</span></button><a class="hm-why26-thumb hm-why26-more" href="{{ $detailUrl }}">View<br>profile</a></div>
             </article>
             <section class="hm-why26-score" aria-label="Compatibility score {{ $score }} percent">
                 <div class="hm-why26-score-ring" style="--hm-why26-score:{{ $score }};"><div><i class="las la-heart" aria-hidden="true"></i><strong>{{ $score }}%</strong></div></div>
@@ -118,14 +117,14 @@
                     @forelse($factorSections as $section)
                         <h3 class="hm-why26-factor-subheading">{{ $section['label'] }}</h3>
                         @foreach($section['items'] as $factor)
-                            <div class="hm-why26-factor hm-why26-factor-dynamic" title="{{ $factor['reason'] }}">
-                                <i class="las {{ $factor['icon'] }}"></i>
-                                <span>{{ $factor['label'] }}</span>
+                            <div class="hm-why26-factor hm-why26-factor-dynamic" data-factor-status="{{ $factor['status'] }}">
+                                <i class="las {{ $factor['icon'] }}" aria-hidden="true"></i>
+                                <span class="hm-why26-factor-label">{{ $factor['label'] }}</span>
+                                <b class="hm-why26-factor-score">{{ $factor['score'] !== null ? $factor['score'].'%' : '—' }}</b>
                                 <div class="hm-why26-track" role="meter" aria-label="{{ $section['label'] }}: {{ $factor['label'] }}" aria-valuemin="0" aria-valuemax="100"
                                      @if($factor['score'] !== null) aria-valuenow="{{ $factor['score'] }}" @else aria-valuetext="Not evaluated" @endif>
                                     <span style="width:{{ $factor['score'] ?? 0 }}%"></span>
                                 </div>
-                                <b>{{ $factor['score'] !== null ? $factor['score'].'%' : '—' }}</b>
                                 <small class="hm-why26-factor-reason">{{ $factor['reason'] ?: ucfirst(str_replace('_',' ', $factor['status'])) }}</small>
                                 @if($factor['hard_constraint'] && $factor['status']==='no_match')
                                     <small class="hm-why26-factor-warning">Mandatory preference not met</small>
