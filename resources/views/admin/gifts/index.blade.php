@@ -1,0 +1,15 @@
+@extends('admin.layouts.app')
+@section('content')
+<div class="container-fluid py-4"><h1>Virtual Gifts Management</h1><p>Manage the same gift catalog and coin prices used by mobile and web. Deactivated gifts retain their transaction history.</p>
+@if(session('success'))<div class="alert alert-success">{{session('success')}}</div>@endif
+@if($errors->any())<div class="alert alert-danger">{{$errors->first()}}</div>@endif
+<div class="card mb-4"><div class="card-header">Create Gift</div><div class="card-body"><form action="{{route('admin.gifts.save')}}" method="POST">@csrf<div class="row">
+@foreach(['name'=>'Gift Name','slug'=>'Slug','thumbnail'=>'Thumbnail Path','animated_asset'=>'Animation Path','coins'=>'Coin Cost','category'=>'Category','sort_order'=>'Sort Order'] as $key=>$label)<div class="col-md-4 form-group"><label for="gift-new-{{$key}}">{{$label}}</label><input class="form-control" id="gift-new-{{$key}}" name="{{$key}}" value="{{old($key)}}" @if(in_array($key,['coins','sort_order'])) type="number" min="{{$key==='coins'?1:0}}" @else type="text" @endif required></div>@endforeach
+</div><label><input type="checkbox" name="is_active" value="1" checked> Active</label><button class="btn btn-primary ml-3" type="submit">Create Gift</button></form></div></div>
+<h2 class="h5">Gift Catalog</h2>
+@forelse($gifts as $gift)<form class="card p-3 mb-3" method="POST" action="{{route('admin.gifts.save')}}">@csrf<input type="hidden" name="gift_id" value="{{$gift->id}}"><div class="row">
+@foreach(['name'=>'Name','slug'=>'Slug','thumbnail'=>'Thumbnail','animated_asset'=>'Animation','coins'=>'Coins','category'=>'Category','sort_order'=>'Order'] as $key=>$label)<div class="col-md-3 form-group"><label for="gift-{{$gift->id}}-{{$key}}">{{$label}}</label><input id="gift-{{$gift->id}}-{{$key}}" class="form-control" name="{{$key}}" value="{{$gift->$key}}" @if(in_array($key,['coins','sort_order'])) type="number" min="{{$key==='coins'?1:0}}" @else type="text" @endif required></div>@endforeach</div><div class="d-flex align-items-center"><label><input type="checkbox" name="is_active" value="1" @checked($gift->is_active)> Active</label><button class="btn btn-primary ml-3" type="submit">Save Changes</button><span class="ml-auto">{{$gift->transactions()->count()}} sends</span></div></form>
+@empty<p>No gifts found. Run the existing GiftSeeder or create the first item.</p>@endforelse
+<h2 class="h5 mt-4">Recent Gift Transactions</h2><div class="table-responsive"><table class="table"><thead><tr><th>Gift</th><th>Sender</th><th>Receiver</th><th>Coins</th><th>Date</th></tr></thead><tbody>@forelse($transactions as $t)<tr><td>{{$t->gift?->name}}</td><td>{{$t->sender?->first_name}} #{{$t->sender_id}}</td><td>{{$t->receiver?->first_name}} #{{$t->receiver_id}}</td><td>{{$t->coins}}</td><td>{{$t->created_at?->format('d M Y')}}</td></tr>@empty<tr><td colspan="5">No gift transactions.</td></tr>@endforelse</tbody></table></div>{{$transactions->links()}}
+</div>
+@endsection
