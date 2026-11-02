@@ -169,6 +169,7 @@
                         ['member.reference.stories','Happy Stories','la-heart'],
                         ['member.reference.blogs','Blogs & Articles','la-book-open'],
                          ['member.expert.index','Ask an Expert','la-user-md'],
+                         ['member.superlikes.history','Super Likes','la-star'],
                         ['client.scope.support','Support & Feedback','la-headset'],
                         ['member.verification','Verification','la-shield-alt'],
                         ['member.reference.meetings','Meeting Scheduling','la-calendar-alt'],
