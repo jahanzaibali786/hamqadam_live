@@ -108,6 +108,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::get('/proposal-meetings', 'proposalMeetings')->name('proposal_meetings');
         Route::post('/proposal-meetings/{meeting}', 'updateProposalMeeting')->name('proposal_meetings.update');
         Route::get('/expert-questions', 'expertQuestions')->name('expert_questions');
+        Route::get('/expert-questions/{question}/conversation', 'expertConversation')->whereNumber('question')->name('expert_questions.conversation');
+        Route::post('/expert-questions/{question}/conversation', 'replyExpertConversation')->whereNumber('question')->middleware('throttle:20,1')->name('expert_questions.reply');
         Route::post('/expert-questions/{question}', 'answerExpertQuestion')->name('expert_questions.answer');
         Route::get('/community', 'community')->name('community');
         Route::post('/community/threads/{thread}', 'updateThread')->name('community.threads.update');

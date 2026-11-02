@@ -17,7 +17,7 @@
   <h2 class="h5">My Questions</h2>
   @forelse($questions as $item)
   <article class="card mb-3"><div class="card-body">
-    <div class="d-flex justify-content-between flex-wrap"><strong>{{ $item->question }}</strong><span class="badge badge-secondary">{{ ucfirst($item->status) }}</span></div>
+    <div class="d-flex justify-content-between flex-wrap"><a href="{{ route('member.expert.conversation',$item->id) }}"><strong>{{ $item->question }}</strong> <i class="las la-comment-dots"></i> Open Conversation</a><span class="badge badge-secondary">{{ ucfirst($item->status) }}</span></div>
     <p class="text-muted mt-2">{{ $item->details }}</p>
     @if($item->status==='answered')<div class="p-3 rounded" style="background:#f8f6f7"><b>Expert Response @if($item->expert_name) — {{ $item->expert_name }} @endif</b><p class="mb-0 mt-2">{{ $item->answer }}</p></div>@elseif($item->status==='rejected')<p class="text-muted">This question was not approved for answering.</p>@else <p class="text-muted">Awaiting expert review.</p>@endif
   </div></article>

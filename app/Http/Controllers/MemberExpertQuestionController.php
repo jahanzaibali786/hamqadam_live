@@ -31,4 +31,20 @@ class MemberExpertQuestionController extends Controller
         ]);
         return redirect()->route('member.expert.index')->with('success','Your question has been submitted to our experts.');
     }
+    public function conversation(Request $request,int $question)
+    {
+        $question=ExpertQuestion::where('user_id',$request->user()->id)->findOrFail($question);
+        $messages=\App\Models\ExpertQuestionMessage::where('expert_question_id',$question->id)->oldest()->paginate(30);
+        return view('frontend.member.expert_conversation',compact('question','messages'));
+    }
+
+    public function reply(Request $request,int $question)
+    {
+        $entry=ExpertQuestion::where('user_id',$request->user()->id)->findOrFail($question);
+        $data=$request->validate(['body'=>['required','string','max:5000']]);
+        \App\Models\ExpertQuestionMessage::create(['expert_question_id'=>$entry->id,'sender_id'=>$request->user()->id,'body'=>$data['body']]);
+        if($entry->status==='answered')$entry->update(['status'=>'pending']);
+        return back()->with('success','Message sent.');
+    }
 }
+
