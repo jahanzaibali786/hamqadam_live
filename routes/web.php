@@ -230,6 +230,30 @@ Route::middleware(['auth', 'member', 'verified', 'manual.review', 'activated'])-
         ->whereNumber('id')->name('member_profile');
 });
 
+Route::middleware(['auth','member','verified','manual.review','activated'])->group(function(){
+ Route::post('/member/profiles/{member}/like',[\App\Http\Controllers\MemberAppreciationController::class,'like'])->whereNumber('member')->middleware('throttle:30,1')->name('member.profile.like');
+ Route::post('/member/profiles/{member}/super-like',[\App\Http\Controllers\MemberAppreciationController::class,'superLike'])->whereNumber('member')->middleware('throttle:10,1')->name('member.profile.superlike');
+ Route::get('/member/super-likes',[\App\Http\Controllers\MemberAppreciationController::class,'history'])->name('member.superlikes.history');
+});
+
+// Virtual gifting shares the mobile GiftService and existing member coin wallet.
+Route::middleware(['auth','member','verified','manual.review','activated'])->prefix('member/gifts')->name('member.gifts.')->group(function () {
+ Route::get('/', [\App\Http\Controllers\MemberGiftController::class,'index'])->name('index');
+ Route::get('/send/{member}', [\App\Http\Controllers\MemberGiftController::class,'compose'])->whereNumber('member')->name('compose');
+ Route::post('/send', [\App\Http\Controllers\MemberGiftController::class,'send'])->middleware('throttle:10,1')->name('send');
+ Route::get('/transactions/{transaction}', [\App\Http\Controllers\MemberGiftController::class,'transaction'])->whereNumber('transaction')->name('transaction');
+});
+
+ // Shortlisting is available to signed-in members regardless of package and coins.
+// Other package-gated features retain the existing check.package middleware.
+Route::middleware(['auth', 'member', 'verified', 'manual.review', 'activated'])->group(function () {
+    Route::controller(ShortlistController::class)->group(function () {
+        Route::get('/my-shortlists', 'index')->name('my_shortlists');
+        Route::post('/member/add-to-shortlist', 'create')->middleware('throttle:30,1')->name('member.add_to_shortlist');
+        Route::post('/member/remove-from-shortlist', 'remove')->middleware('throttle:30,1')->name('member.remove_from_shortlist');
+    });
+});
+
 Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.review']], function () {
     Route::controller(HomeController::class)->middleware('activated')->group(function () {
         Route::post('/new-user-email', 'update_email')->name('user.change.email');
@@ -312,12 +336,10 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
             Route::post('/{call}/missed', 'missed')->whereNumber('call')->name('missed');
         });
 
-        // ShortList list, Add, Remove
-        Route::controller(ShortlistController::class)->group(function () {
-            Route::get('/my-shortlists', 'index')->name('my_shortlists');
-            Route::post('/member/add-to-shortlist', 'create')->name('member.add_to_shortlist');
-            Route::post('/member/remove-from-shortlist', 'remove')->name('member.remove_from_shortlist');
-        });
+        Route::get('/member/ask-expert', [\App\Http\Controllers\MemberExpertQuestionController::class, 'index'])->name('member.expert.index');
+        Route::get('/member/ask-expert/{question}/conversation', [\App\Http\Controllers\MemberExpertQuestionController::class,'conversation'])->whereNumber('question')->name('member.expert.conversation');
+        Route::post('/member/ask-expert/{question}/conversation', [\App\Http\Controllers\MemberExpertQuestionController::class,'reply'])->whereNumber('question')->middleware('throttle:15,1')->name('member.expert.reply');
+        Route::post('/member/ask-expert', [\App\Http\Controllers\MemberExpertQuestionController::class, 'store'])->middleware('throttle:5,1')->name('member.expert.store');
 
         // Ignore list, Add, Remove
         Route::controller(IgnoredUserController::class)->group(function () {
@@ -374,6 +396,7 @@ Route::group(['middleware' => ['member', 'verified', 'check.package', 'manual.re
         Route::post('/connection/proposals/{proposal}/relationship', [\App\Http\Controllers\MemberWorkflowController::class, 'relationshipStatus'])->whereNumber('proposal')->name('member.workflow.relationship');
         Route::post('/connection/preferences', [\App\Http\Controllers\MemberWorkflowController::class, 'preferences'])->name('member.workflow.preferences');
         Route::get('/matched-profiles/{member}/why', [\App\Http\Controllers\MemberMatchDetailController::class, 'show'])->whereNumber('member')->name('member.match.why');
+        Route::get('/matched-profiles/{member}/proposal', [\App\Http\Controllers\MemberMatchActionController::class, 'showProposal'])->whereNumber('member')->name('member.match.proposal.show');
         Route::post('/matched-profiles/{member}/proposal', [\App\Http\Controllers\MemberMatchActionController::class, 'propose'])->whereNumber('member')->name('member.match.propose');
         Route::get('/horoscope-matched-profiles', [HoroscopeProfileMatchController::class, 'horoscopeMatchedProfiles'])->name('horoscope_matched_profiles');
         Route::get('/matched-refresh', [ProfileMatchController::class, 'matchedRefresh'])->name('match.refresh');

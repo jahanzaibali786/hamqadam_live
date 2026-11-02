@@ -30,7 +30,7 @@
      $canView=get_setting('full_profile_show_according_to_membership')!=1||$already||(package_validity($me->id)&&(int)get_remaining_package_value($me->id,'remaining_profile_viewer_view')>0);
     @endphp
     <article class="hm-dash26-person"><a href="{{ $canView?route('member_profile',$person->id):route('member.reference.packages') }}" class="hm-dash26-photo"><img src="{{ $photo }}" onerror="this.onerror=null;this.src='{{ $fallback }}'" loading="lazy" alt="{{ $person->first_name }} profile">
-     <span class="hm-dash26-heart"><i class="las la-heart"></i></span></a>
+     </a>
      @php($matchActions=\App\Support\MemberMatchCardActions::between(auth()->user(),$person))
      @include('frontend.member.partials.match_dropdown',['person'=>$person,'detailUrl'=>$detailUrl ?? route('member_profile',$person->id),'matchActions'=>$matchActions])
      <strong>{{ $person->first_name }}@if($related?->birthday), {{ \Carbon\Carbon::parse($related->birthday)->age }}@endif</strong>

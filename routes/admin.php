@@ -72,6 +72,9 @@ Route::get('/admin/login', [HomeController::class, 'admin_login'])->name('admin.
 
 
 Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function () {
+    Route::get('/gifts', [\App\Http\Controllers\Admin\GiftCatalogWebController::class,'index'])->name('admin.gifts.index');
+    Route::post('/gifts', [\App\Http\Controllers\Admin\GiftCatalogWebController::class,'save'])->middleware('throttle:20,1')->name('admin.gifts.save');
+    Route::post('/gifts/{gift}/deactivate', [\App\Http\Controllers\Admin\GiftCatalogWebController::class,'deactivate'])->whereNumber('gift')->name('admin.gifts.deactivate');
     // Referral rewards are an admin configuration feature, not a public route.
     Route::get('/settings/referrals', [ReferralSystemController::class, 'set_referral_commission'])->name('admin.referrals.settings');
     Route::post('/referral-rewards/settings', [ReferralSystemController::class, 'save_reward_settings'])
@@ -108,6 +111,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
         Route::get('/proposal-meetings', 'proposalMeetings')->name('proposal_meetings');
         Route::post('/proposal-meetings/{meeting}', 'updateProposalMeeting')->name('proposal_meetings.update');
         Route::get('/expert-questions', 'expertQuestions')->name('expert_questions');
+        Route::get('/expert-questions/{question}/conversation', 'expertConversation')->whereNumber('question')->name('expert_questions.conversation');
+        Route::post('/expert-questions/{question}/conversation', 'replyExpertConversation')->whereNumber('question')->middleware('throttle:20,1')->name('expert_questions.reply');
         Route::post('/expert-questions/{question}', 'answerExpertQuestion')->name('expert_questions.answer');
         Route::get('/community', 'community')->name('community');
         Route::post('/community/threads/{thread}', 'updateThread')->name('community.threads.update');

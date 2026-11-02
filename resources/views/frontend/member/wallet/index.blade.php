@@ -23,6 +23,7 @@
         <article class="hm-wallet-stat"><i class="las la-gem"></i><span>Current Package</span><strong>{{ $package?->name ?? 'Free' }}</strong><small>Expires: {{ $member?->package_validity ? \Carbon\Carbon::parse($member->package_validity)->format('d M Y') : 'Not available' }}</small><a class="hm-pink-button" href="{{ route('member.reference.packages') }}">View Plans <i class="las la-arrow-right"></i></a></article>
       </div>
       <section class="hm-wallet-panel" id="hm-wallet-purchase">
+        <div class="p-3 mb-3"><a href="{{ route('member.gifts.index') }}"><i class="las la-gift"></i> My Sent &amp; Received Gifts</a></div>
         <nav class="hm-wallet-tabs" aria-label="Wallet sections">
           <button type="button" class="is-active" data-wallet-tab="buy">Buy Coins</button>
           <button type="button" data-wallet-tab="history">Payment History</button>

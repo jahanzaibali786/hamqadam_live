@@ -40,14 +40,14 @@ class GiftService
      * records the usage transaction, and creates the gift row. Any failure
      * rolls everything back so coins are never lost.
      */
-    public function send(User $sender, int $receiverId, int $giftId, ?string $message): array
+    public function send(User $sender, int $receiverId, int $giftId, ?string $message, ?int $confirmedCoins = null): array
     {
         if ((int) $sender->id === $receiverId) {
             throw new ApiException('You cannot send a gift to yourself.', 422, ApiErrorCode::ValidationFailed->value);
         }
 
         // The existing deactivation flag (users.deactivated) + soft deletes.
-        $receiver = User::where('deactivated', 0)->find($receiverId);
+        $receiver = User::where('user_type', 'member')->where('approved', 1)->where('blocked', 0)->where('deactivated', 0)->whereHas('member')->find($receiverId);
 
         if (! $receiver) {
             throw new ApiException('Receiver not found.', 404, ApiErrorCode::NotFound->value);
@@ -64,11 +64,15 @@ class GiftService
             throw new ApiException('This member is not available for gifts.', 403, ApiErrorCode::Forbidden->value);
         }
 
-        $result = DB::transaction(function () use ($sender, $receiver, $giftId, $message): array {
+        $result = DB::transaction(function () use ($sender, $receiver, $giftId, $message, $confirmedCoins): array {
             $gift = Gift::where('is_active', true)->lockForUpdate()->find($giftId);
 
             if (! $gift) {
                 throw new ApiException('Gift not found or unavailable.', 404, ApiErrorCode::NotFound->value);
+            }
+
+            if ($confirmedCoins !== null && $confirmedCoins !== (int) $gift->coins) {
+                throw new ApiException('The gift price changed. Please review the current price before sending.', 409, 'gift_price_changed');
             }
 
             // Lock the wallet row — two simultaneous sends serialize here.
@@ -136,7 +140,7 @@ class GiftService
             }
 
             return [$transaction->load('gift'), $gift, $balance - $gift->coins];
-        });
+        }, 3);
 
         [$transaction, $gift, $remaining] = $result;
 

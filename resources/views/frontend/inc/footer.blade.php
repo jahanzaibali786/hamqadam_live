@@ -15,6 +15,33 @@
                     <span class="hq-footer-brand-mark"><img src="{{ static_asset('assets/img/hamqadam-double-heart.svg') }}?v=20261023" alt="" aria-hidden="true"></span>{{ $referenceSiteName }}
                 </a>
                 <p>{{ get_setting('about_us_description') ? strip_tags(get_setting('about_us_description')) : translate('Find Your Perfect Partner With Trust & Care. Hamqadam is a dignified, secure matrimonial platform committed to verified profiles, family respect, and lasting lifelong unions.') }}</p>
+                @php
+                    // Use standard Blade loops; the inline destructuring/one-line
+                    // @php syntax formerly produced an unclosed compiled directive.
+                    $footerSocialLinks = [
+                        ['setting' => 'hq_social_facebook', 'label' => 'Facebook', 'icon' => 'lab la-facebook-f'],
+                        ['setting' => 'hq_social_instagram', 'label' => 'Instagram', 'icon' => 'lab la-instagram'],
+                        ['setting' => 'hq_social_x', 'label' => 'X', 'icon' => 'lab la-twitter'],
+                        ['setting' => 'hq_app_store_url', 'label' => 'Apple App Store', 'icon' => 'lab la-apple'],
+                        ['setting' => 'hq_play_store_url', 'label' => 'Google Play Store', 'icon' => 'lab la-google-play'],
+                    ];
+                @endphp
+                <div class="hq-footer-social" aria-label="Social media and mobile applications" style="display:flex;flex-wrap:wrap;gap:10px;margin:14px 0">
+                    @foreach ($footerSocialLinks as $footerSocialLink)
+                        @php
+                            $socialUrl = trim((string) get_setting($footerSocialLink['setting']));
+                            $isValidSocialUrl = filter_var($socialUrl, FILTER_VALIDATE_URL)
+                                && strtolower((string) parse_url($socialUrl, PHP_URL_SCHEME)) === 'https';
+                        @endphp
+                        @if ($isValidSocialUrl)
+                            <a href="{{ $socialUrl }}" target="_blank" rel="noopener noreferrer"
+                               aria-label="{{ $footerSocialLink['label'] }}" title="{{ $footerSocialLink['label'] }}"
+                               style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid #a84469;border-radius:50%;color:#a84469">
+                                <i class="{{ $footerSocialLink['icon'] }}" aria-hidden="true" style="font-size:20px"></i>
+                            </a>
+                        @endif
+                    @endforeach
+                </div>
                 <div class="hq-footer-trust">
                     <span><i class="las la-shield-alt"></i>{{ get_setting('hq_footer_verified_label') ?: translate('100% Verified Profiles') }}</span>
                     <span><i class="las la-lock"></i>{{ get_setting('hq_footer_ssl_label') ?: translate('256-Bit SSL Protection') }}</span>

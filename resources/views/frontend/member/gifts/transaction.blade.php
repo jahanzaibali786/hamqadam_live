@@ -1,0 +1,4 @@
+@extends('frontend.layouts.member_panel')
+@section('panel_content')
+<div class="container-fluid py-4"><a href="{{route('member.gifts.index')}}">← Gift History</a><div class="card p-4 mt-3"><h1 class="h4">{{$gift->gift?->name??'Gift'}} — #{{$gift->id}}</h1><p><strong>From:</strong> {{$gift->sender?->first_name}} {{$gift->sender?->last_name}}</p><p><strong>To:</strong> {{$gift->receiver?->first_name}} {{$gift->receiver?->last_name}}</p><p><strong>Coins spent:</strong> {{$gift->coins}}</p><p><strong>Status:</strong> {{$gift->status}}</p><p><strong>Message:</strong> {{$gift->message?:'No message'}}</p><small>{{$gift->created_at?->format('d M Y H:i')}}</small></div></div>
+@endsection

@@ -41,6 +41,8 @@ $add('ai_suggested_profile', 'Someone May Be Worth Discovering', 'Our AI found a
 $add('preference_match', 'A New Possibility', 'We found a new profile that matches your preferences. Some stories are worth discovering.', ['push'], '/ai-matches');
 $add('daily_ai_matches', 'Your Daily Matches Are Ready', 'We found new possibilities based on your preferences. Take a moment to discover them.', ['push', 'email_optional'], '/ai-matches');
 $add('profile_viewed', '', '', [], '/profile-views');
+$add('profile_liked', 'Someone Liked Your Profile', ':name liked your profile. You can view their profile and choose whether to like back or send interest.', ['push'], '/member/likes');
+$add('profile_super_liked', 'You Received a Super Like!', ':name sent you a Super Like. Review their highlighted profile and choose your next step.', ['push', 'email_optional'], '/member/super-likes');
 $add('profile_shortlisted', '', '', [], '/shortlists');
 $add('relevant_profile_recommendation', 'New Possibilities for You', 'We found new profiles that may be relevant to what you are looking for.', ['push', 'email_optional'], '/members');
 
@@ -102,6 +104,7 @@ $add('achievement_unlocked', 'Achievement Unlocked', 'Congratulations! You reach
 $add('reward_expiring', 'Your Reward Is Waiting', 'Your reward is expiring soon. Make the most of it.', ['push', 'email_optional'], '/rewards');
 
 $add('support_ticket_created', 'We’ve Got You', 'Your support ticket has been created successfully. We’ll help you from here.', ['push', 'email'], '/support-ticket/history');
+$add('advisor_expert_replied', 'Your Advisor Replied', 'Your Hamqadam advisor has replied to your Ask Expert question.', ['push','email'], '/member/ask-expert');
 $add('support_agent_replied', 'Your Support Agent Replied', 'We have a response waiting for you.', ['push', 'email'], '/support-ticket/history');
 $add('support_ticket_updated', 'Your Ticket Has an Update', 'The status or expected resolution time of your support ticket has been updated.', ['push', 'email'], '/support-ticket/history');
 $add('support_ticket_resolved', 'We’ve Resolved Your Issue', 'Your support ticket has been resolved. We hope we made your journey easier.', ['push', 'email'], '/support-ticket/history');

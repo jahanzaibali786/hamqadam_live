@@ -1,6 +1,7 @@
 @extends('frontend.layouts.member_panel')
 @section('panel_content')
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-why-match-20261026.css') }}?v=1">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-why-match-ai-factors-20261102.css') }}?v=2">
 @php
     $score = max(0, min(100, (int) round((float) $match->match_percentage)));
     $name = trim(($person->first_name ?? '') . ' ' . ($person->last_name ?? '')) ?: 'Member';
@@ -9,10 +10,9 @@
     $viewerFallback = static_asset(($viewer->member?->gender ?? 1) == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png');
     $photo = $person->photo && show_profile_picture($person) ? uploaded_asset($person->photo) : $fallback;
     $viewerPhoto = $viewer->photo ? uploaded_asset($viewer->photo) : $viewerFallback;
-    $canView = get_setting('full_profile_show_according_to_membership') != 1 ||
-        (package_validity($viewer->id) && (int) get_remaining_package_value($viewer->id, 'remaining_profile_viewer_view') > 0) ||
-        \App\Models\ProfileViewer::where('user_id', $person->id)->where('viewed_by', $viewer->id)->exists();
-    $detailUrl = $canView ? route('member_profile', $person->id) : route('member.reference.packages');
+    $detailUrl = route('member_profile', $person->id);
+    $liked = \App\Models\ProfileLike::where('sender_id', $viewer->id)->where('recipient_id', $person->id)->exists();
+    $superLiked = \App\Models\ProfileSuperLike::where('sender_id', $viewer->id)->where('recipient_id', $person->id)->exists();
     $candidateCity = $person->addresses->firstWhere('type', 'present')?->city?->name ?? 'Location not provided';
     $viewerCity = $viewer->addresses->firstWhere('type', 'present')?->city?->name ?? 'Location not provided';
     $age = fn ($member) => !empty($member?->birthday) ? \Carbon\Carbon::parse($member->birthday)->age . ' years' : 'Age not provided';
@@ -63,7 +63,9 @@
                         <p><i class="las la-graduation-cap"></i> {{ $education($person) }}</p>
                     </div>
                 </div>
-                <div class="hm-why26-thumbnails" aria-label="Member photographs"><span class="hm-why26-thumb"><img src="{{ $photo }}" alt="" loading="lazy"></span><span class="hm-why26-thumb"><img src="{{ $fallback }}" alt="" loading="lazy"></span><span class="hm-why26-thumb hm-why26-muted"><i class="las la-heart"></i></span><span class="hm-why26-thumb hm-why26-muted"><i class="las la-star"></i></span><a class="hm-why26-thumb hm-why26-more" href="{{ $detailUrl }}">View<br>profile</a></div>
+                <div class="hm-why26-thumbnails hm-why26-member-actions" aria-label="Member photographs and reactions" data-member-name="{{ $name }}"><span class="hm-why26-thumb"><img src="{{ $photo }}" alt="" loading="lazy"></span><span class="hm-why26-thumb"><img src="{{ $fallback }}" alt="" loading="lazy"></span>
+                    <button type="button" class="hm-why26-thumb hm-appreciate-like {{ $liked ? 'is-active' : '' }}" data-like-url="{{ route('member.profile.like', $person->id) }}" aria-pressed="{{ $liked ? 'true' : 'false' }}" aria-label="{{ $liked ? 'Unlike' : 'Like' }} {{ $name }}" title="{{ $liked ? 'Unlike' : 'Like' }} (free)"><i class="{{ $liked ? 'las' : 'lar' }} la-heart"></i><span class="sr-only">{{ $liked ? 'Liked' : 'Like' }}</span></button>
+                    <button type="button" class="hm-why26-thumb hm-appreciate-super {{ $superLiked ? 'is-active' : '' }}" data-super-url="{{ route('member.profile.superlike', $person->id) }}" @disabled($superLiked) aria-label="Super Like {{ $name }}" title="{{ $superLiked ? 'Super Liked' : 'Super Like' }} (coins)"><i class="las la-star"></i><span class="sr-only">{{ $superLiked ? 'Super Liked' : 'Super Like' }}</span></button><a class="hm-why26-thumb hm-why26-more" href="{{ $detailUrl }}">View<br>profile</a></div>
             </article>
             <section class="hm-why26-score" aria-label="Compatibility score {{ $score }} percent">
                 <div class="hm-why26-score-ring" style="--hm-why26-score:{{ $score }};"><div><i class="las la-heart" aria-hidden="true"></i><strong>{{ $score }}%</strong></div></div>
@@ -96,8 +98,8 @@
             @if($status === 1)<a href="{{ $thread ? route('chat_view', $thread->id) : route('all.messages') }}"><i class="las la-comment-dots"></i> Start Conversation</a>
             @else <span class="hm-why26-action-disabled" title="Messaging becomes available after interest acceptance"><i class="las la-comment-dots"></i> Chat after acceptance</span>@endif
             @if($isShortlisted)<span class="hm-why26-action-disabled"><i class="las la-bookmark"></i> Already Shortlisted</span>
-            @elseif($status === 1)<button type="button" data-why-action="shortlist"><i class="las la-bookmark"></i> Add to Shortlist</button>
-            @else <span class="hm-why26-action-disabled" title="Shortlisting requires accepted interest"><i class="las la-bookmark"></i> Shortlist after acceptance</span>@endif
+            @else<button type="button" data-why-action="shortlist"><i class="las la-bookmark"></i> Add to Shortlist</button>
+            @endif
             <a href="{{ route('member.reference.packages') }}"><i class="las la-rocket"></i> Premium Features</a>
             <button type="button" data-why-action="share"><i class="las la-share-alt"></i> Share Profile</button>
             <form action="{{ route('reportusers.store') }}" method="POST" class="hm-why26-report">@csrf<input type="hidden" name="member_id" value="{{ $person->id }}"><input type="hidden" name="reason" value=""><button type="submit"><i class="las la-flag"></i> Report Profile</button></form>
@@ -112,7 +114,26 @@
         <section class="hm-why26-panel is-active" id="hm-why26-panel-overview" role="tabpanel" aria-labelledby="hm-why26-tab-overview">
             <div class="hm-why26-analysis-grid">
                 <section class="hm-why26-card hm-why26-factors"><h2>Key Matching Factors</h2>
-                    @foreach($factorScores as $factor)<div class="hm-why26-factor"><i class="las {{ $factor['icon'] }}"></i><span>{{ $factor['label'] }}</span><div class="hm-why26-track" role="meter" aria-label="{{ $factor['label'] }}" aria-valuemin="0" aria-valuemax="100" @if($factor['score'] !== null) aria-valuenow="{{ $factor['score'] }}" @else aria-valuetext="Not available" @endif><span style="width:{{ $factor['score'] ?? 0 }}%"></span></div><b>{{ $factor['score'] !== null ? $factor['score'].'%' : '—' }}</b></div>@endforeach
+                    @forelse($factorSections as $section)
+                        <h3 class="hm-why26-factor-subheading">{{ $section['label'] }}</h3>
+                        @foreach($section['items'] as $factor)
+                            <div class="hm-why26-factor hm-why26-factor-dynamic" data-factor-status="{{ $factor['status'] }}">
+                                <i class="las {{ $factor['icon'] }}" aria-hidden="true"></i>
+                                <span class="hm-why26-factor-label">{{ $factor['label'] }}</span>
+                                <b class="hm-why26-factor-score">{{ $factor['score'] !== null ? $factor['score'].'%' : '—' }}</b>
+                                <div class="hm-why26-track" role="meter" aria-label="{{ $section['label'] }}: {{ $factor['label'] }}" aria-valuemin="0" aria-valuemax="100"
+                                     @if($factor['score'] !== null) aria-valuenow="{{ $factor['score'] }}" @else aria-valuetext="Not evaluated" @endif>
+                                    <span style="width:{{ $factor['score'] ?? 0 }}%"></span>
+                                </div>
+                                <small class="hm-why26-factor-reason">{{ $factor['reason'] ?: ucfirst(str_replace('_',' ', $factor['status'])) }}</small>
+                                @if($factor['hard_constraint'] && $factor['status']==='no_match')
+                                    <small class="hm-why26-factor-warning">Mandatory preference not met</small>
+                                @endif
+                            </div>
+                        @endforeach
+                    @empty
+                        <p class="hm-why26-empty">The AI model has not returned individual evaluated matching factors for this pair.</p>
+                    @endforelse
                 </section>
                 <section class="hm-why26-card hm-why26-summary"><div class="hm-why26-card-heading"><h2>AI Match Summary</h2>@if($match->ai_enhanced)<span>AI</span>@endif</div>
                     <p class="hm-why26-summary-text"><i class="las la-magic"></i>{{ $summary }}</p>
@@ -154,10 +175,10 @@ document.addEventListener('DOMContentLoaded',function(){
         const form=root.querySelector('#'+formId);const data=new FormData(form);
         fetch(form.action,{method:'POST',body:data,credentials:'same-origin',headers:{'X-Requested-With':'XMLHttpRequest'}})
           .then(res=>{if(!res.ok)throw new Error('Request failed');return res.text();})
-          .then(body=>{if(body.trim()!=='1')throw new Error('Action unavailable or insufficient coins');feedback.textContent=successText;const button=root.querySelector('[data-why-action="'+(formId.includes('block')?'block':'shortlist')+'"]');if(button)button.disabled=true;if(formId.includes('block'))window.location.href=@json(route('my_matched_profiles'));})
+          .then(body=>{if(body.trim()!=='1')throw new Error('This action is unavailable');feedback.textContent=successText;const button=root.querySelector('[data-why-action="'+(formId.includes('block')?'block':'shortlist')+'"]');if(button)button.disabled=true;if(formId.includes('block'))window.location.href=@json(route('my_matched_profiles'));})
           .catch(()=>{feedback.textContent='Unable to complete this action. Please check your account or package.';});
     }
-    root.querySelector('[data-why-action=shortlist]')?.addEventListener('click',()=>sendAction('hm-why26-shortlist-form','Shortlisting may use coins. Continue?','Profile added to shortlist.'));
+    root.querySelector('[data-why-action=shortlist]')?.addEventListener('click',()=>sendAction('hm-why26-shortlist-form','Add this member to your shortlist?','Profile added to shortlist.'));
     root.querySelector('[data-why-action=block]')?.addEventListener('click',()=>sendAction('hm-why26-block-form','Block this member? The match will be hidden.','Member blocked.'));
     root.querySelector('[data-why-action=share]')?.addEventListener('click',async()=>{const url=@json(route('member_profile',$person->id));try{if(navigator.share){await navigator.share({title:@json($name),url});}else if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(url);feedback.textContent='Profile link copied.';}else{window.prompt('Copy this profile link:',url);}}catch(error){if(error.name!=='AbortError')feedback.textContent='Unable to share profile.';}});
 });

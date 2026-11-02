@@ -102,9 +102,39 @@ class MvpAdminController extends Controller
 
     public function expertQuestions()
     {
-        $questions = ExpertQuestion::with('user')->latest()->paginate(20);
+        $questions = ExpertQuestion::with('user')->when(request('status'), fn ($q) => $q->where('status', request('status')))
+            ->latest()->paginate(20)->withQueryString();
 
         return view('admin.mvp.expert_questions', compact('questions'));
+    }
+
+    public function expertConversation(int $question)
+    {
+        $question=ExpertQuestion::with('user')->findOrFail($question);
+        $messages=\App\Models\ExpertQuestionMessage::with('sender')->where('expert_question_id',$question->id)->oldest()->paginate(30);
+        return view('admin.mvp.expert_conversation',compact('question','messages'));
+    }
+
+    public function replyExpertConversation(Request $request,int $question): RedirectResponse
+    {
+        abort_unless(in_array($request->user()?->user_type,['admin','staff'],true),403);
+        $data=$request->validate(['body'=>['required','string','max:5000']]);
+        $entry=ExpertQuestion::findOrFail($question);
+        \App\Models\ExpertQuestionMessage::create(['expert_question_id'=>$entry->id,'sender_id'=>$request->user()->id,'body'=>$data['body']]);
+        $entry->update(['answer'=>$data['body'],'status'=>'answered','expert_name'=>trim($request->user()->first_name.' '.$request->user()->last_name)]);
+        try {
+            if ($entry->user) {
+                \App\Services\NotificationHelper::event($entry->user, 'advisor_expert_replied', [
+                    'event_id' => 'expert-reply-'.$entry->id.'-'.\App\Models\ExpertQuestionMessage::where('expert_question_id',$entry->id)->latest('id')->value('id'),
+                    'info_id' => $entry->id,
+                    'notify_by' => $request->user()->id,
+                    'deep_link' => route('member.expert.conversation',$entry->id,false),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Advisor reply notification failed',['question_id'=>$entry->id,'error'=>$e->getMessage()]);
+        }
+        return back()->with('success','Advisor reply sent.');
     }
 
     public function answerExpertQuestion(Request $request, int $question): RedirectResponse

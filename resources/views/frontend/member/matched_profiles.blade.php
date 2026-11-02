@@ -1,7 +1,7 @@
 @extends('frontend.layouts.member_panel')
 
 @section('panel_content')
-<div class="hm-four">
+<div class="hm-four hm-matched-card-page">
     @if ($errors->has('proposal'))
         <div class="alert alert-danger">{{ $errors->first('proposal') }}</div>
     @endif
@@ -27,7 +27,7 @@
                 <a class="{{ request('tab') === 'recent' ? 'active' : '' }}" href="{{ route('my_matched_profiles', ['tab' => 'recent']) }}">Recently Active</a>
             </nav>
 
-            <div class="hm-four-matches">
+            <div class="hm-four-matches hm-matched-card-grid">
                 @forelse ($matchedProfiles as $match)
                     @php
                         $person = $match->matchedUser;
@@ -38,12 +38,13 @@
                             $member = $person->member;
                             $fallback = static_asset(($member?->gender ?? 1) == 1 ? 'assets/img/avatar-place.png' : 'assets/img/female-avatar-place.png');
                             $photo = $person->photo && show_profile_picture($person) ? uploaded_asset($person->photo) : $fallback;
-                            $allowed = get_setting('full_profile_show_according_to_membership') != 1 || auth()->user()->membership != 1;
-                            $detailUrl = $allowed ? route('member_profile', $person->id) : route('member.reference.packages');
+                            // Member profile details require login, not an upgrade.
+                            // Keep the same View Profile destination as the dashboard.
+                            $detailUrl = route('member_profile', $person->id);
                             $matchActions = \App\Support\MemberMatchCardActions::between(auth()->user(), $person);
                         @endphp
 
-                        <article class="hm-four-profile">
+                        <article class="hm-four-profile hm-matched-card">
                             <div class="hm-four-photo">
                                 <img src="{{ $photo }}" alt="{{ $person->first_name }}" loading="lazy"
                                      onerror="this.onerror=null;this.src='{{ $fallback }}'">

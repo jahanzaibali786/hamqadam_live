@@ -227,29 +227,9 @@
                                         $shortlist = \App\Models\Shortlist::where('user_id', $user->id)
                                             ->where('shortlisted_by', Auth::user()->id)
                                             ->first();
-                                        $can_shortlist = (!empty($do_expressed_interest) && $do_expressed_interest->status->value == 1)
-                                            || (!empty($received_expressed_interest) && $received_expressed_interest->status->value == 1);
-                                        if (empty($shortlist) && $can_shortlist) {
-                                            $shortlist_onclick = 1;
-                                            $shortlist_text = translate('Shortlist');
-                                            $shortlist_prompt = '';
-                                        } elseif (!empty($shortlist)) {
-                                            $shortlist_onclick = 0;
-                                            $shortlist_text = translate('Shortlisted');
-                                            $shortlist_prompt = '';
-                                        } else {
-                                            $shortlist_onclick = -1;
-                                            $shortlist_text = translate('Shortlist');
-                                            if (empty($do_expressed_interest) && empty($received_expressed_interest)) {
-                                                $shortlist_prompt = translate('Please express interest first before shortlisting this member.');
-                                            } elseif (!empty($do_expressed_interest) && $do_expressed_interest->status->value == 0) {
-                                                $shortlist_prompt = translate('Your interest request has been sent. Please wait for approval before shortlisting.');
-                                            } elseif (!empty($received_expressed_interest) && $received_expressed_interest->status->value == 0) {
-                                                $shortlist_prompt = translate('Please respond to the received interest before shortlisting this member.');
-                                            } else {
-                                                $shortlist_prompt = translate('Please wait for interest approval before shortlisting this member.');
-                                            }
-                                        }
+                                        $shortlist_onclick = $shortlist ? 0 : 1;
+                                        $shortlist_text = $shortlist ? translate('Shortlisted') : translate('Shortlist');
+                                        $shortlist_prompt = '';
                                     @endphp
                                     <a href="javascript:void(0);" id="shortlist_a_id_{{ $user->id }}"
                                         @if ($shortlist_onclick == 1) onclick="do_shortlist({{ $user->id }})"
@@ -2314,33 +2294,11 @@
         }
 
         function show_shortlist_requirement(message) {
-            AIZ.plugins.notify('danger', message || '{{ translate('Please express interest first and wait for approval before shortlisting.') }}');
+            AIZ.plugins.notify('danger', message || 'Unable to shortlist this profile.');
         }
 
-        // Shortlist
-        function do_shortlist(id) {
-            $.post('{{ route('user.remaining_package_value') }}', {
-                    _token: '{{ csrf_token() }}',
-                    id: id,
-                    colmn_name: 'remaining_interest'
-                },
-                function(data) {
-                    var remaining_interest = data;
-                    if (!package_validity || remaining_interest < 5) {
-                        $('.package_update_alert_modal').modal('show');
-                    } else {
-                        $('.confirm_modal').modal('show');
-                        $("#confirm_modal_title").html("{{ translate('Confirm Shortlist!') }}");
-                        $("#confirm_modal_content").html(
-                            "<p class='fs-14'>{{ translate('Coin Balance') }}: " +
-                            remaining_interest +
-                            " {{ translate('Coins') }}</p><small class='text-danger fs-12'>{{ translate('**N.B. Shortlisting will cost') }} " + shortlist_coin_charge + " {{ translate('coin(s)**') }}</small>"
-                        );
-                        $("#confirm_button").attr("onclick", "do_shortlist_confirm(" + id + ")");
-                    }
-                }
-            );
-        }
+        // No package, accepted-interest or coin requirement for shortlisting.
+        function do_shortlist(id) { do_shortlist_confirm(id); }
 
         function do_shortlist_confirm(id) {
             $('.confirm_modal').modal('hide');
@@ -2357,7 +2315,7 @@
                         AIZ.plugins.notify('success', '{{ translate('You Have Shortlisted This Member.') }}');
                     } else {
                         $("#shortlist_id_" + id).html("{{ translate('Shortlist') }}");
-                        AIZ.plugins.notify('danger', '{{ translate('Please express interest first and wait for approval before shortlisting.') }}');
+                        AIZ.plugins.notify('danger', 'Unable to shortlist this profile.');
                     }
                 }
             );

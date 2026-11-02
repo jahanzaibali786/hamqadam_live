@@ -129,24 +129,10 @@
                                         $shortlist = \App\Models\Shortlist::where('user_id', $user->id)
                                             ->where('shortlisted_by', Auth::user()->id)
                                             ->first();
-                                        $can_shortlist = (!empty($do_expressed_interest) && $do_expressed_interest->status->value == 1)
-                                            || (!empty($received_expressed_interest) && $received_expressed_interest->status->value == 1);
-                                        if (empty($shortlist) && $can_shortlist) {
-                                            $shortlist_onclick = 1;
-                                            $shortlist_text = translate('Shortlist');
-                                            $shortlist_prompt = '';
-                                        } elseif (!empty($shortlist)) {
-                                            $shortlist_onclick = 0;
-                                            $shortlist_text = translate('Shortlisted');
-                                            $shortlist_prompt = '';
-                                        } else {
-                                            $shortlist_onclick = -1;
-                                            $shortlist_text = translate('Shortlist');
-                                            $shortlist_prompt = empty($do_expressed_interest) && empty($received_expressed_interest)
-                                                ? translate('Please express interest first before shortlisting this member.')
-                                                : translate('Please wait for interest approval before shortlisting this member.');
-                                        }
-
+                                        $can_shortlist = true;
+                                        $shortlist_onclick = $shortlist ? 0 : 1;
+                                        $shortlist_text = $shortlist ? translate('Shortlisted') : translate('Shortlist');
+                                        $shortlist_prompt = '';
                                         $profile_reported = \App\Models\ReportedUser::where('user_id', $user->id)
                                             ->where('reported_by', Auth::user()->id)
                                             ->exists();
@@ -236,28 +222,11 @@
                                                 @endif
                                             </div>
 
-                                            <div class="hq-discovery-actions">
-                                                @if($interest_onclick === 1)
-                                                    <button type="button" id="interest_a_id_{{ $user->id }}" onclick="express_interest({{ $user->id }})" class="btn btn-primary">
-                                                        <i class="lar la-heart"></i><span id="interest_id_{{ $user->id }}">{{ $interest_text }}</span>
-                                                    </button>
-                                                @elseif($interest_onclick === 'do_response')
-                                                    <a id="interest_a_id_{{ $user->id }}" href="{{ route('interest_requests') }}" class="btn btn-primary">
-                                                        <i class="las la-reply"></i><span id="interest_id_{{ $user->id }}">{{ $interest_text }}</span>
-                                                    </a>
-                                                @else
-                                                    <button type="button" id="interest_a_id_{{ $user->id }}" class="btn btn-soft-primary" disabled>
-                                                        <i class="las la-check"></i><span id="interest_id_{{ $user->id }}">{{ $interest_text }}</span>
-                                                    </button>
-                                                @endif
-
-                                                @if($profileNeedsUpgrade)
-                                                    <button type="button" onclick="package_update_alert()" class="btn btn-soft-primary"><i class="las la-user-lock"></i>{{ translate('View Profile') }}</button>
-                                                @else
-                                                    <a href="{{ route('member_profile', $user->id) }}" class="btn btn-soft-primary"><i class="las la-user"></i>{{ translate('View Profile') }}</a>
-                                                @endif
-                                            </div>
-
+                                            @php
+                                                $cardActions = \App\Support\MemberMatchCardActions::between(auth()->user(), $user);
+                                                $detailUrl = route('member_profile', $user->id);
+                                            @endphp
+                                            @include('frontend.member.partials.match_actions', ['person' => $user, 'detailUrl' => $detailUrl, 'matchActions' => $cardActions])
                                             <div class="hq-card-secondary-actions">
                                                 <button type="button" onclick="ignore_member({{ $user->id }})"><i class="las la-ban"></i>{{ translate('Ignore') }}</button>
                                                 <button type="button"

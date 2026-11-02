@@ -32,21 +32,11 @@ class ShortlistController extends Controller
 
     public function store(Request $request)
     {
-        if (User::find($request->user_id)) {
-            $short_list = Shortlist::where('user_id', $request->user_id)
-                ->where('shortlisted_by', auth()->id())
-                ->first();
-            if ($short_list == null) {
-                Shortlist::create($request->only('user_id') + [
-                    'shortlisted_by' => auth()->user()->id
-                ]);
-                return $this->success_message('You Have Shortlisted This Member');
-            }
-            return $this->failure_message('You Have already added This Member');
-        }
-        return $this->failure_message('Invalid Member to Shortlist.');
+        $data=$request->validate(['user_id'=>'required|integer|min:1']);
+        $result=app(\App\Services\OpenShortlistService::class)->add($request->user(),(int)$data['user_id']);
+        return $result === null ? $this->failure_message('This profile is unavailable to shortlist.')
+            : $this->success_message($result ? 'You have shortlisted this member.' : 'Already shortlisted.');
     }
-
     public function remove(Request $request)
     {
         $shortlist = Shortlist::where('user_id', $request->user_id)->where('shortlisted_by', auth()->user()->id)->first();
