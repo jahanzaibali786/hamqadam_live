@@ -6,3 +6,9 @@
 .hm-member-app .hm-match-controls .hm-profile-appreciations{flex:1 1 100%}
 .hm-member-app .hq-discovery-card .hm-profile-appreciations{width:100%}
 @media(max-width:440px){.hm-member-app .hm-profile-appreciations button{font-size:11px;padding:7px 5px}}
+
+.hm-member-app .hm-appreciation-card-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:stretch}
+.hm-member-app .hm-appreciation-card-actions > .hm-match-send{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;text-align:center;min-height:34px;padding:7px 5px;font-size:11px}
+.hm-member-app .hm-appreciation-card-actions .hm-profile-appreciations{grid-column:1/-1}
+.hm-member-app .hq-discovery-card .hm-profile-appreciations{flex-basis:100%}
+@media(min-width:1150px){.hm-member-app .hm-appreciation-card-actions{grid-template-columns:repeat(4,minmax(0,1fr))}}
