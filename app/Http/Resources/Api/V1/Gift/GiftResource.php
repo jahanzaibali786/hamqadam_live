@@ -17,6 +17,10 @@ class GiftResource extends JsonResource
             'slug' => $this->slug,
             'thumbnail' => $this->thumbnail,
             'animated_asset' => $this->animated_asset,
+            // Absolute URLs for admin-uploaded media; null for app-bundled assets.
+            'thumbnail_url' => \App\Models\Gift::publicUrl($this->thumbnail),
+            'animation_url' => \App\Models\Gift::publicUrl($this->animated_asset),
+            'media_type' => $this->resolvedMediaType(),
             'coins' => $this->coins,
             'category' => $this->category,
             'sort_order' => $this->sort_order,
