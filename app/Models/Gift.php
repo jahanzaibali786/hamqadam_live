@@ -64,6 +64,6 @@ class Gift extends Model
             return $path;
         }
 
-        return asset($path);
+        return static_asset($path);
     }
 }
