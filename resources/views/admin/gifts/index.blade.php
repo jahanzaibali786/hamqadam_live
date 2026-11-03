@@ -73,7 +73,7 @@
                     <td class="text-right">
                         <button type="button" class="btn btn-soft-primary btn-icon btn-circle btn-sm" title="{{ translate('Edit') }}"
                             data-toggle="modal" data-target="#gift-modal"
-                            onclick='giftForm(@json($gift->only(["id","name","coins","category","sort_order","is_active"])))'>
+                            onclick="giftForm({{ json_encode($gift->only('id', 'name', 'coins', 'category', 'sort_order', 'is_active')) }})">
                             <i class="las la-edit"></i>
                         </button>
                         <form action="{{ route('admin.gifts.deactivate', $gift) }}" method="POST" class="d-inline">

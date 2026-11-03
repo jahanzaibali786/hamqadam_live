@@ -76,7 +76,11 @@ class GiftCatalogWebController extends Controller
                 return back()->withInput()->withErrors(['animation_file' => 'Animation must be a GIF, SVGA, MP4 or Lottie JSON file.']);
             }
             $attrs['animated_asset'] = $this->storeFile($file, 'anim');
-            $attrs['media_type'] = Gift::MEDIA_TYPES[$ext];
+            // Guarded so uploads still work if the media_type migration hasn't run;
+            // the type is then inferred from the file extension.
+            if (\Illuminate\Support\Facades\Schema::hasColumn('gifts', 'media_type')) {
+                $attrs['media_type'] = Gift::MEDIA_TYPES[$ext];
+            }
         }
 
         $gift ? $gift->update($attrs) : Gift::create($attrs);
