@@ -134,7 +134,7 @@ class AuthController extends ApiController
         $otp = $this->authService->requestEmailLoginOtp($request->string('email')->toString());
 
         $meta = [];
-        if (! app()->environment('production')) {
+        if (! app()->environment('production') || config('app.otp_debug_response')) {
             $meta['debug_otp'] = $otp['code'];
         }
 
@@ -166,7 +166,7 @@ class AuthController extends ApiController
         );
 
         $meta = [];
-        if (! app()->environment('production')) {
+        if (! app()->environment('production') || config('app.otp_debug_response')) {
             $meta['debug_otp'] = $otp['code'];
         }
 
@@ -200,7 +200,7 @@ class AuthController extends ApiController
         );
 
         $meta = [];
-        if (! app()->environment('production')) {
+        if (! app()->environment('production') || config('app.otp_debug_response')) {
             $meta['debug_otp'] = $otp['code'];
         }
 
@@ -237,7 +237,7 @@ class AuthController extends ApiController
         );
 
         $meta = [];
-        if (! app()->environment('production')) {
+        if (! app()->environment('production') || config('app.otp_debug_response')) {
             $meta['debug_otp'] = $otp['code'];
         }
 

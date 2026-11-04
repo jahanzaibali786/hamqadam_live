@@ -42,6 +42,13 @@ return [
     'debug' => env('APP_DEBUG', false),
 
     /*
+    | Echo OTP codes in the API response's meta.debug_otp so testers can read
+    | them from the app's debug console. NEVER leave this on for real users:
+    | anyone calling the API would see every code.
+    */
+    'otp_debug_response' => (bool) env('OTP_DEBUG_RESPONSE', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
