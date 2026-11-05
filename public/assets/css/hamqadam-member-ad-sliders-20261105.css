@@ -67,3 +67,8 @@
   grid-template-columns:repeat(auto-fit,minmax(min(100%,205px),1fr))!important
  }
 }
+
+/* Presence badge on Member Home recommended-profile tiles. */
+.hm-member-app .hm-home-ref-card .hm-home-ref-image{position:relative}
+.hm-member-app .hm-home-ref-card .hm-home-ref-image>.hm-card-presence{position:absolute;top:7px;left:7px;z-index:3;width:11px;height:11px;border-radius:50%;border:2px solid #FFFFFF;background:#6B6B6B;box-sizing:border-box}
+.hm-member-app .hm-home-ref-card .hm-home-ref-image>.hm-card-presence.is-online{background:#11c686}
