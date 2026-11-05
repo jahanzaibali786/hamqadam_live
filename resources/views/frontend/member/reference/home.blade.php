@@ -66,6 +66,7 @@
                                 $profession = $personMember?->job_title ?: 'Profession not provided';
                                 $education = $person->education->last()?->degree ?: 'Education not provided';
                                 $matchScore = max(0, min(100, (int) round($match->match_percentage)));
+                                $online = \Illuminate\Support\Facades\Cache::has('user-is-online-'.$person->id);
                                 $mustUpgrade = get_setting('full_profile_show_according_to_membership') == 1
                                     && $viewer->membership == 1;
                                 $detailUrl = $mustUpgrade
@@ -76,6 +77,7 @@
                                 <a class="hm-home-ref-image" href="{{ $detailUrl }}">
                                     <img src="{{ $photo }}" loading="lazy" alt="{{ $person->first_name }} profile"
                                          onerror="this.onerror=null;this.src='{{ $fallback }}'">
+                                    <span class="hm-card-presence {{ $online ? 'is-online' : 'is-offline' }}" title="{{ $online ? 'Online now' : 'Not currently online' }}" aria-label="{{ $online ? 'Online now' : 'Not currently online' }}"></span>
                                     <span class="hm-home-ref-match"><i class="las la-heart"></i> {{ $matchScore }}% Match</span>
                                     @if (app(\App\Services\BadgeService::class)->isVerified($personMember))
                                         <span class="hm-home-ref-verified"><i class="las la-check-circle"></i> Verified</span>
