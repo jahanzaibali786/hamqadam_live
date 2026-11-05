@@ -57,9 +57,6 @@ Route::middleware(['auth:sanctum', 'member.activity'])
     ->post('/broadcasting/auth', fn (Request $request) => Broadcast::auth($request))
     ->name('api.v1.broadcasting.auth');
 
-// Home ad / banner carousels (Admin → Member Ad Sliders). Public: shown before login too.
-Route::get('/ads', [\App\Http\Controllers\Api\V1\Ads\AdSliderController::class, 'index'])->middleware('throttle:60,1')->name('api.v1.ads.index');
-
 Route::middleware('auth:sanctum')->get('/admin/overview', AdminOverviewController::class)->name('api.v1.admin.overview');
 
 Route::prefix('auth')->name('api.v1.auth.')->group(function () {
