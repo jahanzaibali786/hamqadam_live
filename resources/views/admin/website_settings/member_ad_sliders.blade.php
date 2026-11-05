@@ -27,7 +27,7 @@
                         $previewImage = $existingId ? uploaded_asset($existingId) : (isset($presets[$preset]) ? static_asset($presets[$preset]) : '');
                     @endphp
                     <article class="hq-ad-editor-row border rounded mb-3 p-3" data-index="{{ $index }}">
-                        <div class="d-flex justify-content-between align-items-center mb-2"><strong class="hq-ad-row-title">Slide {{ $loop->iteration }}</strong><button type="button" class="btn btn-sm btn-outline-danger hq-ad-remove">Remove</button></div>
+                        <div class="d-flex justify-content-between align-items-center mb-2"><strong class="hq-ad-row-title">Slide {{ $loop->iteration }}</strong><div><button type="button" class="btn btn-sm btn-light hq-ad-up" title="Move earlier" aria-label="Move slide earlier"><i class="las la-arrow-up"></i></button> <button type="button" class="btn btn-sm btn-light hq-ad-down" title="Move later" aria-label="Move slide later"><i class="las la-arrow-down"></i></button> <button type="button" class="btn btn-sm btn-outline-danger hq-ad-remove">Remove</button></div></div>
                         <div class="row">
                             <div class="col-lg-6">
                                 <label>Image from Media Library</label>
@@ -122,6 +122,13 @@
    if(!model){alert('Keep one slide in each placement while editing; add slides before removing the last one.');return;}
    const clone=model.cloneNode(true);resetRow(clone);wrap.appendChild(clone);sync(section);
   }
+  const up=e.target.closest('.hq-ad-up'),down=e.target.closest('.hq-ad-down');
+  if(up||down){
+   const row=(up||down).closest('.hq-ad-editor-row'),section=row.closest('.hq-ad-admin-section');
+   if(up&&row.previousElementSibling)row.parentNode.insertBefore(row,row.previousElementSibling);
+   if(down&&row.nextElementSibling)row.parentNode.insertBefore(row.nextElementSibling,row);
+   sync(section);
+  }
   if(remove){
    const section=remove.closest('.hq-ad-admin-section'),wrap=rowsOf(section.dataset.placement);
    if(wrap.children.length<=1){alert('Keep at least one editable slide. Disable it to hide the slider.');return;}
@@ -150,6 +157,18 @@
     row.querySelector('.hq-ad-preview-image').src=selected?.dataset.image||'';
    }
   }
+ });
+ // The shared AIZ media uploader populates previews asynchronously. Observe
+ // the uploader's preview container so the crop frame follows the selected image.
+ root.querySelectorAll('.hq-ad-editor-row').forEach(row=>{
+  const preview=row.querySelector('.file-preview');
+  if(!preview)return;
+  new MutationObserver(()=>{
+   const image=preview.querySelector('img');
+   if(image&&row.querySelector('.hq-ad-upload').value){
+    row.querySelector('.hq-ad-preview-image').src=image.src;
+   }
+  }).observe(preview,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
  });
  root.querySelectorAll('.hq-ad-admin-section').forEach(sync);
 })();
