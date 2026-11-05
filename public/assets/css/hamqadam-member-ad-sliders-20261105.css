@@ -1,8 +1,8 @@
 /* Two ad placements from the reference; scoped to member panel only.
    Layout is genuine HTML/CSS with editable CMS images, not a pasted screenshot. */
 .hm-member-app .hm-ad-slider{position:relative;isolation:isolate;overflow:hidden;border-radius:18px;margin:14px 0 18px;background:#F8C8D8;border:1px solid #E5E5E7}
-.hm-member-app .hm-ad-slider--top{min-height:170px;height:clamp(170px,17.5vw,230px)}
-.hm-member-app .hm-ad-slider--bottom{height:clamp(88px,9vw,126px);margin:17px 0 10px;border-radius:13px}
+.hm-member-app .hm-ad-slider--top{min-height:125px;height:clamp(125px,12vw,185px)}
+.hm-member-app .hm-ad-slider--bottom{height:clamp(80px,7vw,110px);margin:17px 0 10px;border-radius:13px}
 .hm-member-app .hm-ad-slider-track{height:100%;position:relative}
 .hm-member-app .hm-ad-slide{position:absolute;inset:0;display:none;overflow:hidden}
 .hm-member-app .hm-ad-slide.is-active{display:flex;align-items:center}
@@ -37,10 +37,10 @@
 .hm-member-app .hm-dash26-recommend .hm-unified-profile-card .hm-card-age-religion,
 .hm-member-app .hm-dash26-recommend .hm-unified-profile-card .hm-card-meta{text-align:left!important}
 .hm-member-app .hm-unified-profile-card .hm-card-presence{position:absolute;z-index:4;top:7px;left:7px;height:11px;width:11px;border:2px solid #FFFFFF;border-radius:50%;background:#6B6B6B;box-sizing:border-box}
-.hm-member-app .hm-unified-profile-card .hm-card-presence.is-online{background:#A45F7B}
+.hm-member-app .hm-unified-profile-card .hm-card-presence.is-online{background:#11c686}
 .hm-member-app .hm-unified-profile-card .hm-card-match{left:auto!important;right:7px!important}
-.hm-member-app .hm-unified-profile-card .hm-card-verified{display:inline-flex;align-items:center;gap:3px;bottom:7px;left:7px;color:#A45F7B!important;background:#FFFFFF!important}
-.hm-member-app .hm-unified-profile-card .hm-card-verified i{color:#A45F7B!important}
+.hm-member-app .hm-unified-profile-card .hm-card-verified{display:inline-flex;align-items:center;gap:3px;bottom:7px;left:7px;color:#11a56d!important;background:#FFFFFF!important}
+.hm-member-app .hm-unified-profile-card .hm-card-verified i{color:#11a56d!important}
 .hm-member-app .hm-dash26-recommend .hm-unified-profile-card>div.hm-card-body{margin:0!important;display:flex!important;align-items:stretch!important;flex-direction:column!important}
 @media(max-width:900px){.hm-member-app .hm-ad-content{margin-left:9%;width:56%}.hm-member-app .hm-ad-benefits{right:6%;max-width:150px}.hm-member-app .hm-ad-benefits span{font-size:9px}}
 @media(max-width:600px){
@@ -56,3 +56,14 @@
  .hm-member-app .hm-ad-sponsored{left:7px;top:5px}
 }
 @media(prefers-reduced-motion:reduce){.hm-member-app .hm-ad-slider *{animation:none!important;transition:none!important}}
+
+/* Maintain reference-like card density in the main matched page and four-across
+   dashboard rows while keeping the existing responsive single-column fallback. */
+@media(min-width:760px){
+ .hm-member-app .hm-four.hm-matched-card-page .hm-four-matches.hm-matched-card-grid{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,175px),1fr))!important
+ }
+ .hm-member-app .hm-dash26-recommend .hm-dash26-profiles{
+  grid-template-columns:repeat(auto-fit,minmax(min(100%,205px),1fr))!important
+ }
+}
