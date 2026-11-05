@@ -48,6 +48,10 @@
                         @foreach ($receivedProfileViewers as $key => $profileViewer)
                             @php
                                 $profileViewedBy = $profileViewer->profileViewer;
+                            @endphp
+                            {{-- Historical profile views can reference members that have been deleted. --}}
+                            @continue(!$profileViewedBy)
+                            @php
                                 $alreadyViewedFullProfile = \App\Models\ProfileViewer::where('user_id', $profileViewedBy->id)->where('viewed_by', $user->id)->exists();
                                 $openProfile = $alreadyViewedFullProfile || $canViewFullProfile;
                             @endphp
@@ -71,11 +75,11 @@
                                         {{ $profileViewedBy->first_name . ' ' . $profileViewedBy->last_name }}
                                     </a>
                                 </td>
-                                <td>{{ \Carbon\Carbon::parse($profileViewedBy->member->birthday)->age }}</td>
+                                <td>{{ $profileViewedBy->member?->birthday ? \Carbon\Carbon::parse($profileViewedBy->member->birthday)->age : '—' }}</td>
                                 @if (get_setting('member_spiritual_and_social_background_section') == 'on')
                                     <td>
-                                        @if (!empty($profileViewedBy->spiritual_backgrounds->religion_id))
-                                            {{ $profileViewedBy->spiritual_backgrounds->religion->name }}
+                                        @if (!empty($profileViewedBy->spiritual_backgrounds?->religion_id))
+                                            {{ $profileViewedBy->spiritual_backgrounds?->religion?->name }}
                                         @endif
                                     </td>
                                 @endif
@@ -83,14 +87,14 @@
                                     <td>
                                         @php $present_address = \App\Models\Address::where('type', 'present')->where('user_id', $profileViewedBy->id)->first(); @endphp
                                         @if (!empty($present_address->country_id))
-                                            {{ $present_address->country->name }}
+                                            {{ $present_address?->country?->name }}
                                         @endif
                                     </td>
                                 @endif
                                 @if (get_setting('member_language_section') == 'on')
                                     <td>
-                                        @if ($profileViewedBy->member->mothere_tongue != null)
-                                            {{ \App\Models\MemberLanguage::where('id', $profileViewedBy->member->mothere_tongue)->first()->name }}
+                                        @if ($profileViewedBy->member?->mothere_tongue != null)
+                                            {{ \App\Models\MemberLanguage::where('id', $profileViewedBy->member?->mothere_tongue)->first()?->name }}
                                         @endif
                                     </td>
                                 @endif
@@ -146,6 +150,7 @@
                             @php
                                 $profileViewed = $profileViewer->user;
                             @endphp
+                            @continue(!$profileViewed)
                             <tr>
                                 <td>{{ $key + 1 + ($viewedProfiles->currentPage() - 1) * $viewedProfiles->perPage() }}</td>
                                 <td>
@@ -162,11 +167,11 @@
                                         {{ $profileViewed->first_name . ' ' . $profileViewed->last_name }}
                                     </a>
                                 </td>
-                                <td>{{ \Carbon\Carbon::parse($profileViewed->member->birthday)->age }}</td>
+                                <td>{{ $profileViewed->member?->birthday ? \Carbon\Carbon::parse($profileViewed->member->birthday)->age : '—' }}</td>
                                 @if (get_setting('member_spiritual_and_social_background_section') == 'on')
                                     <td>
-                                        @if (!empty($profileViewed->spiritual_backgrounds->religion_id))
-                                            {{ $profileViewed->spiritual_backgrounds->religion->name }}
+                                        @if (!empty($profileViewed->spiritual_backgrounds?->religion_id))
+                                            {{ $profileViewed->spiritual_backgrounds?->religion?->name }}
                                         @endif
                                     </td>
                                 @endif
@@ -174,14 +179,14 @@
                                     <td>
                                         @php $present_address = \App\Models\Address::where('type', 'present')->where('user_id', $profileViewed->id)->first(); @endphp
                                         @if (!empty($present_address->country_id))
-                                            {{ $present_address->country->name }}
+                                            {{ $present_address?->country?->name }}
                                         @endif
                                     </td>
                                 @endif
                                 @if (get_setting('member_language_section') == 'on')
                                     <td>
-                                        @if ($profileViewed->member->mothere_tongue != null)
-                                            {{ \App\Models\MemberLanguage::where('id', $profileViewed->member->mothere_tongue)->first()->name }}
+                                        @if ($profileViewed->member?->mothere_tongue != null)
+                                            {{ \App\Models\MemberLanguage::where('id', $profileViewed->member?->mothere_tongue)->first()?->name }}
                                         @endif
                                     </td>
                                 @endif

@@ -19,7 +19,7 @@ document.addEventListener('click',async event=>{
     control.title=newSaved?'Remove from Shortlist':'Shortlist';
     control.setAttribute('aria-label',(newSaved?'Remove from Shortlist ':'Shortlist ')+(control.closest('[data-member-name]')?.dataset.memberName||'member'));
     const icon=control.querySelector('i');if(icon)icon.className=(newSaved?'las':'lar')+' la-bookmark';
-    const label=control.querySelector('span');if(label)label.textContent=newSaved?'Shortlisted':'Shortlist';
+    const label=control.querySelector('span');if(label)label.textContent=newSaved?'Remove from Shortlist':'Add to Shortlist';
    });
   }catch(error){alert(error.message)}finally{busy=false;btn.disabled=false}
   return;
