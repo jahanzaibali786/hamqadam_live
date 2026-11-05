@@ -10,6 +10,11 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+
+
+    <div class="hm-four-layout">
+        <main>
+            @include('frontend.member.partials.ad_slider', ['placement' => 'top'])
     <header class="hm-four-head">
         <div>
             <h1><i class="las la-user-friends"></i> Matched Profiles</h1>
@@ -17,9 +22,6 @@
         </div>
         <aside>Better matches lead to brighter futures.</aside>
     </header>
-
-    <div class="hm-four-layout">
-        <main>
             <nav class="hm-four-tabs" aria-label="Match filters">
                 <a class="{{ !request('tab') || request('tab') === 'all' ? 'active' : '' }}" href="{{ route('my_matched_profiles') }}">All Matches ({{ $matchedProfiles->total() }})</a>
                 <a class="{{ request('tab') === 'high' ? 'active' : '' }}" href="{{ route('my_matched_profiles', ['tab' => 'high']) }}">High Compatibility</a>
@@ -44,29 +46,7 @@
                             $matchActions = \App\Support\MemberMatchCardActions::between(auth()->user(), $person);
                         @endphp
 
-                        <article class="hm-four-profile hm-matched-card">
-                            <div class="hm-four-photo">
-                                <img src="{{ $photo }}" alt="{{ $person->first_name }}" loading="lazy"
-                                     onerror="this.onerror=null;this.src='{{ $fallback }}'">
-                                <b>{{ round($match->match_percentage) }}% Match</b>
-                            </div>
-                            @include('frontend.member.partials.match_dropdown', [
-                                'person' => $person,
-                                'detailUrl' => $detailUrl,
-                                'matchActions' => $matchActions
-                            ])
-                            <div>
-                                <h2>{{ $person->first_name }} {{ $person->last_name }}</h2>
-                                <p><i class="las la-map-marker"></i>{{ $person->addresses->firstWhere('type', 'present')?->city?->name ?? 'Location not provided' }}</p>
-                                <p><i class="las la-briefcase"></i>{{ $member?->job_title ?? 'Profession not provided' }}</p>
-                                <p><i class="las la-graduation-cap"></i>{{ $person->education->last()?->degree ?? 'Education not provided' }}</p>
-                                @include('frontend.member.partials.match_actions', [
-                                    'person' => $person,
-                                    'detailUrl' => $detailUrl,
-                                    'matchActions' => $matchActions
-                                ])
-                            </div>
-                        </article>
+                        @include('frontend.member.partials.compact_match_card', ['cardContext' => 'matched', 'person' => $person, 'match' => $match, 'photo' => $photo, 'fallback' => $fallback, 'detailUrl' => $detailUrl])
                     @endif
                 @empty
                     <p class="hm-four-empty">No compatible profiles match these filters.</p>
@@ -74,6 +54,7 @@
             </div>
 
             {{ $matchedProfiles->links() }}
+            @include('frontend.member.partials.ad_slider', ['placement' => 'bottom'])
         </main>
 
         <aside>

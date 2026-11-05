@@ -29,8 +29,11 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-brand-palette-20261026.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-profile-appreciations.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-card-action-fix-20261102.css') }}?v=2">
-<script src="{{ static_asset('assets/js/hamqadam-profile-appreciations.js') }}?v=1" defer></script>
-<script src="{{ static_asset('assets/js/hamqadam-match-card-menu-20261025.js') }}?v=1" defer></script>
+{{-- Last-load override to supersede all earlier member themes. --}}
+
+<script src="{{ static_asset('assets/js/hamqadam-profile-appreciations.js') }}?v=20261105-3" defer></script>
+<script src="{{ static_asset('assets/js/hamqadam-match-card-menu-20261025.js') }}?v=20261105-3" defer></script>
+<script src="{{ static_asset('assets/js/hamqadam-member-ad-sliders-20261105.js') }}?v=20261105-1" defer></script>
 @php
     $memberShellUser = auth()->user();
     $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
@@ -95,6 +98,10 @@
       <button type="button" class="hm-member-overlay" aria-label="Close dashboard navigation"></button>
       <main class="aiz-user-panel hq-member-main-content hm-member-workspace" id="hm-member-workspace">
         @yield('panel_content')
+        {{-- Member stylesheets emitted by child templates must come before these final overrides. --}}
+        <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-final-member-palette-cards-20261105.css') }}?v=20261105-3">
+        <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-palette-repair-20261105.css') }}?v=20261105-3">
+        <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-ad-sliders-20261105.css') }}?v=20261105-1">
       </main>
     </div>
   </section>

@@ -1,0 +1,234 @@
+/* HamQadam final approved palette — targeted repairs for member screens.
+ * Loaded after all child-view CSS to defeat late legacy gradients.
+ * Values are exactly from FINAL Web Color & Text Color Specification. */
+body.hq-site #hamqadam-main-content .hm-member-app{
+  --hm-pink:#A45F7B;--hm-wine:#A45F7B;--hm-light:#F6F4F5;
+  --hm-ink:#151515;--hm-mute:#6B6B6B;--hm-line:#E5E5E7;
+  --hm-soft:#FBE0E9;--hm-border:#E5E5E7;--hm-color:#A45F7B;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-workspace :is(
+ .hm-profile-ref h2,.hm-sl-hero h1,.hm-chat-heading h1,.hm-2026-heading h1,
+ .hm-detail-title h1,.hm-detail-identity h2,.hm-next-head h1,
+ .hm-expert-panel h1,.hm-wallet-aside-card h2,.hm-verify-progress b,
+ .hm-public-section-heading h2,.hm-public-feature-card h3
+){color:#151515!important}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-workspace :is(
+ .hm-profile-ref-meta,.hm-sl-hero p,.hm-chat-heading p,.hm-2026-heading p,
+ .hm-detail-title p,.hm-next-head p,.hm-next-panel>p,
+ .hm-wallet-stat>small,.hm-detail-panel dt,.hm-public-section-heading p
+){color:#6B6B6B!important}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-workspace :is(
+ .hm-profile-ref .card-header h5,.hm-sl-card-body h2,
+ .hm-wallet-choice>b,.hm-detail-score strong,.hm-verify-upload h2 i,
+ .hm-public-section-heading>span,.hm-public-feature-icon,.hm-next-section-title a
+){color:#A45F7B!important}
+
+/* My Profile: section tabs and completion-step navigation. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-profile-ref-tabs{
+  background:#FFFFFF!important;border-color:#E5E5E7!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-profile-ref-tab{
+  background:#FFFFFF!important;background-image:none!important;color:#6B6B6B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-profile-ref-tab[aria-selected="true"]{
+  background:#F4BFD1!important;background-image:none!important;color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-profile-parity-step{
+  color:#6B6B6B!important;border-color:#E5E5E7!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-profile-parity-step[aria-current="step"],
+body.hq-site #hamqadam-main-content .hm-member-app .hm-profile-parity-step.is-active{
+  background:#F7E6EE!important;background-image:none!important;color:#A45F7B!important;
+  border-color:#EEA9C5!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-profile-parity-step[aria-current="step"] span,
+body.hq-site #hamqadam-main-content .hm-member-app .hm-profile-parity-step.is-active span{
+  background:#F4BFD1!important;background-image:none!important;color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-profile-ref .btn-primary{
+  background:#F4BFD1!important;background-image:none!important;border-color:#F4BFD1!important;color:#A45F7B!important
+}
+
+/* Member profile detail: old dedicated action classes were overriding palette. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-detail :is(
+ .hm-detail-action-primary,.hm-public-private button,.hm-detail-show-complete
+){
+  background:#F4BFD1!important;background-image:none!important;color:#A45F7B!important;
+  border-color:#F4BFD1!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-detail :is(
+ .hm-detail-action-light,.hm-detail-quiet,.hm-detail-score
+){background:#FBE0E9!important;background-image:none!important;color:#A45F7B!important}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-detail :is(
+ .hm-detail-panel,.hm-detail-identity
+){background:#FFFFFF!important;border-color:#E5E5E7!important}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-detail :is(
+ .hm-detail-panel dt,.hm-detail-identity p
+){color:#6B6B6B!important}
+
+/* Saved profiles: include every shortlist-specific button and its filters. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-shortlist-2026 :is(
+ .hm-sl-view,.hm-sl-add a,.hm-sl-apply,.hm-sl-title-icon
+){
+  background:#F4BFD1!important;background-image:none!important;
+  color:#A45F7B!important;border-color:#F4BFD1!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-shortlist-2026 :is(
+ .hm-sl-more,.hm-sl-favorite,.hm-sl-score
+){background:#FBE0E9!important;background-image:none!important;color:#A45F7B!important}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-shortlist-2026 .hm-sl-tabs button{
+  background:#FFFFFF!important;background-image:none!important;color:#6B6B6B!important;
+  border-color:transparent!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-shortlist-2026 .hm-sl-tabs button.is-active{
+  background:#F4BFD1!important;color:#A45F7B!important;border-color:#F4BFD1!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-shortlist-2026 .hm-sl-hero-quote{
+  background:#F8C8D8!important;background-image:none!important;color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-shortlist-2026 :is(
+ .hm-sl-filters,.hm-sl-card,.hm-sl-toolbar
+){border-color:#E5E5E7!important;background:#FFFFFF!important}
+
+/* Chat / messaging page including new conversation, tab navigation, send button
+   and active conversation. Preserve message alignment and chat behavior. */
+body.hq-site #hamqadam-main-content .hm-member-app :is(
+ .hm-chat-heading>span,.hm-chat-new,
+ .hm-messages-reference #single_chat #send-mesaage .btn-primary
+){
+  background:#F4BFD1!important;background-image:none!important;
+  color:#A45F7B!important;border-color:#F4BFD1!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-chat-banner{
+  background:#F8C8D8!important;background-image:none!important;color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-chat-filters button{
+  background:#FFFFFF!important;color:#6B6B6B!important;border-color:transparent!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-chat-filters button.is-active{
+  background:#F4BFD1!important;color:#A45F7B!important;border-color:#F4BFD1!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-messages-reference :is(
+ .chat-user-item.active,.chat-user-item.is-active,.chat-user-item:hover
+){background:#F7E6EE!important;color:#A45F7B!important}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-chat-toolbar-actions label{
+  background:#FFFFFF!important;border-color:#E5E5E7!important
+}
+
+/* Wallet: overrides legacy coin purchase gradients, links, tabs and controls. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-wallet-2026 :is(
+ .hm-pink-button,.hm-wallet-buy,.hm-wallet-buy.primary,.hm-wallet-promo>a
+){
+  background:#F4BFD1!important;background-image:none!important;
+  color:#A45F7B!important;border-color:#F4BFD1!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-wallet-2026 :is(
+ .hm-wallet-popular,.hm-2026-heading-icon
+){background:#F4BFD1!important;background-image:none!important;color:#A45F7B!important}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-wallet-2026 :is(
+ .hm-wallet-stat,.hm-wallet-promo
+){background:#F6F4F5!important;background-image:none!important;border-color:#E5E5E7!important}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-wallet-2026 .hm-2026-banner-note{
+  background:#F8C8D8!important;background-image:none!important;color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-wallet-2026 .hm-wallet-tabs button{
+  background:#FFFFFF!important;color:#6B6B6B!important;border-color:transparent!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-wallet-2026 .hm-wallet-tabs button.is-active{
+  background:#F4BFD1!important;color:#A45F7B!important;border-color:#F4BFD1!important
+}
+
+/* Ask Expert: inline !important legacy style requires a stronger scoped selector.
+   This page has its own HTML inline background declaration, so target directly. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-workspace .hm-expert-panel button.btn.btn-primary[type="submit"]{
+  background:#F4BFD1!important;background-image:none!important;
+  border-color:#F4BFD1!important;color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-expert-panel .card{
+  background:#FFFFFF!important;border-color:#E5E5E7!important
+}
+
+/* Verification: exact active/completed steps, progress, and CTA roles. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-verify-next .hm-verify-progress>div.complete span,
+body.hq-site #hamqadam-main-content .hm-member-app .hm-verify-next .hm-verify-progress>div.active span{
+  background:#F4BFD1!important;background-image:none!important;
+  border-color:#EEA9C5!important;color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-verify-next .hm-verify-progress>div span{
+  background:#FFFFFF!important;border-color:#E5E5E7!important;color:#6B6B6B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-verify-next .hm-verify-progress>div.active b,
+body.hq-site #hamqadam-main-content .hm-member-app .hm-verify-next .hm-verify-progress>div.complete b{
+  color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-verify-next .hm-next-primary{
+  background:#F4BFD1!important;background-image:none!important;
+  color:#A45F7B!important;border-color:#F4BFD1!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-verify-next .hm-next-quote{
+  background:#F8C8D8!important;background-image:none!important;color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-verify-next .hm-next-panel{
+  background:#FFFFFF!important;border-color:#E5E5E7!important
+}
+
+/* Card action row from reference: View Profile | Like | three-dot menu.
+   Super Like and Shortlist are intentionally available *inside* the flyout. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-appreciation-card-actions>.hm-card-icons.hm-profile-appreciations{
+  grid-column:3!important;grid-row:1!important;
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  min-width:0;gap:4px!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-card-icons .hm-match-menu{
+  display:flex!important;align-items:stretch;justify-content:stretch;
+  min-width:0!important;position:relative!important;
+  top:auto!important;right:auto!important;z-index:4
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-card-icons :is(
+ .hm-appreciate-like,.hm-match-menu-toggle
+){
+  width:100%!important;min-width:0!important;height:100%!important;
+  min-height:33px!important;display:flex!important;align-items:center;justify-content:center;
+  padding:3px!important;border-radius:7px!important;
+  border:1px solid #E5E5E7!important;background:#FFFFFF!important;background-image:none!important;
+  color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-card-icons .hm-appreciate-like.is-active{
+  background:#F7E6EE!important;border-color:#EEA9C5!important;color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-card-icons .hm-match-menu-toggle:hover,
+body.hq-site #hamqadam-main-content .hm-member-app .hm-card-icons .hm-match-menu-toggle[aria-expanded="true"]{
+  background:#FBE0E9!important;color:#A45F7B!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card>.hm-match-menu{display:none!important}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-match-controls>.hm-card-icons.hm-profile-appreciations>button>span{
+  display:none!important
+}
+body.hq-site>.hm-match-menu-panel .hm-match-menu-item{
+  background:#FFFFFF!important;color:#A45F7B!important;border-color:#E5E5E7!important
+}
+body.hq-site>.hm-match-menu-panel .hm-match-menu-item:is(:hover,:focus-visible){
+  background:#FBE0E9!important;color:#A45F7B!important
+}
+body.hq-site>.hm-match-menu-panel .hm-match-menu-item.is-active{
+  background:#F7E6EE!important;color:#A45F7B!important
+}
+body.hq-site>.hm-match-menu-panel .hm-match-menu-item:disabled{opacity:.65;cursor:default}
+
+/* Keep statuses distinguishable without overriding green verification or alerts. */
+
+/* Match the compact reference card alignment instead of the centered old card. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-body{
+  text-align:left!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card :is(.hm-dash26-photo,.hm-four-photo){
+  height:128px!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-name{
+  text-align:left!important
+}
+@media(max-width:520px){
+  body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card :is(.hm-dash26-photo,.hm-four-photo){
+    height:185px!important
+  }
+}

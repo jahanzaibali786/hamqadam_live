@@ -171,6 +171,9 @@ if (! $lang) {
         <!-- End Facebook Pixel Code -->
     @endif
 
+    {{-- Final approved public website palette, after original theme styles and inline defaults. --}}
+    <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-final-site-palette-20261105.css') }}?v=20261105-1">
+
     {!! get_setting('header_script') !!}
 
 </head>

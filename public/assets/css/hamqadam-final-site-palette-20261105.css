@@ -1,0 +1,87 @@
+/* HamQadam approved 2026-11-05 palette.
+ * Source: FINAL WEB COLOR & TEXT COLOR SPECIFICATION, sections 3-10.
+ * This applies to the public website and never to the separate admin panel.
+ * No layout, font, shadow or interaction changes belong in this file. */
+:root{
+  --primary-pink:#F4BFD1;--soft-pink:#FBE0E9;--hero-pink:#F8C8D8;
+  --bottom-navigation-pink:#F5C2D3;--accent-pink:#EEA9C5;
+  --active-navigation-tint:#F7E6EE;--primary-black:#151515;
+  --secondary-gray:#6B6B6B;--rose-pink-text:#A45F7B;
+  --muted-rose:#B56A87;--white:#FFFFFF;--main-background:#FAFAFA;
+  --card-surface:#FFFFFF;--light-border-gray:#E5E5E7;
+  --light-surface-gray:#F6F4F5;
+  /* Legacy framework roles, kept as aliases rather than introducing shades. */
+  --primary:var(--primary-pink);--hov-primary:var(--accent-pink);
+  --soft-primary:var(--soft-pink);--secondary:var(--hero-pink);
+}
+body.hq-site{background-color:var(--main-background);}
+body.hq-site .aiz-main-wrapper.bg-white{background-color:var(--main-background)!important;}
+/* Public-page button/action backgrounds. Never recolor generic text globally. */
+body.hq-site :is(.btn-primary,.btn.btn-primary,.bg-primary-grad,.bg-primary,.badge-primary),
+body.hq-site .page-item.active .page-link,
+body.hq-site .nav-pills .nav-link.active{
+  background:var(--primary-pink)!important;background-image:none!important;
+  border-color:var(--primary-pink)!important;color:var(--rose-pink-text)!important;
+}
+body.hq-site :is(.btn-primary,.btn.btn-primary):is(:hover,:focus-visible),
+body.hq-site .page-item.active .page-link:is(:hover,:focus-visible){
+  background:var(--accent-pink)!important;border-color:var(--accent-pink)!important;
+  color:var(--rose-pink-text)!important;
+}
+body.hq-site :is(.btn-primary,.btn.btn-primary,.bg-primary-grad,.badge-primary) :is(i,svg,span){
+  color:inherit!important;
+}
+body.hq-site :is(.text-primary,.text-primary-grad,.btn-outline-primary,.aiz-pagination .page-link),
+body.hq-site .hq-ref24 :is(.hq-reference-eyebrow,.hq24-clear,.hq24-filter-chip,.hq24-upgrade-kicker){
+  color:var(--rose-pink-text)!important;
+}
+body.hq-site .text-primary-grad{
+  background:none!important;-webkit-text-fill-color:currentColor!important;
+}
+body.hq-site .btn-outline-primary{border-color:var(--accent-pink)!important;background:var(--white)!important;}
+body.hq-site .btn-outline-primary:is(:hover,:focus-visible){
+  color:var(--rose-pink-text)!important;background:var(--soft-pink)!important;
+}
+/* Public site's existing panels/cards, headings and subordinate descriptions. */
+body.hq-site :is(.hq-ref24,.hq-reference-discovery-page,.hq-ref24-packages,.hq-reference-ticket-page){
+  --hq24-rose:var(--rose-pink-text);--hq24-wine:var(--rose-pink-text);
+  --hq24-blush:var(--light-surface-gray);--hq24-ink:var(--primary-black);
+}
+body.hq-site :is(.hq-reference-page-hero,.hq24-upgrade-banner,.hq-referral26-hero){
+  background:var(--hero-pink)!important;background-image:none!important;
+}
+body.hq-site :is(.hq-reference-page-hero h1,.hq24-results-count strong,.hq24-upgrade-banner h2){
+  color:var(--primary-black)!important;
+}
+body.hq-site :is(.hq-reference-page-hero p,.hq24-results-count,.hq24-breadcrumb,.hq24-upgrade-banner p){
+  color:var(--secondary-gray)!important;
+}
+body.hq-site :is(.hq-discovery-card,.hq-design-plan-card,.hq-ticket-main,.hq-ticket-side-card){
+  background-color:var(--card-surface)!important;
+}
+body.hq-site :is(.form-control,.form-control:focus,.hq24-sort select,.hq-discovery-card input,.hq-discovery-card select){
+  border-color:var(--light-border-gray)!important;
+}
+body.hq-site input::placeholder,
+body.hq-site textarea::placeholder{color:var(--secondary-gray);opacity:1;}
+body.hq-site :is(input[type=checkbox],input[type=radio]){accent-color:var(--primary-pink);}
+body.hq-site :is(.aiz-pagination .page-link,.page-link){border-color:var(--light-border-gray);}
+body.hq-site :is(.hq24-filter-chip,.hq24-sort,.hq24-view-toggle,.hq-plan-price-box){
+  background:var(--light-surface-gray)!important;
+}
+body.hq-site :is(.hq-discovery-card .hq-discovery-photo-overlay h2,.hq-discovery-card .hq-profile-name){
+  color:var(--rose-pink-text)!important;
+}
+body.hq-site :is(.hq-discovery-card .hq-profile-facts,.hq-discovery-card .hq-profile-profession,.hq-discovery-card .hq-profile-summary){
+  color:var(--secondary-gray)!important;
+}
+/* The public discovery screens retain their existing, separately approved card structure. */
+body.hq-site .hq-ref24-discovery :is(.hq-match-pill,.hq-profile-tags span){
+  background:var(--soft-pink)!important;color:var(--rose-pink-text)!important;
+}
+body.hq-site .hq-ref24-discovery .hq24-upgrade-banner .btn,
+body.hq-site .hq-ref24-discovery .hq-discovery-actions .btn,
+body.hq-site .hq-ref24-discovery .aiz-filter-sidebar button[type=submit]{
+  background:var(--primary-pink)!important;background-image:none!important;
+  border-color:var(--primary-pink)!important;color:var(--rose-pink-text)!important;
+}
