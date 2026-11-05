@@ -57,6 +57,10 @@ Route::middleware(['auth:sanctum', 'member.activity'])
     ->post('/broadcasting/auth', fn (Request $request) => Broadcast::auth($request))
     ->name('api.v1.broadcasting.auth');
 
+// App home ads banner — Admin → Website Setup → Member Ad Sliders (`?placement=top|bottom`).
+// Public so it also shows before login.
+Route::get('/ads-banner', [\App\Http\Controllers\Api\V1\Ads\AdsBannerController::class, 'index'])->middleware('throttle:60,1')->name('api.v1.ads_banner.index');
+
 Route::middleware('auth:sanctum')->get('/admin/overview', AdminOverviewController::class)->name('api.v1.admin.overview');
 
 Route::prefix('auth')->name('api.v1.auth.')->group(function () {
