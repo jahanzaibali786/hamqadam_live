@@ -18,7 +18,6 @@
             <span class="hm-card-verified"><i class="las la-check-circle" aria-hidden="true"></i> Verified</span>
         @endif
     </a>
-    @include('frontend.member.partials.match_dropdown', ['person' => $person, 'detailUrl' => $detailUrl, 'matchActions' => $matchActions])
     <div class="hm-card-body">
         <strong class="hm-card-name">{{ trim($person->first_name.' '.$person->last_name) }}</strong>
         <span class="hm-card-age-religion">{{ $cardAge ? $cardAge.' Years' : 'Age not provided' }}@if($cardReligion) · {{ $cardReligion }}@endif</span>
