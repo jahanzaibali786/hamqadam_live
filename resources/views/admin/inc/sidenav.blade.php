@@ -746,6 +746,7 @@
                         </li>
                         @endcan
                         @can('edit_pages')
+                         <li class="aiz-side-nav-item"><a href="{{ route('website.member_ad_sliders.index') }}" class="aiz-side-nav-link {{ request()->routeIs('website.member_ad_sliders.*') ? 'active' : '' }}"><span class="aiz-side-nav-text"><i class="las la-images mr-1"></i> Member Ad Sliders</span></a></li>
                         <li class="aiz-side-nav-item"><a href="{{ route('website.home_content.edit') }}" class="aiz-side-nav-link {{ areActiveRoutes(['website.home_content.edit']) }}"><span class="aiz-side-nav-text">Home Page Content</span></a></li>
                         @foreach(['about'=>'About Us','team'=>'Our Team','privacy'=>'Privacy Policy','terms'=>'Terms & Conditions'] as $hqKey=>$hqLabel)
                         <li class="aiz-side-nav-item"><a class="aiz-side-nav-link" href="{{ route('website.editorial.edit',$hqKey) }}"><span class="aiz-side-nav-text">{{ $hqLabel }}</span></a></li>
