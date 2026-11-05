@@ -14,7 +14,7 @@
         @foreach(['top'=>'Top Matchmaking Hero Slider','bottom'=>'Footer Sponsored Banner Slider'] as $placement=>$label)
         <section class="card mb-4 hq-ad-admin-section" data-placement="{{ $placement }}">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                <div><h3 class="h5 mb-1">{{ $label }}</h3><small>{{ $placement==='top'?'Recommended source artwork: 1600 × 360px (40:9).':'Recommended source artwork: 1600 × 200px (8:1).' }} Display images at least 1600px wide for desktop. Responsive crop is automatic.</small></div>
+                <div><h3 class="h5 mb-1">{{ $label }}</h3><small>{{ $placement==='top'?'Recommended source artwork: 1800 × 300px (6:1).':'Recommended source artwork: 1800 × 150px (12:1).' }} Display images at least 1600px wide for desktop. Responsive crop is automatic.</small></div>
                 <button type="button" class="btn btn-outline-primary hq-ad-add" data-placement="{{ $placement }}"><i class="las la-plus"></i> Add Slide <span class="hq-ad-counter"></span></button>
             </div>
             <div class="card-body">
@@ -72,7 +72,7 @@
      The rows are built only from known template fields, no dynamic HTML from users. --}}
 <style>
 .hq-ad-preview{position:relative;width:100%;border-radius:12px;background:#F6F4F5;border:1px solid #E5E5E7;overflow:hidden}
-.hq-ad-preview-top{aspect-ratio:40/9}.hq-ad-preview-bottom{aspect-ratio:8/1}
+.hq-ad-preview-top{aspect-ratio:6/1}.hq-ad-preview-bottom{aspect-ratio:12/1}
 .hq-ad-preview img{display:block;width:100%;height:100%;object-fit:cover}
 .hq-ad-preview-label{position:absolute;bottom:5px;left:8px;background:#FFFFFF;color:#A45F7B;padding:3px 8px;border-radius:5px;font-size:10px}
 .hq-ad-editor-row{background:#FFFFFF}.hq-ad-editor-row input[type=range]{accent-color:#A45F7B}
