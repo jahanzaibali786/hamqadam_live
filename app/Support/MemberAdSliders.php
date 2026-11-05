@@ -2,8 +2,6 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Arr;
-
 final class MemberAdSliders
 {
     public const MAX_SLIDES = 6;
@@ -27,7 +25,7 @@ final class MemberAdSliders
                     'eyebrow' => 'AI Matches', 'title' => 'Thoughtful Proposals',
                     'highlight' => 'for Your Journey',
                     'subtitle' => 'Our AI finds compatible, verified profiles based on your preferences.',
-                    'button_label' => 'Explore AI Matches', 'button_url' => route('my_matched_profiles'),
+                    'button_label' => 'Explore AI Matches', 'button_url' => (parse_url(route('my_matched_profiles'), PHP_URL_PATH) ?: '/'),
                     'object_x' => 50, 'object_y' => 50, 'active' => true,
                 ],
                 [
@@ -35,7 +33,7 @@ final class MemberAdSliders
                     'eyebrow' => 'Verified Community', 'title' => 'Discover Genuine',
                     'highlight' => 'Connections',
                     'subtitle' => 'Explore meaningful matches in a respectful community.',
-                    'button_label' => 'View Members', 'button_url' => route('member.listing'),
+                    'button_label' => 'View Members', 'button_url' => (parse_url(route('member.listing'), PHP_URL_PATH) ?: '/'),
                     'object_x' => 50, 'object_y' => 50, 'active' => true,
                 ],
                 [
@@ -43,7 +41,7 @@ final class MemberAdSliders
                     'eyebrow' => 'Your Next Chapter', 'title' => 'A Beautiful Beginning',
                     'highlight' => 'Starts Here',
                     'subtitle' => 'Take the next step toward a compatible lifelong partner.',
-                    'button_label' => 'Find Matches', 'button_url' => route('my_matched_profiles'),
+                    'button_label' => 'Find Matches', 'button_url' => (parse_url(route('my_matched_profiles'), PHP_URL_PATH) ?: '/'),
                     'object_x' => 50, 'object_y' => 50, 'active' => true,
                 ],
             ],
@@ -52,21 +50,21 @@ final class MemberAdSliders
                     'preset' => 'bottom_rings', 'image_id' => null,
                     'eyebrow' => 'Sponsored', 'title' => 'Exclusive Wedding Packages',
                     'highlight' => '', 'subtitle' => 'Venues | Photography | Decor | Catering',
-                    'button_label' => 'Get Quote', 'button_url' => route('member.reference.packages'),
+                    'button_label' => 'Get Quote', 'button_url' => (parse_url(route('member.reference.packages'), PHP_URL_PATH) ?: '/'),
                     'object_x' => 50, 'object_y' => 50, 'active' => true,
                 ],
                 [
                     'preset' => 'bottom_jewelry', 'image_id' => null,
                     'eyebrow' => 'Partner', 'title' => 'Find Premium Wedding Venues',
                     'highlight' => '', 'subtitle' => 'Explore elegant celebrations and meaningful moments.',
-                    'button_label' => 'View Offers', 'button_url' => route('member.reference.packages'),
+                    'button_label' => 'View Offers', 'button_url' => (parse_url(route('member.reference.packages'), PHP_URL_PATH) ?: '/'),
                     'object_x' => 50, 'object_y' => 50, 'active' => true,
                 ],
                 [
                     'preset' => 'bottom_floral', 'image_id' => null,
                     'eyebrow' => 'Featured', 'title' => 'Plan Your Special Day',
                     'highlight' => '', 'subtitle' => 'Explore services for your new beginning.',
-                    'button_label' => 'Learn More', 'button_url' => route('member.reference.packages'),
+                    'button_label' => 'Learn More', 'button_url' => (parse_url(route('member.reference.packages'), PHP_URL_PATH) ?: '/'),
                     'object_x' => 50, 'object_y' => 50, 'active' => true,
                 ],
             ],
