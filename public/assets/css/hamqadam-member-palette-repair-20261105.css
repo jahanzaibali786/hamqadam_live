@@ -216,3 +216,19 @@ body.hq-site>.hm-match-menu-panel .hm-match-menu-item.is-active{
 body.hq-site>.hm-match-menu-panel .hm-match-menu-item:disabled{opacity:.65;cursor:default}
 
 /* Keep statuses distinguishable without overriding green verification or alerts. */
+
+/* Match the compact reference card alignment instead of the centered old card. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-body{
+  text-align:left!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card :is(.hm-dash26-photo,.hm-four-photo){
+  height:128px!important
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-name{
+  text-align:left!important
+}
+@media(max-width:520px){
+  body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card :is(.hm-dash26-photo,.hm-four-photo){
+    height:185px!important
+  }
+}
