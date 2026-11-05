@@ -120,7 +120,7 @@
    if(wrap.children.length>=max)return;
    const model=wrap.firstElementChild;
    if(!model){alert('Keep one slide in each placement while editing; add slides before removing the last one.');return;}
-   const clone=model.cloneNode(true);resetRow(clone);wrap.appendChild(clone);sync(section);
+   const clone=model.cloneNode(true);resetRow(clone);wrap.appendChild(clone);observeRow(clone);sync(section);
   }
   const up=e.target.closest('.hq-ad-up'),down=e.target.closest('.hq-ad-down');
   if(up||down){
@@ -160,7 +160,7 @@
  });
  // The shared AIZ media uploader populates previews asynchronously. Observe
  // the uploader's preview container so the crop frame follows the selected image.
- root.querySelectorAll('.hq-ad-editor-row').forEach(row=>{
+ function observeRow(row){
   const preview=row.querySelector('.file-preview');
   if(!preview)return;
   new MutationObserver(()=>{
@@ -169,7 +169,8 @@
     row.querySelector('.hq-ad-preview-image').src=image.src;
    }
   }).observe(preview,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
- });
+ }
+ root.querySelectorAll('.hq-ad-editor-row').forEach(observeRow);
  root.querySelectorAll('.hq-ad-admin-section').forEach(sync);
 })();
 </script>
