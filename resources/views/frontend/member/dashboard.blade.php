@@ -29,15 +29,8 @@
      $already=\App\Models\ProfileViewer::where('user_id',$person->id)->where('viewed_by',$me->id)->exists();
      $canView=get_setting('full_profile_show_according_to_membership')!=1||$already||(package_validity($me->id)&&(int)get_remaining_package_value($me->id,'remaining_profile_viewer_view')>0);
     @endphp
-    <article class="hm-dash26-person"><a href="{{ $canView?route('member_profile',$person->id):route('member.reference.packages') }}" class="hm-dash26-photo"><img src="{{ $photo }}" onerror="this.onerror=null;this.src='{{ $fallback }}'" loading="lazy" alt="{{ $person->first_name }} profile">
-     </a>
-     @php($matchActions=\App\Support\MemberMatchCardActions::between(auth()->user(),$person))
-     @include('frontend.member.partials.match_dropdown',['person'=>$person,'detailUrl'=>$detailUrl ?? route('member_profile',$person->id),'matchActions'=>$matchActions])
-     <strong>{{ $person->first_name }}@if($related?->birthday), {{ \Carbon\Carbon::parse($related->birthday)->age }}@endif</strong>
-     <small>{{ $loc?->city?->name??'Location not provided' }}</small><p><i class="las la-briefcase"></i> {{ $related?->job_title??'Profession not provided' }}</p><div><b><i class="las la-heart"></i> {{ round($match->match_percentage) }}% Match</b></div>
-     @php($detailUrl=$canView?route('member_profile',$person->id):route('member.reference.packages'))
-     @include('frontend.member.partials.match_actions',['person'=>$person,'detailUrl'=>$detailUrl,'matchActions'=>$matchActions])
-    </article>
+    @php($detailUrl = $canView ? route('member_profile', $person->id) : route('member.reference.packages'))
+    @include('frontend.member.partials.compact_match_card', ['cardContext' => 'dashboard', 'person' => $person, 'match' => $match, 'photo' => $photo, 'fallback' => $fallback, 'detailUrl' => $detailUrl])
     @empty <p class="hm-ref26-empty">No compatible profiles are available yet. <a href="{{ route('profile_settings') }}">Update your preferences</a>.</p>@endforelse
    </div></section>
   </div>
