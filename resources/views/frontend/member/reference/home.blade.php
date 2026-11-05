@@ -18,6 +18,7 @@
         <a href="{{ route('my_shortlists') }}"><i class="las la-users"></i> My Connections</a>
     </nav>
 
+    @include('frontend.member.partials.ad_slider', ['placement' => 'top'])
     <div class="hm-home-ref-layout">
         <main class="hm-home-ref-main">
             <section class="hm-home-ref-hero">
@@ -129,5 +130,6 @@
             </section>
         </aside>
     </div>
+    @include('frontend.member.partials.ad_slider', ['placement' => 'bottom'])
 </div>
 @endsection
