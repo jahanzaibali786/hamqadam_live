@@ -10,6 +10,11 @@
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
+
+
+    <div class="hm-four-layout">
+        <main>
+            @include('frontend.member.partials.ad_slider', ['placement' => 'top'])
     <header class="hm-four-head">
         <div>
             <h1><i class="las la-user-friends"></i> Matched Profiles</h1>
@@ -17,10 +22,6 @@
         </div>
         <aside>Better matches lead to brighter futures.</aside>
     </header>
-
-    <div class="hm-four-layout">
-        <main>
-            @include('frontend.member.partials.ad_slider', ['placement' => 'top'])
             <nav class="hm-four-tabs" aria-label="Match filters">
                 <a class="{{ !request('tab') || request('tab') === 'all' ? 'active' : '' }}" href="{{ route('my_matched_profiles') }}">All Matches ({{ $matchedProfiles->total() }})</a>
                 <a class="{{ request('tab') === 'high' ? 'active' : '' }}" href="{{ route('my_matched_profiles', ['tab' => 'high']) }}">High Compatibility</a>
