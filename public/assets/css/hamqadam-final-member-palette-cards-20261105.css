@@ -1,0 +1,219 @@
+/* Approved HamQadam 2026-11-05 role-based palette, member panel only.
+ * This sheet is loaded LAST after the legacy reference, wine and action CSS.
+ * Never apply text colors to all descendant elements indiscriminately. */
+body.hq-site #hamqadam-main-content .hm-member-app{
+ --primary-pink:#F4BFD1;--soft-pink:#FBE0E9;--hero-pink:#F8C8D8;
+ --bottom-navigation-pink:#F5C2D3;--accent-pink:#EEA9C5;
+ --active-navigation-tint:#F7E6EE;--primary-black:#151515;
+ --secondary-gray:#6B6B6B;--rose-pink-text:#A45F7B;
+ --muted-rose:#B56A87;--white:#FFFFFF;--main-background:#FAFAFA;
+ --card-surface:#FFFFFF;--light-border-gray:#E5E5E7;
+ --light-surface-gray:#F6F4F5;
+ --primary:#F4BFD1;--pink:#A45F7B;--accent:#A45F7B;--wine:#A45F7B;
+ --hm-pink:#A45F7B;--hm-color:#A45F7B;--hm-rose:#A45F7B;
+ --hm-control-pink:#F4BFD1;--hm-control-pink-hover:#EEA9C5;
+ --hm-action-pink:#F4BFD1;--hm-action-hover:#EEA9C5;
+ --ink:#151515;--muted:#6B6B6B;--line:#E5E5E7;
+ background:var(--main-background);color:var(--primary-black);
+}
+/* Header wordmark, navigation and sidebar are separate UI roles. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-topbar{background:var(--white)!important;border-color:var(--light-border-gray)!important;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-topbar-brand{color:var(--primary-black)!important;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-topbar-brand small{color:var(--secondary-gray)!important;}
+body.hq-site #hamqadam-main-content .hm-member-app :is(.hm-integrated-link,.aiz-side-nav-link){color:var(--secondary-gray)!important;}
+body.hq-site #hamqadam-main-content .hm-member-app :is(.hm-integrated-link.is-active,.aiz-side-nav-link.active,.aiz-side-nav-link:hover){
+ color:var(--rose-pink-text)!important;background:var(--active-navigation-tint)!important;background-image:none!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-topbar-actions>a:not(.hm-member-account){color:var(--rose-pink-text)!important;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-account{color:var(--primary-black)!important;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-workspace{background:var(--main-background)!important;color:var(--primary-black);}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-workspace :is(.hm-ref26,.hm-four,.hm-reference,.hq-ref24){
+ --ink:#151515;--muted:#6B6B6B;--line:#E5E5E7;
+ --pink:#A45F7B;--accent:#A45F7B;--wine:#A45F7B;
+ --hq24-rose:#A45F7B;--hq24-wine:#A45F7B;--hq24-ink:#151515;--hq24-blush:#F6F4F5;
+}
+/* Primary headings and purposeful supporting text - not a global black/gray override. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-workspace :is(.hm-four-head h1,.hm-ref26-section-head h2,.hm-four-panel h2,.hm-dash26-welcome h1,.hm-referral26-title h1,.hm-reference-heading h1,.hq-reference-page-hero h1){
+ color:var(--primary-black)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-workspace :is(.hm-four-head p,.hm-dash26-welcome p,.hm-reference-heading p,.hm-ref26-empty,.hm-referral26-title p,.hq-reference-page-hero p){
+ color:var(--secondary-gray)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-workspace :is(.text-primary,.hm-ref26-section-head a,.hm-ref-kicker,.hm-ref-price,.hm-match-status){
+ color:var(--rose-pink-text)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-member-workspace :is(.hm-ref26-card,.hm-four-panel,.hm-ref-white,.hm-matched-card,.hm-dash26-person,.hq-discovery-card,.card){
+ background-color:var(--card-surface)!important;border-color:var(--light-border-gray)!important;
+}
+/* All member-panel primary actions: flat approved colors, no legacy dark gradients. */
+body.hq-site #hamqadam-main-content .hm-member-app :is(.hm-member-workspace,.hm-sidebar-column) :is(
+ .btn-primary,.btn.btn-primary,.hm-ref26-primary,.hm-ref-cta,.hm-next-primary,.hm-pink-button,
+ .hm-four-primary,.hm-member-promo-cta,.hm-home-ref-view,.hm-referral26-share button,
+ .hq-discovery-actions .btn,.hq24-upgrade-banner .btn,
+ button[type=submit]:not(.hm-match-menu-item):not(.btn-light):not(.btn-outline-primary)
+){
+ background:var(--primary-pink)!important;background-image:none!important;
+ border-color:var(--primary-pink)!important;color:var(--rose-pink-text)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app :is(.hm-member-workspace,.hm-sidebar-column) :is(
+ .btn-primary,.hm-ref26-primary,.hm-ref-cta,.hm-next-primary,.hm-pink-button,
+ .hm-four-primary,button[type=submit]:not(.hm-match-menu-item)
+):is(:hover,:focus-visible){
+ background:var(--accent-pink)!important;background-image:none!important;
+ border-color:var(--accent-pink)!important;color:var(--rose-pink-text)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app :is(.btn-outline-primary,.hm-four-request-actions button.outlined){
+ background:var(--white)!important;color:var(--rose-pink-text)!important;border-color:var(--accent-pink)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app :is(.badge-primary,.bg-primary,.progress-bar,.hm-ref26-track>i,.hm-next-progress>span,.page-item.active .page-link,.nav-pills .nav-link.active){
+ background:var(--primary-pink)!important;background-image:none!important;
+ color:var(--rose-pink-text)!important;border-color:var(--primary-pink)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app :is(.form-control,input[type=search],.hm-four-panel input,.hm-four-panel select){
+ border-color:var(--light-border-gray)!important;background-color:var(--white)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app :is(input,textarea)::placeholder{
+ color:var(--secondary-gray)!important;opacity:1;
+}
+body.hq-site #hamqadam-main-content .hm-member-app :is(input[type=checkbox],input[type=radio]){accent-color:var(--primary-pink)!important;}
+/* Match header tabs and promotional surfaces. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-four-tabs{background:var(--white)!important;border-color:var(--light-border-gray)!important;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-four-tabs a{
+ color:var(--secondary-gray)!important;background:var(--white)!important;border-color:var(--light-border-gray)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-four-tabs a.active{
+ background:var(--primary-pink)!important;color:var(--rose-pink-text)!important;border-color:var(--primary-pink)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app :is(.hm-four-head>aside,.hm-dash26-quote,.hm-four-promo,.hm-dash26-upgrade,.hm-referral26-hero,.hq-reference-page-hero){
+ background:var(--hero-pink)!important;background-image:none!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-four-head>aside{color:var(--rose-pink-text)!important;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-dash26-ring{
+ background:conic-gradient(var(--primary-pink) calc(var(--progress)*1%),var(--soft-pink) 0)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-match-menu-toggle,
+body>.hm-match-menu-panel .hm-match-menu-item{
+ background:var(--white,#FFFFFF)!important;color:var(--rose-pink-text,#A45F7B)!important;
+ border-color:var(--light-border-gray,#E5E5E7)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-match-menu-toggle:is(:hover,:focus-visible),
+body>.hm-match-menu-panel .hm-match-menu-item:is(:hover,:focus-visible):not(.is-disabled){
+ background:#FBE0E9!important;color:#A45F7B!important;
+}
+/* Shared compact profile cards: Dashboard and Matched Profiles have the same density. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-dash26-recommend .hm-dash26-profiles,
+body.hq-site #hamqadam-main-content .hm-member-app .hm-four.hm-matched-card-page .hm-four-matches.hm-matched-card-grid{
+ display:grid!important;
+ grid-template-columns:repeat(auto-fit,minmax(min(100%,218px),1fr))!important;
+ gap:12px!important;align-items:stretch;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card{
+ display:flex!important;flex-direction:column;min-width:0;width:100%;height:100%;
+ padding:0!important;background:var(--card-surface)!important;
+ border:1px solid var(--light-border-gray)!important;overflow:visible!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card :is(.hm-dash26-photo,.hm-four-photo){
+ display:block;height:148px!important;flex:none;overflow:hidden;
+ border-radius:11px 11px 0 0;background:var(--light-surface-gray)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card :is(.hm-dash26-photo,.hm-four-photo) img{
+ width:100%;height:100%;object-fit:cover;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-body{
+ flex:1;display:flex;flex-direction:column;min-width:0;padding:10px!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-name{
+ display:block;color:var(--rose-pink-text)!important;margin:0 0 4px;
+ font-weight:750;line-height:1.3;font-size:13px;overflow-wrap:anywhere;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-age-religion{
+ display:block;color:var(--primary-black)!important;font-size:11px;line-height:1.4;margin:0 0 5px;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-meta{
+ display:block;color:var(--secondary-gray)!important;font-size:10px;line-height:1.4;
+ margin:2px 0;overflow-wrap:anywhere;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-meta i{
+ color:var(--muted-rose)!important;margin-right:5px;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-match{
+ position:absolute;top:7px;left:7px;right:auto!important;z-index:2;
+ margin:0!important;border:0;border-radius:16px;padding:5px 8px;
+ background:var(--soft-pink)!important;color:var(--rose-pink-text)!important;
+ font-size:10px;font-weight:750;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-card-verified{
+ position:absolute;bottom:7px;left:7px;z-index:2;
+ background:var(--white)!important;color:var(--rose-pink-text)!important;
+ font-size:9px;border-radius:14px;padding:4px 7px;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card .hm-match-controls{margin-top:auto!important;}
+/* Fixed compact card hierarchy: [View Profile | Like/Super/Bookmark],
+   [Why This Match?], [Interest | Proposal | Gift], [optional Chat]. */
+body.hq-site #hamqadam-main-content .hm-member-app .hm-match-controls.hm-appreciation-card-actions{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ align-items:stretch;gap:6px!important;min-width:0;width:100%!important;
+ padding:9px 0 0!important;margin-top:auto!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-appreciation-card-actions>.hm-match-send{
+ display:flex!important;align-items:center;justify-content:center;gap:4px;
+ width:100%!important;max-width:none!important;min-width:0!important;
+ min-height:33px!important;padding:7px 4px!important;
+ background:var(--soft-pink)!important;background-image:none!important;
+ border:1px solid var(--soft-pink)!important;color:var(--rose-pink-text)!important;
+ font-size:10px!important;line-height:1.25!important;font-weight:650;
+ text-align:center;white-space:normal!important;word-break:normal!important;
+ overflow-wrap:normal!important;border-radius:7px;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-appreciation-card-actions>.hm-match-send:is(:hover,:focus-visible){
+ background:var(--accent-pink)!important;border-color:var(--accent-pink)!important;
+ color:var(--rose-pink-text)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-appreciation-card-actions>.hm-card-action--profile{grid-column:1/3!important;grid-row:1;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-appreciation-card-actions>.hm-card-action--why{grid-column:1/-1!important;grid-row:2;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-appreciation-card-actions>.hm-card-action--interest{grid-column:1!important;grid-row:3;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-appreciation-card-actions>.hm-card-action--proposal{
+ grid-column:2!important;grid-row:3;background:var(--primary-pink)!important;border-color:var(--primary-pink)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-appreciation-card-actions>.hm-card-action--gift{grid-column:3!important;grid-row:3;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-appreciation-card-actions>.hm-card-action--chat{grid-column:1/-1!important;grid-row:4;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-appreciation-card-actions>.hm-card-icons.hm-profile-appreciations{
+ grid-column:3!important;grid-row:1!important;display:grid!important;
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ gap:4px!important;align-items:stretch;min-width:0;margin:0!important;
+ padding:0!important;width:100%!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-card-icons.hm-profile-appreciations>button{
+ display:flex!important;align-items:center;justify-content:center;
+ box-sizing:border-box;min-height:33px!important;min-width:0!important;width:100%;
+ padding:4px 0!important;border:1px solid var(--light-border-gray)!important;
+ border-radius:7px;background:var(--white)!important;background-image:none!important;
+ color:var(--rose-pink-text)!important;opacity:1;
+ font-size:14px!important;cursor:pointer;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-card-icons.hm-profile-appreciations>button.is-active{
+ background:var(--active-navigation-tint)!important;border-color:var(--accent-pink)!important;
+ color:var(--rose-pink-text)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-card-icons.hm-profile-appreciations>button:disabled{cursor:default;opacity:.75;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-card-icons.hm-profile-appreciations>button>span{display:none!important;}
+body.hq-site #hamqadam-main-content .hm-member-app .hm-card-icons.hm-profile-appreciations>button i{font-size:15px!important;}
+/* Existing discovery listing has a separately approved long-form information layout. */
+body.hq-site #hamqadam-main-content .hm-member-app .hq-discovery-card .hq-discovery-photo-overlay h2{color:var(--rose-pink-text)!important;}
+body.hq-site #hamqadam-main-content .hm-member-app .hq-discovery-card :is(.hq-profile-summary,.hq-profile-facts,.hq-profile-profession){color:var(--secondary-gray)!important;}
+body.hq-site #hamqadam-main-content .hm-member-app .hq-discovery-card :is(.hq-match-pill,.hq-profile-tags span){
+ background:var(--soft-pink)!important;color:var(--rose-pink-text)!important;
+}
+body.hq-site #hamqadam-main-content .hm-member-app .hq-discovery-card .hm-appreciation-card-actions{
+ margin-top:12px!important;
+}
+/* Destination of popover is body; apply the same approved rose role there. */
+body>.hm-match-menu-panel .hm-match-menu-item{color:#A45F7B!important;}
+body>.hm-match-menu-panel .hm-match-menu-item:is(:hover,:focus-visible):not(.is-disabled){background:#FBE0E9!important;color:#A45F7B!important;}
+@media(max-width:520px){
+ body.hq-site #hamqadam-main-content .hm-member-app .hm-dash26-recommend .hm-dash26-profiles,
+ body.hq-site #hamqadam-main-content .hm-member-app .hm-four.hm-matched-card-page .hm-four-matches.hm-matched-card-grid{
+  grid-template-columns:minmax(0,1fr)!important;
+ }
+ body.hq-site #hamqadam-main-content .hm-member-app .hm-unified-profile-card :is(.hm-dash26-photo,.hm-four-photo){height:190px!important;}
+}
