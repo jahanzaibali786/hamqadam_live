@@ -1,10 +1,14 @@
 (function(){
 'use strict';
-let openMenu=null,openButton=null;
+let openMenu=null,openButton=null,menuOwner=null;
 function closeMenu(){
  if(!openMenu)return;
  openMenu.hidden=true;openButton?.setAttribute('aria-expanded','false');
- openMenu=null;openButton=null;
+ // Restore the panel to its original trigger wrapper: otherwise reopening the same
+ // three-dot menu fails because the first open moved it to document.body.
+ if(menuOwner&&menuOwner.isConnected)menuOwner.appendChild(openMenu);
+ openMenu.style.top='';openMenu.style.left='';
+ openMenu=null;openButton=null;menuOwner=null;
 }
 function reposition(){
  if(!openMenu||!openButton)return;
@@ -24,6 +28,7 @@ document.addEventListener('click',function(event){
   if(openMenu===menu){closeMenu();return}
   closeMenu();
   // Body portal prevents overflow, transformed grid tracks, and Popper offsets from shifting the flyout to another card.
+  menuOwner=btn.closest('.hm-match-menu');
   document.body.appendChild(menu);
   menu.hidden=false;openMenu=menu;openButton=btn;
   btn.setAttribute('aria-expanded','true');reposition();
