@@ -29,7 +29,9 @@
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-brand-palette-20261026.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-profile-appreciations.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-card-action-fix-20261102.css') }}?v=2">
-<script src="{{ static_asset('assets/js/hamqadam-profile-appreciations.js') }}?v=1" defer></script>
+{{-- Last-load override to supersede all earlier member themes. --}}
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-final-member-palette-cards-20261105.css') }}?v=20261105-1">
+<script src="{{ static_asset('assets/js/hamqadam-profile-appreciations.js') }}?v=20261105-1" defer></script>
 <script src="{{ static_asset('assets/js/hamqadam-match-card-menu-20261025.js') }}?v=1" defer></script>
 @php
     $memberShellUser = auth()->user();
