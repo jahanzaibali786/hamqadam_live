@@ -296,3 +296,62 @@ body.hq-public-page .hq-mobile-guest-account { display:none; }
     max-width:100%;
   }
 }
+
+
+/* 12 Nov: fix registration wizard/card nested widths and drop-down controls.
+   All guards are scoped to public pages, so desktop forms and the member shell
+   are unaffected. */
+@media (max-width: 767.98px) {
+ body.hq-public-page .hq-home-registration {min-width:0;max-width:100%;padding:36px 0!important}
+ body.hq-public-page .hq-home-registration>.container {width:100%!important;min-width:0;max-width:100%;padding-left:16px!important;padding-right:16px!important}
+ body.hq-public-page .hq-register-shell {display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:20px!important;min-width:0!important;max-width:100%;width:100%;box-sizing:border-box;padding:22px 14px!important;overflow:visible}
+ body.hq-public-page .hq-register-intro,
+ body.hq-public-page .hq-register-form-card,
+ body.hq-public-page .hq-register-form-card form,
+ body.hq-public-page .hq-register-form-card .registration-flow,
+ body.hq-public-page .hq-register-form-card .registration-flow-step {min-width:0!important;max-width:100%!important;box-sizing:border-box}
+ body.hq-public-page .hq-register-form-card {width:100%!important;margin:0!important;inset:auto!important;transform:none!important}
+ body.hq-public-page .hq-register-form-card form {width:100%!important;min-width:0!important;padding:16px 12px!important;margin:0!important}
+ body.hq-public-page .hq-register-form-card .registration-flow-window {max-width:100%!important;box-sizing:border-box}
+ body.hq-public-page .hq-register-form-card .registration-flow-step>.row {min-width:0;max-width:100%;margin-left:-5px!important;margin-right:-5px!important}
+ body.hq-public-page .hq-register-form-card .registration-flow-step>.row>[class*="col"] {min-width:0!important;max-width:100%;padding-left:5px!important;padding-right:5px!important}
+ body.hq-public-page .hq-register-form-card :is(.form-control,.bootstrap-select,.bootstrap-select>.dropdown-toggle,.iti,input,select,textarea) {max-width:100%!important;min-width:0!important;box-sizing:border-box}
+ body.hq-public-page .hq-register-form-card .dropdown-toggle .filter-option {max-width:100%;overflow:hidden}
+ body.hq-public-page .hq-register-form-card .registration-flow-actions {display:flex!important;flex-wrap:wrap;gap:8px!important}
+ body.hq-public-page .hq-register-form-card .registration-flow-actions .btn {min-width:0!important;flex:1 1 0%;margin:0!important;white-space:normal}
+ /* Registration step numbers are preserved and shrink proportionally rather
+    than forcing the three-circle strip wider than a 320px phone. */
+ body.hq-public-page .hq-register-form-card .registration-flow-window {--step-circle-size:40px!important;padding:14px 7px!important;margin:0 0 18px!important;overflow:hidden}
+ body.hq-public-page .hq-register-form-card .registration-flow-track {min-width:0}
+ body.hq-public-page .hq-register-form-card .registration-flow-circle {min-width:40px!important;width:40px!important;height:40px!important;font-size:13px!important}
+ body.hq-public-page .hq-register-steps {grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ body.hq-public-page .hq-register-steps>span {min-width:0;white-space:normal;overflow-wrap:break-word}
+ /* The contact form icon gets its own line, with a full-width heading/copy. */
+ body.hq-public-page .hq-ref24-support .hq-ticket-heading {display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:12px!important;min-width:0}
+ body.hq-public-page .hq-ref24-support .hq-ticket-heading>span {flex:0 0 43px!important;width:43px!important;height:43px!important;align-self:flex-start}
+ body.hq-public-page .hq-ref24-support .hq-ticket-heading>div {width:100%;min-width:0;max-width:100%}
+ body.hq-public-page .hq-ref24-support .hq-ticket-heading h2 {font-size:clamp(25px,7vw,30px)!important;line-height:1.12;overflow-wrap:normal}
+ body.hq-public-page .hq-ref24-support .hq-ticket-heading p {line-height:1.5;overflow-wrap:break-word}
+ /* The login story follows the actual login form on phones. */
+ body.hq-public-page .hq-login-columns {display:flex!important;flex-direction:column!important;gap:18px!important;min-width:0}
+ body.hq-public-page .hq-login-panel {order:1;width:100%;min-width:0}
+ body.hq-public-page .hq-login-story {order:2;width:100%;min-width:0}
+ body.hq-public-page .hq-login-register {display:grid!important;grid-template-columns:36px minmax(0,1fr);align-items:center;gap:9px 12px!important}
+ body.hq-public-page .hq-login-register-icon {width:36px;height:36px}
+ body.hq-public-page .hq-login-register-copy {width:100%!important;min-width:0!important;max-width:100%}
+ body.hq-public-page .hq-login-register-copy :is(h3,p) {white-space:normal!important;overflow-wrap:normal!important;word-break:normal!important;max-width:100%;line-height:1.45}
+ body.hq-public-page .hq-login-register>a {grid-column:1/-1;justify-self:start;margin:0!important;white-space:normal;text-align:center}
+ body.hq-public-page .hq-login-container {max-width:100%!important;min-width:0;padding-left:16px!important;padding-right:16px!important}
+ body.hq-public-page .hq-login-story,
+ body.hq-public-page .hq-login-panel {padding:24px 18px!important;border-radius:20px}
+ body.hq-public-page .hq-login-story h1 {font-size:clamp(31px,8vw,39px)!important;overflow-wrap:normal;word-break:normal;line-height:1.15}
+ body.hq-public-page .hq-login-story-kicker {flex-wrap:wrap}
+}
+@media (max-width: 359.98px) {
+ body.hq-public-page .hq-home-registration>.container {padding-left:12px!important;padding-right:12px!important}
+ body.hq-public-page .hq-register-shell {padding:14px 9px!important}
+ body.hq-public-page .hq-register-form-card form {padding:13px 10px!important}
+ body.hq-public-page .hq-register-form-card .registration-flow-window {--step-circle-size:36px!important;padding:11px 4px!important}
+ body.hq-public-page .hq-register-form-card .registration-flow-circle {min-width:36px!important;width:36px!important;height:36px!important}
+ body.hq-public-page .hq-login-panel,.hq-public-page .hq-login-story {padding:20px 14px!important}
+}
