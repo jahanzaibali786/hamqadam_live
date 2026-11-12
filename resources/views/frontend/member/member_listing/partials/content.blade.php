@@ -6,6 +6,7 @@
 
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-four-pages-20261024.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-discovery-contexts-20261024.css') }}?v=4">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-listing-clickable-20261112.css') }}?v=20261112-1">
 <div class="hq-ref24 hq-ref24-discovery {{ request()->routeIs('members.public_listing') ? 'hq24-standalone' : 'hq24-dashboard' }}">
     <section class="hq-reference-page-hero hq-discovery-reference-hero">
         <div class="container">
@@ -138,7 +139,13 @@
                                             ->exists();
                                     @endphp
 
-                                    <article class="hq-discovery-card" id="block_id_{{ $user->id }}">
+                                    {{-- Card surface opens the same route as View Profile; nested actions retain their own behavior. --}}
+                                    <article class="hq-discovery-card hq-clickable-member-card"
+                                        id="block_id_{{ $user->id }}"
+                                        role="link"
+                                        tabindex="0"
+                                        data-profile-url="{{ route('member_profile', $user->id) }}"
+                                        aria-label="{{ translate('View Profile') }}: {{ trim($user->first_name . ' ' . $user->last_name) }}">
                                         <div class="hq24-photo-frame {{ $hasVisiblePhoto ? 'hq24-has-photo' : 'hq24-no-photo' }}">
                                             <div class="hq24-photo-fallback" aria-label="{{ $photoFallbackLabel }}">
                                                 <span class="hq24-photo-fallback-icon" aria-hidden="true"><i class="las la-user-shield"></i></span>

@@ -1,0 +1,21 @@
+/* Discovery cards: accessible click-through without altering child controls. */
+.hq-ref24-discovery .hq-clickable-member-card {
+    cursor:pointer;
+    transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+.hq-ref24-discovery .hq-clickable-member-card:hover {
+    transform:translateY(-2px);
+    border-color:#EEA9C5!important;
+    box-shadow:0 10px 28px rgba(164,95,123,.13);
+}
+.hq-ref24-discovery .hq-clickable-member-card:focus-visible {
+    outline:3px solid #A45F7B;
+    outline-offset:3px;
+}
+.hq-ref24-discovery .hq-clickable-member-card :is(a,button,[role="button"]) {
+    cursor:pointer;
+}
+@media (prefers-reduced-motion:reduce) {
+    .hq-ref24-discovery .hq-clickable-member-card {transition:none}
+    .hq-ref24-discovery .hq-clickable-member-card:hover {transform:none}
+}
