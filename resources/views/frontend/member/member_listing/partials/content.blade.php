@@ -138,7 +138,13 @@
                                             ->exists();
                                     @endphp
 
-                                    <article class="hq-discovery-card" id="block_id_{{ $user->id }}">
+                                    {{-- Card surface opens the same route as View Profile; nested actions retain their own behavior. --}}
+                                    <article class="hq-discovery-card hq-clickable-member-card"
+                                        id="block_id_{{ $user->id }}"
+                                        role="link"
+                                        tabindex="0"
+                                        data-profile-url="{{ route('member_profile', $user->id) }}"
+                                        aria-label="{{ translate('View Profile') }}: {{ trim($user->first_name . ' ' . $user->last_name) }}">
                                         <div class="hq24-photo-frame {{ $hasVisiblePhoto ? 'hq24-has-photo' : 'hq24-no-photo' }}">
                                             <div class="hq24-photo-fallback" aria-label="{{ $photoFallbackLabel }}">
                                                 <span class="hq24-photo-fallback-icon" aria-hidden="true"><i class="las la-user-shield"></i></span>
