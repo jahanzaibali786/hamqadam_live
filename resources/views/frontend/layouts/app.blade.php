@@ -173,6 +173,8 @@ if (! $lang) {
 
     {{-- Final approved public website palette, after original theme styles and inline defaults. --}}
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-final-site-palette-20261105.css') }}?v=20261105-1">
+    {{-- Keep this after the existing public theme so narrow-screen overflow fixes win. --}}
+    <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-mobile-shell-20261112.css') }}?v=20261112-1">
 
     {!! get_setting('header_script') !!}
 
