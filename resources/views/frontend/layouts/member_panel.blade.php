@@ -117,7 +117,7 @@
   const root=document.querySelector('.hm-member-app'),toggle=root?.querySelector('.hm-member-mobile-menu'),overlay=root?.querySelector('.hm-member-overlay');
   if(!root||!toggle)return;
   const close=()=>{root.classList.remove('hm-nav-open');toggle.setAttribute('aria-expanded','false');};
-  toggle.addEventListener('click',()=>{const opened=root.classList.toggle('hm-nav-open');toggle.setAttribute('aria-expanded',String(opened));});
+  toggle.addEventListener('click',()=>{const opened=root.classList.toggle('hm-nav-open');toggle.setAttribute('aria-expanded',String(opened));if(opened)root.querySelector('.hm-sidebar-mobile-close')?.focus();});
   overlay?.addEventListener('click',close);
   root.querySelector('.hm-sidebar-mobile-close')?.addEventListener('click',()=>{close();toggle.focus();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
