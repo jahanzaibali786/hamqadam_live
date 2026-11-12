@@ -1,0 +1,112 @@
+/* Chat overflow, avatar placement and presence repairs (member panel only).
+   Long unbroken messages must NEVER increase the width of the conversation. */
+.hm-member-app .hm-messages-reference .hm-chat-reference-grid,
+.hm-member-app .hm-messages-reference .hm-chat-center-column,
+.hm-member-app .hm-messages-reference #single_chat,
+.hm-member-app .hm-messages-reference #single_chat>.chat-box-wrap,
+.hm-member-app .hm-messages-reference #single_chat .chat-list-wrap,
+.hm-member-app .hm-messages-reference #single_chat #chat-messages,
+.hm-member-app .hm-messages-reference #single_chat .chat-list {
+  min-width:0!important;max-width:100%!important;box-sizing:border-box!important
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-list-wrap {
+  overflow-x:hidden!important;overscroll-behavior-x:none
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation {
+  box-sizing:border-box;min-width:0!important;max-width:100%!important;
+  width:100%;overflow:visible
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation>.media {
+  display:flex!important;align-items:flex-end!important;
+  min-width:0!important;max-width:100%!important;width:100%;
+  box-sizing:border-box
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .media-body {
+  flex:1 1 auto!important;min-width:0!important;max-width:100%!important;
+  box-sizing:border-box
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .media-body>.text {
+  box-sizing:border-box!important;min-width:0!important;max-width:100%!important;
+  width:fit-content;white-space:pre-wrap!important;
+  overflow-wrap:anywhere!important;word-break:break-word!important;
+  hyphens:auto;line-height:1.55!important
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation.right .media-body>.text {
+  margin-left:auto!important
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview,
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .voice-message-shell {
+  min-width:0!important;max-width:100%!important
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item {
+  min-width:0;max-width:100%;overflow:hidden
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item img {
+  max-width:100%;height:auto;object-fit:contain
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .avatar {
+  flex:0 0 auto!important;align-self:flex-end;
+}
+.hm-member-app .hm-messages-reference #single_chat .hm-message-meta {
+  max-width:100%!important;min-width:0!important;flex-wrap:wrap;
+  overflow-wrap:anywhere
+}
+/* One status dot next to the partner's presence text, instead of the
+   detached badge between the name and the status label. */
+.hm-member-app .hm-messages-reference #single_chat .chat-header>.media {
+  min-width:0!important;max-width:100%;
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-header .media-body {
+  min-width:0!important;max-width:100%
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-header .hm-chat-presence {
+  display:flex!important;align-items:center;gap:7px;
+  min-width:0;max-width:100%;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+  line-height:1.4!important;font-size:11px!important;color:#6B6B6B!important
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-header .hm-chat-presence::before {
+  content:"";display:inline-block;flex:0 0 9px;width:9px;height:9px;
+  border-radius:50%;box-sizing:border-box;
+  border:2px solid #FFFFFF;background-color:#9B9B9B;
+  box-shadow:0 0 0 1px #E5E5E7
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-header .hm-chat-presence.is-online {
+  color:#168A61!important
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-header .hm-chat-presence.is-online::before {
+  background-color:#11C686;box-shadow:0 0 0 1px #89DEC0
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-header .hm-chat-presence.is-typing {
+  color:#A45F7B!important
+}
+.hm-member-app .hm-messages-reference #single_chat .chat-header .hm-chat-presence.is-typing::before {
+  background-color:#A45F7B
+}
+/* Avatar fallback preserves size and circular crop on header, threads,
+   individual chat messages and profile rail. */
+.hm-member-app .hm-messages-reference :is(
+ .chat-header .avatar,.chat-user-item .avatar,
+ .chat-coversation .avatar,.hm-chat-side-avatar
+) {
+  flex-shrink:0;overflow:hidden;border-radius:50%;
+  background-color:#F6F4F5
+}
+.hm-member-app .hm-messages-reference :is(
+ .chat-header .avatar img,.chat-user-item .avatar img,
+ .chat-coversation .avatar img,.hm-chat-side-avatar img
+) {display:block;object-fit:cover;object-position:center}
+@media(max-width:520px) {
+ .hm-member-app .hm-messages-reference #single_chat #chat-messages {
+   padding:12px 9px!important
+ }
+ .hm-member-app .hm-messages-reference #single_chat .chat-coversation>.media {
+   gap:6px
+ }
+ .hm-member-app .hm-messages-reference #single_chat .chat-coversation .avatar {
+   width:27px!important;height:27px!important;flex:0 0 27px!important
+ }
+ .hm-member-app .hm-messages-reference #single_chat .chat-coversation .avatar img {
+   width:27px!important;height:27px!important
+ }
+}

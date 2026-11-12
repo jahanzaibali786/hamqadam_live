@@ -34,6 +34,7 @@
 <script src="{{ static_asset('assets/js/hamqadam-profile-appreciations.js') }}?v=20261105-3" defer></script>
 <script src="{{ static_asset('assets/js/hamqadam-match-card-menu-20261025.js') }}?v=20261105-3" defer></script>
 <script src="{{ static_asset('assets/js/hamqadam-member-ad-sliders-20261105.js') }}?v=20261105-1" defer></script>
+<script src="{{ static_asset('assets/js/hamqadam-chat-avatar-fallback-20261112.js') }}?v=20261112-1" defer></script>
 @php
     $memberShellUser = auth()->user();
     $memberShellAvatar = $memberShellUser?->photo ? uploaded_asset($memberShellUser->photo) : static_asset('assets/img/avatar-place.png');
@@ -107,6 +108,7 @@
         <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-palette-repair-20261105.css') }}?v=20261105-3">
         <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-ad-sliders-20261105.css') }}?v=20261105-1">
         <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-mobile-shell-20261112.css') }}?v=20261112-1">
+        <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-chat-wrap-avatar-presence-20261112.css') }}?v=20261112-1">
       </main>
     </div>
   </section>

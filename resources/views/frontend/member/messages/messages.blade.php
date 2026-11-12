@@ -43,22 +43,17 @@
                     {{ $chat_thread->$user_to_show->first_name.' '.$chat_thread->$user_to_show->last_name }}
                 </h6>
 
-                    @if(Cache::has('user-is-online-' . $chat_thread->$user_to_show->id))
-
-                        <span class="badge badge-dot badge-success badge-circle"></span>
-
-                    @else
-
-                        <span class="badge badge-dot badge-secondary badge-circle"></span>
-
-                    @endif
-
-                @php $inlinePartnerLastSeen = Cache::has('user-is-online-' . $chat_thread->$user_to_show->id) ? null : optional($chat_thread->$user_to_show->last_active_at ?? $chat_thread->$user_to_show->last_login_at); @endphp
-                <div class="fs-11 text-muted chat-partner-presence-inline hm-chat-presence" id="hm-web-presence">
-                    @if (Cache::has('user-is-online-' . $chat_thread->$user_to_show->id))
-                        <span class="text-success fw-600">{{ translate('Online') }}</span>
+                @php
+                    $hmChatPartnerOnline = Cache::has('user-is-online-' . $chat_thread->$user_to_show->id);
+                    $inlinePartnerLastSeen = $hmChatPartnerOnline ? null : ($chat_thread->$user_to_show->last_active_at ?? $chat_thread->$user_to_show->last_login_at);
+                @endphp
+                <div class="fs-11 text-muted chat-partner-presence-inline hm-chat-presence {{ $hmChatPartnerOnline ? 'is-online' : 'is-offline' }}" id="hm-web-presence" aria-live="polite">
+                    @if ($hmChatPartnerOnline)
+                        {{ translate('Online') }}
                     @elseif($inlinePartnerLastSeen)
-                        {{ translate('Last seen') }} {{ $inlinePartnerLastSeen->diffForHumans() }}
+                        {{ translate('Last seen') }} {{ \Carbon\Carbon::parse($inlinePartnerLastSeen)->diffForHumans() }}
+                    @else
+                        {{ translate('Offline') }}
                     @endif
                 </div>
             </div>
