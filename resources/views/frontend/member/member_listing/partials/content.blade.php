@@ -6,6 +6,7 @@
 
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-four-pages-20261024.css') }}?v=1">
 <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-discovery-contexts-20261024.css') }}?v=4">
+<link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-listing-clickable-20261112.css') }}?v=20261112-1">
 <div class="hq-ref24 hq-ref24-discovery {{ request()->routeIs('members.public_listing') ? 'hq24-standalone' : 'hq24-dashboard' }}">
     <section class="hq-reference-page-hero hq-discovery-reference-hero">
         <div class="container">
