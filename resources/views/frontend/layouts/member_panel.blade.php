@@ -93,6 +93,10 @@
   <section class="hq-member-panel-page hq-member-sticky-layout hm-member-stage">
     <div class="hm-member-app-layout">
       <aside class="hm-sidebar-column" id="hm-member-sidebar" aria-label="Account navigation">
+        <div class="hm-sidebar-mobile-heading">
+          <strong><i class="las la-heart" aria-hidden="true"></i> {{ translate('Account Menu') }}</strong>
+          <button type="button" class="hm-sidebar-mobile-close" aria-label="Close dashboard navigation"><i class="las la-times" aria-hidden="true"></i></button>
+        </div>
         @include('frontend.member.sidebar')
       </aside>
       <button type="button" class="hm-member-overlay" aria-label="Close dashboard navigation"></button>
@@ -102,6 +106,7 @@
         <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-final-member-palette-cards-20261105.css') }}?v=20261105-3">
         <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-palette-repair-20261105.css') }}?v=20261105-3">
         <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-ad-sliders-20261105.css') }}?v=20261105-1">
+        <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-mobile-shell-20261112.css') }}?v=20261112-1">
       </main>
     </div>
   </section>
@@ -112,8 +117,9 @@
   const root=document.querySelector('.hm-member-app'),toggle=root?.querySelector('.hm-member-mobile-menu'),overlay=root?.querySelector('.hm-member-overlay');
   if(!root||!toggle)return;
   const close=()=>{root.classList.remove('hm-nav-open');toggle.setAttribute('aria-expanded','false');};
-  toggle.addEventListener('click',()=>{const opened=root.classList.toggle('hm-nav-open');toggle.setAttribute('aria-expanded',String(opened));});
+  toggle.addEventListener('click',()=>{const opened=root.classList.toggle('hm-nav-open');toggle.setAttribute('aria-expanded',String(opened));if(opened)root.querySelector('.hm-sidebar-mobile-close')?.focus();});
   overlay?.addEventListener('click',close);
+  root.querySelector('.hm-sidebar-mobile-close')?.addEventListener('click',()=>{close();toggle.focus();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
   root.querySelectorAll('.hm-sidebar-column a[href]').forEach(link=>link.addEventListener('click',close));
   const accessibilityToggle=root.querySelector('#hm-accessibility-toggle');
