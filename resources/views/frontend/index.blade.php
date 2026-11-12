@@ -147,6 +147,96 @@
             </div>
         </div>
     </section>
+
+    {{-- Loaded after the registration wizard's inline stylesheet, so this
+         final mobile layout is not overridden by older step components. --}}
+    <style>
+    @media(max-width:767.98px){
+      body.hq-public-page #home-register{box-sizing:border-box;max-width:100%;padding:35px 0!important}
+      body.hq-public-page #home-register>.container{
+        box-sizing:border-box!important;width:100%!important;max-width:100%!important;
+        min-width:0!important;padding:0 12px!important;margin:0 auto!important
+      }
+      body.hq-public-page #home-register .hq-register-shell{
+        box-sizing:border-box!important;display:flex!important;flex-direction:column!important;
+        width:100%!important;min-width:0!important;max-width:100%!important;
+        gap:18px!important;padding:18px 12px!important;margin:0!important;overflow:visible
+      }
+      body.hq-public-page #home-register .hq-register-intro,
+      body.hq-public-page #home-register #register-form-container,
+      body.hq-public-page #home-register #reg-form{
+        box-sizing:border-box!important;width:100%!important;max-width:100%!important;
+        min-width:0!important;margin:0!important;inset:auto!important;transform:none!important
+      }
+      body.hq-public-page #home-register .hq-register-intro h2{
+        font-size:clamp(27px,8.5vw,36px)!important;line-height:1.1!important;
+        overflow-wrap:normal;word-break:normal
+      }
+      body.hq-public-page #home-register .hq-register-intro p{
+        font-size:12px!important;line-height:1.6!important;
+        max-width:100%!important;overflow-wrap:break-word
+      }
+      body.hq-public-page #home-register .hq-register-steps{
+        display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;
+        width:100%;gap:10px 8px!important;min-width:0
+      }
+      body.hq-public-page #home-register .hq-register-steps>span{
+        min-width:0!important;max-width:100%;font-size:10px!important;
+        white-space:normal!important;overflow-wrap:break-word!important
+      }
+      body.hq-public-page #home-register #reg-form{
+        padding:15px 11px!important;border-radius:12px!important;
+        overflow:visible
+      }
+      body.hq-public-page #home-register .registration-flow,
+      body.hq-public-page #home-register .registration-flow-window,
+      body.hq-public-page #home-register .registration-flow-step{
+        box-sizing:border-box!important;width:100%!important;min-width:0!important;
+        max-width:100%!important
+      }
+      body.hq-public-page #home-register .registration-flow-window{
+        display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+        padding:12px 5px!important;gap:0!important;overflow:hidden!important;
+        --step-circle-size:36px!important
+      }
+      body.hq-public-page #home-register .registration-flow-slot{
+        width:100%!important;min-width:0!important;max-width:100%!important
+      }
+      body.hq-public-page #home-register .registration-flow-circle{
+        width:36px!important;min-width:36px!important;height:36px!important;
+        font-size:13px!important;box-shadow:0 2px 7px rgba(21,21,21,.08)
+      }
+      body.hq-public-page #home-register .registration-flow-step>.row{
+        margin:0 -4px!important;min-width:0!important;max-width:calc(100% + 8px)!important
+      }
+      body.hq-public-page #home-register .registration-flow-step>.row>[class*="col"]{
+        flex:0 0 100%!important;width:100%!important;max-width:100%!important;
+        padding:0 4px!important;min-width:0!important
+      }
+      body.hq-public-page #home-register .registration-flow-step .form-group,
+      body.hq-public-page #home-register .registration-flow-step .bootstrap-select,
+      body.hq-public-page #home-register .registration-flow-step .bootstrap-select>.dropdown-toggle,
+      body.hq-public-page #home-register .registration-flow-step :is(input,select,textarea,.form-control,.iti){
+        box-sizing:border-box!important;min-width:0!important;width:100%!important;max-width:100%!important
+      }
+      body.hq-public-page #home-register .registration-flow-heading{
+        margin:14px 0 18px!important;padding:0 4px!important;
+        text-align:center!important
+      }
+      body.hq-public-page #home-register .registration-flow-actions{
+        display:flex!important;flex-wrap:wrap!important;gap:8px!important
+      }
+      body.hq-public-page #home-register .registration-flow-actions>.btn{
+        flex:1 1 0!important;min-width:0!important;padding:10px 7px!important;
+        margin:0!important
+      }
+    }
+    @media(max-width:359.98px){
+      body.hq-public-page #home-register>.container{padding:0 9px!important}
+      body.hq-public-page #home-register .hq-register-shell{padding:15px 9px!important}
+      body.hq-public-page #home-register #reg-form{padding:12px 9px!important}
+    }
+    </style>
 @endif
 
 <!-- premium member Section -->

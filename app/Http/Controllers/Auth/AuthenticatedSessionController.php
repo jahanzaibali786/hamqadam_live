@@ -7,6 +7,8 @@ use App\Http\Controllers\HoroscopeProfileMatchController;
 use App\Http\Controllers\ProfileMatchController;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Astrology;
+use App\Support\RegistrationReward;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\FamilyGuardianLink;
 use Illuminate\Http\RedirectResponse;
@@ -36,30 +38,51 @@ class AuthenticatedSessionController extends Controller
 
         app(UserActivityTracker::class)->trackLogin(auth()->user(), $request, 'web');
 
-        if (auth()->user() != null && (auth()->user()->user_type == 'admin' || auth()->user()->user_type == 'staff')) {
+        $user = $request->user();
+
+        if (in_array($user->user_type, ['admin', 'staff'], true)) {
             $redirect_route = 'admin.dashboard';
-        } elseif (FamilyGuardianLink::where('guardian_user_id', auth()->id())
+        } elseif (FamilyGuardianLink::where('guardian_user_id', $user->id)
             ->where('status', 'approved')
             ->whereNull('revoked_at')
             ->exists()) {
             $redirect_route = 'guardian_panel.index';
         } else {
-            if (auth()->user() != null && (auth()->user()->member->current_package_id != null)) {
-                $redirect_route = 'dashboard';
-            }else{
-                $redirect_route = 'packages';
+            // A member is linked through members.user_id = users.id, NOT by
+            // members.id = users.id. The relation excludes soft-deleted rows.
+            $members = $user->member()->limit(2)->get();
+            if ($members->count() !== 1) {
+                Log::warning('Login: no unique active member record for user', [
+                    'user_id' => $user->id,
+                    'active_member_count' => $members->count(),
+                    'trashed_member_count' => $user->member()->onlyTrashed()->count(),
+                ]);
+
+                // Do not create a second member, restore a deleted account, or
+                // connect a member with a coincidentally matching primary key.
+                flash('Your login succeeded, but your member profile needs review. Please contact support.')->warning();
+                return redirect()->route('contact_us');
             }
-            
-            $user  = User::where('id',Auth::user()->id)->first();
-    
-            if($user->member->auto_horoscope_profile_match ==  1){
-              $HoroscopeProfileMatchController = new HoroscopeProfileMatchController;
-              $HoroscopeProfileMatchController->match_profiles($user->id);
+
+            $member = $members->first();
+            if ($member->current_package_id === null) {
+                // Set an existing active default package ONLY for the member
+                // tied to this authenticated user; never invent a package ID.
+                $defaultPackage = RegistrationReward::registrationPackage();
+                if ($defaultPackage && (float) $defaultPackage->price <= 0) {
+                    $member->current_package_id = $defaultPackage->id;
+                    $member->save();
+                }
             }
-    
-            if($user->member->auto_profile_match ==  1){
-              $ProfileMatchController = new ProfileMatchController;
-              $ProfileMatchController->match_profiles($user->id);
+
+            $redirect_route = $member->current_package_id !== null ? 'dashboard' : 'packages';
+
+            if ((int) $member->auto_horoscope_profile_match === 1) {
+                (new HoroscopeProfileMatchController)->match_profiles($user->id);
+            }
+
+            if ((int) $member->auto_profile_match === 1) {
+                (new ProfileMatchController)->match_profiles($user->id);
             }
         }
 

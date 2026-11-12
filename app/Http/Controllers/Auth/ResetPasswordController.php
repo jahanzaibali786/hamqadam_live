@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\AuthEmailLookup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -33,9 +34,13 @@ class ResetPasswordController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $user = User::where('email', $request->email)
-            ->where('verification_code', $request->code)
-            ->first();
+        $user = AuthEmailLookup::find((string) $request->email);
+        if ($user && ! hash_equals((string) $user->verification_code, (string) $request->code)) {
+            $user = null;
+        }
+        if ($user && empty($user->verification_code)) {
+            $user = null;
+        }
 
         if (! $user) {
             flash(translate('Invalid email or verification code'))->error();

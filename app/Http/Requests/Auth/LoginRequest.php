@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use App\Models\User;
+use App\Support\AuthEmailLookup;
 use App\Services\Security\LoginSecurityService;
 
 class LoginRequest extends FormRequest
@@ -43,7 +44,10 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $login = $this->input('email');
+        $login = trim((string) $this->input('email'));
+        if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $login = AuthEmailLookup::normalize($login);
+        }
         $security = app(LoginSecurityService::class);
         $lockedFor = $security->lockoutSeconds($login, $this, 'web');
 
@@ -53,10 +57,19 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
-        $user = User::where($field, $login)->first();
+        $emailLogin = filter_var($login, FILTER_VALIDATE_EMAIL) !== false;
+        $field = $emailLogin ? 'email' : 'phone';
+        $user = $emailLogin
+            ? AuthEmailLookup::find($login)
+            : User::where('phone', $login)->first();
 
-        if (! Auth::attempt([$field => $login, 'password' => $this->password], $this->boolean('remember'))) {
+        // Use the exact stored identifier only after an unambiguous, active
+        // account match. Soft-deleted users remain excluded by the model scope.
+        $credentials = [
+            $field => $user ? $user->{$field} : $login,
+            'password' => $this->password,
+        ];
+        if (! $user || ! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
             $security->recordFailure($user, $login, $this, 'web', 'invalid_credentials');
 
@@ -97,6 +110,6 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(Str::lower(trim((string) $this->input('email'))).'|'.$this->ip());
     }
 }

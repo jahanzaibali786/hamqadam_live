@@ -7,12 +7,14 @@
             <div class="col-xxl-5 col-xl-6 col-md-8 mx-auto">
                 <div class="bg-white rounded shadow-sm p-4 text-left">
                     <h1 class="h3 fw-600">{{ translate('Reset Password') }}</h1>
-                    <p class="mb-4 opacity-60">{{translate('Enter your email address and new password and confirm password.')}} </p>
-                    <form method="POST" action="{{ route('password.update') }}">
+                    <p class="mb-4 opacity-60">{{translate('Enter your verification code and choose a new password.')}} </p>
+                    @if(!empty($resetNotice))<div class="alert alert-info" role="status">{{ $resetNotice }}</div>@endif
+                    <form method="POST" action="{{ route('password.store') }}">
                         @csrf
 
                         <div class="form-group">
-                            <input id="email" type="email" class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}" name="email" value="{{ $email ?? old('email') }}" placeholder="{{ translate('Email') }}" required autofocus>
+                            <input id="email" type="email" class="form-control" value="{{ old('email', $email ?? '') }}" placeholder="{{ translate('Email') }}" autocomplete="email" disabled aria-label="{{ translate('Email') }}">
+                            <input type="hidden" name="email" value="{{ old('email', $email ?? '') }}">
 
                             @if ($errors->has('email'))
                                 <span class="invalid-feedback" role="alert">
@@ -22,7 +24,7 @@
                         </div>
 
                         <div class="form-group">
-                            <input id="code" type="text" class="form-control{{ $errors->has('code') ? ' is-invalid' : '' }}" name="code" value="{{ $email ?? old('code') }}" placeholder="Code" required autofocus>
+                            <input id="code" type="text" class="form-control{{ $errors->has('code') ? ' is-invalid' : '' }}" name="code" value="{{ old('code') }}" placeholder="Code" required autofocus inputmode="numeric" maxlength="6" autocomplete="one-time-code">
 
                             @if ($errors->has('code'))
                                 <span class="invalid-feedback" role="alert">
