@@ -178,7 +178,7 @@ if (! $lang) {
 
 </head>
 
-<body class="text-left hq-site hq-route-{{ str_replace('.', '-', Route::currentRouteName() ?? 'page') }}">
+<body class="text-left hq-site hq-route-{{ str_replace('.', '-', Route::currentRouteName() ?? 'page') }} {{ \Illuminate\Support\Facades\View::hasSection('member_dashboard_shell') ? 'hq-member-shell' : 'hq-public-page' }}">
 
     <a href="#hamqadam-main-content" class="hq-skip-link">Skip to main content</a>
     <style>
