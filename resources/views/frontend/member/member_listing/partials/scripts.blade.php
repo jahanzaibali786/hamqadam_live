@@ -1,3 +1,37 @@
+<script>
+/* Make the open area of each discovery card a genuine keyboard-accessible
+   profile destination while preserving every existing card action/menu. */
+(function () {
+    const root = document.querySelector('.hq-ref24-discovery');
+    if (!root) return;
+
+    const interactive = 'a, button, input, select, textarea, label, summary, [contenteditable="true"], [role="button"], [role="menuitem"]';
+
+    function shouldOpen(event, card) {
+        if (!card || !card.dataset.profileUrl) return false;
+        if (event.target.closest(interactive)) return false;
+        if (event.target.closest('.hm-match-menu-panel, .dropdown-menu, .modal')) return false;
+        if (window.getSelection && String(window.getSelection()).trim()) return false;
+        return true;
+    }
+
+    root.addEventListener('click', function (event) {
+        const card = event.target.closest('.hq-clickable-member-card');
+        if (!shouldOpen(event, card)) return;
+        window.location.assign(card.dataset.profileUrl);
+    });
+
+    root.addEventListener('keydown', function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        const card = event.target.closest('.hq-clickable-member-card');
+        // Keyboard events from descendant controls must activate those controls only.
+        if (!card || event.target !== card) return;
+        event.preventDefault();
+        window.location.assign(card.dataset.profileUrl);
+    });
+})();
+</script>
+
 
 <script>
 (function(){const root=document.querySelector('.hq-ref24-discovery');if(!root)return;root.querySelectorAll('.hq24-view-toggle button').forEach(btn=>btn.addEventListener('click',()=>{root.classList.toggle('hq24-list-view',btn.dataset.cols==='one');root.querySelectorAll('.hq24-view-toggle button').forEach(x=>{x.classList.toggle('is-selected',x===btn);x.setAttribute('aria-pressed',String(x===btn));});}));})();
