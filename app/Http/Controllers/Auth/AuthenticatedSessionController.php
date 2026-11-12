@@ -60,8 +60,8 @@ class AuthenticatedSessionController extends Controller
 
                 // Do not create a second member, restore a deleted account, or
                 // connect a member with a coincidentally matching primary key.
-                return redirect()->route('contact_us')
-                    ->with('warning', 'Your login succeeded, but the member profile needs review. Please contact support.');
+                flash('Your login succeeded, but your member profile needs review. Please contact support.')->warning();
+                return redirect()->route('contact_us');
             }
 
             $member = $members->first();
@@ -69,7 +69,7 @@ class AuthenticatedSessionController extends Controller
                 // Set an existing active default package ONLY for the member
                 // tied to this authenticated user; never invent a package ID.
                 $defaultPackage = RegistrationReward::registrationPackage();
-                if ($defaultPackage) {
+                if ($defaultPackage && (float) $defaultPackage->price <= 0) {
                     $member->current_package_id = $defaultPackage->id;
                     $member->save();
                 }
