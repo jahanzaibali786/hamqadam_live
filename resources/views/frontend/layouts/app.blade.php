@@ -173,12 +173,14 @@ if (! $lang) {
 
     {{-- Final approved public website palette, after original theme styles and inline defaults. --}}
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-final-site-palette-20261105.css') }}?v=20261105-1">
+    {{-- Keep this after the existing public theme so narrow-screen overflow fixes win. --}}
+    <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-mobile-shell-20261112.css') }}?v=20261112-1">
 
     {!! get_setting('header_script') !!}
 
 </head>
 
-<body class="text-left hq-site hq-route-{{ str_replace('.', '-', Route::currentRouteName() ?? 'page') }}">
+<body class="text-left hq-site hq-route-{{ str_replace('.', '-', Route::currentRouteName() ?? 'page') }} {{ \Illuminate\Support\Facades\View::hasSection('member_dashboard_shell') ? 'hq-member-shell' : 'hq-public-page' }}">
 
     <a href="#hamqadam-main-content" class="hq-skip-link">Skip to main content</a>
     <style>

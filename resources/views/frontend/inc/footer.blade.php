@@ -87,6 +87,9 @@
     </div>
 </footer>
 
+{{-- Navigation destinations require authentication. Guests do not see a fixed
+     bottom navigation or its notification/message links. --}}
+@auth
 <div class="aiz-mobile-bottom-nav d-xl-none fixed-bottom bg-white shadow-lg border-top rounded-top" style="box-shadow: 0px -1px 10px rgb(0 0 0 / 15%)!important; ">
     <div class="row align-items-center gutters-5 text-center">
         <div class="col">
@@ -157,6 +160,7 @@
         @endif
     </div>
 </div>
+@endauth
 
 @if (Auth::check() && Auth::user()->user_type == 'member')
     <div class="aiz-mobile-side-nav collapse-sidebar-wrap sidebar-xl d-xl-none z-1035">

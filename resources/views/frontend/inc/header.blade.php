@@ -48,8 +48,14 @@
                         <i class="las la-sign-out-alt mr-1"></i>{{ translate('Logout') }}
                     </a>
                 @else
+                    {{-- Keep the two separate guest buttons on tablets/desktop. On narrow
+                         phones use one accessible account icon to prevent header overflow. --}}
                     <a class="hq-login-button" href="{{ route('login') }}">{{ translate('Log In') }}</a>
                     <a class="hq-register-button" href="{{ route('register') }}">{{ translate('Register Now') }}</a>
+                    <a class="hq-mobile-guest-account" href="{{ route('login') }}"
+                       aria-label="{{ translate('Log In') }}" title="{{ translate('Log In') }}">
+                        <i class="las la-user-circle" aria-hidden="true"></i>
+                    </a>
                 @endauth
             </div>
         </div>
