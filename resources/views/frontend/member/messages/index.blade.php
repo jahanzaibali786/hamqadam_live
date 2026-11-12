@@ -19,7 +19,7 @@
         display:none !important;
     }
 </style>
-    <div class="hm-ref-page hm-messages-reference" data-hm-screen="messages"><div class="hm-ref-msg-shell"><div class="aiz-chat">
+    <div class="hm-ref-page hm-messages-reference" data-hm-screen="messages" data-chat-avatar-fallback="{{ static_asset('assets/img/avatar-place.png') }}"><div class="hm-ref-msg-shell"><div class="aiz-chat">
         <div class="row no-gutters hm-chat-reference-grid">
             <div class="col-lg-4 hm-chat-conversation-column">
                 <div class="chat-user-list-wrap z-1035">
