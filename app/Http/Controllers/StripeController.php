@@ -109,6 +109,48 @@ class StripeController extends Controller
             ->where('user_id', $request->user()->id)
             ->first();
         if ($existingPayment) {
+            // An earlier verified payment may have been recorded while the
+            // member relation was missing. Re-verify its exact Stripe charge
+            // before offering idempotent activation after profile repair.
+            if (($existingPayment->metadata['activation_status'] ?? null) === 'pending_review' &&
+                $existingPayment->payment_status === 'Paid') {
+                try {
+                    Stripe::setApiKey(config('services.stripe.secret') ?: env('STRIPE_SECRET'));
+                    $paidSession = CheckoutSession::retrieve($sessionId);
+                    if ((string) $paidSession->status !== 'complete' ||
+                        (string) $paidSession->payment_status !== 'paid' ||
+                        (string) ($paidSession->metadata->user_id ?? '') !== (string) $request->user()->id ||
+                        (string) ($paidSession->metadata->payment_type ?? '') !== 'package_payment' ||
+                        (string) ($paidSession->metadata->package_id ?? '') !== (string) $existingPayment->package_id ||
+                        (int) $paidSession->amount_total !== (int) round((float) $existingPayment->payable_amount * 100) ||
+                        strtolower((string) $paidSession->currency) !== strtolower((string) $existingPayment->currency)) {
+                        throw new \RuntimeException('Stored payment did not match Stripe.');
+                    }
+
+                    return app(PackagePaymentController::class)->package_payment_done([
+                        'user_id' => $request->user()->id,
+                        'package_id' => $existingPayment->package_id,
+                        'payment_method' => 'stripe',
+                        'amount' => $existingPayment->payable_amount,
+                        'package_amount' => $existingPayment->amount,
+                        'discount_amount' => $existingPayment->discount_amount,
+                        'payable_amount' => $existingPayment->payable_amount,
+                        'coupon_id' => $existingPayment->coupon_id,
+                        'currency' => $existingPayment->currency,
+                        'stripe_checkout_session_id' => $sessionId,
+                        'payment_attempt_id' => $existingPayment->metadata['payment_attempt_id'] ?? '',
+                    ], $existingPayment->payment_details);
+                } catch (\Throwable $e) {
+                    Log::warning('Pending Stripe package could not be reconciled', [
+                        'payment_id' => $existingPayment->id, 'error' => $e->getMessage(),
+                    ]);
+
+                    return redirect()->route('contact_us')->with('warning',
+                        'Your payment was received but requires manual review. Quote purchase code ' .
+                        $existingPayment->payment_code . '. Do not pay again.');
+                }
+            }
+
             return redirect()->route('package_payment.invoice', $existingPayment->id);
         }
 
