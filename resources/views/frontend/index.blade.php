@@ -25,26 +25,11 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-6 col-xl-6 d-none d-lg-block">
-                @php
-                    $featured = collect($premium_members)->concat($new_members)->unique('id');
-                    $hero_female = $featured->first(fn($u) => (int) $u->member?->gender === 2);
-                    $hero_male = $featured->first(fn($u) => (int) $u->member?->gender === 1);
-                @endphp
-                <div class="hq-hero-visual" aria-hidden="true">
-                    <div class="hq-match-float hq-match-float-top">
-                        <span class="hq-match-score">96% {{ \App\Support\HomePageContent::get('hero_match_label') }}</span>
-                        <span class="hq-match-verified"><i class="las la-shield-alt"></i> {{ \App\Support\HomePageContent::get('hero_verified_label') }}</span>
-                        <strong>{{ $hero_female ? $hero_female->first_name : \App\Support\HomePageContent::get('hero_female_fallback') }}</strong>
-                        <small>ID: {{ $hero_female ? ($hero_female->code ?: $hero_female->id) : '202609213' }} · {{ $hero_female?->member?->permanent_address?->city ?: ($hero_female?->member?->present_address?->city ?: \App\Support\HomePageContent::get('hero_fallback_city_female')) }}</small>
-                    </div>
-                    <div class="hq-hero-photo-caption"><span>{{ \App\Support\HomePageContent::get('hero_sanctuary_label') }}</span><strong>{{ \App\Support\HomePageContent::get('hero_sanctuary_caption') }}</strong></div>
-                    <div class="hq-match-float hq-match-float-bottom">
-                        <span class="hq-match-score">{{ $hero_male && $hero_male->membership == 2 ? \App\Support\HomePageContent::get('hero_premium_label') : \App\Support\HomePageContent::get('hero_standard_label') }}</span>
-                        <strong>{{ $hero_male ? $hero_male->first_name : \App\Support\HomePageContent::get('hero_male_fallback') }}</strong>
-                        <small>ID: {{ $hero_male ? ($hero_male->code ?: $hero_male->id) : '202609201' }} · {{ $hero_male?->member?->permanent_address?->city ?: ($hero_male?->member?->present_address?->city ?: \App\Support\HomePageContent::get('hero_fallback_city_male')) }}</small>
-                    </div>
-                </div>
+            {{-- The photograph is the full visual: remove old floating member
+                 cards, numeric IDs and overlaid caption on all viewports. --}}
+            <div class="col-lg-6 col-xl-6 hq-home-hero-photo-column">
+                <div class="hq-hero-visual hq-hero-photo-only" role="img"
+                     aria-label="Wedding jewellery photograph"></div>
             </div>
         </div>
 
