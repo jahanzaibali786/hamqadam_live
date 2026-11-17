@@ -14,6 +14,12 @@
                   <a href="{{ \App\Support\PublicNavigation::link($item['url']) }}" class="{{ rtrim(parse_url($item['url'],PHP_URL_PATH) ?: '', '/') === request()->getPathInfo() ? 'is-active' : '' }}">{{ $item['label'] }}</a>
                 @endforeach
             </nav>
+            <button type="button" class="hq-public-menu-toggle d-lg-none"
+                aria-label="{{ translate('Open navigation menu') }}"
+                aria-controls="hq-public-mobile-navigation"
+                aria-expanded="false">
+                <i class="las la-bars" aria-hidden="true"></i>
+            </button>
             <div class="hq-reference-actions">
                 @auth
                     @if(auth()->user()->user_type === 'member')
@@ -59,11 +65,28 @@
                 @endauth
             </div>
         </div>
-        <div class="hq-reference-mobile-menu d-lg-none">
+        {{-- Single mobile navigation drawer; never show a horizontally scrolling link bar. --}}
+        <nav id="hq-public-mobile-navigation" class="hq-reference-mobile-menu d-lg-none"
+             aria-label="{{ translate('Mobile navigation') }}" hidden>
           @foreach(\App\Support\PublicNavigation::items('header') as $item)
-            <a href="{{ \App\Support\PublicNavigation::link($item['url']) }}">{{ $item['label'] }}</a>
+            @php
+              $navPath = parse_url(\App\Support\PublicNavigation::link($item['url']), PHP_URL_PATH) ?: '/';
+              $navActive = rtrim($navPath, '/') === rtrim(request()->getPathInfo(), '/');
+            @endphp
+            <a href="{{ \App\Support\PublicNavigation::link($item['url']) }}"
+               class="{{ $navActive ? 'is-active' : '' }}"
+               @if($navActive) aria-current="page" @endif>{{ $item['label'] }}</a>
           @endforeach
-        </div>
+          <div class="hq-public-mobile-menu-account">
+            @guest
+              <a href="{{ route('login') }}"><i class="las la-sign-in-alt" aria-hidden="true"></i> {{ translate('Log In') }}</a>
+              <a href="{{ route('register') }}"><i class="las la-user-plus" aria-hidden="true"></i> {{ translate('Register Now') }}</a>
+            @else
+              <a href="{{ auth()->user()->user_type === 'member' ? route('dashboard') : route('admin.dashboard') }}"><i class="las la-user-circle" aria-hidden="true"></i> {{ translate('Dashboard') }}</a>
+              <a href="{{ route('user.logout') }}"><i class="las la-sign-out-alt" aria-hidden="true"></i> {{ translate('Logout') }}</a>
+            @endguest
+          </div>
+        </nav>
     </header>
 </div>
 <div class="hq-legacy-header">
