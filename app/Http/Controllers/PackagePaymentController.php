@@ -12,6 +12,8 @@ use App\Models\Wallet;
 use App\Notifications\DbStoreNotification;
 use App\Services\FirbaseNotification;
 use App\Support\RegistrationReward;
+use App\Services\Payments\MemberPackageFulfillmentService;
+use Illuminate\Support\Facades\Log;
 use App\Utility\EmailUtility;
 use App\Utility\SmsUtility;
 use Auth;
@@ -61,6 +63,16 @@ class PackagePaymentController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+        // Fail before starting a new charge when the active member relation
+        // is missing or ambiguous. An already-paid checkout is handled
+        // separately by the reconciliation-safe completion endpoint.
+        $activeMemberCount = Member::query()->where('user_id', $user->id)->limit(2)->count();
+        if ($user->user_type !== 'member' || $activeMemberCount !== 1) {
+            Log::warning('Package checkout blocked: member relation unresolved', [
+                'user_id' => $user->id, 'active_member_count' => $activeMemberCount,
+            ]);
+            return back()->with('error', 'Your member profile needs review before purchasing a package. Please contact support.');
+        }
         $request->validate([
             'package_id' => ['required', 'integer', 'exists:packages,id'],
             'payment_option' => ['required', 'string'],
@@ -82,6 +94,7 @@ class PackagePaymentController extends Controller
         $data['package_id']     = (int) $request->package_id;
         $data['payment_method'] = $request->payment_option;
         $data['user_id'] = Auth::user()->id;
+        $data['payment_attempt_id'] = (string) \Illuminate\Support\Str::uuid();
 
         $request->session()->put('payment_type', 'package_payment');
         $request->session()->put('payment_data', $data);
@@ -319,103 +332,89 @@ class PackagePaymentController extends Controller
     public function package_payment_done($payment_data, $payment_details)
     {
         $user = auth()->user();
-
-        $package_payment = new PackagePayment();
-        $package_payment->payment_code = date('ymd-His');
-        $package_payment->user_id = $user->id;
-        $package_payment->package_id = $payment_data['package_id'];
-        $package_payment->payment_method = $payment_data['payment_method'];
-        $package_payment->payment_status = 'Paid';
-        $package_payment->amount = $payment_data['package_amount'] ?? $payment_data['amount'];
-        $package_payment->discount_amount = $payment_data['discount_amount'] ?? 0;
-        $package_payment->payable_amount = $payment_data['payable_amount'] ?? $payment_data['amount'];
-        $package_payment->coupon_id = $payment_data['coupon_id'] ?? null;
-        $package_payment->payment_details = $payment_details;
-        $package_payment->offline_payment = 2;
-        $package_payment->save();
-        app(\App\Services\Referral\PaidPackageReferralRewardService::class)->award($package_payment);
-
-        if ($package_payment->coupon_id) {
-            PaymentCoupon::whereKey($package_payment->coupon_id)->increment('used_count');
+        if (! $user || ! is_array($payment_data)) {
+            return redirect()->route('login')
+                ->with('error', 'Your payment session needs to be reviewed by support.');
         }
 
-        $member = Member::where('user_id', $user->id)->first();
-        $package = Package::where('id', $payment_data['package_id'])->first();
+        // For Stripe, ONLY this trusted server verification path may
+        // provide a Checkout Session ID in payment_data. It is verified in
+        // StripeController before reaching here.
+        try {
+            $result = app(MemberPackageFulfillmentService::class)
+                ->fulfill($user, $payment_data, $payment_details);
+        } catch (\Throwable $e) {
+            Log::error('Package activation failed after payment callback', [
+                'user_id' => $user->id,
+                'payment_method' => $payment_data['payment_method'] ?? null,
+                'package_id' => $payment_data['package_id'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
 
-        $member->current_package_id             = $package->id;
-        $member->remaining_interest             = $member->remaining_interest + $package->express_interest;
-        $member->remaining_photo_gallery        = $member->remaining_photo_gallery + $package->photo_gallery;
-        $member->remaining_contact_view         = $member->remaining_contact_view + $package->contact;
-        $member->remaining_profile_viewer_view  = $member->remaining_profile_viewer_view + $package->profile_viewers_view;
-        $member->remaining_profile_image_view   = $member->remaining_profile_image_view + $package->profile_image_view;
-        $member->remaining_gallery_image_view   = $member->remaining_gallery_image_view + $package->gallery_image_view;
-        $member->auto_profile_match             = $package->auto_profile_match;
-        $member->auto_horoscope_profile_match             = $package->auto_horoscope_profile_match;
-        $member->package_validity               = Carbon::now()->addDays($package->validity)->format('Y-m-d');
+            // Do not pretend that a successful gateway charge failed or
+            // recommend another payment. Keep session for support review.
+            return redirect()->route('package_purchase_history')->with('error',
+                'We could not complete the package activation. Please contact support with your payment receipt; do not pay again.');
+        }
 
-        if ($member->save()) {
-            if ($user->member->current_package_id == 1){
-                $user->membership = 1;
-            }else{
-                $user->membership = 2;
-            }
-            $user->save();
+        $payment = $result['payment'];
 
-            if (addon_activation('referral_system') && $user->referred_by != null && $user->referral_comission == 0) {
-                // For Referred by user
-                $reffered_by = User::where('id', $user->referred_by)->first();
-                $wallet = new Wallet();
-                $wallet->user_id = $reffered_by->id;
-                $wallet->amount = get_setting('referred_by_user_commission');
-                $wallet->payment_method = 'reffered_commission';
-                $wallet->payment_details = '';
-                $wallet->referral_user = $user->id;
-                $wallet->save();
-
-                $reffered_by->balance = $reffered_by->balance + get_setting('referred_by_user_commission');
-                $reffered_by->save();
-
-                $user->referral_comission = 1;
-                $user->save();
-            }
-
-            // Package Payment Store Notification for member
+        // The same verified Checkout can return repeatedly; never resend
+        // credits, coupons or referral benefits on duplicate callbacks.
+        if ($result['newly_activated']) {
             try {
-                $notify_type = 'package_purchase';
-                $id = unique_notify_id();
-                $notify_by = $user->id;
-                $info_id = $package_payment->id;
-                $message = $user->first_name . ' ' . $user->last_name .' '. translate('has been purchased a new package. Payment Code: ') . $package_payment->payment_code;
-                $route = route('package-payments.index');
-
-                // fcm
-                if (get_setting('firebase_push_notification') == 1) {
-                    $fcmTokens = User::where('user_type', 'admin')
-                        ->whereNotNull('fcm_token')
-                        ->pluck('fcm_token')
-                        ->toArray();
-                    Larafirebase::withTitle(str_replace("_", " ", $notify_type))
-                        ->withBody($message)
-                        ->sendMessage($fcmTokens);
-                }
-                // end of fcm
-
-                Notification::send(User::where('user_type', 'admin')->first(), new DbStoreNotification($notify_type, $id, $notify_by, $info_id, $message, $route));
-            } catch (\Exception $e) {
-                // dd($e);
+                app(\App\Services\Referral\PaidPackageReferralRewardService::class)->award($payment);
+            } catch (\Throwable $e) {
+                Log::warning('Post-payment referral award failed', [
+                    'payment_id' => $payment->id, 'error' => $e->getMessage(),
+                ]);
             }
 
-            // Payment approval email send to member
-            if ($user->email != null && get_email_template('package_purchase_email', 'status')) {
-                EmailUtility::package_purchase_email($user, $package_payment);
+            try {
+                $notifyType = 'package_purchase';
+                $infoId = $payment->id;
+                $message = $user->first_name . ' ' . $user->last_name . ' ' .
+                    translate('has purchased a new package. Payment Code: ') . $payment->payment_code;
+                if (get_setting('firebase_push_notification') == 1) {
+                    $fcmTokens = User::where('user_type', 'admin')->whereNotNull('fcm_token')
+                        ->pluck('fcm_token')->toArray();
+                    Larafirebase::withTitle(str_replace('_', ' ', $notifyType))
+                        ->withBody($message)->sendMessage($fcmTokens);
+                }
+                $admin = User::where('user_type', 'admin')->first();
+                if ($admin) {
+                    Notification::send($admin, new DbStoreNotification(
+                        $notifyType, unique_notify_id(), $user->id, $infoId,
+                        $message, route('package-payments.index')
+                    ));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Package-purchase notification failed', [
+                    'payment_id' => $payment->id, 'error' => $e->getMessage(),
+                ]);
+            }
+
+            if ($user->email && get_email_template('package_purchase_email', 'status')) {
+                try {
+                    EmailUtility::package_purchase_email($user, $payment);
+                } catch (\Throwable $e) {
+                    Log::warning('Package purchase email failed', [
+                        'payment_id' => $payment->id, 'error' => $e->getMessage(),
+                    ]);
+                }
             }
         }
 
         Session::forget('payment_data');
         Session::forget('payment_type');
 
+        if (! $result['activated']) {
+            return redirect()->route('package_payment.invoice', $payment->id)->with('warning',
+                'Your payment has been recorded but your package needs account review. Do not pay again; contact support with this receipt.');
+        }
+
         flash(translate('Payment completed'))->success();
-        return redirect()->route('package_payment.invoice', $package_payment->id);
+        return redirect()->route('package_payment.invoice', $payment->id);
     }
 
     public function package_purchase_history(Request $request)
