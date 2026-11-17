@@ -33,10 +33,7 @@
                     </div>
                     <div class="row">
                         <div class="col-lg-12">
-                            <div class="form-group mb-3">
-                                <label class="form-label" for="name">{{ translate('Member ID') }}</label>
-                                <input type="text" name="member_code" value="{{ $member_code }}" class="form-control">
-                            </div>
+
                         </div>
                     </div>
                     <div class="row">
