@@ -1,0 +1,202 @@
+/* Mobile horizontal overflow repair.
+ *
+ * Symptom at ~425px: Chrome allows document-level sideways scrolling,
+ * shifting BOTH the fixed public navbar and hero out of view.
+ * Keep the root document at viewport width, fix the flex/grid sizing that
+ * contributes to overflow, and do not create a vertical scroll container.
+ * This file is loaded after the previously shipped public navbar CSS.
+ */
+@media (max-width: 991.98px) {
+  /* clip is preferable to hidden here: it does not turn the outer layout
+     into a second scrolling container or break vertical page scrolling. */
+  html:has(body.hq-public-page) {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  body.hq-public-page {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-left: 0!important;
+    margin-right: 0!important;
+    overflow-x: clip;
+  }
+  body.hq-public-page .aiz-main-wrapper,
+  body.hq-public-page #hamqadam-main-content {
+    box-sizing: border-box!important;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  /* The header is anchored to the viewport, not a wide flex descendant.
+     Keep the mobile account just LEFT of the rightmost hamburger. */
+  body.hq-public-page .hq-reference-header {
+    box-sizing: border-box!important;
+    left: 0!important;
+    right: 0!important;
+    width: 100%!important;
+    max-width: 100%!important;
+    margin: 0!important;
+    transform: none!important;
+  }
+  body.hq-public-page .hq-reference-navbar {
+    box-sizing: border-box!important;
+    width: 100%!important;
+    max-width: 100%!important;
+    min-width: 0!important;
+  }
+  body.hq-public-page .hq-reference-navbar .hq-reference-navbar-inner {
+    box-sizing: border-box!important;
+    display: flex!important;
+    align-items: center!important;
+    flex-wrap: nowrap!important;
+    width: 100%!important;
+    max-width: 100%!important;
+    min-width: 0!important;
+    margin: 0 auto!important;
+    padding-left: 16px!important;
+    padding-right: 16px!important;
+    gap: 8px!important;
+  }
+  body.hq-public-page .hq-reference-navbar-inner>.hq-reference-brand {
+    box-sizing: border-box!important;
+    flex: 1 1 0%!important;
+    width: auto!important;
+    min-width: 0!important;
+    max-width: 100%!important;
+    margin: 0!important;
+    overflow: hidden!important;
+  }
+  body.hq-public-page .hq-reference-navbar-inner>.hq-reference-brand>span:last-child {
+    min-width: 0!important;
+    overflow: hidden;
+  }
+  body.hq-public-page .hq-reference-navbar-inner>.hq-reference-actions {
+    flex-shrink: 0!important;
+    margin: 0!important;
+  }
+  body.hq-public-page .hq-reference-navbar-inner>.hq-public-menu-toggle {
+    flex-shrink: 0!important;
+    margin: 0!important;
+  }
+  /* The open menu is still a vertical dropdown, never a 100vw-wide
+     overflowing child of a padded container. */
+  body.hq-public-page #hq-public-mobile-navigation:not([hidden]) {
+    box-sizing: border-box!important;
+    width: 100%!important;
+    max-width: 100%!important;
+    min-width: 0!important;
+    left: 0!important;
+    right: 0!important;
+    overflow-x: clip!important;
+    overflow-y: auto!important;
+  }
+
+  /* Bootstrap rows and inherited desktop cards can otherwise contribute
+     their intrinsic/min-content width to the entire flex page wrapper. */
+  body.hq-public-page .hq-design-home-hero,
+  body.hq-public-page .hq-design-home-hero>.container {
+    box-sizing: border-box!important;
+    width: 100%!important;
+    max-width: 100%!important;
+    min-width: 0!important;
+    margin-left: 0!important;
+    margin-right: 0!important;
+  }
+  body.hq-public-page .hq-design-home-hero {
+    overflow-x: clip!important;
+  }
+  body.hq-public-page .hq-design-home-hero>.container {
+    padding-left: 16px!important;
+    padding-right: 16px!important;
+  }
+  body.hq-public-page .hq-design-home-hero .hq-design-hero-row {
+    box-sizing: border-box!important;
+    display: flex!important;
+    flex-wrap: wrap!important;
+    width: 100%!important;
+    min-width: 0!important;
+    max-width: 100%!important;
+    margin-left: 0!important;
+    margin-right: 0!important;
+  }
+  body.hq-public-page .hq-design-home-hero .hq-design-hero-row>[class*="col-"] {
+    box-sizing: border-box!important;
+    min-width: 0!important;
+    max-width: 100%!important;
+    padding-left: 0!important;
+    padding-right: 0!important;
+  }
+  body.hq-public-page .hq-design-home-hero .hq-design-hero-row>.col-lg-6 {
+    flex: 0 0 100%!important;
+    width: 100%!important;
+    max-width: 100%!important;
+  }
+  body.hq-public-page .hq-design-home-hero .hq-hero-copy,
+  body.hq-public-page .hq-design-home-hero .hq-hero-actions,
+  body.hq-public-page .hq-design-home-hero .hq-hero-stats,
+  body.hq-public-page .hq-design-home-hero .hq-design-search {
+    box-sizing: border-box!important;
+    min-width: 0!important;
+    max-width: 100%!important;
+  }
+  body.hq-public-page .hq-design-home-hero .hq-hero-copy h1,
+  body.hq-public-page .hq-design-home-hero .hq-hero-copy p {
+    max-width: 100%!important;
+    overflow-wrap: break-word;
+  }
+  body.hq-public-page .hq-design-home-hero .hq-hero-actions,
+  body.hq-public-page .hq-design-home-hero .hq-hero-stats {
+    display: grid!important;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    width: 100%!important;
+    gap: 8px!important;
+  }
+  body.hq-public-page .hq-design-home-hero .hq-hero-stats {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+  }
+  body.hq-public-page .hq-design-home-hero .hq-hero-actions>*,
+  body.hq-public-page .hq-design-home-hero .hq-hero-stats>* {
+    box-sizing: border-box!important;
+    min-width: 0!important;
+    max-width: 100%!important;
+  }
+  body.hq-public-page .hq-design-home-hero .hq-design-search {
+    width: 100%!important;
+    margin-left: 0!important;
+    margin-right: 0!important;
+  }
+  body.hq-public-page .hq-design-home-hero .hq-design-search .row {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: calc(100% + 10px);
+  }
+  body.hq-public-page .hq-design-home-hero .hq-design-search .row>[class*="col"] {
+    min-width: 0!important;
+  }
+  /* Constrain other public cards and media without changing their vertical
+     layout or hiding interactive content. */
+  body.hq-public-page #hamqadam-main-content :is(img,video,iframe,svg) {
+    max-width: 100%;
+  }
+}
+@media (max-width: 575.98px) {
+  body.hq-public-page .hq-reference-navbar .hq-reference-navbar-inner {
+    padding-left: 14px!important;
+    padding-right: 14px!important;
+    gap: 6px!important;
+  }
+}
+@media (max-width: 359.98px) {
+  body.hq-public-page .hq-reference-navbar .hq-reference-navbar-inner {
+    padding-left: 12px!important;
+    padding-right: 12px!important;
+    gap: 5px!important;
+  }
+  body.hq-public-page .hq-design-home-hero>.container {
+    padding-left: 12px!important;
+    padding-right: 12px!important;
+  }
+}
