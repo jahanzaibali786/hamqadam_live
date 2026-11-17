@@ -14,12 +14,6 @@
                   <a href="{{ \App\Support\PublicNavigation::link($item['url']) }}" class="{{ rtrim(parse_url($item['url'],PHP_URL_PATH) ?: '', '/') === request()->getPathInfo() ? 'is-active' : '' }}">{{ $item['label'] }}</a>
                 @endforeach
             </nav>
-            <button type="button" class="hq-public-menu-toggle d-lg-none"
-                aria-label="{{ translate('Open navigation menu') }}"
-                aria-controls="hq-public-mobile-navigation"
-                aria-expanded="false">
-                <i class="las la-bars" aria-hidden="true"></i>
-            </button>
             <div class="hq-reference-actions">
                 @auth
                     @if(auth()->user()->user_type === 'member')
@@ -64,6 +58,12 @@
                     </a>
                 @endauth
             </div>
+            <button type="button" class="hq-public-menu-toggle d-lg-none"
+                aria-label="{{ translate('Open navigation menu') }}"
+                aria-controls="hq-public-mobile-navigation"
+                aria-expanded="false">
+                <i class="las la-bars" aria-hidden="true"></i>
+            </button>
         </div>
         {{-- Single mobile navigation drawer; never show a horizontally scrolling link bar. --}}
         <nav id="hq-public-mobile-navigation" class="hq-reference-mobile-menu d-lg-none"
