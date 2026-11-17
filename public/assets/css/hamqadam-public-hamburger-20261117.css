@@ -212,11 +212,11 @@
   body.hq-public-page .hq-reference-header .hq-reference-actions>.hq-dashboard-pill>span {
     display:none!important;
   }
-  body.hq-public-page .hq-reference-header .hq-reference-actions>.hq-dashboard-pill:has(.la-tachometer-alt)::before {
-    content:"\\f007";
-    font-family:"Line Awesome Free";
-    font-weight:900;
-    font-size:20px;
+  body.hq-public-page .hq-reference-header .hq-reference-actions>.hq-dashboard-pill .hq-admin-mobile-icon {
+    display:inline-block!important;
+    font-size:22px!important;
+    margin:0!important;
+    color:#A45F7B!important;
   }
   body.hq-public-page .hq-reference-header .hq-reference-actions>.hq-dashboard-pill:focus-visible,
   body.hq-public-page .hq-reference-header .hq-reference-actions>.hq-mobile-guest-account:focus-visible {
@@ -252,4 +252,8 @@
   body.hq-public-page .hq-reference-header .hq-reference-actions>.hq-dashboard-pill .hq-nav-avatar {
     width:29px!important;height:29px!important;min-width:29px!important
   }
+}
+
+@media(min-width:992px){
+  .hq-reference-actions .hq-admin-mobile-icon{display:none!important}
 }
