@@ -14,12 +14,6 @@
                   <a href="{{ \App\Support\PublicNavigation::link($item['url']) }}" class="{{ rtrim(parse_url($item['url'],PHP_URL_PATH) ?: '', '/') === request()->getPathInfo() ? 'is-active' : '' }}">{{ $item['label'] }}</a>
                 @endforeach
             </nav>
-            <button type="button" class="hq-public-menu-toggle d-lg-none"
-                aria-label="{{ translate('Open navigation menu') }}"
-                aria-controls="hq-public-mobile-navigation"
-                aria-expanded="false">
-                <i class="las la-bars" aria-hidden="true"></i>
-            </button>
             <div class="hq-reference-actions">
                 @auth
                     @if(auth()->user()->user_type === 'member')
@@ -45,7 +39,8 @@
                             <i class="las la-angle-right ml-1 opacity-60"></i>
                         </a>
                     @else
-                        <a class="hq-dashboard-pill" href="{{ route('admin.dashboard') }}">
+                        <a class="hq-dashboard-pill" href="{{ route('admin.dashboard') }}" aria-label="{{ translate('Admin Panel') }}">
+                            <i class="las la-user-circle hq-admin-mobile-icon" aria-hidden="true"></i>
                             <i class="las la-tachometer-alt mr-1"></i>
                             <span>{{ translate('Admin Panel') }}</span>
                         </a>
@@ -64,6 +59,12 @@
                     </a>
                 @endauth
             </div>
+            <button type="button" class="hq-public-menu-toggle d-lg-none"
+                aria-label="{{ translate('Open navigation menu') }}"
+                aria-controls="hq-public-mobile-navigation"
+                aria-expanded="false">
+                <i class="las la-bars" aria-hidden="true"></i>
+            </button>
         </div>
         {{-- Single mobile navigation drawer; never show a horizontally scrolling link bar. --}}
         <nav id="hq-public-mobile-navigation" class="hq-reference-mobile-menu d-lg-none"
