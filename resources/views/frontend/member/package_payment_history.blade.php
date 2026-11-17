@@ -39,7 +39,9 @@
                           </td>
                           <td>{{ single_price($package_payment->amount) }}</td>
                           <td class="text-center">
-                            @if ($package_payment->payment_status == 'Paid')
+                            @if (($package_payment->metadata['activation_status'] ?? null) === 'pending_review')
+                                <span class="badge badge-inline badge-warning">Paid — Activation Pending Review</span>
+                            @elseif ($package_payment->payment_status == 'Paid')
                                 <span class="badge badge-inline badge-success">{{ translate('Paid')}}</span>
                             @elseif ($package_payment->payment_status == 'Due')
                                 <span class="badge badge-inline badge-warning">{{ translate('Pending Approval')}}</span>
