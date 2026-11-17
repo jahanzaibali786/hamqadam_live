@@ -178,6 +178,7 @@ if (! $lang) {
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-hamburger-20261117.css') }}?v=20261117-2">
     {{-- Final mobile overflow constraints after navbar + homepage theme CSS. --}}
     <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-public-overflow-fix-20261117.css') }}?v=20261117-1">
+    <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-about-home-privacy-20261117.css') }}?v=20261117-1">
     <script src="{{ static_asset('assets/js/hamqadam-public-hamburger-20261117.js') }}?v=20261117-1" defer></script>
 
     {!! get_setting('header_script') !!}
