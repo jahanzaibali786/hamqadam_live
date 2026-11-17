@@ -97,7 +97,7 @@ class StripeController extends Controller
         $sessionId = trim((string) $request->query('session_id', ''));
 
         if (! $request->user() || ! preg_match('/^cs_(test|live)_[A-Za-z0-9_]+$/', $sessionId)) {
-            return redirect()->route('package_purchase_history')
+            return redirect()->route('contact_us')
                 ->with('error', 'We could not identify this checkout. Please contact support before retrying.');
         }
 
@@ -157,7 +157,7 @@ class StripeController extends Controller
         if (! is_array($data) || ! in_array($type, ['package_payment', 'wallet_payment', 'custom_coins'], true) ||
             (int) ($data['user_id'] ?? 0) !== (int) $request->user()->id ||
             ! hash_equals((string) ($data['stripe_checkout_session_id'] ?? ''), $sessionId)) {
-            return redirect()->route('package_purchase_history')->with('error',
+            return redirect()->route('contact_us')->with('error',
                 'We could not restore the payment session. Contact support with your Stripe receipt; do not pay again.');
         }
 
@@ -200,7 +200,7 @@ class StripeController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return redirect()->route('package_purchase_history')->with('error',
+            return redirect()->route('contact_us')->with('error',
                 'Your payment could not be verified or activated yet. Contact support with the Stripe receipt; do not pay again.');
         }
     }
