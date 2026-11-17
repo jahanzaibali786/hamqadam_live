@@ -39,7 +39,8 @@
                             <i class="las la-angle-right ml-1 opacity-60"></i>
                         </a>
                     @else
-                        <a class="hq-dashboard-pill" href="{{ route('admin.dashboard') }}">
+                        <a class="hq-dashboard-pill" href="{{ route('admin.dashboard') }}" aria-label="{{ translate('Admin Panel') }}">
+                            <i class="las la-user-circle hq-admin-mobile-icon" aria-hidden="true"></i>
                             <i class="las la-tachometer-alt mr-1"></i>
                             <span>{{ translate('Admin Panel') }}</span>
                         </a>
