@@ -377,6 +377,21 @@ class HomeController extends Controller
             $users = $users->whereIn('id', $user_ids);
         }
 
+        // Frontend name search replaces the member-ID search field.
+        // Keep the legacy code filter for existing bookmarked/admin URLs,
+        // but do not expose identifiers on public/member screens.
+        $nameSearch = trim((string) $request->query('search', ''));
+        if ($nameSearch !== '') {
+            $nameSearch = mb_substr($nameSearch, 0, 80);
+            foreach (preg_split('/\\s+/', $nameSearch, -1, PREG_SPLIT_NO_EMPTY) as $part) {
+                $term = '%' . addcslashes($part, '%_\\\\') . '%';
+                $users->where(function ($query) use ($term) {
+                    $query->where('users.first_name', 'like', $term)
+                        ->orWhere('users.last_name', 'like', $term);
+                });
+            }
+        }
+
         // Search by Member Code
         if (!empty($member_code)) {
             $users = $users->where('code', $member_code);
