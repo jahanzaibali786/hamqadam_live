@@ -3,6 +3,13 @@
     <div class="container">
         <div class="card z-depth-2-top mt-4 mb-4">
             <div class="card-body">
+                @if(($payment->metadata['activation_status'] ?? null) === 'pending_review')
+                    <div class="alert alert-warning" role="status">
+                        <strong>Payment received — package activation pending review.</strong>
+                        Your payment has been recorded. Please contact support with purchase code
+                        {{ $payment->payment_code }}. Do not pay again.
+                    </div>
+                @endif
                 <div class="print" id="printableArea">
                     <div class="row">
                         <div class="col-sm-12">
