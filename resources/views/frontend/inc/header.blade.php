@@ -283,6 +283,10 @@
         </div>
 
         @if (Auth::check() && auth()->user()->user_type == 'member')
+            {{-- This legacy secondary navigation is included on all public pages.
+                 A logged-in user may have no active members.user_id relation
+                 (including soft-deleted records). Do not dereference null. --}}
+            @php($headerMember = auth()->user()->member)
             <div class="border-top d-none d-lg-block">
                 <div class="container">
                     <ul class="list-inline d-flex align-items-center mb-0">
@@ -316,7 +320,7 @@
                                 <span>{{ translate('Messaging') }}</span>
                             </a>
                         </li>
-                        @if(Auth::user()->member->auto_profile_match == 1)
+                        @if((int) ($headerMember?->auto_profile_match ?? 0) === 1)
                             <li class="list-inline-item">
                                 <a href="{{ route('my_matched_profiles') }}"
                                     class="text-reset d-inline-block px-4 py-3 fw-600 {{ areActiveRoutes(['my_matched_profiles'],'text-primary-grad opacity-100') }}">
@@ -324,7 +328,7 @@
                                 </a>
                             </li>
                         @endif
-                        @if(Auth::user()->member->auto_horoscope_profile_match == 1)
+                        @if((int) ($headerMember?->auto_horoscope_profile_match ?? 0) === 1)
                             <li class="list-inline-item">
                                 <a href="{{ route('horoscope_matched_profiles') }}"
                                     class="text-reset d-inline-block px-4 py-3 fw-600 {{ areActiveRoutes(['horoscope_matched_profiles'],'text-primary-grad opacity-100') }}">
