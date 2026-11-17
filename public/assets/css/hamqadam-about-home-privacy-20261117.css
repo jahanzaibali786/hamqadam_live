@@ -1,8 +1,8 @@
 /* About Us: the CTA title should be white over the branded rose panel.
    The global editorial heading selector uses !important; use a more
    specific, About-only selector rather than recoloring all site headings. */
-body.hq-public-page .hqed.hqed-about .hqed-cta-wide .hqed-cta-inner h2,
-body.hq-public-page .hqed.hqed-about .hqed-cta-wide .hqed-cta-inner h2 * {
+body.hq-public-page .hqed .hqed-cta-wide .hqed-cta-inner h2,
+body.hq-public-page .hqed .hqed-cta-wide .hqed-cta-inner h2 * {
   color:#FFFFFF!important;
   -webkit-text-fill-color:#FFFFFF!important;
 }
