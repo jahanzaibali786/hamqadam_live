@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Currency;
 use App\Models\PackagePayment;
+use App\Models\User;
+use App\Models\Wallet;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Checkout\Session as CheckoutSession;
@@ -23,10 +26,12 @@ class StripeController extends Controller
 
         if (! $request->user() || ! is_array($data) ||
             ! in_array($type, ['package_payment', 'wallet_payment', 'custom_coins'], true) ||
-            (int) ($data['user_id'] ?? 0) !== (int) $request->user()->id) {
+            (isset($data['user_id']) &&
+                (int) $data['user_id'] !== (int) $request->user()->id)) {
             return response()->json(['message' => 'Payment session expired. Please restart checkout.'], 422);
         }
 
+        $data['user_id'] = (int) $request->user()->id;
         $amount = round((float) ($data['amount'] ?? -1) * 100);
         if ($amount <= 0) {
             return response()->json(['message' => 'Invalid checkout amount.'], 422);
@@ -96,8 +101,8 @@ class StripeController extends Controller
                 ->with('error', 'We could not identify this checkout. Please contact support before retrying.');
         }
 
-        // Already-processed success URLs are safe to revisit, but never award
-        // a second activation or coupon on replay.
+        // Already-recorded purchases may be revisited safely after the
+        // browser session was cleared. No duplicate credits are issued.
         $existingPayment = PackagePayment::query()
             ->where('payment_method', 'stripe')
             ->where('gateway_reference', $sessionId)
@@ -107,7 +112,7 @@ class StripeController extends Controller
             return redirect()->route('package_payment.invoice', $existingPayment->id);
         }
 
-        if (! is_array($data) || $type !== 'package_payment' ||
+        if (! is_array($data) || ! in_array($type, ['package_payment', 'wallet_payment', 'custom_coins'], true) ||
             (int) ($data['user_id'] ?? 0) !== (int) $request->user()->id ||
             ! hash_equals((string) ($data['stripe_checkout_session_id'] ?? ''), $sessionId)) {
             return redirect()->route('package_purchase_history')->with('error',
@@ -127,17 +132,25 @@ class StripeController extends Controller
                 $actualCurrency !== $expectedCurrency ||
                 (string) $stripeSession->client_reference_id !== (string) ($data['payment_attempt_id'] ?? '') ||
                 (string) ($stripeSession->metadata->user_id ?? '') !== (string) $request->user()->id ||
-                (string) ($stripeSession->metadata->payment_type ?? '') !== 'package_payment' ||
-                (string) ($stripeSession->metadata->package_id ?? '') !== (string) $data['package_id']) {
+                (string) ($stripeSession->metadata->payment_type ?? '') !== $type ||
+                (string) ($stripeSession->metadata->package_id ?? '') !== (string) ($data['package_id'] ?? 0)) {
                 throw new \RuntimeException('Stripe checkout verification mismatch.');
             }
 
             $data['stripe_checkout_session_id'] = $sessionId;
-            return app(PackagePaymentController::class)->package_payment_done($data, json_encode([
+            $paymentDetails = json_encode([
                 'status' => 'Success',
                 'stripe_checkout_session_id' => $sessionId,
                 'stripe_payment_intent_id' => (string) ($stripeSession->payment_intent ?? ''),
-            ]));
+            ]);
+
+            if ($type === 'package_payment') {
+                return app(PackagePaymentController::class)->package_payment_done($data, $paymentDetails);
+            }
+
+            // Retain the existing wallet / custom-coin checkout products while
+            // verifying payment and making their Stripe credits repeat-safe.
+            return $this->fulfillNonPackageCheckout($type, $data, $paymentDetails, $request);
         } catch (\Throwable $e) {
             Log::error('Stripe package fulfillment verification failed', [
                 'user_id' => $request->user()->id,
@@ -148,6 +161,72 @@ class StripeController extends Controller
             return redirect()->route('package_purchase_history')->with('error',
                 'Your payment could not be verified or activated yet. Contact support with the Stripe receipt; do not pay again.');
         }
+    }
+
+    private function fulfillNonPackageCheckout(string $type, array $data, string $details, Request $request)
+    {
+        $sessionId = (string) ($data['stripe_checkout_session_id'] ?? '');
+        $userId = (int) $request->user()->id;
+
+        // Lock the buyer while checking/recording this gateway transaction.
+        return DB::transaction(function () use ($type, $data, $details, $sessionId, $userId) {
+            $user = User::query()->whereKey($userId)->lockForUpdate()->firstOrFail();
+
+            if ($type === 'wallet_payment') {
+                $existing = Wallet::query()->where('user_id', $userId)
+                    ->where('payment_method', 'stripe')
+                    ->where('payment_details', 'like', '%' . $sessionId . '%')->first();
+
+                if ($existing) {
+                    return redirect()->route('wallet.index')
+                        ->with('success', 'This wallet payment was already credited.');
+                }
+
+                $wallet = new Wallet();
+                $wallet->user_id = $userId;
+                $wallet->amount = $data['amount'];
+                $wallet->payment_method = 'stripe';
+                $wallet->payment_details = $details;
+                $wallet->save();
+
+                $user->balance = (float) $user->balance + (float) $data['amount'];
+                $user->save();
+                session()->forget(['payment_type', 'payment_data']);
+                return redirect()->route('wallet.index')->with('success', 'Payment completed.');
+            }
+
+            $payment = PackagePayment::query()->where('user_id', $userId)
+                ->where('payment_method', 'stripe')
+                ->where('gateway_reference', $sessionId)->first();
+
+            if (! $payment) {
+                $payment = new PackagePayment();
+                $payment->payment_code = now()->format('ymd-His') . '-' . random_int(1000, 9999);
+                $payment->user_id = $userId;
+                $payment->package_id = 0;
+                $payment->payment_method = 'stripe';
+                $payment->payment_status = 'Paid';
+                $payment->amount = $data['amount'];
+                $payment->payable_amount = $data['amount'];
+                $payment->currency = strtoupper((string) $data['currency']);
+                $payment->payment_details = $details;
+                $payment->gateway_reference = $sessionId;
+                $payment->gateway_status = 'paid';
+                $payment->offline_payment = 2;
+                $payment->metadata = [
+                    \App\Services\Api\V1\Payment\CustomCoinService::TYPE => [
+                        'coins' => (int) $data['coins'],
+                        'unit_price' => \App\Services\Api\V1\Payment\CustomCoinService::amountFor(1),
+                        'amount' => $data['amount'],
+                    ],
+                ];
+                $payment->save();
+            }
+
+            \App\Services\Api\V1\Payment\CustomCoinService::deliverIfPaid($payment);
+            session()->forget(['payment_type', 'payment_data']);
+            return redirect()->route('package_payment.invoice', $payment->id);
+        }, 3);
     }
 
     public function cancel(Request $request)
