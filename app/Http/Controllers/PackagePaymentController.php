@@ -353,7 +353,7 @@ class PackagePaymentController extends Controller
 
             // Do not pretend that a successful gateway charge failed or
             // recommend another payment. Keep session for support review.
-            return redirect()->route('package_purchase_history')->with('error',
+            return redirect()->route('contact_us')->with('error',
                 'We could not complete the package activation. Please contact support with your payment receipt; do not pay again.');
         }
 
