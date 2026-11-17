@@ -33,8 +33,8 @@
 
             <form class="hm-home-ref-search" action="{{ route('member.listing') }}" method="GET" role="search">
                 <i class="las la-search" aria-hidden="true"></i>
-                <label class="sr-only" for="hm-home-ref-member-search">Search by member ID</label>
-                <input id="hm-home-ref-member-search" name="member_code" type="search" placeholder="Find members by ID..." autocomplete="off">
+                <label class="sr-only" for="hm-home-ref-member-search">Search members</label>
+                <input id="hm-home-ref-member-search" name="search" type="search" placeholder="Search members by name..." autocomplete="off">
                 <button type="submit" aria-label="Search members"><i class="las la-sliders-h"></i></button>
             </form>
 

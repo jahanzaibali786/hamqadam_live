@@ -61,9 +61,9 @@
       <button id="hm-integrated-search-open" class="hm-integrated-search-trigger" type="button" aria-label="Open member search" aria-controls="hm-integrated-search-panel" aria-expanded="false"><i class="las la-search"></i></button>
       <div class="hm-integrated-search-panel" id="hm-integrated-search-panel" hidden>
         <form action="{{ route('member.listing') }}" method="GET" role="search" class="hm-integrated-search-form">
-          <label class="sr-only" for="hm-integrated-search-input">Search members by member code</label>
+          <label class="sr-only" for="hm-integrated-search-input">Search members</label>
           <i class="las la-search" aria-hidden="true"></i>
-          <input id="hm-integrated-search-input" type="search" name="member_code" autocomplete="off" placeholder="Search members by ID..." value="{{ request('member_code') }}">
+          <input id="hm-integrated-search-input" type="search" name="search" autocomplete="off" placeholder="Search members by name..." value="{{ request('search') }}">
           <button class="hm-integrated-search-submit" type="submit" aria-label="Search members"><i class="las la-arrow-right"></i></button>
         </form>
         <button id="hm-integrated-search-close" type="button" class="hm-integrated-search-close" aria-label="Close member search"><i class="las la-times"></i></button>

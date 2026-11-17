@@ -32,7 +32,7 @@
      : collect();
 @endphp
 <div class="hm-detail">
- <div class="hm-detail-back"><a href="{{ url()->previous() }}"><i class="las la-arrow-left"></i> Back to Search Results</a><span>Member ID: {{ $user->code }}</span></div>
+ <div class="hm-detail-back"><a href="{{ url()->previous() }}"><i class="las la-arrow-left"></i> Back to Search Results</a></div>
  <header class="hm-detail-header"><div class="hm-detail-title"><span class="hm-detail-bubble"><i class="las la-heart"></i></span><div><h1>Profile Details</h1><p>Get to know more about this member.</p></div></div>
  <div class="hm-detail-head-actions">
  @if($ownProfile)<a href="{{ route('profile_settings') }}" class="hm-detail-quiet"><i class="las la-edit"></i> Edit My Profile</a>

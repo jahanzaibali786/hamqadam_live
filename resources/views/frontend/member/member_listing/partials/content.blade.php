@@ -185,7 +185,6 @@
                                             <div class="hq-discovery-photo-overlay">
                                                 <div>
                                                     <h2>{{ $user->first_name . ' ' . $user->last_name }}</h2>
-                                                    <small>ID: {{ $user->code }}</small>
                                                 </div>
                                                 @if($compatibility)
                                                     <span class="hq-match-pill"><i class="las la-heart"></i> {{ (int) $compatibility->match_percentage }}% {{ translate('Match') }}</span>

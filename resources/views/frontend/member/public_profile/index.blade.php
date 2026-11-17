@@ -42,10 +42,6 @@
                                     @endphp
                                 </span>
                             </h1>
-                            <div class="fs-12">
-                                <span class="opacity-60">{{ translate('Member ID: ') }}</span>
-                                <span class="ml-2">{{ $user->code }}</span>
-                            </div>
                             <div class="mt-2">
                                 @if(app(\App\Services\BadgeService::class)->isVerified($user->member))
                                     <span class="badge badge-soft-success mr-1"><i class="las la-check-circle"></i> {{ translate('Verified') }}</span>
@@ -215,10 +211,6 @@
 
 
                         <div class="mb-4 p-4 border rounded border-gray-200 d-none d-xl-block">
-                            <div class="fs-12">
-                                <span class="opacity-60">{{ translate('Member ID: ') }}</span>
-                                <span class="ml-1 text-primary">{{ $user->code }}</span>
-                            </div>
                             <h2 class="fs-20 fw-500">{{ $user->first_name . ' ' . $user->last_name }}</h2>
 
                             @if (Auth::user()->id != $user->id)
@@ -459,10 +451,6 @@
                     </div>
 
                     <div class="mb-4 p-4 border rounded border-gray-200 d-xl-none">
-                        <div class="fs-12">
-                            <span class="opacity-60">{{ translate('Member ID: ') }}</span>
-                            <span class="ml-1 text-primary">{{ $user->code }}</span>
-                        </div>
                         <h2 class="fs-20 fw-500 mb-4">{{ $user->first_name . ' ' . $user->last_name }}</h2>
 
                         @if (Auth::user()->id != $user->id)
@@ -553,8 +541,7 @@
                                             <span
                                                 class="fs-18 fw-600 d-block">{{ translate('About ') }}{{ $user->first_name . ' ' . $user->last_name }}</span>
                                             <span class="fs-11 fw-400">
-                                                <span>{{ translate('Member ID: ') }} {{ $user->code }}</span>
-                                                <span class="mx-2">|</span>
+                                                
                                                 <span>{{ translate('On Behalf:') }}
                                                     {{ $user->member->on_behalves->name ?? '' }}</span>
                                             </span>
