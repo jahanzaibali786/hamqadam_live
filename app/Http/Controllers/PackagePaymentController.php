@@ -409,8 +409,9 @@ class PackagePaymentController extends Controller
         Session::forget('payment_type');
 
         if (! $result['activated']) {
-            return redirect()->route('package_payment.invoice', $payment->id)->with('warning',
-                'Your payment has been recorded but your package needs account review. Do not pay again; contact support with this receipt.');
+            return redirect()->route('contact_us')->with('warning',
+                'Payment received and recorded under purchase code ' . $payment->payment_code .
+                ', but your member profile requires review before activation. Please contact support and do not pay again.');
         }
 
         flash(translate('Payment completed'))->success();
@@ -438,6 +439,9 @@ class PackagePaymentController extends Controller
     public function package_payment_invoice($id)
     {
         $payment = PackagePayment::findOrFail($id);
+        // The invoice contains billing details; members may only see their
+        // own receipts. The separate admin invoice route has its own permission.
+        abort_unless(auth()->check() && (int) $payment->user_id === (int) auth()->id(), 403);
         return view('frontend.member.payment_invoice', compact('payment'));
     }
 
