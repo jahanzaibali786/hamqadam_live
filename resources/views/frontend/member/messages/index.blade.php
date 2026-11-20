@@ -109,7 +109,7 @@
                         <div class="media">
                             <h6 class="mb-0">{{ translate('Chats')}}</h6>
                         </div>
-                        <button class="aiz-mobile-toggler d-lg-none aiz-all-chat-toggler mr-2" data-toggle="class-toggle" data-target=".chat-user-list-wrap">
+                        <button type="button" class="aiz-mobile-toggler d-lg-none aiz-all-chat-toggler mr-2" data-toggle="class-toggle" data-target=".chat-user-list-wrap" aria-label="Show conversations" title="Show conversations">
                             <span></span>
                         </button>
                     </div>
