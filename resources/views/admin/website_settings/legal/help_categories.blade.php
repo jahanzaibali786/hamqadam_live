@@ -15,7 +15,10 @@
 </div></div>
 <div class="card mt-3"><div class="card-header">Category Revision History</div><div class="card-body">
 @forelse($revisions as $revision)
-<p>#{{ $revision->id }} — {{ $revision->status }} — {{ $revision->created_at?->format('d M Y H:i') }} by {{ $revision->editor?->first_name ?? 'Admin' }}</p>
+<p>#{{ $revision->id }} — {{ $revision->status }} — {{ $revision->created_at?->format('d M Y H:i') }} by {{ $revision->editor?->first_name ?? 'Admin' }}
+@if($revision->status === 'published')
+<form class="d-inline" method="POST" action="{{ route('website.help.restore',$revision) }}">@csrf<button class="btn btn-sm btn-outline-primary" onclick="return confirm('Restore these published categories?')">Restore</button></form>
+@endif</p>
 @empty<p>No previous revisions.</p>@endforelse
 </div></div>
 <a class="btn btn-link mt-2" href="{{ route('website.help.manage') }}">Back to Help Center</a>
