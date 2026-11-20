@@ -42,6 +42,9 @@ final class HelpCenterContentController extends Controller
             'articles' => $cms->availableHelp(),
             'drafts' => ManagedContentRevision::query()->where('page_key','like','help:%')
                 ->where('status','draft')->orderByDesc('id')->get()->unique('page_key'),
+            'archived' => ManagedContentRevision::query()->where('page_key','like','help:%')
+                ->whereIn('status',['published','unpublished'])->orderByDesc('id')->get()
+                ->unique('page_key')->filter(fn ($revision) => $revision->status === 'unpublished'),
             'categories' => $this->categories($cms),
         ]);
     }
