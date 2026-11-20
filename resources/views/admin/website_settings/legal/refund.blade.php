@@ -104,6 +104,46 @@
   if(e.target.closest('.hq-move-down')&&row.nextElementSibling){wrap.insertBefore(row.nextElementSibling,row);mark()}
   renumber();
  });
+ // Lightweight rich-text controls work for existing AND newly added
+ // sections, without depending on cloning an initialized Summernote editor.
+ function addToolbar(textarea){
+  if(textarea.previousElementSibling?.classList.contains('hq-rich-toolbar'))return;
+  const bar=document.createElement('div');bar.className='hq-rich-toolbar mb-2';
+  bar.style.cssText='display:flex;gap:5px;flex-wrap:wrap';
+  const controls=[
+   ['Bold','<strong>','</strong>'],['Italic','<em>','</em>'],
+   ['Heading','<h3>','</h3>'],['Paragraph','<p>','</p>'],
+   ['Bullets','<ul><li>','</li></ul>'],['Numbers','<ol><li>','</li></ol>'],
+   ['Quote','<blockquote>','</blockquote>']
+  ];
+  for(const [label,start,end] of controls){
+   const button=document.createElement('button');button.type='button';
+   button.className='btn btn-sm btn-outline-secondary';button.textContent=label;
+   button.addEventListener('click',()=>{
+    const from=textarea.selectionStart,to=textarea.selectionEnd;
+    const text=textarea.value.slice(from,to)||'Your text';
+    textarea.setRangeText(start+text+end,from,to,'end');
+    textarea.dispatchEvent(new Event('input',{bubbles:true}));textarea.focus();
+   });bar.appendChild(button);
+  }
+  const link=document.createElement('button');link.type='button';
+  link.className='btn btn-sm btn-outline-secondary';link.textContent='Link';
+  link.addEventListener('click',()=>{
+   const href=window.prompt('Enter an HTTPS or relative /path link');
+   if(!href)return;
+   if(!/^https:\/\/[^\s]+$/i.test(href)&&!/^\/(?!\/)/.test(href)){
+    alert('Only HTTPS and relative links are allowed.');return;
+   }
+   const from=textarea.selectionStart,to=textarea.selectionEnd;
+   const label=textarea.value.slice(from,to)||'Link text';
+   textarea.setRangeText('<a href="'+href.replaceAll('"','&quot;')+'">'+label+'</a>',from,to,'end');
+   textarea.dispatchEvent(new Event('input',{bubbles:true}));textarea.focus();
+  });
+  bar.appendChild(link);textarea.before(bar);
+ }
+ function toolbars(){form.querySelectorAll('.hq-body,textarea[name="turnaround_body"]').forEach(addToolbar)}
+ toolbars();
+ document.getElementById('hq-add-section').addEventListener('click',()=>queueMicrotask(toolbars));
  form.addEventListener('submit',()=>submitting=true);
  window.addEventListener('beforeunload',e=>{if(dirty&&!submitting){e.preventDefault();e.returnValue='';}});
 })();
