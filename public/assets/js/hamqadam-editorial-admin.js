@@ -29,6 +29,16 @@ function repeat(value,shape,path,key){const wrap=node('div','hqcms-nested');cons
 function render(){root.replaceChildren();Object.keys(schema).forEach(key=>{const section=node('section','hqcms-panel');section.dataset.label=label(key).toLowerCase();section.appendChild(node('h3','',label(key)));fields(doc[key],schema[key],[key],section);root.appendChild(section)});filter();}
 function filter(){const q=document.getElementById('hqcms-search').value.toLowerCase().trim();root.querySelectorAll('.hqcms-panel').forEach(el=>el.classList.toggle('hqcms-hidden',q&&!el.textContent.toLowerCase().includes(q)&&!el.querySelector('input[value*="'+q.replace(/["\\]/g,'')+'"]')))}
 document.getElementById('hqcms-search').addEventListener('input',filter);
-form.addEventListener('submit',()=>document.getElementById('hqcms-payload').value=JSON.stringify(doc));
+const original=JSON.stringify(doc);
+let submitting=false;
+window.addEventListener('beforeunload',event=>{
+  if(!submitting&&JSON.stringify(doc)!==original){
+    event.preventDefault();event.returnValue='';
+  }
+});
+form.addEventListener('submit',()=>{
+  document.getElementById('hqcms-payload').value=JSON.stringify(doc);
+  submitting=true;
+});
 render();
 })();
