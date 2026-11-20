@@ -29,7 +29,7 @@
                  cards, numeric IDs and overlaid caption on all viewports. --}}
             <div class="col-lg-6 col-xl-6 hq-home-hero-photo-column">
                 <div class="hq-hero-visual hq-hero-photo-only" role="img"
-                     aria-label="Wedding jewellery photograph"></div>
+                     aria-label="Wedding couple in a pink matrimonial setting"></div>
             </div>
         </div>
 

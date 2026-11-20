@@ -1,7 +1,7 @@
 /* Hamqadam public legal and help pages: premium light-pink and white */
 .hql-legal-page{background:linear-gradient(160deg,#fff8fa,#fff 430px);color:#29252a;padding:128px 0 74px;min-height:70vh}
 .hql-legal-page .hql-wrap{width:min(1160px,calc(100% - 42px));margin:auto;min-width:0}
-.hql-legal-page .hql-header{max-width:820px;padding:26px 0 34px}
+.hql-legal-page .hql-header{/* max-width:820px; */padding:26px 0 34px}
 .hql-legal-page .hql-kicker{display:inline-flex;align-items:center;gap:8px;background:#fbe0e9;color:#94506b;padding:8px 14px;border-radius:99px;font-size:12px;font-weight:700;letter-spacing:.035em}
 .hql-legal-page .hql-header h1{font-family:'Cormorant Garamond',Georgia,serif!important;font-size:clamp(35px,4.6vw,62px)!important;line-height:1.1!important;font-weight:700;color:#441d30!important;letter-spacing:-.012em;margin:18px 0 12px;overflow-wrap:break-word}
 .hql-legal-page .hql-header p{font-size:15px;line-height:1.85;color:#6f5c68;max-width:730px}
