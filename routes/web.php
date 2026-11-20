@@ -586,6 +586,15 @@ Route::get('/api-docs', function () {
 
 Route::post('/our-team/consultation', [\App\Http\Controllers\HamqadamEditorialController::class,'consultation'])->middleware('throttle:3,1')->name('editorial.team.consult');
 
+// Public legal and Help Center routes must be registered before the generic /{slug} route.
+Route::get('/refund-policy', [\App\Http\Controllers\LegalPageController::class, 'refund'])->name('legal.refund');
+Route::get('/help-center', [\App\Http\Controllers\HelpCenterContentController::class, 'index'])->name('help_center.index');
+Route::get('/help-center/{slug}', [\App\Http\Controllers\HelpCenterContentController::class, 'article'])
+    ->where('slug','[a-z0-9-]{1,100}')->name('help_center.article');
+
+// Sitemap reflects the published refund policy and existing public legal pages.
+Route::get('/sitemap.xml', [\App\Http\Controllers\LegalSitemapController::class, 'index'])->name('legal.sitemap');
+
 // Curated CMS-managed editorial pages (before the catch-all slug route)
 Route::get('/about-us', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','about')->name('editorial.about');
 Route::get('/our-team', [\App\Http\Controllers\HamqadamEditorialController::class,'show'])->defaults('page','team')->name('editorial.team');
