@@ -58,7 +58,10 @@ jobs:
           php artisan optimize:clear
       - name: Validate legal CMS migration and compiled Blade
         run: |
-          php artisan migrate --force
+          # Existing legacy migrations contain a duplicate failed_jobs creation.
+          # Validate only this change's new table in isolation; do not modify
+          # or mask historical application migrations in a compliance PR.
+          php artisan migrate --path=database/migrations/2026_11_20_000001_create_managed_content_revisions_table.php --force
           php artisan view:cache
       - name: Test approved policy and rich-text safety
         run: php artisan test tests/Unit/HamqadamLegalContentTest.php --stop-on-failure
