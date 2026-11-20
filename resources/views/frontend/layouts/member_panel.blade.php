@@ -109,6 +109,7 @@
         <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-ad-sliders-20261105.css') }}?v=20261105-1">
         <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-member-mobile-shell-20261112.css') }}?v=20261112-1">
         <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-chat-wrap-avatar-presence-20261112.css') }}?v=20261112-1">
+        <link rel="stylesheet" href="{{ static_asset('assets/css/hamqadam-chat-polish-20261120.css') }}?v=20261120-1">
       </main>
     </div>
   </section>
