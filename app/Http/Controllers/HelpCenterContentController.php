@@ -13,7 +13,12 @@ final class HelpCenterContentController extends Controller
     public function index(LegalContentService $cms)
     {
         $articles = $cms->availableHelp();
-        $categories = $this->categories($cms);
+        // Retain visibility of older published articles when a category is
+        // renamed/removed; admins can reassign them before fully retiring it.
+        $categories = array_values(array_unique(array_merge(
+            $this->categories($cms),
+            array_map(fn ($entry) => $entry['data']['category'] ?? 'General', $articles)
+        )));
         return view('frontend.legal.help_index', compact('articles','categories'));
     }
 
