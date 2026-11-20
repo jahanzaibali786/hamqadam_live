@@ -85,6 +85,12 @@ final class LegalContentService
         if (trim(strip_tags($clean['turnaround_body'])) === '') {
             throw new \InvalidArgumentException('Refund processing statement cannot be empty.');
         }
+        // SafePay's approved timeline must remain explicit in the published
+        // policy even when administrators customize the surrounding text.
+        if (! preg_match('/(?:7|seven)\s+working\s+days/i',
+            $clean['turnaround_heading'] . ' ' . strip_tags($clean['turnaround_body']))) {
+            throw new \InvalidArgumentException('The approved 7-working-day processing commitment must be retained.');
+        }
         return $clean;
     }
 
@@ -122,6 +128,24 @@ final class LegalContentService
         }
 
         return DB::transaction(function () use ($key,$data,$action,$adminId) {
+            // Before the first publication, snapshot the currently live
+            // editorial wording (or the approved initial refund policy).
+            // This preserves a real rollback path without modifying it.
+            if ($action === 'publish' &&
+                ($key === 'refund' || in_array($key, self::EDITORIAL_KEYS, true)) &&
+                $this->publishedRevision($key) === null) {
+                $previous = $key === 'refund'
+                    ? RefundPolicyContent::defaults()
+                    : \App\Http\Controllers\HamqadamEditorialController::content($key);
+                ManagedContentRevision::create([
+                    'page_key' => $key,
+                    'status' => 'published',
+                    'content_json' => json_encode($previous,
+                        JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR),
+                    'editor_id' => null,
+                    'published_at' => now(),
+                ]);
+            }
             $revision = ManagedContentRevision::create([
                 'page_key' => $key,
                 'status' => $action === 'publish' ? 'published' :
