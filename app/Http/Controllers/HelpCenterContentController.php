@@ -109,6 +109,22 @@ final class HelpCenterContentController extends Controller
             ->with('success', 'Previously published content restored as a new revision.');
     }
 
+    public function previewCategories(ManagedContentRevision $revision, LegalContentService $cms)
+    {
+        abort_unless($revision->page_key === 'help-categories', 404);
+        $previewData = json_decode($revision->content_json, true);
+        $categories = $previewData['items'] ?? [];
+        $articles = $cms->availableHelp();
+        $categories = array_values(array_unique(array_merge($categories,
+            array_map(fn ($entry) => $entry['data']['category'] ?? 'General', $articles))));
+
+        return response()->view('frontend.legal.help_index', [
+            'articles' => $articles,
+            'categories' => $categories,
+            'preview' => true,
+        ])->header('X-Robots-Tag', 'noindex, nofollow');
+    }
+
     public function editCategories(LegalContentService $cms)
     {
         $data = $cms->editingData('help-categories');
