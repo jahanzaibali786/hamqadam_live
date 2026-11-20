@@ -8,6 +8,7 @@
 @section('content')
 <main class="hql-legal-page">
  <div class="hql-wrap">
+   @if(!empty($preview))<div class="hql-preview">ADMIN PREVIEW — Draft category arrangement</div>@endif
    <header class="hql-header">
      <span class="hql-kicker">Help & Support</span>
      <h1>How can we help you?</h1>
