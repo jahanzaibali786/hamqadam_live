@@ -28,7 +28,7 @@
                     <p>Discover compatible members through your partner preferences.</p>
                     <a href="{{ route('member.listing') }}">Discover Members <i class="las la-arrow-right"></i></a>
                 </div>
-                <img src="{{ static_asset('assets/img/member-reference-couple.svg') }}" alt="Hamqadam couples illustration">
+                <img src="{{ is_file(public_path('assets/img/hamqadam-rebrand/member-couple-banner.jpg')) ? static_asset('assets/img/hamqadam-rebrand/member-couple-banner.jpg') : static_asset('assets/img/member-reference-couple.svg') }}" alt="Happy couple enjoying their new chapter together" fetchpriority="high">
             </section>
 
             <form class="hm-home-ref-search" action="{{ route('member.listing') }}" method="GET" role="search">
