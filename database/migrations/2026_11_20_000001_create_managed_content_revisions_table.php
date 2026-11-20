@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('managed_content_revisions', function (Blueprint $table) {
             $table->id();
             $table->string('page_key', 80)->index();
-            $table->enum('status', ['draft','published']);
+            $table->enum('status', ['draft','published','unpublished']);
             $table->longText('content_json');
             $table->foreignId('editor_id')->nullable()->index();
             $table->timestamp('published_at')->nullable();
