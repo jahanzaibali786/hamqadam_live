@@ -61,7 +61,7 @@ final class HelpCenterContentController extends Controller
             'slug' => ['required','regex:/^[a-z0-9-]{1,100}$/'],
             'action' => ['required','in:draft,publish,unpublish'],
             'title' => ['required','string','max:180'],
-            'category' => ['required','string','max:100'],
+            'category' => ['required','string','max:100', \Illuminate\Validation\Rule::in($this->categories($cms))],
             'description' => ['nullable','string','max:500'],
             'body' => ['required','string','max:60000'],
             'is_faq' => ['nullable','boolean'],
@@ -91,12 +91,17 @@ final class HelpCenterContentController extends Controller
 
     public function restore(Request $request, ManagedContentRevision $revision, LegalContentService $cms)
     {
-        abort_unless(str_starts_with($revision->page_key, 'help:'), 404);
+        abort_unless(str_starts_with($revision->page_key, 'help:') ||
+            $revision->page_key === 'help-categories', 404);
         abort_unless($revision->status === 'published', 422);
         $cms->save($revision->page_key, json_decode($revision->content_json,true),
             'publish', auth()->id());
-        return redirect()->route('website.help.edit', Str::after($revision->page_key, 'help:'))
-            ->with('success', 'Previously published article restored as a new revision.');
+        $route = $revision->page_key === 'help-categories'
+            ? 'website.help.categories' : 'website.help.edit';
+        $params = $revision->page_key === 'help-categories'
+            ? [] : [Str::after($revision->page_key, 'help:')];
+        return redirect()->route($route, $params)
+            ->with('success', 'Previously published content restored as a new revision.');
     }
 
     public function editCategories(LegalContentService $cms)
