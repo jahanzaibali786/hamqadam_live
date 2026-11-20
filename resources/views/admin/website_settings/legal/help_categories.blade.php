@@ -15,7 +15,7 @@
 </div></div>
 <div class="card mt-3"><div class="card-header">Category Revision History</div><div class="card-body">
 @forelse($revisions as $revision)
-<p>#{{ $revision->id }} — {{ $revision->status }} — {{ $revision->created_at?->format('d M Y H:i') }} by {{ $revision->editor?->first_name ?? 'Admin' }}
+<p>#{{ $revision->id }} — {{ $revision->status }} — {{ $revision->created_at?->format('d M Y H:i') }} by {{ $revision->editor?->first_name ?? 'Admin' }} <a class="btn btn-sm btn-light" href="{{ route('website.help.categories.preview',$revision) }}" target="_blank" rel="noopener">Preview</a>
 @if($revision->status === 'published')
 <form class="d-inline" method="POST" action="{{ route('website.help.restore',$revision) }}">@csrf<button class="btn btn-sm btn-outline-primary" onclick="return confirm('Restore these published categories?')">Restore</button></form>
 @endif</p>
