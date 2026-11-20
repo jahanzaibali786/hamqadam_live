@@ -374,6 +374,26 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     Route::get('/website/login-page', [\App\Http\Controllers\Admin\LoginPageSettingsController::class, 'edit'])->middleware('permission:appearances')->name('website.login_page');
     Route::post('/website/login-page', [\App\Http\Controllers\Admin\LoginPageSettingsController::class, 'update'])->middleware('permission:appearances')->name('website.login_page.update');
 
+    // Reuse existing Website Setup permissions for legal and support publishing.
+    Route::get('/website/legal/refund', [\App\Http\Controllers\LegalPageController::class,'edit'])->middleware('permission:edit_pages')->name('website.legal.refund.edit');
+    Route::post('/website/legal/refund', [\App\Http\Controllers\LegalPageController::class,'save'])->middleware(['permission:edit_pages','throttle:20,1'])->name('website.legal.refund.save');
+    Route::get('/website/legal/refund/preview/{revision}', [\App\Http\Controllers\LegalPageController::class,'preview'])->middleware('permission:edit_pages')->whereNumber('revision')->name('website.legal.refund.preview');
+    Route::post('/website/legal/{page}/restore/{revision}', [\App\Http\Controllers\LegalPageController::class,'restore'])->middleware(['permission:edit_pages','throttle:10,1'])->whereIn('page',['refund','privacy','terms'])->whereNumber('revision')->name('website.legal.restore');
+    Route::get('/website/editorial/{page}/preview/{revision}', [\App\Http\Controllers\HamqadamEditorialController::class,'previewRevision'])->middleware('permission:edit_pages')->whereIn('page',['privacy','terms'])->whereNumber('revision')->name('website.editorial.preview');
+    Route::get('/website/help', [\App\Http\Controllers\HelpCenterContentController::class,'manage'])->middleware('permission:edit_pages')->name('website.help.manage');
+    Route::get('/website/help/new', function (\Illuminate\Http\Request $request) {
+        $slug = (string) $request->query('slug','');
+        abort_unless(preg_match('/^[a-z0-9-]{1,100}$/',$slug),422);
+        return redirect()->route('website.help.edit',$slug);
+    })->middleware('permission:edit_pages')->name('website.help.new');
+    Route::get('/website/help/categories', [\App\Http\Controllers\HelpCenterContentController::class,'editCategories'])->middleware('permission:edit_pages')->name('website.help.categories');
+    Route::post('/website/help/categories', [\App\Http\Controllers\HelpCenterContentController::class,'saveCategories'])->middleware(['permission:edit_pages','throttle:20,1'])->name('website.help.categories.save');
+    Route::get('/website/help/categories/preview/{revision}', [\App\Http\Controllers\HelpCenterContentController::class,'previewCategories'])->middleware('permission:edit_pages')->whereNumber('revision')->name('website.help.categories.preview');
+    Route::get('/website/help/{slug}/edit', [\App\Http\Controllers\HelpCenterContentController::class,'edit'])->middleware('permission:edit_pages')->where('slug','[a-z0-9-]{1,100}')->name('website.help.edit');
+    Route::post('/website/help/article', [\App\Http\Controllers\HelpCenterContentController::class,'save'])->middleware(['permission:edit_pages','throttle:20,1'])->name('website.help.save');
+    Route::get('/website/help/preview/{revision}', [\App\Http\Controllers\HelpCenterContentController::class,'preview'])->middleware('permission:edit_pages')->whereNumber('revision')->name('website.help.preview');
+    Route::post('/website/help/restore/{revision}', [\App\Http\Controllers\HelpCenterContentController::class,'restore'])->middleware(['permission:edit_pages','throttle:10,1'])->whereNumber('revision')->name('website.help.restore');
+
     Route::get('/website/editorial/{page}', [\App\Http\Controllers\HamqadamEditorialController::class,'edit'])->whereIn('page', ['about','team','privacy','terms'])->middleware('permission:edit_pages')->name('website.editorial.edit');
     Route::post('/website/editorial/{page}', [\App\Http\Controllers\HamqadamEditorialController::class,'update'])->whereIn('page', ['about','team','privacy','terms'])->middleware('permission:edit_pages')->name('website.editorial.update');
 

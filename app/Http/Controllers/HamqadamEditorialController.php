@@ -34,8 +34,23 @@ class HamqadamEditorialController extends Controller
 
     public function edit(string $page)
     {
-        $data = self::content($page);
-        return view('admin.website_settings.editorial_page',compact('data','page'));
+        $cms = app(\App\Services\LegalContentService::class);
+        $data = in_array($page, ['privacy','terms'], true)
+            ? $cms->editingData($page) : self::content($page);
+        $revisions = in_array($page, ['privacy','terms'], true)
+            ? $cms->revisions($page) : collect();
+        return view('admin.website_settings.editorial_page', compact('data','page','revisions'));
+    }
+
+    public function previewRevision(string $page, \App\Models\ManagedContentRevision $revision)
+    {
+        abort_unless(in_array($page, ['privacy','terms'], true) &&
+            $revision->page_key === $page, 404);
+        return response()->view('frontend.editorial.base', [
+            'data' => json_decode($revision->content_json, true),
+            'pageKey' => $page,
+            'preview' => true,
+        ])->header('X-Robots-Tag', 'noindex, nofollow');
     }
 
     /**
@@ -55,6 +70,18 @@ class HamqadamEditorialController extends Controller
             $clean = $this->sanitize($provided,$schema,0);
         } catch (\InvalidArgumentException $e) {
             return back()->withErrors(['payload'=>$e->getMessage()])->withInput();
+        }
+        if (in_array($page, ['privacy','terms'], true)) {
+            $action = $request->input('action', 'publish');
+            if (! in_array($action, ['draft','publish'], true)) {
+                return back()->withErrors(['action' => 'Choose Save Draft or Publish.']);
+            }
+            app(\App\Services\LegalContentService::class)
+                ->save($page, $clean, $action, auth()->id());
+            return redirect()->back()->with('success',
+                $action === 'draft'
+                    ? 'Draft saved; the current live policy is unchanged.'
+                    : 'Policy published successfully without a deployment.');
         }
         Setting::updateOrCreate(['type'=>'hq_editorial_'.$page],['value'=>json_encode($clean,JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)]);
         Cache::forget('settings');
