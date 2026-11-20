@@ -2,6 +2,12 @@
 
     <div class="attached-top bg-white border-bottom chat-header d-flex justify-content-between align-items-center p-3 shadow-sm">
 
+            <button type="button" class="aiz-mobile-toggler d-lg-none aiz-all-chat-toggler mr-2" data-toggle="class-toggle" data-target=".chat-user-list-wrap" aria-label="Show conversations" title="Show conversations">
+
+                <span></span>
+
+            </button>
+
         <div class="media align-items-center">
 
             <span class="avatar avatar-sm mr-3 flex-shrink-0">
@@ -91,12 +97,6 @@
             <button type="button" class="btn btn-icon btn-circle btn-soft-info mr-2" onclick="startCall('video')" title="{{ translate('Video Call') }}" {{ !empty($chat_is_blocked) ? 'disabled' : '' }}>
 
                 <i class="las la-video"></i>
-
-            </button>
-
-            <button type="button" class="aiz-mobile-toggler d-lg-none aiz-all-chat-toggler mr-2" data-toggle="class-toggle" data-target=".chat-user-list-wrap" aria-label="Show conversations" title="Show conversations">
-
-                <span></span>
 
             </button>
 
@@ -2146,12 +2146,17 @@
 
         if ($('#call-log-' + call.id).length) { return; }
 
-        var html = '<div id="call-log-' + call.id + '" class="chat-coversation call-log-item"><div class="media">';
-
-        html += '<span class="avatar avatar-xs flex-shrink-0"><span class="call-log-icon"><i class="las ' + icon + '"></i></span></span>';
-
-        html += '<div class="media-body"><div class="text call-log-card"><div class="d-flex justify-content-between align-items-center flex-wrap"><span><i class="las ' + icon + ' mr-1"></i>' + label + '</span><span class="badge badge-light">' + String(call.status || '').toUpperCase() + '</span></div><div class="small text-muted mt-1">' + duration + '</div></div><span class="time">' + (call.ended_at || call.started_at || call.created_at || '') + '</span></div>';
-
+        var callStatus = String(call.status || '').toLowerCase().replace(/[^a-z0-9-]/g, '');
+        var isCaller = Number(call.caller_id || (call.caller && call.caller.id) || 0) === {{ (int) Auth::id() }};
+        var iconHtml = '<span class="avatar avatar-xs flex-shrink-0 call-log-avatar"><span class="call-log-icon"><i class="las ' + icon + '"></i></span></span>';
+        var safeStatus = escapeHtml(callStatus.toUpperCase());
+        var timeRaw = call.ended_at || call.answered_at || call.started_at || call.created_at || '';
+        var timeDisplay = timeRaw ? new Date(timeRaw) : null;
+        var formattedTime = timeDisplay && !isNaN(timeDisplay.getTime()) ? timeDisplay.toLocaleString() : 'Just now';
+        var html = '<div id="call-log-' + call.id + '" class="chat-coversation call-log-item is-' + callStatus + (isCaller ? ' right' : '') + '"><div class="media">';
+        if (!isCaller) html += iconHtml;
+        html += '<div class="media-body call-log-body"><div class="text call-log-card"><div class="call-log-heading"><span class="call-log-title"><i class="las ' + icon + '"></i><span>' + label + '</span></span><span class="call-log-status">' + safeStatus + '</span></div><div class="call-log-duration"><i class="las la-clock"></i><span>' + duration + '</span></div></div><span class="time call-log-time">' + escapeHtml(formattedTime) + '</span></div>';
+        if (isCaller) html += iconHtml;
         html += '</div></div>';
 
         $('#chat-messages').append(html);
