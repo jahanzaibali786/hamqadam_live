@@ -1,0 +1,50 @@
+/* Hamqadam public legal and help pages: premium light-pink and white */
+.hql-legal-page{background:linear-gradient(160deg,#fff8fa,#fff 430px);color:#29252a;padding:128px 0 74px;min-height:70vh}
+.hql-legal-page .hql-wrap{width:min(1160px,calc(100% - 42px));margin:auto;min-width:0}
+.hql-legal-page .hql-header{max-width:820px;padding:26px 0 34px}
+.hql-legal-page .hql-kicker{display:inline-flex;align-items:center;gap:8px;background:#fbe0e9;color:#94506b;padding:8px 14px;border-radius:99px;font-size:12px;font-weight:700;letter-spacing:.035em}
+.hql-legal-page .hql-header h1{font-family:'Cormorant Garamond',Georgia,serif!important;font-size:clamp(35px,4.6vw,62px)!important;line-height:1.1!important;font-weight:700;color:#441d30!important;letter-spacing:-.012em;margin:18px 0 12px;overflow-wrap:break-word}
+.hql-legal-page .hql-header p{font-size:15px;line-height:1.85;color:#6f5c68;max-width:730px}
+.hql-legal-page .hql-turnaround{display:flex;align-items:center;gap:27px;background:linear-gradient(115deg,#6d2447,#a45f7b);color:white;border-radius:19px;padding:23px 34px;box-shadow:0 12px 35px #78274424;margin-bottom:35px}
+.hql-legal-page .hql-turnaround-number{font-size:57px;font-weight:800;line-height:.98;white-space:nowrap;color:#fff}
+.hql-legal-page .hql-turnaround-number small{font-size:15px;max-width:100px;display:inline-block;white-space:normal;line-height:1.2;font-weight:700;vertical-align:middle;margin-left:6px}
+.hql-legal-page .hql-turnaround-copy{display:flex;flex-direction:column;gap:5px;line-height:1.6}
+.hql-legal-page .hql-turnaround-copy strong{font-weight:700;font-size:16px;color:#fff}
+.hql-legal-page .hql-turnaround-copy span{font-size:13px;color:#fff}
+.hql-legal-page .hql-columns{display:grid;grid-template-columns:240px minmax(0,1fr);gap:32px;align-items:start}
+.hql-legal-page .hql-toc{position:sticky;top:120px;border:1px solid #f0e0e7;border-radius:15px;padding:19px;background:#fff;display:flex;flex-direction:column;gap:4px;max-height:calc(100vh - 145px);overflow-y:auto}
+.hql-legal-page .hql-toc strong{color:#733655;font-size:15px;margin-bottom:10px}
+.hql-legal-page .hql-toc a{padding:8px 10px;border-radius:7px;color:#6b5a65;font-size:12px;font-weight:500;line-height:1.5;text-decoration:none}
+.hql-legal-page .hql-toc a:hover,.hql-legal-page .hql-toc a:focus-visible{color:#842a54;background:#fbe0e9}
+.hql-legal-page .hql-document{min-width:0}
+.hql-legal-page .hql-section{padding:29px 32px;margin-bottom:17px;background:#fff;border:1px solid #f1e3e9;border-radius:15px;scroll-margin-top:125px}
+.hql-legal-page .hql-section h2,.hql-legal-page .hql-help-cta h2,.hql-legal-page .hql-help-group h2{font-family:'Cormorant Garamond',Georgia,serif!important;font-weight:700!important;font-size:30px!important;color:#692443!important;line-height:1.2!important;margin:0 0 14px}
+.hql-legal-page .hql-rich{font-size:14px;color:#4f454d;line-height:1.95;overflow-wrap:anywhere}
+.hql-legal-page .hql-rich p{font-size:inherit;color:inherit;line-height:inherit;margin:0 0 12px}
+.hql-legal-page .hql-rich p:last-child{margin-bottom:0}
+.hql-legal-page .hql-rich ul,.hql-legal-page .hql-rich ol{padding-left:23px;margin:8px 0 14px}
+.hql-legal-page .hql-rich li{padding:2px 0}
+.hql-legal-page .hql-rich strong{font-weight:700;color:#5d2a42}
+.hql-legal-page .hql-rich a{color:#a45f7b;text-decoration:underline}
+.hql-legal-page .hql-timeline{border-left:5px solid #a45f7b}
+.hql-legal-page .hql-help-cta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;background:#f9e4ec;border-radius:15px;padding:24px 27px;margin-top:22px}
+.hql-legal-page .hql-help-cta h2{font-size:27px!important;margin:0 0 6px}
+.hql-legal-page .hql-help-cta p{font-size:13px;line-height:1.7;margin:0;color:#654d5a}
+.hql-legal-page .hql-help-cta a{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:11px 18px;border-radius:9px;background:#9c426a;color:#fff!important;font-size:12px;font-weight:700;text-decoration:none}
+.hql-legal-page .hql-preview{padding:12px 15px;background:#fbe0e9;color:#842a54;border-radius:10px;margin-top:10px;font-weight:700;font-size:13px}
+.hql-legal-page .hql-help-categories{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:22px}
+.hql-legal-page .hql-help-categories a{border:1px solid #ecc3d3;border-radius:99px;padding:8px 14px;color:#7c3456;background:#fff;font-size:12px;text-decoration:none}
+.hql-legal-page .hql-help-group{margin-bottom:28px;scroll-margin-top:130px}
+.hql-legal-page .hql-help-group h2{margin-bottom:16px}
+.hql-legal-page .hql-help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:14px}
+.hql-legal-page .hql-help-card{background:#fff;border:1px solid #f1e3e9;border-radius:15px;padding:19px;display:block;min-width:0;color:#4f454d;text-decoration:none;transition:box-shadow .2s,border-color .2s}
+.hql-legal-page .hql-help-card:hover{border-color:#dfb8c9;box-shadow:0 8px 20px #78274418;text-decoration:none}
+.hql-legal-page .hql-help-card>span{color:#a45f7b;font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.hql-legal-page .hql-help-card h3{font-size:16px;color:#692443;margin:12px 0}
+.hql-legal-page .hql-help-card p{font-size:13px;line-height:1.7;color:#6f5c68}
+.hql-legal-page .hql-article{max-width:850px;margin:auto}
+.hql-legal-page .hql-breadcrumb{display:flex;gap:10px;font-size:12px;padding-top:12px;color:#66545e}
+.hql-legal-page .hql-breadcrumb a{color:#a45f7b}
+@media(max-width:850px){.hql-legal-page .hql-columns{grid-template-columns:minmax(0,1fr)}.hql-legal-page .hql-toc{position:static;max-height:none}}
+@media(max-width:575px){.hql-legal-page{padding:90px 0 45px}.hql-legal-page .hql-wrap{width:calc(100% - 28px)}.hql-legal-page .hql-header{padding:18px 0 25px}.hql-legal-page .hql-header h1{font-size:35px!important}.hql-legal-page .hql-turnaround{padding:17px;gap:12px;align-items:flex-start}.hql-legal-page .hql-turnaround-number{font-size:42px}.hql-legal-page .hql-turnaround-number small{font-size:11px;max-width:65px}.hql-legal-page .hql-turnaround-copy strong{font-size:13px}.hql-legal-page .hql-turnaround-copy span{font-size:11px}.hql-legal-page .hql-section{padding:21px 18px}.hql-legal-page .hql-section h2{font-size:27px!important}.hql-legal-page .hql-help-cta{padding:19px}}
+@media(prefers-reduced-motion:reduce){.hql-legal-page *{transition:none!important}}
