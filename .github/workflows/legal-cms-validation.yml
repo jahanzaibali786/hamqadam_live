@@ -1,0 +1,64 @@
+name: Legal and Help CMS Validation
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'app/Http/Controllers/HamqadamEditorialController.php'
+      - 'app/Http/Controllers/HelpCenterContentController.php'
+      - 'app/Http/Controllers/LegalPageController.php'
+      - 'app/Http/Controllers/LegalSitemapController.php'
+      - 'app/Models/ManagedContentRevision.php'
+      - 'app/Services/LegalContentService.php'
+      - 'app/Support/RefundPolicyContent.php'
+      - 'app/Support/SafeRichText.php'
+      - 'database/migrations/2026_11_20_000001_create_managed_content_revisions_table.php'
+      - 'resources/views/frontend/legal/**'
+      - 'resources/views/admin/website_settings/legal/**'
+      - 'routes/web.php'
+      - 'routes/admin.php'
+      - 'tests/Unit/HamqadamLegalContentTest.php'
+      - '.github/workflows/legal-cms-validation.yml'
+  workflow_dispatch:
+
+jobs:
+  legal-cms:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, dom, gd, zip, sqlite3, pdo_sqlite, bcmath
+          tools: composer:v2
+          coverage: none
+      - name: Check PHP source syntax
+        run: |
+          set -euo pipefail
+          for file in \
+            app/Http/Controllers/HelpCenterContentController.php \
+            app/Http/Controllers/LegalPageController.php \
+            app/Http/Controllers/LegalSitemapController.php \
+            app/Services/LegalContentService.php \
+            app/Models/ManagedContentRevision.php \
+            app/Support/RefundPolicyContent.php \
+            app/Support/SafeRichText.php \
+            database/migrations/2026_11_20_000001_create_managed_content_revisions_table.php \
+            tests/Unit/HamqadamLegalContentTest.php; do
+            php -l "$file"
+          done
+      - name: Prepare Laravel
+        run: |
+          mkdir -p bootstrap/cache storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs
+          chmod -R ug+rwX bootstrap/cache storage/framework
+          cp .env.example .env
+          printf '\nAPP_ENV=testing\nDB_CONNECTION=sqlite\nDB_DATABASE=:memory:\nCACHE_STORE=array\nSESSION_DRIVER=array\nQUEUE_CONNECTION=sync\nMAIL_MAILER=array\n' >> .env
+          composer install --no-interaction --prefer-dist --no-progress
+          php artisan key:generate
+          php artisan optimize:clear
+      - name: Validate legal CMS migration and compiled Blade
+        run: |
+          php artisan migrate --force
+          php artisan view:cache
+      - name: Test approved policy and rich-text safety
+        run: php artisan test tests/Unit/HamqadamLegalContentTest.php --stop-on-failure
