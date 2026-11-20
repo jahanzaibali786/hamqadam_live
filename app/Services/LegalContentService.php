@@ -48,6 +48,10 @@ final class LegalContentService
         if (in_array($key, self::EDITORIAL_KEYS, true)) {
             return \App\Http\Controllers\HamqadamEditorialController::content($key);
         }
+        if (str_starts_with($key, 'help:')) {
+            $last = ManagedContentRevision::forPage($key)->orderByDesc('id')->first();
+            return $last ? json_decode($last->content_json, true) : null;
+        }
         return $this->publicData($key);
     }
 
