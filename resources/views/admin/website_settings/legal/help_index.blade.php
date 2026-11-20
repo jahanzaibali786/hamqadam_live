@@ -22,6 +22,15 @@
  @empty <tr><td colspan="4">No published articles yet. Create the first article above.</td></tr>@endforelse
  </tbody></table>
  </div></div>
+ @if($archived->count())
+ <div class="card mt-3"><div class="card-header"><strong>Unpublished Articles</strong></div><div class="card-body">
+ @foreach($archived as $revision)
+  <a class="btn btn-outline-secondary btn-sm mb-2" href="{{ route('website.help.edit',\Illuminate\Support\Str::after($revision->page_key,'help:')) }}">
+    {{ json_decode($revision->content_json,true)['title'] ?? \Illuminate\Support\Str::after($revision->page_key,'help:') }}
+  </a>
+ @endforeach
+ </div></div>
+ @endif
  @if($drafts->count())
  <div class="card mt-3 mb-4"><div class="card-header"><strong>Draft Articles</strong></div><div class="card-body">
  @foreach($drafts as $draft)
