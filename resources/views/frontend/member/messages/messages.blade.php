@@ -1464,27 +1464,27 @@
 
 
                 event.attachments.forEach(function (attachment) {
-
                     var downloadUrl = attachment.download_url || attachment.url || '#';
-
                     var originalName = attachment.original_name || attachment.name || 'Attachment';
-
                     var extension = attachment.extension ? '.' + attachment.extension : '';
-
                     var sizeLabel = formatAttachmentSize(attachment.size);
-
-
-
-                    if (attachment.type === 'image') {
-
-                        html += '<div class="mb-2 file-preview-item" title="' + escapeHtml(originalName) + '"><a href="' + escapeHtml(safeDownloadUrl) + '" target="_blank" rel="noopener" class="' + attachmentClass + '" data-attachment-id="' + attachmentId + '" data-download-url="' + escapeHtml(safeDownloadUrl) + '"><div class="thumb"><img src="' + attachmentPreviewUrl + '" class="img-fit"></div><div class="body"><h6 class="d-flex"><span class="text-truncate title">' + escapeHtml(originalName) + '</span><span class="ext">' + escapeHtml(extension) + '</span></h6><p>' + escapeHtml(sizeLabel) + '</p></div></a></div>';
-
-                    } else {
-
-                        html += '<div class="mb-2 file-preview-item" title="' + escapeHtml(originalName) + '"><a href="' + escapeHtml(safeDownloadUrl) + '" target="_blank" rel="noopener" class="' + attachmentClass + '" data-attachment-id="' + attachmentId + '" data-download-url="' + escapeHtml(safeDownloadUrl) + '"><div class="thumb"><i class="la la-file-text"></i></div><div class="body"><h6 class="d-flex"><span class="text-truncate title">' + escapeHtml(originalName) + '</span><span class="ext">' + escapeHtml(extension) + '</span></h6><p>' + escapeHtml(sizeLabel) + '</p></div></a></div>';
-
+                    var previewUrl = attachment.preview_url || attachment.url || '';
+                    // Permit only same-origin or relative public URLs in rendered attachments.
+                    function safeChatUrl(value) {
+                        try {
+                            var parsed = new URL(String(value || ''), window.location.href);
+                            return parsed.origin === window.location.origin && /^https?:$/.test(parsed.protocol) ? parsed.href : '';
+                        } catch (e) { return ''; }
                     }
-
+                    var safeDownloadUrl = safeChatUrl(downloadUrl) || '#';
+                    var attachmentPreviewUrl = safeChatUrl(previewUrl);
+                    var safeName = escapeHtml(originalName);
+                    var body = '<div class="body"><h6 class="d-flex"><span class="text-truncate title">' + safeName + '</span><span class="ext">' + escapeHtml(extension) + '</span></h6><p>' + escapeHtml(sizeLabel) + '</p></div>';
+                    if (attachment.type === 'image') {
+                        html += '<div class="file-preview-item" title="' + safeName + '"><a href="' + escapeHtml(safeDownloadUrl) + '" target="_blank" rel="noopener"><div class="thumb">' + (attachmentPreviewUrl ? '<img src="' + escapeHtml(attachmentPreviewUrl) + '" class="img-fit" alt="' + safeName + '">' : '<i class="las la-image"></i>') + '</div>' + body + '</a></div>';
+                    } else {
+                        html += '<div class="file-preview-item" title="' + safeName + '"><a href="' + escapeHtml(safeDownloadUrl) + '" target="_blank" rel="noopener"><div class="thumb"><i class="las la-file-alt"></i></div>' + body + '</a></div>';
+                    }
                 });
 
 
