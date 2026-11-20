@@ -388,6 +388,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'admin']], function 
     })->middleware('permission:edit_pages')->name('website.help.new');
     Route::get('/website/help/categories', [\App\Http\Controllers\HelpCenterContentController::class,'editCategories'])->middleware('permission:edit_pages')->name('website.help.categories');
     Route::post('/website/help/categories', [\App\Http\Controllers\HelpCenterContentController::class,'saveCategories'])->middleware(['permission:edit_pages','throttle:20,1'])->name('website.help.categories.save');
+    Route::get('/website/help/categories/preview/{revision}', [\App\Http\Controllers\HelpCenterContentController::class,'previewCategories'])->middleware('permission:edit_pages')->whereNumber('revision')->name('website.help.categories.preview');
     Route::get('/website/help/{slug}/edit', [\App\Http\Controllers\HelpCenterContentController::class,'edit'])->middleware('permission:edit_pages')->where('slug','[a-z0-9-]{1,100}')->name('website.help.edit');
     Route::post('/website/help/article', [\App\Http\Controllers\HelpCenterContentController::class,'save'])->middleware(['permission:edit_pages','throttle:20,1'])->name('website.help.save');
     Route::get('/website/help/preview/{revision}', [\App\Http\Controllers\HelpCenterContentController::class,'preview'])->middleware('permission:edit_pages')->whereNumber('revision')->name('website.help.preview');
