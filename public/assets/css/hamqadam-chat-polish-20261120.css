@@ -1,0 +1,78 @@
+/* Hamqadam messaging UI refinements. Scoped to member messaging so other screens are unchanged. */
+.hm-member-app .hm-messages-reference #single_chat .chat-list,
+.hm-member-app .hm-messages-reference #single_chat #chat-messages{min-width:0;width:100%;box-sizing:border-box}
+.hm-member-app .hm-messages-reference #single_chat #chat-messages{padding:14px 16px 20px!important;display:flex;flex-direction:column;align-items:stretch;gap:4px}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation{width:100%!important;max-width:100%!important;margin:5px 0!important;min-height:0!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation>.media{display:flex!important;align-items:flex-end!important;min-width:0!important;width:100%!important;gap:9px;margin:0!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .avatar{margin:0 0 18px!important;width:30px!important;height:30px!important;min-width:30px!important;flex:0 0 30px!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .avatar img{width:30px!important;height:30px!important;border-radius:50%!important;object-fit:cover}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .media-body{flex:0 1 auto!important;min-width:0!important;max-width:min(78%,420px)!important;width:max-content!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;text-align:left!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation.right>.media{justify-content:flex-end!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation.right .media-body{align-items:flex-end!important;text-align:right!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .media-body>.text:not(.call-log-card){display:block!important;width:fit-content!important;max-width:100%!important;min-width:0!important;margin:0!important;padding:10px 13px!important;border-radius:15px 15px 15px 5px!important;background:#fff!important;border:1px solid #f0e4eb!important;box-shadow:0 3px 12px rgba(75,31,50,.055);color:#3e2e3a!important;font-size:12px!important;line-height:1.55!important;white-space:pre-wrap;overflow-wrap:anywhere}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation.right .media-body>.text:not(.call-log-card){border-radius:15px 15px 5px 15px!important;background:#fbe5ee!important;border-color:#f3cbdc!important;color:#432b38!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .time,
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .hm-message-meta{font-size:10px!important;line-height:1.45!important;color:#8b7581!important;opacity:1!important;min-height:14px!important;max-width:100%!important;margin:5px 0 0!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .media-body>.time{display:block!important;align-self:flex-start}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation.right .media-body>.time{align-self:flex-end}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .hm-message-meta{display:flex!important;justify-content:flex-end!important;align-items:center;gap:5px}
+/* Generic AIZ file previews float:left by default; make attachments match their sender bubble. */
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview.box,
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview.box.sm{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(min(100%,155px),1fr))!important;gap:8px!important;width:min(100%,360px)!important;max-width:100%!important;min-width:0!important;float:none!important;clear:both!important;margin:0!important;padding:8px!important;border:1px solid #f0e4eb;border-radius:15px;background:#fff}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation.right .file-preview.box{margin-left:auto!important;background:#fff5f8;border-color:#f1d5e1}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview.box .file-preview-item,
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview.box.sm .file-preview-item{float:none!important;display:block!important;width:100%!important;max-width:100%!important;margin:0!important;padding:0!important;border:1px solid #eedfe6!important;border-radius:11px!important;overflow:hidden!important;background:#fff!important;min-width:0!important;box-shadow:none!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item>a{display:flex!important;flex-direction:column!important;align-items:stretch;text-align:left!important;width:100%;height:100%;text-decoration:none!important;color:#4c3542!important;min-width:0}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item .thumb{display:flex!important;align-items:center!important;justify-content:center!important;width:100%!important;max-width:100%!important;min-width:0!important;height:125px!important;border-radius:0!important;background:#fcf3f7!important;overflow:hidden!important;flex:none!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item .thumb img{display:block!important;width:100%!important;height:100%!important;max-height:100%!important;object-fit:contain!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item .thumb i{font-size:34px;color:#a84469}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item .body{display:block!important;width:100%;padding:8px 9px 9px!important;text-align:left!important;min-width:0}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item .body h6{display:flex!important;min-width:0!important;gap:3px;align-items:center;margin:0 0 3px!important;font-size:11px!important;color:#8b3059!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item .body .title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item .body .ext{flex:0 0 auto;font-size:9px}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .file-preview-item .body p{margin:0!important;font-size:10px!important;color:#927e89!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation .voice-message-shell{width:min(100%,330px)!important;max-width:100%;border:1px solid #eedce5;border-radius:14px;padding:11px;background:#fff}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation.right .voice-message-shell{background:#fbe5ee}
+/* Call logs: compact, stable, content-driven dimensions and direction-aware placement. */
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation.call-log-item .media-body{flex:0 1 auto!important;width:min(100%,270px)!important;max-width:min(78%,300px)!important;min-width:0!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation.call-log-item .text.call-log-card{display:flex!important;flex-direction:column!important;gap:6px!important;width:100%!important;min-height:0!important;max-width:100%!important;min-width:0!important;margin:0!important;padding:12px 13px!important;border:1px solid #eedce5!important;border-radius:15px 15px 15px 5px!important;background:linear-gradient(135deg,#fff,#fff6f9)!important;box-shadow:0 3px 12px rgba(90,28,58,.06)!important;line-height:1.35!important;color:#563448!important;text-align:left!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-coversation.call-log-item.right .text.call-log-card{background:linear-gradient(135deg,#fce7ef,#fff5f8)!important;border-color:#efcddd!important;border-radius:15px 15px 5px 15px!important}
+.hm-member-app .hm-messages-reference #single_chat .call-log-card .call-log-heading{display:flex!important;justify-content:space-between!important;align-items:center!important;flex-wrap:wrap!important;gap:6px}
+.hm-member-app .hm-messages-reference #single_chat .call-log-card .call-log-title{display:inline-flex;align-items:center;gap:7px;min-width:0;font-weight:750;font-size:12px;color:#69324e}
+.hm-member-app .hm-messages-reference #single_chat .call-log-card .call-log-title i{font-size:16px;color:#ae4b76}
+.hm-member-app .hm-messages-reference #single_chat .call-log-card .call-log-status{font:700 9px/1.25 Poppins,Arial,sans-serif;letter-spacing:.025em;border-radius:99px;padding:5px 8px;background:#f6e5eb;color:#94405e;max-width:100%;overflow-wrap:anywhere}
+.hm-member-app .hm-messages-reference #single_chat .call-log-card .call-log-duration{display:flex;align-items:center;gap:6px;font-size:10px;color:#8e7182;line-height:1.3}
+.hm-member-app .hm-messages-reference #single_chat .call-log-item .call-log-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:#fae7ef;color:#a84469}
+.hm-member-app .hm-messages-reference #single_chat .call-log-item .call-log-avatar{background:transparent!important}
+.hm-member-app .hm-messages-reference #single_chat .call-log-item.is-missed .call-log-status,.hm-member-app .hm-messages-reference #single_chat .call-log-item.is-rejected .call-log-status,.hm-member-app .hm-messages-reference #single_chat .call-log-item.is-cancelled .call-log-status{background:#fff0f0;color:#b54855}
+.hm-member-app .hm-messages-reference #single_chat .call-log-item.is-answered .call-log-status,.hm-member-app .hm-messages-reference #single_chat .call-log-item.is-completed .call-log-status,.hm-member-app .hm-messages-reference #single_chat .call-log-item.is-ended .call-log-status{background:#e7f7ed;color:#288052}
+.hm-member-app .hm-messages-reference #single_chat .call-log-item .call-log-time{margin-top:5px!important}
+/* On phones keep navigation on the left and fit all call/action buttons without a central hamburger. */
+.hm-member-app .hm-messages-reference #single_chat .chat-header{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:7px!important;min-width:0!important;max-width:100%!important;padding:10px!important}
+.hm-member-app .hm-messages-reference #single_chat .chat-header>.media{flex:1 1 auto!important;min-width:0!important;width:auto!important;max-width:100%!important;overflow:hidden}
+.hm-member-app .hm-messages-reference #single_chat .chat-header .media-body{min-width:0!important;flex:1 1 auto!important;overflow:hidden}
+.hm-member-app .hm-messages-reference #single_chat .chat-header .hm-chat-header-actions{flex:0 0 auto!important;margin-left:auto!important;gap:5px!important;min-width:0}
+.hm-member-app .hm-messages-reference #single_chat .chat-header .aiz-all-chat-toggler{display:none!important}
+@media(max-width:740px){
+ .hm-member-app .hm-messages-reference #single_chat .chat-header .aiz-all-chat-toggler{display:flex!important;order:-1!important;flex:0 0 32px!important;width:32px!important;height:32px!important;min-width:32px!important;margin:0 1px 0 0!important;align-items:center!important;justify-content:center!important;border:1px solid #f0d6e2!important;border-radius:9px!important;background:#fbe9f0!important;color:#963e65!important;position:relative}
+ .hm-member-app .hm-messages-reference #single_chat .chat-header .aiz-all-chat-toggler span{display:none!important}
+ .hm-member-app .hm-messages-reference #single_chat .chat-header .aiz-all-chat-toggler:before{content:"☰";font:700 19px/1 Arial,sans-serif;display:block}
+ .hm-member-app .hm-messages-reference #single_chat .chat-header>.media{margin:0!important}
+ .hm-member-app .hm-messages-reference #single_chat .chat-header .avatar{width:34px!important;height:34px!important;min-width:34px!important;margin-right:6px!important}
+ .hm-member-app .hm-messages-reference #single_chat .chat-header .avatar img{height:34px!important;width:34px!important}
+ .hm-member-app .hm-messages-reference #single_chat .chat-header h6{font-size:12px!important;margin:0 0 2px!important}
+ .hm-member-app .hm-messages-reference #single_chat .chat-header .hm-chat-presence{font-size:9px!important}
+ .hm-member-app .hm-messages-reference #single_chat .hm-chat-header-actions{gap:3px!important}
+ .hm-member-app .hm-messages-reference #single_chat .hm-chat-header-actions>.btn,.hm-member-app .hm-messages-reference #single_chat .hm-chat-header-actions>.dropdown>.btn{width:29px!important;min-width:29px!important;height:29px!important;padding:0!important;margin:0!important}
+ .hm-member-app .hm-messages-reference #single_chat .hm-chat-header-actions>.btn i,.hm-member-app .hm-messages-reference #single_chat .hm-chat-header-actions>.dropdown>.btn i{font-size:16px!important}
+ .hm-member-app .hm-messages-reference #single_chat #chat-messages{padding:12px 9px 16px!important}
+ .hm-member-app .hm-messages-reference #single_chat .chat-coversation .media-body{max-width:calc(100% - 46px)!important}
+ .hm-member-app .hm-messages-reference #single_chat .chat-coversation.call-log-item .media-body{max-width:min(83%,290px)!important}
+}
+@media(max-width:390px){
+ .hm-member-app .hm-messages-reference #single_chat .chat-header{gap:4px!important;padding:8px 6px!important}
+ .hm-member-app .hm-messages-reference #single_chat .chat-header .avatar{width:29px!important;height:29px!important;min-width:29px!important;margin-right:4px!important}
+ .hm-member-app .hm-messages-reference #single_chat .chat-header .avatar img{width:29px!important;height:29px!important}
+ .hm-member-app .hm-messages-reference #single_chat .hm-chat-header-actions>.btn,.hm-member-app .hm-messages-reference #single_chat .hm-chat-header-actions>.dropdown>.btn{width:26px!important;min-width:26px!important;height:28px!important}
+ .hm-member-app .hm-messages-reference #single_chat .chat-header .aiz-all-chat-toggler{flex-basis:29px!important;width:29px!important;min-width:29px!important;height:29px!important}
+}
