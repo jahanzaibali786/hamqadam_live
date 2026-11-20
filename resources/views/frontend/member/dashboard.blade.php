@@ -11,7 +11,7 @@
 @if($errors->has('proposal'))<div class="alert alert-danger">{{ $errors->first('proposal') }}</div>@endif
 @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
  @include('frontend.member.partials.ad_slider', ['placement' => 'top'])
- <header class="hm-dash26-welcome"><div><h1>Welcome back, <span>{{ $me->first_name }}!</span> 👋</h1><p>Let's find meaningful connections for your future.</p></div><div class="hm-dash26-quote"><i class="las la-quote-left"></i><strong>Every person has a story.<br>Find yours.</strong><img src="{{ static_asset('assets/img/member-reference-couple.svg') }}" alt=""></div></header>
+ <header class="hm-dash26-welcome"><div><h1>Welcome back, <span>{{ $me->first_name }}!</span> 👋</h1><p>Let's find meaningful connections for your future.</p></div><div class="hm-dash26-quote"><i class="las la-quote-left"></i><strong>Every person has a story.<br>Find yours.</strong><img src="{{ is_file(public_path('assets/img/hamqadam-rebrand/member-couple-portrait.jpg')) ? static_asset('assets/img/hamqadam-rebrand/member-couple-portrait.jpg') : static_asset('assets/img/member-reference-couple.svg') }}" alt="Happy married couple" loading="lazy"></div></header>
  <div class="hm-dash26-upper">
   <div class="hm-dash26-left">
    <div class="hm-dash26-stats">
