@@ -94,7 +94,7 @@
 
             </button>
 
-            <button class="aiz-mobile-toggler d-lg-none aiz-all-chat-toggler mr-2" data-toggle="class-toggle" data-target=".chat-user-list-wrap">
+            <button type="button" class="aiz-mobile-toggler d-lg-none aiz-all-chat-toggler mr-2" data-toggle="class-toggle" data-target=".chat-user-list-wrap" aria-label="Show conversations" title="Show conversations">
 
                 <span></span>
 
