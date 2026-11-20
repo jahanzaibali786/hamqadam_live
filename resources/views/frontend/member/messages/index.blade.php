@@ -106,12 +106,13 @@
             <div class="col-lg-5 hm-chat-center-column" id="single_chat">
                 <div class="chat-box-wrap h-100">
                     <div class="attached-top bg-white border-bottom chat-header d-flex justify-content-between align-items-center p-3 shadow-sm">
+                        <button type="button" class="aiz-mobile-toggler d-lg-none aiz-all-chat-toggler mr-2" data-toggle="class-toggle" data-target=".chat-user-list-wrap" aria-label="Show conversations" title="Show conversations">
+                            <span></span>
+                        </button>
                         <div class="media">
                             <h6 class="mb-0">{{ translate('Chats')}}</h6>
                         </div>
-                        <button class="aiz-mobile-toggler d-lg-none aiz-all-chat-toggler mr-2" data-toggle="class-toggle" data-target=".chat-user-list-wrap">
-                            <span></span>
-                        </button>
+                        
                     </div>
                     <div class="px-3 py-5 text-center">
                         <i class="las la-user la-6x text-primary mb-4"></i>

@@ -14,7 +14,7 @@
         $duration = $call->duration_seconds ? gmdate('i:s', (int) $call->duration_seconds) : '00:00';
         $time = optional($call->ended_at ?? $call->answered_at ?? $call->started_at ?? $call->created_at)->diffForHumans();
     @endphp
-    <div class="chat-coversation {{ $isCaller ? 'right' : '' }} call-log-item">
+    <div class="chat-coversation {{ $isCaller ? 'right' : '' }} call-log-item is-{{ preg_replace('/[^a-z0-9-]/', '', strtolower($status)) }}">
         <div class="media">
             @if (! $isCaller)
                 <span class="avatar avatar-xs flex-shrink-0 call-log-avatar">
